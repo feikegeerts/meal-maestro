@@ -10,9 +10,9 @@
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "init-edge-config": "node ./scripts/initialize-edge-config.js"
   },
-  "dependencies": {},
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.8",
     "@sveltejs/adapter-vercel": "^5.7.0",
@@ -26,5 +26,8 @@
     "typescript": "^5.0.0",
     "vercel": "^41.6.1",
     "vite": "^6.2.5"
+  },
+  "dependencies": {
+    "@vercel/edge-config": "^1.4.0"
   }
 }
