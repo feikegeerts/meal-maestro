@@ -12,6 +12,9 @@ node_modules
 .DS_Store
 Thumbs.db
 
+# Sensitive data
+/data/careerEvents.json
+
 # Env
 .env
 .env.*
@@ -22,3 +25,4 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+.env*.local
