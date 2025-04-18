@@ -22,8 +22,13 @@
   let lastAttemptTime = 0;
 
   onMount(() => {
-    // Check if we have an existing session
-    checkAuthentication();
+    // Check for an existing session by looking for the CSRF token cookie
+    const existingCsrfToken = getCookie('timeline_csrf');
+    if (existingCsrfToken) {
+      // If we have a token, try to fetch career events
+      csrfToken = existingCsrfToken;
+      checkAuthentication();
+    }
 
     window.addEventListener("keydown", handleKeydown);
     window.addEventListener("wheel", handleWheel, { passive: false });
