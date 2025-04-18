@@ -1,11 +1,3 @@
 {
-  "crons": [],
-  "edge-config": {
-    "items": [
-      {
-        "key": "careerEvents",
-        "type": "json"
-      }
-    ]
-  }
+  "crons": []
 }
