@@ -1,0 +1,59 @@
+:root {
+  /* Light theme (default) */
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --secondary: #10b981;
+  --accent: #8b5cf6;
+  --background: #ffffff;
+  --surface: #f3f4f6;
+  --text: #1f2937;
+  --text-light: #6b7280;
+  --border: #e5e7eb;
+  --error: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+}
+
+/* Dark theme */
+[data-theme='dark'] {
+  --primary: #60a5fa;
+  --primary-dark: #3b82f6;
+  --secondary: #34d399;
+  --accent: #a78bfa;
+  --background: #111827;
+  --surface: #1f2937;
+  --text: #f9fafb;
+  --text-light: #9ca3af;
+  --border: #374151;
+  --error: #f87171;
+  --success: #4ade80;
+  --warning: #fbbf24;
+}
+
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  background-color: var(--background);
+  color: var(--text);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text);
+}
+
+a {
+  color: var(--primary);
+}
+
+a:hover {
+  color: var(--primary-dark);
+}
