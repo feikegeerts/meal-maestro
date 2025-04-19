@@ -1,17 +1,40 @@
 <script lang="ts">
-  // Define props and events
-  export let password: string = "";
+  import { authService } from "$lib/services/authService";
+  
+  // Define props
   export let isAuthenticating: boolean = false;
   export let authError: string | null = null;
   
-  // Create a login event that the parent component can listen for
-  import { createEventDispatcher } from "svelte";
-  const dispatch = createEventDispatcher<{
-    login: { password: string };
-  }>();
+  // Define callback props to replace event dispatching
+  export let onAuthSuccess: (csrfToken: string) => void = () => {};
+  export let onAuthFailure: (error: string) => void = () => {};
+  
+  // Local state
+  let password: string = "";
 
-  function handleSubmit() {
-    dispatch('login', { password });
+  async function handleSubmit() {
+    isAuthenticating = true;
+    
+    try {
+      const result = await authService.login(password);
+      
+      if (result.success && result.csrfToken) {
+        // Clear password from memory
+        password = "";
+        authError = null;
+        
+        // Notify parent of successful login using callback prop
+        onAuthSuccess(result.csrfToken);
+      } else {
+        authError = result.error || "Authentication failed";
+        onAuthFailure(authError);
+      }
+    } catch (err) {
+      authError = "Authentication error occurred";
+      onAuthFailure(authError);
+    } finally {
+      isAuthenticating = false;
+    }
   }
 </script>
 

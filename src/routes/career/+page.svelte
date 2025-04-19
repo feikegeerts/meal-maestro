@@ -3,10 +3,7 @@
   import TimelineView from "$lib/components/TimelineView.svelte";
   import LoginForm from "$lib/components/LoginForm.svelte";
   import type { CareerEvent } from "$lib/types";
-  import { 
-    CSRF_COOKIE_NAME, 
-    MAX_ATTEMPTS 
-  } from "$lib/authConstants";
+  import { authService } from "$lib/services/authService";
   
   let selectedEventId: number | null = null;
   let isTransitioning = false;
@@ -17,21 +14,14 @@
   // Authentication states
   let isAuthenticated = false;
   let isAuthenticating = false;
-  let password = "";
   let authError: string | null = null;
   let csrfToken: string | null = null;
 
-  // Track failed login attempts client-side
-  let loginAttempts = 0;
-  const MAX_CLIENT_ATTEMPTS = MAX_ATTEMPTS; // Using the same value from authUtils
-  let lastAttemptTime = 0;
-
   onMount(() => {
-    // Check for an existing session by looking for the CSRF token cookie
-    const existingCsrfToken = getCookie(CSRF_COOKIE_NAME);
-    if (existingCsrfToken) {
+    // Check for an existing session
+    if (authService.hasCsrfToken()) {
       // If we have a token, try to fetch career events
-      csrfToken = existingCsrfToken;
+      csrfToken = authService.getCsrfToken();
       checkAuthentication();
     }
 
@@ -45,21 +35,18 @@
   
   async function checkAuthentication() {
     try {
-      const response = await fetch('/api/career-events');
-      if (response.status === 401) {
+      const result = await authService.checkAuthentication();
+      
+      if (result.isAuthenticated && result.data) {
+        careerEvents = result.data.careerEvents;
+        isAuthenticated = true;
+        csrfToken = authService.getCsrfToken();
+      } else {
         isAuthenticated = false;
-        return;
+        if (result.error) {
+          error = result.error;
+        }
       }
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch data');
-      }
-      
-      const data = await response.json();
-      careerEvents = data.careerEvents;
-      isAuthenticated = true;
-      
-      csrfToken = getCookie(CSRF_COOKIE_NAME);
     } catch (err) {
       if (err instanceof Error) {
         error = "An error occurred while loading data";
@@ -67,74 +54,15 @@
       }
     }
   }
-  
-  // Helper function to get a cookie value
-  function getCookie(name: string): string | null {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
-    return null;
-  }
 
-  async function handleLogin(event: CustomEvent<{ password: string }>) {
-    const enteredPassword = event.detail.password;
-    
-    if (!enteredPassword.trim()) {
-      authError = "Password is required";
-      return;
-    }
-    
-    // Simple client-side throttling
-    const now = Date.now();
-    if (loginAttempts >= MAX_CLIENT_ATTEMPTS && now - lastAttemptTime < 60000) {
-      authError = "Too many attempts. Please wait before trying again.";
-      return;
-    }
-    
-    lastAttemptTime = now;
-    loginAttempts++;
-    
-    try {
-      isAuthenticating = true;
-      authError = null;
-      
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password: enteredPassword }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok || !data.success) {
-        authError = "Authentication failed";
-        return;
-      }
-      
-      // Store the CSRF token if provided
-      if (data.csrfToken) {
-        csrfToken = data.csrfToken;
-      }
-      
-      // Reset login attempts on success
-      loginAttempts = 0;
-      
-      // Successfully authenticated, now fetch career events
-      isAuthenticated = true;
-      password = ""; // Clear password from memory
-      
-      // Fetch career data
-      await checkAuthentication();
-    } catch (err) {
-      if (err instanceof Error) {
-        authError = "Authentication error occurred";
-        console.error('Login error:', err);
-      }
-    } finally {
-      isAuthenticating = false;
-    }
+  function onAuthSuccessCallback(tokenValue: string) {
+    csrfToken = tokenValue;
+    isAuthenticated = true;
+    checkAuthentication();
+  }
+  
+  function onAuthFailureCallback(error: string) {
+    authError = error;
   }
 
   function selectEvent(id: number): void {
@@ -248,10 +176,10 @@
   
   {#if !isAuthenticated}
     <LoginForm 
-      bind:password
-      {isAuthenticating}
-      {authError}
-      on:login={handleLogin}
+      bind:isAuthenticating
+      bind:authError
+      onAuthSuccess={onAuthSuccessCallback}
+      onAuthFailure={onAuthFailureCallback}
     />
   {:else}
     <TimelineView
