@@ -16,6 +16,7 @@
   let isAuthenticating = false;
   let authError: string | null = null;
   let csrfToken: string | null = null;
+  let isCheckingSession = true;
 
   onMount(() => {
     // Check for an existing session
@@ -23,6 +24,8 @@
       // If we have a token, try to fetch career events
       csrfToken = authService.getCsrfToken();
       checkAuthentication();
+    } else {
+      isCheckingSession = false;
     }
 
     window.addEventListener("keydown", handleKeydown);
@@ -52,6 +55,8 @@
         error = "An error occurred while loading data";
         console.error('Error loading career events:', err);
       }
+    } finally {
+      isCheckingSession = false;
     }
   }
 
@@ -174,7 +179,10 @@
     <div class="error">{error}</div>
   {/if}
   
-  {#if !isAuthenticated}
+  {#if isCheckingSession}
+    <!-- Optionally, show a loading spinner here -->
+    <!-- <div class="loading">Loading...</div> -->
+  {:else if !isAuthenticated}
     <LoginForm 
       bind:isAuthenticating
       bind:authError
