@@ -28,6 +28,8 @@
     "vite": "^6.2.5"
   },
   "dependencies": {
-    "@vercel/edge-config": "^1.4.0"
+    "@types/bcrypt": "^5.0.2",
+    "@vercel/edge-config": "^1.4.0",
+    "bcrypt": "^5.1.1"
   }
 }

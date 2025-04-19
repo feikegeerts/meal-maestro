@@ -3,6 +3,11 @@
   import TimelineView from "$lib/components/TimelineView.svelte";
   import LoginForm from "$lib/components/LoginForm.svelte";
   import type { CareerEvent } from "$lib/types";
+  import { 
+    CSRF_COOKIE_NAME, 
+    MAX_ATTEMPTS 
+  } from "$lib/authConstants";
+  
   let selectedEventId: number | null = null;
   let isTransitioning = false;
   let timelineViewComponent: TimelineView;
@@ -18,12 +23,12 @@
 
   // Track failed login attempts client-side
   let loginAttempts = 0;
-  const MAX_CLIENT_ATTEMPTS = 5;
+  const MAX_CLIENT_ATTEMPTS = MAX_ATTEMPTS; // Using the same value from authUtils
   let lastAttemptTime = 0;
 
   onMount(() => {
     // Check for an existing session by looking for the CSRF token cookie
-    const existingCsrfToken = getCookie('timeline_csrf');
+    const existingCsrfToken = getCookie(CSRF_COOKIE_NAME);
     if (existingCsrfToken) {
       // If we have a token, try to fetch career events
       csrfToken = existingCsrfToken;
@@ -54,7 +59,7 @@
       careerEvents = data.careerEvents;
       isAuthenticated = true;
       
-      csrfToken = getCookie('timeline_csrf');
+      csrfToken = getCookie(CSRF_COOKIE_NAME);
     } catch (err) {
       if (err instanceof Error) {
         error = "An error occurred while loading data";
