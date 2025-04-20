@@ -41,8 +41,7 @@
 <div class="login-container">
   <form on:submit|preventDefault={handleSubmit} class="login-form">
     <h2>Password Protected</h2>
-    <p>Please enter the password to view the career timeline.</p>
-    
+    <p>For privacy reasons, my career timeline is protected. You can request the password by contacting me directly.</p>
     {#if authError}
       <div class="auth-error">{authError}</div>
     {/if}
