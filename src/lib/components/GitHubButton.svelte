@@ -38,4 +38,11 @@
     background: var(--primary);
     color: white;
   }
+
+  @media (max-width: 768px) {
+
+    .github-button {
+        bottom: 70px; 
+    }
+  }
 </style>

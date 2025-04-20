@@ -37,4 +37,9 @@
     background: var(--primary);
     color: white;
   }
+  @media (max-width: 768px) {
+  .linkedin-button {
+      bottom: 120px; 
+  }
+}
 </style>

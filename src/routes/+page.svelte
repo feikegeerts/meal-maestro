@@ -25,25 +25,11 @@
 </main>
 
 <style>
-  main {
-    padding: 2em;
-    max-width: 1200px;
-    margin: 0 auto;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  }
-
   header {
     text-align: center;
     margin-bottom: 3em;
   }
-
-  h1 {
-    color: var(--primary);
-    font-size: 2.5em;
-    margin-bottom: 0.5em;
-  }
-
+  
   .tiles {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -93,4 +79,23 @@
     background: linear-gradient(135deg, #ff9800, #ffb74d);
     color: white;
   }
+
+  @media (max-width: 768px) {
+  .tile p {
+    font-size: 0.75em;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+  }
+  header {
+    margin-bottom: 1.5em;
+  }
+  .tile {
+    padding: 1em;
+  }
+  .tile h2 {
+    font-size: 1.5em;
+    margin-bottom: 0em;
+    margin-top: 0.5em;
+  }
+}
 </style>
