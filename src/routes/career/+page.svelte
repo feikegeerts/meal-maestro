@@ -171,8 +171,8 @@
 
 <main>
   <header>
-    <h1>My Career Timeline - Vercel edition</h1>
-    <p>A chronological journey through my professional experience</p>
+    <h1>My Career Timeline</h1>
+    <p>An overview of my professional milestones and experiences</p>
   </header>
 
   {#if error}
