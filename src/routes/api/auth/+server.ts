@@ -31,6 +31,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 
     // Check if the IP is currently rate limited
     if (!checkRateLimit(clientIp)) {
+      console.log('[AUTH] Rate limit exceeded');
       return json(
         {
           success: false,
@@ -46,6 +47,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
     if (!password) {
       // Increment failed attempt count
       incrementFailedAttempts(clientIp);
+      console.log('[AUTH] Authentication failed: Missing password');
       return json({ success: false, message: 'Authentication failed' }, { status: 400 });
     }
 
@@ -53,13 +55,13 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
     const storedPasswordHash = process.env.TIMELINE_PASSWORD;
 
     if (!storedPasswordHash) {
-      console.error('Server missing password configuration');
+      console.error('[AUTH] Server missing password configuration');
       return json({ success: false, message: 'Authentication failed' }, { status: 500 });
     }
 
     // Verify the password is in bcrypt format
     if (!isValidBcryptHash(storedPasswordHash)) {
-      console.error('Password must be stored as a bcrypt hash');
+      console.error('[AUTH] Password must be stored as a bcrypt hash');
       return json({ success: false, message: 'Invalid password format' }, { status: 500 });
     }
 
@@ -68,11 +70,15 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
     if (!authenticated) {
       // Increment failed attempt count
       incrementFailedAttempts(clientIp);
+      console.log('[AUTH] Invalid password attempt');
       return json({ success: false, message: 'Authentication failed' }, { status: 401 });
     }
 
     // Reset failed attempts on successful login
     resetFailedAttempts(clientIp);
+
+    // Log successful authentication
+    console.log('[AUTH] Authentication successful');
 
     // Set authentication cookies and get the CSRF token
     const csrfToken = await setAuthCookies(cookies, password);
@@ -82,7 +88,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
       csrfToken: csrfToken,
     });
   } catch (error) {
-    console.error('Error in authentication:', error);
+    console.error('[AUTH] Error in authentication:', error);
     return json({ success: false, message: 'Authentication failed' }, { status: 500 });
   }
 };
