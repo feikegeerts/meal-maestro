@@ -1,146 +1,139 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
-  let isAnimating = false;
+  import VoiceInput from '$lib/components/VoiceInput.svelte';
+  import ActionLogs from '$lib/components/ActionLogs.svelte';
+  import PageHeader from '$lib/components/PageHeader.svelte';
+  
+  let isRecording = false;
+  let isProcessing = false;
+  let actionLogs: Array<{ id: number; timestamp: Date; action: string; details: string; type: string }> = [];
+  let currentTranscript = '';
+  let assistantResponse = '';
 
+  // Mock data for demonstration
   onMount(() => {
-    isAnimating = true;
+    // Add some sample action logs
+    actionLogs = [
+      {
+        id: 1,
+        timestamp: new Date('2025-06-29T10:30:00'),
+        action: 'Added recipe',
+        details: 'Pesto Pasta with Cherry Tomatoes',
+        type: 'create'
+      },
+      {
+        id: 2,
+        timestamp: new Date('2025-06-29T11:15:00'),
+        action: 'Updated last_eaten',
+        details: 'Lasagna - marked as eaten today',
+        type: 'update'
+      },
+      {
+        id: 3,
+        timestamp: new Date('2025-06-29T11:45:00'),
+        action: 'Retrieved recipes',
+        details: 'Found 3 Italian recipes with pasta',
+        type: 'read'
+      }
+    ];
   });
+
+  function startRecording() {
+    isRecording = true;
+    currentTranscript = '';
+    assistantResponse = '';
+    
+    // TODO: Implement actual voice recording with OpenAI API
+    // For now, simulate recording
+    setTimeout(() => {
+      currentTranscript = "What pasta recipes do you have that I haven't eaten recently?";
+      isRecording = false;
+      processVoiceInput();
+    }, 3000);
+  }
+
+  function stopRecording() {
+    isRecording = false;
+  }
+
+  function processVoiceInput() {
+    isProcessing = true;
+    
+    // TODO: Send to OpenAI API for processing
+    // For now, simulate processing and response
+    setTimeout(() => {
+      assistantResponse = "I found 2 pasta recipes you haven't eaten recently: Carbonara (last eaten 2 weeks ago) and Linguine with Clams (last eaten 3 weeks ago). Would you like me to show you the details for either of these?";
+      
+      // Add new action log
+      const newAction = {
+        id: actionLogs.length + 1,
+        timestamp: new Date(),
+        action: 'Retrieved recipes',
+        details: 'Found 2 pasta recipes not eaten recently',
+        type: 'read'
+      };
+      actionLogs = [newAction, ...actionLogs];
+      
+      isProcessing = false;
+    }, 2000);
+  }
+
+  function clearLogs() {
+    actionLogs = [];
+  }
 </script>
 
 <main>
-  <header>
-    <h1 class="title">Meal Maestro</h1>
-    <p class="subtitle">What's for dinner? Your guide to inspired meals and smart planning.</p>
-  </header>
+  <PageHeader 
+    title="Meal Maestro" 
+    subtitle="Your AI-powered recipe assistant with voice control" 
+  />
 
-  <section class="construction">
-    <p class="message">This page is under construction.</p>
-    <div class="construction-animation" class:animate={isAnimating}>
-      <div class="block block1"></div>
-      <div class="block block2"></div>
-      <div class="block block3"></div>
-      <div class="block block4"></div>
-    </div>
-  </section>
+  <div class="container">
+    <VoiceInput 
+      bind:isRecording
+      bind:isProcessing
+      bind:currentTranscript
+      bind:assistantResponse
+      on:startRecording={startRecording}
+      on:stopRecording={stopRecording}
+    />
+    
+    <ActionLogs 
+      bind:actionLogs
+      on:clearLogs={clearLogs}
+    />
+  </div>
 </main>
 
 <style>
   main {
-    padding: 2em;
-    max-width: 800px;
+    padding: 1rem;
+    max-width: 1200px;
     margin: 0 auto;
-    text-align: center;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
       Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    min-height: 100vh;
   }
 
-  .title {
-    font-size: 2.5em;
-    color: var(--primary);
-    margin-bottom: 0.5em;
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
   }
 
-  .subtitle {
-    font-size: 1.2em;
-    color: var(--text-secondary);
-    margin-bottom: 2em;
+  /* Mobile Responsiveness */
+  @media (max-width: 768px) {
+    .container {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
   }
 
-  .construction {
-    margin-top: 3em;
-  }
-
-  .message {
-    font-size: 1.5em;
-    color: var(--text-primary);
-    margin-bottom: 1.5em;
-  }
-
-  .construction-animation {
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    height: 100px;
-    margin: 0 auto;
-    width: 180px;
-  }
-
-  .block {
-    width: 30px;
-    background-color: var(--primary);
-    margin: 0 5px;
-    border-radius: 4px 4px 0 0;
-    opacity: 0.8;
-    transform: translateY(100%);
-    animation-duration: 1.5s;
-    animation-iteration-count: infinite;
-    animation-timing-function: ease-in-out;
-  }
-
-  .block1 {
-    height: 60px;
-    animation-name: block1;
-    animation-delay: 0s;
-  }
-
-  .block2 {
-    height: 80px;
-    animation-name: block2;
-    animation-delay: 0.2s;
-  }
-
-  .block3 {
-    height: 50px;
-    animation-name: block3;
-    animation-delay: 0.4s;
-  }
-
-  .block4 {
-    height: 70px;
-    animation-name: block4;
-    animation-delay: 0.6s;
-  }
-
-  @keyframes block1 {
-    0%, 100% { transform: translateY(100%); }
-    50% { transform: translateY(0); }
-  }
-
-  @keyframes block2 {
-    0%, 100% { transform: translateY(100%); }
-    50% { transform: translateY(0); }
-  }
-
-  @keyframes block3 {
-    0%, 100% { transform: translateY(100%); }
-    50% { transform: translateY(0); }
-  }
-
-  @keyframes block4 {
-    0%, 100% { transform: translateY(100%); }
-    50% { transform: translateY(0); }
-  }
-
-  /* Dark mode adjustments */
-  @media (prefers-color-scheme: dark) {
+  @media (max-width: 480px) {
     main {
-      color: #f8f8f8;
-    }
-    
-    .title {
-      color: var(--primary);
-    }
-    
-    .subtitle {
-      color: #bdbdbd;
-    }
-    
-    .message {
-      color: #e0e0e0;
-    }
-    
-    .block {
-      opacity: 1;
+      padding: 0.5rem;
     }
   }
 </style>
