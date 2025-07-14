@@ -59,8 +59,8 @@ An AI-powered recipe management system integrated into the Career Timeline appli
 ### Phase 1: MVP Backend Setup
 
 - [x] **1.1** Create Supabase project and configure connection
-- [ ] **1.2** Design and create `recipes` table with proper schema (no user relationship)
-- [ ] **1.3** Create database indexes for performance
+- [x] **1.2** Design and create `recipes` table with proper schema (no user relationship)
+- [x] **1.3** Create database indexes for performance
 - [ ] **1.4** Set up basic API routes in `src/routes/api/recipes/`
   - [ ] `GET /api/recipes` - List/search recipes
   - [ ] `POST /api/recipes` - Add new recipe
