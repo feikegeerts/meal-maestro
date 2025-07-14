@@ -61,11 +61,11 @@ An AI-powered recipe management system integrated into the Career Timeline appli
 - [x] **1.1** Create Supabase project and configure connection
 - [x] **1.2** Design and create `recipes` table with proper schema (no user relationship)
 - [x] **1.3** Create database indexes for performance
-- [ ] **1.4** Set up basic API routes in `src/routes/api/recipes/`
-  - [ ] `GET /api/recipes` - List/search recipes
-  - [ ] `POST /api/recipes` - Add new recipe
-  - [ ] `PUT /api/recipes/[id]` - Update recipe
-  - [ ] `DELETE /api/recipes/[id]` - Delete recipe
+- [x] **1.4** Set up basic API routes in `src/routes/api/recipes/`
+  - [x] `GET /api/recipes` - List/search recipes
+  - [x] `POST /api/recipes` - Add new recipe
+  - [x] `PUT /api/recipes/[id]` - Update recipe
+  - [x] `DELETE /api/recipes/[id]` - Delete recipe
 - [ ] **1.5** Implement basic action logging system
   - [ ] Create `action_logs` table
   - [ ] Add logging middleware for all recipe operations
@@ -141,15 +141,7 @@ An AI-powered recipe management system integrated into the Career Timeline appli
 - [ ] **7.6** Image upload and recipe photo management
 - [ ] **7.7** Recipe sharing and community features
 
-### Phase 8: Mobile & PWA
-
-- [ ] **8.1** Progressive Web App (PWA) implementation
-- [ ] **8.2** Offline functionality with service workers
-- [ ] **8.3** Push notifications for meal reminders
-- [ ] **8.4** Mobile-optimized interface
-- [ ] **8.5** Camera integration for recipe photos
-
-### Phase 9: Analytics & Optimization
+### Phase 8: Analytics & Optimization
 
 - [ ] **9.1** Usage analytics and metrics
 - [ ] **9.2** Performance monitoring
