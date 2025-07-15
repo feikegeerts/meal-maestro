@@ -3,6 +3,8 @@ import type { RequestHandler } from './$types';
 import { dev } from '$app/environment';
 import * as dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+import { logRecipeUpdated, logRecipeDeleted } from '$lib/services/actionLogger.js';
+import type { Recipe } from '$lib/types.js';
 
 if (dev) {
   dotenv.config({ path: '.env.local' });
@@ -64,6 +66,13 @@ export const PUT: RequestHandler = async ({ request, params }) => {
     if (season) updateData.season = season;
     if (last_eaten) updateData.last_eaten = last_eaten;
 
+    // Get original recipe data for logging
+    const { data: originalRecipe } = await supabase
+      .from('recipes')
+      .select('*')
+      .eq('id', id)
+      .single();
+
     const { data: recipe, error } = await supabase
       .from('recipes')
       .update(updateData)
@@ -74,6 +83,11 @@ export const PUT: RequestHandler = async ({ request, params }) => {
     if (error) {
       console.error('Error updating recipe:', error);
       return json({ error: 'Failed to update recipe' }, { status: 500 });
+    }
+
+    // Log the recipe update
+    if (originalRecipe) {
+      await logRecipeUpdated(supabase, id, originalRecipe, updateData);
     }
 
     return json({ recipe, success: true });
@@ -90,6 +104,23 @@ export const DELETE: RequestHandler = async ({ request, params }) => {
     // Validate required fields
     if (!id) {
       return json({ error: 'Recipe ID is required' }, { status: 400 });
+    }
+
+    // Get recipe data before deletion for logging
+    const { data: recipeToDelete, error: fetchError } = await supabase
+      .from('recipes')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching recipe for deletion:', fetchError);
+      return json({ error: 'Recipe not found' }, { status: 404 });
+    }
+
+    // Log the recipe deletion BEFORE actually deleting
+    if (recipeToDelete) {
+      await logRecipeDeleted(supabase, recipeToDelete as Recipe);
     }
 
     const { error } = await supabase
