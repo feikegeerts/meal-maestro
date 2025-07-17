@@ -1,16 +1,67 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { createEventDispatcher } from 'svelte';
   
   const dispatch = createEventDispatcher();
   
-  export let actionLogs: Array<{ id: number; timestamp: Date; action: string; details: string; type: string }> = [];
+  interface ActionLog {
+    id: string;
+    action_type: 'create' | 'update' | 'delete' | 'search';
+    recipe_id?: string;
+    description: string;
+    details?: Record<string, any>;
+    timestamp: string;
+  }
+  
+  export let actionLogs: ActionLog[] = [];
+  export let autoRefresh = true;
+  
+  let isLoading = false;
+  let error = '';
+  let refreshInterval: NodeJS.Timeout;
+
+  onMount(() => {
+    fetchActionLogs();
+    
+    if (autoRefresh) {
+      // Refresh every 5 seconds
+      refreshInterval = setInterval(fetchActionLogs, 5000);
+    }
+    
+    return () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    };
+  });
+
+  async function fetchActionLogs() {
+    try {
+      isLoading = true;
+      error = '';
+      
+      const response = await fetch('/api/recipes/actions');
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch action logs');
+      }
+      
+      actionLogs = data.action_logs || [];
+    } catch (err) {
+      console.error('Error fetching action logs:', err);
+      error = err instanceof Error ? err.message : 'Failed to fetch action logs';
+    } finally {
+      isLoading = false;
+    }
+  }
 
   function clearLogs() {
     dispatch('clearLogs');
   }
 
-  function formatTimestamp(timestamp: Date): string {
-    return timestamp.toLocaleString('en-US', {
+  function formatTimestamp(timestamp: string): string {
+    return new Date(timestamp).toLocaleString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       month: 'short',
@@ -22,7 +73,7 @@
     switch(type) {
       case 'create': return '➕';
       case 'update': return '✏️';
-      case 'read': return '🔍';
+      case 'search': return '🔍';
       case 'delete': return '🗑️';
       default: return '📝';
     }
@@ -32,13 +83,26 @@
 <section class="logs-section">
   <div class="logs-header">
     <h2>Action History</h2>
-    {#if actionLogs.length > 0}
-      <button class="clear-button" on:click={clearLogs}>Clear All</button>
-    {/if}
+    <div class="header-actions">
+      {#if isLoading}
+        <div class="loading-spinner"></div>
+      {/if}
+      <button class="refresh-button" on:click={fetchActionLogs} disabled={isLoading}>
+        🔄
+      </button>
+      {#if actionLogs.length > 0}
+        <button class="clear-button" on:click={clearLogs}>Clear All</button>
+      {/if}
+    </div>
   </div>
   
   <div class="logs-container">
-    {#if actionLogs.length === 0}
+    {#if error}
+      <div class="error-state">
+        <p>Error: {error}</p>
+        <button on:click={fetchActionLogs}>Try Again</button>
+      </div>
+    {:else if actionLogs.length === 0 && !isLoading}
       <div class="empty-state">
         <p>No actions performed yet.</p>
         <p class="empty-hint">Start by asking me about your recipes!</p>
@@ -47,14 +111,26 @@
       {#each actionLogs as log (log.id)}
         <div class="log-item">
           <div class="log-icon">
-            {getActionIcon(log.type)}
+            {getActionIcon(log.action_type)}
           </div>
           <div class="log-content">
             <div class="log-main">
-              <span class="log-action">{log.action}</span>
+              <span class="log-action">{log.description}</span>
               <span class="log-timestamp">{formatTimestamp(log.timestamp)}</span>
             </div>
-            <div class="log-details">{log.details}</div>
+            {#if log.details}
+              <div class="log-details">
+                {#if log.details.searchQuery}
+                  Query: "{log.details.searchQuery}"
+                {:else if log.details.changedFields}
+                  Changed: {log.details.changedFields.join(', ')}
+                {:else if log.details.newData?.title}
+                  Recipe: {log.details.newData.title}
+                {:else if log.details.originalData?.title}
+                  Recipe: {log.details.originalData.title}
+                {/if}
+              </div>
+            {/if}
           </div>
         </div>
       {/each}
@@ -89,6 +165,48 @@
     color: var(--text);
   }
 
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top: 2px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  .refresh-button {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-light);
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .refresh-button:hover:not(:disabled) {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+
+  .refresh-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .clear-button {
     background: none;
     border: 1px solid var(--border);
@@ -104,6 +222,22 @@
     background: var(--error);
     color: white;
     border-color: var(--error);
+  }
+
+  .error-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--error);
+  }
+
+  .error-state button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1rem;
   }
 
   .logs-container {
@@ -170,6 +304,16 @@
     font-size: 0.875rem;
     color: var(--text-light);
     line-height: 1.4;
+  }
+
+  /* Animations */
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   /* Mobile Responsiveness */

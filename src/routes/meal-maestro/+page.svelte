@@ -1,84 +1,30 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import VoiceInput from '$lib/components/VoiceInput.svelte';
+  import ChatInput from '$lib/components/ChatInput.svelte';
   import ActionLogs from '$lib/components/ActionLogs.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
   
-  let isRecording = false;
+  let conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [];
   let isProcessing = false;
-  let actionLogs: Array<{ id: number; timestamp: Date; action: string; details: string; type: string }> = [];
-  let currentTranscript = '';
-  let assistantResponse = '';
+  let error = '';
+  let actionLogs: any[] = [];
 
-  // Mock data for demonstration
-  onMount(() => {
-    // Add some sample action logs
-    actionLogs = [
-      {
-        id: 1,
-        timestamp: new Date('2025-06-29T10:30:00'),
-        action: 'Added recipe',
-        details: 'Pesto Pasta with Cherry Tomatoes',
-        type: 'create'
-      },
-      {
-        id: 2,
-        timestamp: new Date('2025-06-29T11:15:00'),
-        action: 'Updated last_eaten',
-        details: 'Lasagna - marked as eaten today',
-        type: 'update'
-      },
-      {
-        id: 3,
-        timestamp: new Date('2025-06-29T11:45:00'),
-        action: 'Retrieved recipes',
-        details: 'Found 3 Italian recipes with pasta',
-        type: 'read'
-      }
-    ];
-  });
-
-  function startRecording() {
-    isRecording = true;
-    currentTranscript = '';
-    assistantResponse = '';
-    
-    // TODO: Implement actual voice recording with OpenAI API
-    // For now, simulate recording
-    setTimeout(() => {
-      currentTranscript = "What pasta recipes do you have that I haven't eaten recently?";
-      isRecording = false;
-      processVoiceInput();
-    }, 3000);
+  function handleNewMessage(message: string) {
+    // Message handling is done in ChatInput component
+    // This is just for any additional logic needed
   }
 
-  function stopRecording() {
-    isRecording = false;
-  }
-
-  function processVoiceInput() {
-    isProcessing = true;
-    
-    // TODO: Send to OpenAI API for processing
-    // For now, simulate processing and response
+  function handleError(errorMessage: string) {
+    error = errorMessage;
+    // Clear error after 5 seconds
     setTimeout(() => {
-      assistantResponse = "I found 2 pasta recipes you haven't eaten recently: Carbonara (last eaten 2 weeks ago) and Linguine with Clams (last eaten 3 weeks ago). Would you like me to show you the details for either of these?";
-      
-      // Add new action log
-      const newAction = {
-        id: actionLogs.length + 1,
-        timestamp: new Date(),
-        action: 'Retrieved recipes',
-        details: 'Found 2 pasta recipes not eaten recently',
-        type: 'read'
-      };
-      actionLogs = [newAction, ...actionLogs];
-      
-      isProcessing = false;
-    }, 2000);
+      error = '';
+    }, 5000);
   }
 
   function clearLogs() {
+    // This would typically make an API call to clear logs
+    // For now, we'll just refresh the ActionLogs component
     actionLogs = [];
   }
 </script>
@@ -86,17 +32,23 @@
 <main>
   <PageHeader 
     title="Meal Maestro" 
-    subtitle="Your AI-powered recipe assistant with voice control" 
+    subtitle="Your AI-powered recipe assistant" 
   />
 
+  {#if error}
+    <div class="error-banner">
+      <span class="error-icon">⚠️</span>
+      <span class="error-message">{error}</span>
+      <button class="error-close" on:click={() => error = ''}>×</button>
+    </div>
+  {/if}
+
   <div class="container">
-    <VoiceInput 
-      bind:isRecording
+    <ChatInput 
+      bind:conversationHistory
       bind:isProcessing
-      bind:currentTranscript
-      bind:assistantResponse
-      on:startRecording={startRecording}
-      on:stopRecording={stopRecording}
+      onNewMessage={handleNewMessage}
+      onError={handleError}
     />
     
     <ActionLogs 
@@ -116,11 +68,66 @@
     min-height: 100vh;
   }
 
+  .error-banner {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    animation: slideDown 0.3s ease-out;
+  }
+
+  .error-icon {
+    font-size: 1.25rem;
+    color: #dc2626;
+  }
+
+  .error-message {
+    flex: 1;
+    color: #dc2626;
+    font-weight: 500;
+  }
+
+  .error-close {
+    background: none;
+    border: none;
+    color: #dc2626;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+
+  .error-close:hover {
+    background: #fca5a5;
+  }
+
   .container {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
     align-items: start;
+  }
+
+  /* Animations */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   /* Mobile Responsiveness */
