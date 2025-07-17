@@ -8,7 +8,7 @@ if (dev) {
 
 // OpenAI Configuration
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
-const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-nano';
 const OPENAI_MAX_TOKENS = parseInt(process.env.OPENAI_MAX_TOKENS || '1000', 10);
 const OPENAI_TEMPERATURE = parseFloat(process.env.OPENAI_TEMPERATURE || '0.7');
 
@@ -34,16 +34,34 @@ export interface OpenAIUsage {
   cost_usd: number;
 }
 
-// Cost calculation (approximations based on OpenAI pricing)
+// Cost calculation (based on OpenAI pricing as of 2025)
 const MODEL_COSTS = {
   'gpt-4': { input: 0.03, output: 0.06 }, // per 1K tokens
   'gpt-4-turbo': { input: 0.01, output: 0.03 },
+  'gpt-4o': { input: 0.005, output: 0.015 },
+  'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
+  'gpt-4.1': { input: 0.002, output: 0.008 }, // $2.00/1M input, $8.00/1M output
+  'gpt-4.1-mini': { input: 0.0004, output: 0.0016 }, // $0.40/1M input, $1.60/1M output
+  'gpt-4.1-nano': { input: 0.0001, output: 0.0004 }, // $0.10/1M input, $0.40/1M output
   'gpt-3.5-turbo': { input: 0.001, output: 0.002 },
+  'o1-preview': { input: 0.015, output: 0.06 },
+  'o1-mini': { input: 0.003, output: 0.012 },
+  'o3': { input: 0.002, output: 0.008 }, // $2.00/1M input, $8.00/1M output
+  'o4-mini': { input: 0.0011, output: 0.0044 }, // $1.10/1M input, $4.40/1M output
 } as const;
 
 export function calculateCost(model: string, tokens: TokenUsage): number {
-  const modelKey = model.includes('gpt-4-turbo') ? 'gpt-4-turbo' : 
-                   model.includes('gpt-4') ? 'gpt-4' : 
+  const modelKey = model.includes('gpt-4.1-nano') ? 'gpt-4.1-nano' :
+                   model.includes('gpt-4.1-mini') ? 'gpt-4.1-mini' :
+                   model.includes('gpt-4.1') ? 'gpt-4.1' :
+                   model.includes('gpt-4o-mini') ? 'gpt-4o-mini' :
+                   model.includes('gpt-4o') ? 'gpt-4o' :
+                   model.includes('gpt-4-turbo') ? 'gpt-4-turbo' : 
+                   model.includes('gpt-4') ? 'gpt-4' :
+                   model.includes('o4-mini') ? 'o4-mini' :
+                   model.includes('o3') ? 'o3' :
+                   model.includes('o1-preview') ? 'o1-preview' :
+                   model.includes('o1-mini') ? 'o1-mini' :
                    'gpt-3.5-turbo';
   
   const costs = MODEL_COSTS[modelKey];
