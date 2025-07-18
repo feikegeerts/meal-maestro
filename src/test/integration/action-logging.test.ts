@@ -66,47 +66,64 @@ const mockApiUsage = [
 const actionLogsInsertSpy = vi.fn().mockResolvedValue({ error: null });
 const apiUsageInsertSpy = vi.fn().mockResolvedValue({ error: null });
 
+// Shared spies for query methods
+const actionLogsLimitSpy = vi.fn();
+const actionLogsSelectSpy = vi.fn();
+const actionLogsOrderSpy = vi.fn();
+
 // Helper to simulate Supabase query chain for async/await
 function createActionLogsQueryMock(data = mockActionLogs, error = null) {
-  const mock = {
-    insert: actionLogsInsertSpy,
-    then: vi.fn().mockResolvedValue({ data, error }),
-    selectAsync: async () => ({ data, error }),
-    orderAsync: async () => ({ data, error }),
-    limitAsync: async () => ({ data, error }),
-    eqAsync: async () => ({ data, error }),
-    gteAsync: async () => ({ data, error }),
-    lteAsync: async () => ({ data, error }),
-    select: undefined,
-    order: undefined,
-    limit: undefined,
-    eq: undefined,
-    gte: undefined,
-    lte: undefined
-  } as any;
-  mock.select = vi.fn(() => mock);
-  mock.order = vi.fn(() => mock);
-  mock.limit = vi.fn(() => mock);
+  // Create a mock object with all chainable methods returning itself
+  const mock: any = {};
+  mock.insert = actionLogsInsertSpy;
+  mock.select = actionLogsSelectSpy.mockImplementation(() => mock);
+  mock.order = actionLogsOrderSpy.mockImplementation(() => mock);
+  mock.limit = actionLogsLimitSpy.mockImplementation(() => ({ data, error }));
   mock.eq = vi.fn(() => mock);
   mock.gte = vi.fn(() => mock);
   mock.lte = vi.fn(() => mock);
+  mock.or = vi.fn(() => mock);
+  mock.overlaps = vi.fn(() => mock);
+  mock.lt = vi.fn(() => mock);
+  mock.delete = vi.fn(() => mock);
+  
+  // Make the mock thenable to support await
+  mock.then = vi.fn((resolve) => {
+    return Promise.resolve({ data, error }).then(resolve);
+  });
+  
+  // Async variants for completeness
+  mock.selectAsync = async () => ({ data, error });
+  mock.orderAsync = async () => ({ data, error });
+  mock.limitAsync = async () => ({ data, error });
+  mock.eqAsync = async () => ({ data, error });
+  mock.gteAsync = async () => ({ data, error });
+  mock.lteAsync = async () => ({ data, error });
+  mock.orAsync = async () => ({ data, error });
+  mock.overlapsAsync = async () => ({ data, error });
   return mock;
 }
 
 function createApiUsageQueryMock(data = mockApiUsage, error = null) {
-  const mock = {
-    insert: apiUsageInsertSpy,
-    then: vi.fn().mockResolvedValue({ data, error }),
-    selectAsync: async () => ({ data, error }),
-    gteAsync: async () => ({ data, error }),
-    lteAsync: async () => ({ data, error }),
-    select: undefined,
-    gte: undefined,
-    lte: undefined
-  } as any;
+  const mock: any = {};
+  mock.insert = apiUsageInsertSpy;
   mock.select = vi.fn(() => mock);
   mock.gte = vi.fn(() => mock);
   mock.lte = vi.fn(() => mock);
+  mock.or = vi.fn(() => mock);
+  mock.overlaps = vi.fn(() => mock);
+  
+  // Make the mock thenable to support await
+  mock.then = vi.fn((resolve) => {
+    return Promise.resolve({ data, error }).then(resolve);
+  });
+  
+  // Async variants for completeness
+  mock.selectAsync = async () => ({ data, error });
+  mock.gteAsync = async () => ({ data, error });
+  mock.lteAsync = async () => ({ data, error });
+  mock.orAsync = async () => ({ data, error });
+  mock.overlapsAsync = async () => ({ data, error });
   return mock;
 }
 
@@ -121,17 +138,14 @@ const mockSupabaseClient = {
     // fallback for other tables
     const mock = {
       insert: vi.fn().mockResolvedValue({ error: null }),
-      then: vi.fn().mockResolvedValue({ data: [], error: null }),
+      select: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      then: vi.fn((resolve) => Promise.resolve({ data: [], error: null }).then(resolve)),
       selectAsync: async () => ({ data: [], error: null }),
       orderAsync: async () => ({ data: [], error: null }),
-      limitAsync: async () => ({ data: [], error: null }),
-      select: undefined,
-      order: undefined,
-      limit: undefined
+      limitAsync: async () => ({ data: [], error: null })
     } as any;
-    mock.select = vi.fn(() => mock);
-    mock.order = vi.fn(() => mock);
-    mock.limit = vi.fn(() => mock);
     return mock;
   })
 };
@@ -139,6 +153,27 @@ const mockSupabaseClient = {
 describe('Action Logging Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset the from mock to ensure fresh mocks for each test
+    mockSupabaseClient.from.mockImplementation((table: string) => {
+      if (table === 'action_logs') {
+        return createActionLogsQueryMock();
+      }
+      if (table === 'api_usage') {
+        return createApiUsageQueryMock();
+      }
+      // fallback for other tables
+      const mock = {
+        insert: vi.fn().mockResolvedValue({ error: null }),
+        select: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        then: vi.fn((resolve) => Promise.resolve({ data: [], error: null }).then(resolve)),
+        selectAsync: async () => ({ data: [], error: null }),
+        orderAsync: async () => ({ data: [], error: null }),
+        limitAsync: async () => ({ data: [], error: null })
+      } as any;
+      return mock;
+    });
   });
 
   describe('Recipe action logging', () => {
@@ -278,18 +313,21 @@ describe('Action Logging Integration', () => {
       
       expect(logs).toEqual(mockActionLogs);
       
-      const limitCall = mockSupabaseClient.from('action_logs').limit;
-      expect(limitCall).toHaveBeenCalledWith(10);
+      expect(actionLogsLimitSpy).toHaveBeenCalledWith(10);
     });
 
     it('should handle retrieval errors', async () => {
       const errorClient = {
-        from: vi.fn(() => ({
-          select: vi.fn().mockReturnThis(),
-          order: vi.fn().mockReturnThis(),
-          limit: vi.fn().mockReturnThis(),
-          then: vi.fn().mockResolvedValue({ data: null, error: new Error('Database error') })
-        }))
+        from: vi.fn(() => {
+          const mock: any = {};
+          mock.select = vi.fn(() => mock);
+          mock.order = vi.fn(() => mock);
+          mock.limit = vi.fn(() => mock);
+          mock.then = vi.fn((resolve) => {
+            return Promise.resolve({ data: null, error: new Error('Database error') }).then(resolve);
+          });
+          return mock;
+        })
       };
       
       const logs = await getActionLogs(errorClient as any, 50);
@@ -322,12 +360,16 @@ describe('Action Logging Integration', () => {
 
     it('should handle empty usage data', async () => {
       const emptyClient = {
-        from: vi.fn(() => ({
-          select: vi.fn().mockReturnThis(),
-          gte: vi.fn().mockReturnThis(),
-          lte: vi.fn().mockReturnThis(),
-          then: vi.fn().mockResolvedValue({ data: [], error: null })
-        }))
+        from: vi.fn(() => {
+          const mock: any = {};
+          mock.select = vi.fn(() => mock);
+          mock.gte = vi.fn(() => mock);
+          mock.lte = vi.fn(() => mock);
+          mock.then = vi.fn((resolve) => {
+            return Promise.resolve({ data: [], error: null }).then(resolve);
+          });
+          return mock;
+        })
       };
       
       const stats = await getApiUsageStats(emptyClient as any, 'day');
@@ -342,12 +384,16 @@ describe('Action Logging Integration', () => {
 
     it('should handle usage stats errors', async () => {
       const errorClient = {
-        from: vi.fn(() => ({
-          select: vi.fn().mockReturnThis(),
-          gte: vi.fn().mockReturnThis(),
-          lte: vi.fn().mockReturnThis(),
-          then: vi.fn().mockResolvedValue({ data: null, error: new Error('Database error') })
-        }))
+        from: vi.fn(() => {
+          const mock: any = {};
+          mock.select = vi.fn(() => mock);
+          mock.gte = vi.fn(() => mock);
+          mock.lte = vi.fn(() => mock);
+          mock.then = vi.fn((resolve) => {
+            return Promise.resolve({ data: null, error: new Error('Database error') }).then(resolve);
+          });
+          return mock;
+        })
       };
       
       const stats = await getApiUsageStats(errorClient as any, 'day');

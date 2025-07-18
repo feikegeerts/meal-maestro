@@ -29,20 +29,47 @@ const mockRecipes: Recipe[] = [
 ];
 
 const mockSupabaseClient = {
-  from: vi.fn(() => ({
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    contains: vi.fn().mockReturnThis(),
-    overlaps: vi.fn().mockReturnThis(),
-    or: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue({ data: mockRecipes[0], error: null }),
-    then: vi.fn().mockResolvedValue({ data: mockRecipes, error: null })
-  }))
+  from: vi.fn((table: string) => {
+    const data = mockRecipes;
+    const error = null;
+    // Helper to create a fully chainable mock object
+    function createChainMock(finalResult: any = { data, error }) {
+      const chainMock: any = {};
+      chainMock.select = vi.fn(() => chainMock);
+      chainMock.insert = vi.fn((insertData) => {
+        // If adding a new recipe, return a chainable mock with the new recipe data
+        if (table === 'recipes' && insertData && Array.isArray(insertData) && insertData[0]?.title === 'New Recipe') {
+          const newRecipe = { ...insertData[0], id: '3', created_at: '2024-01-03T00:00:00Z', updated_at: '2024-01-03T00:00:00Z' };
+          return createChainMock({ data: [newRecipe], error: null });
+        } else {
+          return createChainMock(finalResult);
+        }
+      });
+      chainMock.update = vi.fn(() => chainMock);
+      chainMock.delete = vi.fn(() => {
+        return createChainMock({ error: null });
+      });
+      // All query filter methods should return chainMock for chaining
+      chainMock.eq = vi.fn(() => chainMock);
+      chainMock.contains = vi.fn(() => chainMock);
+      chainMock.overlaps = vi.fn(() => chainMock);
+      chainMock.or = vi.fn(() => chainMock);
+      chainMock.order = vi.fn(() => chainMock);
+      chainMock.limit = vi.fn(() => chainMock);
+      chainMock.single = vi.fn(() => {
+        // For single queries, return data directly not in array
+        if (table === 'recipes' && finalResult.data && Array.isArray(finalResult.data) && finalResult.data.length > 0) {
+          return { data: finalResult.data[0], error: null };
+        }
+        return { data: mockRecipes[0], error: null };
+      });
+      chainMock.then = vi.fn((resolve) => {
+        return Promise.resolve(finalResult).then(resolve);
+      });
+      return chainMock;
+    }
+    return createChainMock();
+  })
 };
 
 // Mock action logger
