@@ -3,7 +3,8 @@
     "allow": [
       "Bash(curl:*)",
       "Bash(mkdir:*)",
-      "Bash(yarn check)"
+      "Bash(yarn check)",
+      "Bash(yarn test:run:*)"
     ],
     "deny": []
   }

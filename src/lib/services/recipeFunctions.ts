@@ -432,10 +432,10 @@ export function formatFunctionResult(functionName: string, result: any): string 
         return 'No recipes found matching your criteria.';
       }
       if (result.recipes.length === 1) {
-        return `Found 1 recipe: ${result.recipes[0].title} (${result.recipes[0].category})`;
+        return `Found 1 recipe: ${result.recipes[0].title} (${result.recipes[0].category}) with ID: ${result.recipes[0].id}`;
       }
       return `Found ${result.total} recipes. Here's an overview:\n${result.recipes
-        .map((recipe: Recipe, index: number) => `${index + 1}. ${recipe.title} (${recipe.category})`)
+        .map((recipe: Recipe, index: number) => `${index + 1}. ${recipe.title} (${recipe.category}) - ID: ${recipe.id}`)
         .join('\n')}\n\nWhich recipe would you like to see the full details for? Please specify by number or name.`;
     
     case 'add_recipe':
