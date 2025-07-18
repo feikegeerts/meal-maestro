@@ -163,10 +163,6 @@
     .display-content {
       padding: 0.75rem;
     }
-    
-    .recipe-container {
-      /* No special mobile styling needed for single recipe */
-    }
   }
 
   @media (max-width: 480px) {
