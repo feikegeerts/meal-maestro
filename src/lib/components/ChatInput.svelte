@@ -1,10 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import type { Recipe } from '$lib/types.js';
   
   export let isProcessing = false;
   export let conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [];
   export let onNewMessage: (message: string) => void = () => {};
   export let onError: (error: string) => void = () => {};
+  export let onRecipesFound: (recipes: Recipe[]) => void = () => {};
 
   let currentMessage = '';
   let chatContainer: HTMLDivElement;
@@ -47,6 +49,32 @@
 
       // Update conversation history
       conversationHistory = data.conversation_history || [];
+      
+      // If the response contains recipe data, extract and pass to parent
+      if (data.function_calls && data.function_calls.length > 0) {
+        const recipes: Recipe[] = [];
+        
+        // Extract recipes from function call results
+        for (const functionCall of data.function_calls) {
+          if (functionCall.function === 'search_recipes' && functionCall.result?.recipes) {
+            // Only show recipe if there's exactly one result
+            if (functionCall.result.recipes.length === 1) {
+              recipes.push(functionCall.result.recipes[0]);
+            }
+          } else if (functionCall.function === 'get_recipe_details' && functionCall.result?.recipe) {
+            recipes.push(functionCall.result.recipe);
+          } else if (functionCall.function === 'add_recipe' && functionCall.result?.recipe) {
+            recipes.push(functionCall.result.recipe);
+          } else if (functionCall.function === 'update_recipe' && functionCall.result?.recipe) {
+            recipes.push(functionCall.result.recipe);
+          }
+        }
+        
+        // Pass recipes to parent component
+        if (recipes.length > 0) {
+          onRecipesFound(recipes);
+        }
+      }
       
       // Notify parent component about new message
       onNewMessage(message);
