@@ -4,25 +4,27 @@ import type { RequestEvent } from '@sveltejs/kit';
 
 // Mock Supabase client
 const mockSupabaseClient = {
-  from: vi.fn(() => ({
-    select: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    then: vi.fn().mockResolvedValue({ 
-      data: [
-        {
-          id: '1',
-          action_type: 'create',
-          recipe_id: '1',
-          description: 'Created recipe: Test Recipe',
-          details: { newData: { title: 'Test Recipe' } },
-          timestamp: '2024-01-01T00:00:00Z'
-        }
-      ], 
-      error: null 
-    })
-  }))
+  from: vi.fn(() => {
+    const data = [
+      {
+        id: '1',
+        action_type: 'create',
+        recipe_id: '1',
+        description: 'Created recipe: Test Recipe',
+        details: { newData: { title: 'Test Recipe' } },
+        timestamp: '2024-01-01T00:00:00Z'
+      }
+    ];
+    const error = null;
+    const mock: any = {};
+    mock.select = vi.fn(() => mock);
+    mock.order = vi.fn(() => mock);
+    mock.limit = vi.fn(() => ({ data, error }));
+    mock.eq = vi.fn(() => mock);
+    // If you use .then() in your code, you can add:
+    mock.then = vi.fn(() => Promise.resolve({ data, error }));
+    return mock;
+  })
 };
 
 vi.mock('@supabase/supabase-js', () => ({
