@@ -41,6 +41,17 @@ IMPORTANT GUIDELINES:
 6. Provide clear, formatted responses about recipes
 7. If you need more information to complete a task, ask clarifying questions
 
+CRITICAL: FUNCTION CHAINING FOR OPERATIONS:
+- You can call multiple functions in sequence to complete complex tasks
+- When a user asks to delete, update, or mark a recipe as eaten BY NAME, you should:
+  1. FIRST search for the recipe using search_recipes
+  2. If found, SHOW the recipe details and ASK FOR CONFIRMATION before destructive actions
+  3. ONLY proceed with delete/update after explicit user confirmation
+- For example: "delete chocolate cake" → search_recipes → show found recipe → ask "Are you sure you want to delete this recipe?" → wait for confirmation → delete_recipe
+- Do NOT ask the user for recipe IDs - search for them automatically
+- ALWAYS confirm before deleting recipes - this is a destructive action that cannot be undone
+- Only ask for clarification if multiple recipes match and you need to disambiguate
+
 CRITICAL: SINGLE RECIPE DISPLAY RULE:
 - The user interface can only display ONE recipe at a time
 - When a search returns multiple recipes, you MUST ask clarifying questions to help the user narrow down to exactly one recipe
@@ -103,13 +114,17 @@ export const POST: RequestHandler = async ({ request }) => {
     let functionResults: any[] = [];
     let updatedMessages = [...messages];
 
-    // Handle function calls
-    if (choice.message.tool_calls) {
+    // Handle function calls iteratively
+    let currentCompletion = completion;
+    let currentChoice = choice;
+    
+    // Continue processing function calls until no more are needed
+    while (currentChoice.message.tool_calls) {
       // Add the assistant's message with function calls
-      updatedMessages.push(choice.message);
+      updatedMessages.push(currentChoice.message);
 
       // Process each function call
-      for (const toolCall of choice.message.tool_calls) {
+      for (const toolCall of currentChoice.message.tool_calls) {
         if (toolCall.type === 'function') {
           try {
             const functionName = toolCall.function.name;
@@ -140,23 +155,30 @@ export const POST: RequestHandler = async ({ request }) => {
         }
       }
 
-      // Get final response after function calls
-      const { completion: finalCompletion, usage: finalUsage } = await createChatCompletion(
+      // Get next response after function calls
+      const { completion: nextCompletion, usage: nextUsage } = await createChatCompletion(
         updatedMessages,
         recipeTools
       );
 
-      finalResponse = finalCompletion.choices[0]?.message?.content || 'I apologize, but I encountered an issue processing your request.';
+      currentCompletion = nextCompletion;
+      currentChoice = nextCompletion.choices[0];
       
       // Combine usage statistics
-      usage.tokens.prompt_tokens += finalUsage.tokens.prompt_tokens;
-      usage.tokens.completion_tokens += finalUsage.tokens.completion_tokens;
-      usage.tokens.total_tokens += finalUsage.tokens.total_tokens;
-      usage.cost_usd += finalUsage.cost_usd;
-    } else {
-      // No function calls, use the direct response
-      finalResponse = choice.message.content || 'I apologize, but I encountered an issue processing your request.';
+      usage.tokens.prompt_tokens += nextUsage.tokens.prompt_tokens;
+      usage.tokens.completion_tokens += nextUsage.tokens.completion_tokens;
+      usage.tokens.total_tokens += nextUsage.tokens.total_tokens;
+      usage.cost_usd += nextUsage.cost_usd;
+      
+      // Safety check to prevent infinite loops
+      if (functionResults.length > 20) {
+        console.warn('Function call limit reached to prevent infinite loops');
+        break;
+      }
     }
+
+    // Get final response
+    finalResponse = currentChoice?.message?.content || 'I apologize, but I encountered an issue processing your request.';
 
     // Log API usage to database
     await logApiUsage(supabase, 'chat', usage.tokens.total_tokens, usage.cost_usd);
@@ -189,7 +211,7 @@ export const POST: RequestHandler = async ({ request }) => {
     
     // Handle specific error types
     if (error instanceof Error) {
-      if (error.message.includes('rate limit')) {
+      if (error.message.toLowerCase().includes('rate limit')) {
         return json({ 
           error: 'Rate limit exceeded', 
           details: 'Please wait a moment before making another request' 
