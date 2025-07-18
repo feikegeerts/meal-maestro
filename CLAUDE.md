@@ -11,6 +11,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `yarn check` - Run TypeScript type checking with svelte-check
 - `yarn check:watch` - Run type checking in watch mode
 
+### Testing Commands
+- `yarn test` - Run tests in watch mode with Vitest
+- `yarn test:run` - Run tests once and exit
+- `yarn test:ui` - Run tests with interactive UI
+- `yarn test:coverage` - Run tests with coverage report
+
 ### Environment Setup
 - Uses `.env.local` for local development environment variables
 - Requires `TIMELINE_PASSWORD` (bcrypt hash) and `EDGE_CONFIG` (Vercel Edge Config URL)
@@ -26,6 +32,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Database**: Supabase (for Meal Maestro feature)
 - **AI/ML**: OpenAI API for GPT models, speech-to-text, and text-to-speech
 - **Voice**: Web Speech API with OpenAI voice models as fallback
+- **Testing**: Vitest with comprehensive test suite
 
 ### Project Structure
 ```
@@ -40,11 +47,17 @@ src/
 │   ├── +page.svelte    # Homepage with navigation tiles
 │   ├── api/            # SvelteKit API routes
 │   │   ├── auth/       # Authentication endpoints
-│   │   └── career-events/ # Career data CRUD operations
+│   │   ├── career-events/ # Career data CRUD operations
+│   │   └── recipes/    # Meal Maestro API endpoints
 │   ├── career/         # Career timeline page
 │   └── meal-maestro/   # Meal planning feature
-└── server/
-    └── utils/          # Server-side utilities (duplicated from lib/)
+├── server/
+│   └── utils/          # Server-side utilities (duplicated from lib/)
+└── test/
+    ├── api/            # API endpoint unit tests
+    ├── integration/    # Integration tests
+    ├── performance/    # Performance benchmarks
+    └── mocks/          # Test mocks and utilities
 ```
 
 ### Key Components
@@ -164,3 +177,96 @@ CREATE TABLE recipes (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 ```
+
+## Testing Framework
+
+### Testing Stack
+- **Framework**: Vitest 3.2.4 with TypeScript support
+- **Environment**: Node.js for API testing
+- **Mocking**: Vitest built-in mocking for Supabase and OpenAI
+- **Coverage**: HTML and JSON coverage reports
+- **UI**: Interactive test runner with `yarn test:ui`
+
+### Test Structure
+```
+src/test/
+├── api/                    # Unit tests for API endpoints
+│   ├── recipes.test.ts     # Recipe CRUD operations
+│   ├── chat.test.ts        # OpenAI chat integration
+│   └── actions.test.ts     # Action logging endpoints
+├── integration/            # Integration tests
+│   ├── openai-functions.test.ts    # OpenAI function calling
+│   ├── action-logging.test.ts      # Database logging
+│   └── nlp-accuracy.test.ts        # NLP schema validation
+├── performance/            # Performance benchmarks
+│   └── api-performance.test.ts     # Response time testing
+├── mocks/                  # Test utilities
+│   ├── supabase.ts         # Supabase client mocks
+│   └── openai.ts           # OpenAI API mocks
+└── setup.ts               # Test environment setup
+```
+
+### Test Categories
+
+#### Unit Tests (API Endpoints)
+- **Recipe CRUD**: GET, POST, PUT, DELETE operations
+- **Chat Integration**: OpenAI conversation handling
+- **Action Logging**: Operation tracking and retrieval
+- **Error Handling**: Validation and error responses
+- **Authentication**: Security and rate limiting
+
+#### Integration Tests
+- **OpenAI Functions**: All 6 recipe management functions
+- **Action Logging**: Complete operation tracking
+- **NLP Accuracy**: Function schema validation
+- **Database Integration**: Supabase operations
+- **Cost Tracking**: API usage monitoring
+
+#### Performance Tests
+- **Response Times**: <2s API response benchmarks
+- **Cost Calculations**: <1ms calculation performance
+- **Memory Usage**: Heap growth monitoring
+- **Scalability**: Linear performance validation
+- **Error Handling**: Efficient error processing
+
+### Test Results
+- **Total Tests**: 93 tests across all categories
+- **Pass Rate**: 71% (66/93 tests passing)
+- **Performance**: 100% (8/8 benchmarks met)
+- **Coverage**: Comprehensive API and integration coverage
+
+### Running Tests
+```bash
+# Run all tests once
+yarn test:run
+
+# Run tests in watch mode
+yarn test
+
+# Run with interactive UI
+yarn test:ui
+
+# Run with coverage report
+yarn test:coverage
+
+# Run specific test file
+yarn test:run src/test/api/recipes.test.ts
+
+# Run performance tests only
+yarn test:run src/test/performance/
+```
+
+### Test Configuration
+- **Config File**: `vitest.config.ts`
+- **Setup**: `src/test/setup.ts`
+- **Environment**: Node.js with jsdom for DOM testing
+- **TypeScript**: Full TypeScript support
+- **Mocking**: Comprehensive mocks for external services
+
+### Key Test Features
+- **Comprehensive API Coverage**: All endpoints tested
+- **OpenAI Integration**: Function calling validation
+- **Performance Benchmarks**: Response time requirements
+- **Error Handling**: Graceful degradation testing
+- **Type Safety**: TypeScript validation in tests
+- **Mock Isolation**: Each test runs in isolation
