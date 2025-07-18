@@ -2,16 +2,32 @@
   import { onMount } from 'svelte';
   import ChatInput from '$lib/components/ChatInput.svelte';
   import ActionLogs from '$lib/components/ActionLogs.svelte';
+  import RecipeDisplay from '$lib/components/RecipeDisplay.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
+  import type { Recipe } from '$lib/types.js';
   
   let conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [];
   let isProcessing = false;
   let error = '';
   let actionLogs: any[] = [];
+  let displayedRecipe: Recipe | null = null;
+  let recipeDisplayTitle = 'Recipe';
 
   function handleNewMessage(message: string) {
     // Message handling is done in ChatInput component
     // This is just for any additional logic needed
+  }
+  
+  function handleRecipesFound(recipes: Recipe[]) {
+    // Only display the first recipe if multiple are found
+    // The AI should handle asking clarifying questions for multiple results
+    if (recipes.length > 0) {
+      displayedRecipe = recipes[0];
+      recipeDisplayTitle = 'Recipe';
+    } else {
+      displayedRecipe = null;
+      recipeDisplayTitle = 'Recipe';
+    }
   }
 
   function handleError(errorMessage: string) {
@@ -44,17 +60,30 @@
   {/if}
 
   <div class="container">
-    <ChatInput 
-      bind:conversationHistory
-      bind:isProcessing
-      onNewMessage={handleNewMessage}
-      onError={handleError}
-    />
+    <div class="chat-section">
+      <ChatInput 
+        bind:conversationHistory
+        bind:isProcessing
+        onNewMessage={handleNewMessage}
+        onError={handleError}
+        onRecipesFound={handleRecipesFound}
+      />
+    </div>
     
-    <ActionLogs 
-      bind:actionLogs
-      on:clearLogs={clearLogs}
-    />
+    <div class="recipe-section">
+      <RecipeDisplay 
+        bind:recipe={displayedRecipe}
+        isLoading={isProcessing}
+        title={recipeDisplayTitle}
+      />
+    </div>
+    
+    <div class="logs-section">
+      <ActionLogs 
+        bind:actionLogs
+        on:clearLogs={clearLogs}
+      />
+    </div>
   </div>
 </main>
 
@@ -114,8 +143,24 @@
   .container {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
     gap: 2rem;
     align-items: start;
+  }
+  
+  .chat-section {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  
+  .recipe-section {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+  
+  .logs-section {
+    grid-column: 1;
+    grid-row: 2;
   }
 
   /* Animations */
@@ -134,7 +179,23 @@
   @media (max-width: 768px) {
     .container {
       grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
       gap: 1.5rem;
+    }
+    
+    .chat-section {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    
+    .recipe-section {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    
+    .logs-section {
+      grid-column: 1;
+      grid-row: 3;
     }
   }
 
