@@ -12,13 +12,27 @@
   let chatContainer: HTMLDivElement;
   let messageInput: HTMLInputElement;
 
-  // Auto-scroll to bottom when new messages are added
-  $: if (conversationHistory.length > 0) {
+  let shouldAutoScroll = true;
+  let previousHistoryLength = 0;
+
+  // Check if user is near bottom before auto-scrolling
+  function checkScrollPosition() {
+    if (!chatContainer) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatContainer;
+    const isNearBottom = scrollTop + clientHeight >= scrollHeight - 50;
+    shouldAutoScroll = isNearBottom;
+  }
+
+  // Auto-scroll to bottom only when new messages are added and user is near bottom
+  $: if (conversationHistory.length > previousHistoryLength && shouldAutoScroll) {
     setTimeout(() => {
       if (chatContainer) {
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
     }, 100);
+    previousHistoryLength = conversationHistory.length;
+  } else if (conversationHistory.length !== previousHistoryLength) {
+    previousHistoryLength = conversationHistory.length;
   }
 
   async function sendMessage() {
@@ -115,7 +129,7 @@
   </div>
 
   <!-- Conversation Display -->
-  <div class="conversation" bind:this={chatContainer}>
+  <div class="conversation" bind:this={chatContainer} on:scroll={checkScrollPosition}>
     {#if conversationHistory.length === 0}
       <div class="welcome-message">
         <div class="welcome-icon">🍽️</div>

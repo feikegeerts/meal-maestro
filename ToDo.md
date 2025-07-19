@@ -93,8 +93,8 @@ An AI-powered recipe management system integrated into the Career Timeline appli
 - [x] **3.6** Set up environment variables in Vercel
 - [x] **3.7** Deploy MVP to production environment
 - [x] **3.8** Monitor and fix any deployment issues
-- [ ] **3.9** Investigate why tests are still failing
-- [ ] **3.10** Fix failing tests
+- [x] **3.9** Investigate why tests are still failing
+- [x] **3.10** Fix failing tests
 
 ### Phase 4: Post-MVP Enhancements
 
@@ -288,56 +288,6 @@ const functions = [
   },
 ];
 ```
-
-### Environment Variables
-
-```env
-# OpenAI Configuration
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4
-OPENAI_MAX_TOKENS=1000
-OPENAI_TEMPERATURE=0.7
-
-# Supabase Configuration
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_KEY=eyJ...
-
-# Cost Management
-OPENAI_DAILY_BUDGET=10.00
-USAGE_ALERT_THRESHOLD=0.80
-```
-
-## MVP Testing Strategy
-
-### Unit Tests
-
-- API endpoint functionality
-- Database operations and queries
-- OpenAI function calling logic
-- Error handling and edge cases
-
-### Integration Tests
-
-- End-to-end conversation flows
-- Database transaction integrity
-- OpenAI API integration
-- Cost tracking accuracy
-
-### API Testing
-
-- Postman/cURL testing for all endpoints
-- Natural language processing accuracy
-- Action logging completeness
-- Performance under load
-
-## MVP Success Metrics
-
-- All API endpoints functional with <2s response time
-- Natural language processing accuracy >85%
-- Zero data loss in action logging
-- Daily OpenAI costs under budget
-- 99% uptime for API endpoints
 
 ## Post-MVP Roadmap
 
