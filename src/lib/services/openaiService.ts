@@ -10,7 +10,7 @@ if (dev) {
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-nano';
 const OPENAI_MAX_TOKENS = parseInt(process.env.OPENAI_MAX_TOKENS || '1000', 10);
-const OPENAI_TEMPERATURE = parseFloat(process.env.OPENAI_TEMPERATURE || '0.7');
+const OPENAI_TEMPERATURE = parseFloat(process.env.OPENAI_TEMPERATURE || '0.6');
 
 if (!OPENAI_API_KEY) {
   console.error('Missing OPENAI_API_KEY environment variable. Please set it in your .env.local file.');
@@ -76,7 +76,7 @@ class UsageTracker {
   private requests: number = 0;
   private lastReset: number = Date.now();
   private readonly maxRequestsPerMinute: number = 60;
-  private readonly maxDailyCost: number = parseFloat(process.env.OPENAI_DAILY_BUDGET || '10.00');
+  private readonly maxDailyCost: number = parseFloat(process.env.OPENAI_DAILY_BUDGET || '1.00');
   
   private dailyCost: number = 0;
   private lastDailyCostReset: number = Date.now();
