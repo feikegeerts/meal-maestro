@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-An AI-powered recipe management system integrated into the Career Timeline application. The system provides natural language recipe management through OpenAI integration with a focus on delivering core functionality through an MVP approach.
+An AI-powered recipe management system. The system provides natural language recipe management through OpenAI integration with a focus on delivering core functionality through an MVP approach.
 
 ## MVP Definition
 
