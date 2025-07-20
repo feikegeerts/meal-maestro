@@ -109,6 +109,7 @@ An AI-powered recipe management system. The system provides natural language rec
 
 ### Phase 5: Post-MVP Enhancements
 
+- [ ] Review duplicate Supabase keys and URLs in `.env.local` (lines 3-9). Ensure only necessary values are present and remove any redundant entries.
 - [ ] **5.0** Implement edit functionality in the detail view for the user to edit the description or tags, or category and so on.
 - [ ] **5.0** Implement languages Dutch and English
 - [ ] **5.1** Add user authentication integration
