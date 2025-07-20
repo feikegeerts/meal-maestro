@@ -1,26 +1,20 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dev } from '$app/environment';
-import * as dotenv from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
+import { requireAuth } from '$lib/services/auth.js';
 import type { Recipe } from '$lib/types.js';
 
-if (dev) {
-  dotenv.config({ path: '.env.local' });
-}
 
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-  console.error('Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables. Please set them in your .env.local file.');
-}
-
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_ANON_KEY || ''
-);
-
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async (event) => {
+  // Require authentication
+  const authResult = await requireAuth(event);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+  
+  const { user, client: supabase } = authResult;
+  const { params } = event;
+  
   try {
-
     const { id } = params;
 
     if (!id) {
@@ -31,6 +25,7 @@ export const GET: RequestHandler = async ({ params }) => {
       .from('recipes')
       .select('*')
       .eq('id', id)
+      .eq('user_id', user.id)
       .single();
 
     if (error) {
@@ -45,7 +40,16 @@ export const GET: RequestHandler = async ({ params }) => {
   }
 };
 
-export const PUT: RequestHandler = async ({ request, params }) => {
+export const PUT: RequestHandler = async (event) => {
+  // Require authentication
+  const authResult = await requireAuth(event);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+  
+  const { user, client: supabase } = authResult;
+  const { params, request } = event;
+  
   try {
     const { id } = params;
     const requestData = await request.json();
@@ -65,17 +69,23 @@ export const PUT: RequestHandler = async ({ request, params }) => {
     if (season) updateData.season = season;
     if (last_eaten) updateData.last_eaten = last_eaten;
 
-    // Get original recipe data for logging
+    // Get original recipe data and verify ownership
     const { data: originalRecipe } = await supabase
       .from('recipes')
       .select('*')
       .eq('id', id)
+      .eq('user_id', user.id)
       .single();
+    
+    if (!originalRecipe) {
+      return json({ error: 'Recipe not found or access denied' }, { status: 404 });
+    }
 
     const { data: recipe, error } = await supabase
       .from('recipes')
       .update(updateData)
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single();
 
@@ -91,7 +101,16 @@ export const PUT: RequestHandler = async ({ request, params }) => {
   }
 };
 
-export const DELETE: RequestHandler = async ({ request, params }) => {
+export const DELETE: RequestHandler = async (event) => {
+  // Require authentication
+  const authResult = await requireAuth(event);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+  
+  const { user, client: supabase } = authResult;
+  const { params } = event;
+  
   try {
     const { id } = params;
 
@@ -100,11 +119,12 @@ export const DELETE: RequestHandler = async ({ request, params }) => {
       return json({ error: 'Recipe ID is required' }, { status: 400 });
     }
 
-    // Get recipe data before deletion for logging
+    // Get recipe data before deletion and verify ownership
     const { data: recipeToDelete, error: fetchError } = await supabase
       .from('recipes')
       .select('*')
       .eq('id', id)
+      .eq('user_id', user.id)
       .single();
 
     if (fetchError) {
@@ -115,7 +135,8 @@ export const DELETE: RequestHandler = async ({ request, params }) => {
     const { error } = await supabase
       .from('recipes')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', user.id);
 
     if (error) {
       console.error('Error deleting recipe:', error);

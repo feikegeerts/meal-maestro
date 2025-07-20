@@ -108,7 +108,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Frontend**: SvelteKit with TypeScript
 - **Deployment**: Vercel with Edge Config for data storage
-- **Authentication**: Custom bcrypt-based auth with session cookies and CSRF protection
 - **Styling**: Component-scoped CSS with theme support
 - **Database**: Supabase (for Meal Maestro feature)
 - **AI/ML**: OpenAI API for GPT models, speech-to-text, and text-to-speech
@@ -134,15 +133,9 @@ src/
 
 - **TimelineView.svelte**: Main career timeline visualization
 - **ThemeToggle.svelte**: Light/dark theme switching with localStorage persistence
-- **LoginForm.svelte**: Authentication form with client-side validation
+
 - **ActionLogs.svelte**: Admin interface for data management
 - **VoiceInput.svelte**: Voice-to-text input capability
-
-### Authentication System
-
-- Password-based authentication using bcrypt hashing
-- No traditional database - leverages Vercel's edge infrastructure
-- Career events stored as JSON objects with id, title, company, period, description
 
 ### Theme System
 
@@ -152,14 +145,6 @@ src/
 - Theme preference persists across sessions
 
 ## Common Patterns
-
-### API Route Structure
-
-All API routes follow this pattern:
-
-- GET requests: Authentication check → Data retrieval
-- POST/PUT/DELETE: Authentication check → CSRF validation → Data operation
-- Consistent error handling with appropriate HTTP status codes
 
 ### Component Architecture
 
@@ -225,7 +210,6 @@ Each recipe contains the following fields:
 - **Voice Input**: Speech-to-text using OpenAI's voice API or Web Speech API
 - **Voice Output**: Text-to-speech responses using OpenAI's TTS model
 - **Natural Language Interface**: GPT-powered conversation for recipe queries and updates
-- **Action Logging**: Real-time display of all database operations performed by the LLM
 - **Recipe Management**: Add, update, search, and filter recipes through conversation
 
 ### Components
@@ -294,14 +278,12 @@ src/test/
 
 - **Recipe CRUD**: GET, POST, PUT, DELETE operations
 - **Chat Integration**: OpenAI conversation handling
-- **Action Logging**: Operation tracking and retrieval
 - **Error Handling**: Validation and error responses
 - **Authentication**: Security and rate limiting
 
 #### Integration Tests
 
 - **OpenAI Functions**: All 6 recipe management functions
-- **Action Logging**: Complete operation tracking
 - **NLP Accuracy**: Function schema validation
 - **Database Integration**: Supabase operations
 - **Cost Tracking**: API usage monitoring

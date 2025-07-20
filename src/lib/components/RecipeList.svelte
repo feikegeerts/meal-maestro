@@ -41,7 +41,9 @@
       recipeStore.setLoading(true);
       error = '';
       
-      const response = await fetch('/api/recipes');
+      const response = await fetch('/api/recipes', {
+        credentials: 'include' // Include cookies for authentication
+      });
       const data = await response.json();
       
       if (!response.ok) {
@@ -111,6 +113,7 @@
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify({
           id: recipe.id,
           last_eaten: new Date().toISOString()
@@ -161,6 +164,7 @@
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify({ id: recipe.id })
       });
       

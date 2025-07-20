@@ -1,25 +1,11 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dev } from '$app/environment';
-import * as dotenv from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
+import { requireAuth } from '$lib/services/auth.js';
 import { createChatCompletion, validateOpenAIConfig, usageTracker } from '$lib/services/openaiService.js';
 import { recipeTools, RecipeFunctionHandler, formatFunctionResult } from '$lib/services/recipeFunctions.js';
 import { logApiUsage } from '$lib/services/actionLogger.js';
 import type { OpenAI } from 'openai';
 
-if (dev) {
-  dotenv.config({ path: '.env.local' });
-}
-
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-  console.error('Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables. Please set them in your .env.local file.');
-}
-
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_ANON_KEY || ''
-);
 
 // System prompt for the AI assistant
 const SYSTEM_PROMPT = `You are Meal Maestro, an AI-powered recipe assistant. You help users manage their recipe collection through natural language conversations.
@@ -76,7 +62,15 @@ interface ChatRequest {
   };
 }
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async (event) => {
+  // Require authentication
+  const authResult = await requireAuth(event);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+  
+  const { user, client: supabase } = authResult;
+  
   try {
     // Validate OpenAI configuration
     const configValidation = validateOpenAIConfig();
@@ -87,7 +81,7 @@ export const POST: RequestHandler = async ({ request }) => {
       }, { status: 500 });
     }
 
-    const requestData = await request.json() as ChatRequest;
+    const requestData = await event.request.json() as ChatRequest;
     const { message, conversation_history = [], context } = requestData;
 
     if (!message || typeof message !== 'string') {
@@ -125,8 +119,8 @@ export const POST: RequestHandler = async ({ request }) => {
       { role: 'user', content: message }
     ];
 
-    // Initialize the recipe function handler
-    const functionHandler = new RecipeFunctionHandler(supabase);
+    // Initialize the recipe function handler with user context
+    const functionHandler = new RecipeFunctionHandler(supabase, user.id);
 
     // Create the initial chat completion
     const { completion, usage } = await createChatCompletion(messages, recipeTools);
