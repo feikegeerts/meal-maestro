@@ -9,9 +9,12 @@
     toasts.success('Authentication', 'Successfully signed in!');
   }
   
-  function handleAuthError(event) {
+ /**
+  * @param {CustomEvent<{ message: string }>} event
+  */
+ function handleAuthError(event) {
     toasts.error('Authentication Error', event.detail.message);
-  }
+ }
   
   function handleSignOutSuccess() {
     toasts.success('Authentication', 'Successfully signed out!');
