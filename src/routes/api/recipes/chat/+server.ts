@@ -62,6 +62,18 @@ interface ChatMessage {
 interface ChatRequest {
   message: string;
   conversation_history?: ChatMessage[];
+  context?: {
+    current_tab?: string;
+    selected_recipe?: {
+      id: string;
+      title: string;
+      category: string;
+      season?: string;
+      tags: string[];
+      ingredients: string[];
+      description: string;
+    };
+  };
 }
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -76,15 +88,36 @@ export const POST: RequestHandler = async ({ request }) => {
     }
 
     const requestData = await request.json() as ChatRequest;
-    const { message, conversation_history = [] } = requestData;
+    const { message, conversation_history = [], context } = requestData;
 
     if (!message || typeof message !== 'string') {
       return json({ error: 'Message is required and must be a string' }, { status: 400 });
     }
 
+    // Build the system prompt with context information
+    let systemPromptWithContext = SYSTEM_PROMPT;
+    
+    if (context) {
+      systemPromptWithContext += '\n\nCURRENT CONTEXT:';
+      
+      if (context.current_tab) {
+        systemPromptWithContext += `\n- User is currently on the "${context.current_tab}" tab`;
+      }
+      
+      if (context.selected_recipe) {
+        const recipe = context.selected_recipe;
+        systemPromptWithContext += `\n- User is looking at the recipe: "${recipe.title}"`;
+        systemPromptWithContext += `\n  - Category: ${recipe.category}`;
+        if (recipe.season) systemPromptWithContext += `\n  - Season: ${recipe.season}`;
+        systemPromptWithContext += `\n  - Tags: ${recipe.tags.join(', ')}`;
+        systemPromptWithContext += `\n  - Ingredients: ${recipe.ingredients.slice(0, 5).join(', ')}${recipe.ingredients.length > 5 ? '...' : ''}`;
+        systemPromptWithContext += `\n  - This means when they refer to "this recipe", "it", or ask about cooking instructions, they are likely referring to "${recipe.title}"`;
+      }
+    }
+
     // Build the conversation messages
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: systemPromptWithContext },
       ...conversation_history.map(msg => ({
         role: msg.role as 'user' | 'assistant',
         content: msg.content

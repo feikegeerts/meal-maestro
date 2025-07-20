@@ -96,6 +96,14 @@
     }
   }
   
+  function handleRecipeUpdated(updatedRecipe: Recipe) {
+    // If the updated recipe is currently displayed, update it
+    if (displayedRecipe && displayedRecipe.id === updatedRecipe.id) {
+      displayedRecipe = updatedRecipe;
+      recipeDisplayTitle = `Updated: ${updatedRecipe.title}`;
+    }
+  }
+
   function handleSearchResults(recipes: Recipe[], searchQuery: string) {
     // When multiple search results are found, show them in browse tab
     if (recipes.length > 1) {
@@ -125,6 +133,7 @@
   }
 
   function handleRecipeSelected(recipe: Recipe) {
+    // Display the recipe in details tab
     displayedRecipe = recipe;
     recipeDisplayTitle = recipe.title;
     hasDisplayedRecipe = true;
@@ -140,17 +149,11 @@
     hasDisplayedRecipe = true;
     activeTab = 'details';
     
-    // Add message to conversation history and trigger processing
-    const editMessage = `I want to edit "${recipe.title}". Please help me update it.`;
-    
-    // Add user message to history
-    conversationHistory = [
-      ...conversationHistory,
-      { role: 'user', content: editMessage }
-    ];
-    
-    // Trigger chat processing
-    triggerChatMessage(editMessage);
+    // Show a toast to guide the user on how to proceed
+    toasts.info(
+      'Recipe Ready to Edit', 
+      `"${recipe.title}" is now displayed. Use the chat below to specify what you'd like to edit (e.g., "add more garlic", "change cooking time", etc.)`
+    );
   }
 
   // Remove handleDeleteRecipe - now handled directly in RecipeList
@@ -183,6 +186,9 @@
         onError={handleError}
         onRecipesFound={handleRecipesFound}
         onSearchResults={handleSearchResults}
+        onRecipeUpdated={handleRecipeUpdated}
+        currentTab={activeTab}
+        selectedRecipe={displayedRecipe}
       />
     </div>
     

@@ -10,6 +10,11 @@
   export let onError: (error: string) => void = () => {};
   export let onRecipesFound: (recipes: Recipe[]) => void = () => {};
   export let onSearchResults: (recipes: Recipe[], searchQuery: string) => void = () => {};
+  export let onRecipeUpdated: (recipe: Recipe) => void = () => {};
+  
+  // Context props for LLM awareness
+  export let currentTab: string = 'browse';
+  export let selectedRecipe: Recipe | null = null;
 
   let currentMessage = '';
   let chatContainer: HTMLDivElement;
@@ -47,6 +52,24 @@
     try {
       isProcessing = true;
       
+      // Prepare context information for the LLM
+      const contextInfo: any = {
+        current_tab: currentTab
+      };
+      
+      // Include selected recipe context if recipe is displayed in details tab
+      if (currentTab === 'details' && selectedRecipe) {
+        contextInfo.selected_recipe = {
+          id: selectedRecipe.id,
+          title: selectedRecipe.title,
+          category: selectedRecipe.category,
+          season: selectedRecipe.season,
+          tags: selectedRecipe.tags,
+          ingredients: selectedRecipe.ingredients,
+          description: selectedRecipe.description
+        };
+      }
+
       const response = await fetch('/api/recipes/chat', {
         method: 'POST',
         headers: {
@@ -54,7 +77,8 @@
         },
         body: JSON.stringify({
           message,
-          conversation_history: conversationHistory
+          conversation_history: conversationHistory,
+          context: contextInfo
         })
       });
 
@@ -128,6 +152,9 @@
             // Update shared state
             recipeStore.updateRecipe(updatedRecipe);
             toasts.success(`Updated "${updatedRecipe.title}"`);
+            
+            // Notify parent component about the recipe update
+            onRecipeUpdated(updatedRecipe);
           } else if (functionCall.function === 'delete_recipe' && functionCall.result?.success) {
             // Handle deletion in shared state
             if (functionCall.arguments?.id) {
