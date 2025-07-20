@@ -1,27 +1,21 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { dev } from '$app/environment';
-import * as dotenv from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
+import { requireAuth } from '$lib/services/auth.js';
 import { validateRecipeInput, isValidCategory, isValidSeason, isValidTag } from '$lib/services/recipeFunctions.js';
 import { RECIPE_CATEGORIES, RECIPE_SEASONS, RECIPE_TAGS } from '$lib/types';
 
-if (dev) {
-  dotenv.config({ path: '.env.local' });
-}
 
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-  console.error('Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables. Please set them in your .env.local file.');
-}
-
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_ANON_KEY || ''
-);
-
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async (event) => {
+  // Require authentication
+  const authResult = await requireAuth(event);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+  
+  const { user, client: supabase } = authResult;
+  const { url } = event;
+  
   try {
-
     // Get query parameters for filtering
     const category = url.searchParams.get('category');
     const season = url.searchParams.get('season');
@@ -45,6 +39,7 @@ export const GET: RequestHandler = async ({ url }) => {
     let query = supabase
       .from('recipes')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     // Apply filters if provided
@@ -76,9 +71,17 @@ export const GET: RequestHandler = async ({ url }) => {
   }
 };
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async (event) => {
+  // Require authentication
+  const authResult = await requireAuth(event);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+  
+  const { user, client: supabase } = authResult;
+  
   try {
-    const requestData = await request.json();
+    const requestData = await event.request.json();
     const { title, ingredients, description, category, tags, season } = requestData;
 
     // Validate required fields
@@ -108,7 +111,8 @@ export const POST: RequestHandler = async ({ request }) => {
         description,
         category,
         tags: tags || [],
-        season
+        season,
+        user_id: user.id
       }])
       .select()
       .single();
@@ -125,9 +129,17 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 };
 
-export const PUT: RequestHandler = async ({ request }) => {
+export const PUT: RequestHandler = async (event) => {
+  // Require authentication
+  const authResult = await requireAuth(event);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+  
+  const { user, client: supabase } = authResult;
+  
   try {
-    const requestData = await request.json();
+    const requestData = await event.request.json();
     const { id, title, ingredients, description, category, tags, season, last_eaten } = requestData;
 
     // Validate required fields
@@ -160,17 +172,23 @@ export const PUT: RequestHandler = async ({ request }) => {
     if (season) updateData.season = season;
     if (last_eaten) updateData.last_eaten = last_eaten;
 
-    // Get original recipe data for logging
+    // Get original recipe data for logging and verify ownership
     const { data: originalRecipe } = await supabase
       .from('recipes')
       .select('*')
       .eq('id', id)
+      .eq('user_id', user.id)
       .single();
+    
+    if (!originalRecipe) {
+      return json({ error: 'Recipe not found or access denied' }, { status: 404 });
+    }
 
     const { data: recipe, error } = await supabase
       .from('recipes')
       .update(updateData)
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single();
 
@@ -186,9 +204,17 @@ export const PUT: RequestHandler = async ({ request }) => {
   }
 };
 
-export const DELETE: RequestHandler = async ({ request }) => {
+export const DELETE: RequestHandler = async (event) => {
+  // Require authentication
+  const authResult = await requireAuth(event);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+  
+  const { user, client: supabase } = authResult;
+  
   try {
-    const requestData = await request.json();
+    const requestData = await event.request.json();
     const { id } = requestData;
 
     // Validate required fields
@@ -196,11 +222,12 @@ export const DELETE: RequestHandler = async ({ request }) => {
       return json({ error: 'Recipe ID is required' }, { status: 400 });
     }
 
-    // Get recipe data before deletion for logging
+    // Get recipe data before deletion and verify ownership
     const { data: recipeToDelete, error: fetchError } = await supabase
       .from('recipes')
       .select('*')
       .eq('id', id)
+      .eq('user_id', user.id)
       .single();
 
     if (fetchError) {
@@ -211,7 +238,8 @@ export const DELETE: RequestHandler = async ({ request }) => {
     const { error } = await supabase
       .from('recipes')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', user.id);
 
     if (error) {
       console.error('Error deleting recipe:', error);

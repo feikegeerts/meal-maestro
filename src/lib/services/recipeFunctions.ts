@@ -211,7 +211,7 @@ export const recipeTools: OpenAI.Chat.Completions.ChatCompletionCreateParams['to
 
 // Function call handlers
 export class RecipeFunctionHandler {
-  constructor(private supabase: SupabaseClient) {}
+  constructor(private supabase: SupabaseClient, private userId?: string) {}
 
   async handleFunctionCall(functionName: string, args: any): Promise<any> {
     switch (functionName) {
@@ -246,6 +246,11 @@ export class RecipeFunctionHandler {
       .select('*')
       .order('created_at', { ascending: false })
       .limit(limit);
+
+    // Filter by user if provided
+    if (this.userId) {
+      supabaseQuery = supabaseQuery.eq('user_id', this.userId);
+    }
 
     // Apply filters
     if (category) {
@@ -300,16 +305,23 @@ export class RecipeFunctionHandler {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
 
+    const insertData: any = {
+      title,
+      ingredients,
+      description,
+      category,
+      tags: tags || [],
+      season
+    };
+
+    // Add user_id if provided
+    if (this.userId) {
+      insertData.user_id = this.userId;
+    }
+
     const { data: recipe, error } = await this.supabase
       .from('recipes')
-      .insert([{
-        title,
-        ingredients,
-        description,
-        category,
-        tags: tags || [],
-        season
-      }])
+      .insert([insertData])
       .select()
       .single();
 
@@ -333,11 +345,17 @@ export class RecipeFunctionHandler {
     const { id, ...updateData } = args;
 
     // Get original recipe data for validation and logging
-    const { data: originalRecipe } = await this.supabase
+    let originalRecipeQuery = this.supabase
       .from('recipes')
       .select('*')
-      .eq('id', id)
-      .single();
+      .eq('id', id);
+    
+    // Filter by user if provided
+    if (this.userId) {
+      originalRecipeQuery = originalRecipeQuery.eq('user_id', this.userId);
+    }
+    
+    const { data: originalRecipe } = await originalRecipeQuery.single();
 
     if (!originalRecipe) {
       throw new Error('Recipe not found');
@@ -367,10 +385,17 @@ export class RecipeFunctionHandler {
       }
     });
 
-    const { data: recipe, error } = await this.supabase
+    let updateQuery = this.supabase
       .from('recipes')
       .update(updateFields)
-      .eq('id', id)
+      .eq('id', id);
+    
+    // Filter by user if provided
+    if (this.userId) {
+      updateQuery = updateQuery.eq('user_id', this.userId);
+    }
+    
+    const { data: recipe, error } = await updateQuery
       .select()
       .single();
 
@@ -390,23 +415,36 @@ export class RecipeFunctionHandler {
     const eatenDate = date || new Date().toISOString();
 
     // Get original recipe data for logging
-    const { data: originalRecipe } = await this.supabase
+    let originalRecipeQuery = this.supabase
       .from('recipes')
       .select('*')
-      .eq('id', id)
-      .single();
+      .eq('id', id);
+    
+    // Filter by user if provided
+    if (this.userId) {
+      originalRecipeQuery = originalRecipeQuery.eq('user_id', this.userId);
+    }
+    
+    const { data: originalRecipe } = await originalRecipeQuery.single();
 
     if (!originalRecipe) {
       throw new Error('Recipe not found');
     }
 
-    const { data: recipe, error } = await this.supabase
+    let updateQuery = this.supabase
       .from('recipes')
       .update({ 
         last_eaten: eatenDate,
         updated_at: new Date().toISOString()
       })
-      .eq('id', id)
+      .eq('id', id);
+    
+    // Filter by user if provided
+    if (this.userId) {
+      updateQuery = updateQuery.eq('user_id', this.userId);
+    }
+    
+    const { data: recipe, error } = await updateQuery
       .select()
       .single();
 
@@ -424,21 +462,34 @@ export class RecipeFunctionHandler {
     const { id } = args;
 
     // Get recipe data before deletion for logging
-    const { data: recipeToDelete, error: fetchError } = await this.supabase
+    let fetchQuery = this.supabase
       .from('recipes')
       .select('*')
-      .eq('id', id)
-      .single();
+      .eq('id', id);
+    
+    // Filter by user if provided
+    if (this.userId) {
+      fetchQuery = fetchQuery.eq('user_id', this.userId);
+    }
+    
+    const { data: recipeToDelete, error: fetchError } = await fetchQuery.single();
 
     if (fetchError) {
       console.error('Error fetching recipe for deletion:', fetchError);
       throw new Error('Recipe not found');
     }
 
-    const { error } = await this.supabase
+    let deleteQuery = this.supabase
       .from('recipes')
       .delete()
       .eq('id', id);
+    
+    // Filter by user if provided
+    if (this.userId) {
+      deleteQuery = deleteQuery.eq('user_id', this.userId);
+    }
+    
+    const { error } = await deleteQuery;
 
     if (error) {
       console.error('Error deleting recipe:', error);
@@ -456,11 +507,17 @@ export class RecipeFunctionHandler {
   }): Promise<{ recipe: Recipe }> {
     const { id } = args;
 
-    const { data: recipe, error } = await this.supabase
+    let recipeQuery = this.supabase
       .from('recipes')
       .select('*')
-      .eq('id', id)
-      .single();
+      .eq('id', id);
+    
+    // Filter by user if provided
+    if (this.userId) {
+      recipeQuery = recipeQuery.eq('user_id', this.userId);
+    }
+    
+    const { data: recipe, error } = await recipeQuery.single();
 
     if (error) {
       console.error('Error fetching recipe:', error);

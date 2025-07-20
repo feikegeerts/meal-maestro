@@ -8,6 +8,8 @@
   import type { Recipe } from '$lib/types.js';
   import { recipeStore } from '$lib/stores/recipeStore.js';
   import { toasts } from '$lib/stores/toastStore.js';
+  import { isAuthenticated } from '$lib/stores/auth.js';
+  import LoginForm from '$lib/components/LoginForm.svelte';
   
   let conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [];
   let isProcessing = false;
@@ -38,6 +40,7 @@
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify({
           message: message.trim(),
           conversation_history: conversationHistory
@@ -161,6 +164,42 @@
   function switchTab(tab: TabType) {
     activeTab = tab;
   }
+  
+  function handleAuthSuccess() {
+    toasts.success('Welcome!', 'You can now start managing your recipes.');
+  }
+  
+  function handleAuthError(event: CustomEvent<{ message: string }>) {
+    toasts.error('Sign In Error', event.detail.message);
+  }
+  
+  // Check for auth errors in URL params
+  onMount(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const authError = urlParams.get('auth_error');
+    if (authError) {
+      let errorMessage = 'Authentication failed';
+      switch (authError) {
+        case 'callback_failed':
+          errorMessage = 'Authentication callback failed. Please try again.';
+          break;
+        case 'no_code':
+          errorMessage = 'No authorization code received from Google.';
+          break;
+        case 'true':
+          errorMessage = 'Authentication process failed. Please check your configuration.';
+          break;
+        case 'no_session':
+          errorMessage = 'Authentication completed but no session was created.';
+          break;
+        default:
+          errorMessage = `Authentication error: ${authError}`;
+      }
+      toasts.error('Authentication Failed', errorMessage);
+      // Clean up URL
+      window.history.replaceState({}, '', '/');
+    }
+  });
 </script>
 
 <main>
@@ -177,7 +216,8 @@
     </div>
   {/if}
 
-  <div class="container">
+  {#if $isAuthenticated}
+    <div class="container">
     <div class="chat-section">
       <ChatInput 
         bind:conversationHistory
@@ -231,7 +271,16 @@
         {/if}
       </div>
     </div>
-  </div>
+    </div>
+  {:else}
+    <!-- User not authenticated - show login form -->
+    <div class="auth-section">
+      <LoginForm 
+        on:success={handleAuthSuccess}
+        on:error={handleAuthError}
+      />
+    </div>
+  {/if}
 </main>
 
 <!-- Toast Container -->
@@ -288,6 +337,14 @@
 
   .error-close:hover {
     background: #fca5a5;
+  }
+
+  .auth-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    margin-top: 2rem;
   }
 
   .container {

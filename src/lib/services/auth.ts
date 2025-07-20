@@ -1,0 +1,135 @@
+import { supabase } from './supabaseClient.js';
+import type { RequestEvent } from '@sveltejs/kit';
+
+export interface AuthUser {
+  id: string;
+  email?: string;
+}
+
+/**
+ * Get authenticated user from request cookies
+ */
+export async function getAuthenticatedUser(event: RequestEvent): Promise<AuthUser | null> {
+  try {
+    const accessToken = event.cookies.get('sb-access-token');
+    const refreshToken = event.cookies.get('sb-refresh-token');
+
+    console.log('Checking auth cookies:', { 
+      hasAccessToken: !!accessToken, 
+      hasRefreshToken: !!refreshToken,
+      accessTokenLength: accessToken?.length 
+    });
+
+    if (!accessToken) {
+      console.log('No access token found in cookies');
+      return null;
+    }
+
+    // Set the session on the server-side client
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+
+    if (error || !user) {
+      // Try to refresh the token if we have a refresh token
+      if (refreshToken) {
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+          refresh_token: refreshToken
+        });
+
+        if (refreshError || !refreshData.session) {
+          // Clear invalid cookies
+          event.cookies.delete('sb-access-token', { path: '/' });
+          event.cookies.delete('sb-refresh-token', { path: '/' });
+          return null;
+        }
+
+        // Update cookies with new tokens
+        event.cookies.set('sb-access-token', refreshData.session.access_token, {
+          path: '/',
+          maxAge: refreshData.session.expires_in,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax'
+        });
+
+        if (refreshData.session.refresh_token) {
+          event.cookies.set('sb-refresh-token', refreshData.session.refresh_token, {
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7, // 7 days
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+          });
+        }
+
+        return {
+          id: refreshData.session.user.id,
+          email: refreshData.session.user.email
+        };
+      }
+
+      return null;
+    }
+
+    return {
+      id: user.id,
+      email: user.email
+    };
+  } catch (error) {
+    console.error('Error getting authenticated user:', error);
+    return null;
+  }
+}
+
+/**
+ * Create authenticated Supabase client for the current user
+ */
+export async function createAuthenticatedClient(event: RequestEvent) {
+  const user = await getAuthenticatedUser(event);
+  
+  if (!user) {
+    return null;
+  }
+
+  const accessToken = event.cookies.get('sb-access-token');
+  
+  if (!accessToken) {
+    return null;
+  }
+
+  // Create a client with the user's session
+  const authenticatedSupabase = supabase;
+  await authenticatedSupabase.auth.setSession({
+    access_token: accessToken,
+    refresh_token: event.cookies.get('sb-refresh-token') || ''
+  });
+
+  return {
+    client: authenticatedSupabase,
+    user
+  };
+}
+
+/**
+ * Require authentication middleware
+ */
+export async function requireAuth(event: RequestEvent): Promise<{
+  user: AuthUser;
+  client: typeof supabase;
+} | Response> {
+  const authResult = await createAuthenticatedClient(event);
+  
+  if (!authResult) {
+    return new Response(
+      JSON.stringify({ 
+        error: 'Authentication required',
+        code: 'UNAUTHORIZED'
+      }),
+      { 
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+  }
+
+  return authResult;
+}
