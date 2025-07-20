@@ -1,8 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { createEventDispatcher } from 'svelte';
-  
-  const dispatch = createEventDispatcher();
   
   interface ActionLog {
     id: string;
@@ -15,6 +12,7 @@
   
   export let actionLogs: ActionLog[] = [];
   export let autoRefresh = true;
+  export let onClearLogs: (() => void) | undefined = undefined;
   
   let isLoading = false;
   let error = '';
@@ -57,7 +55,7 @@
   }
 
   function clearLogs() {
-    dispatch('clearLogs');
+    onClearLogs?.();
   }
 
   function formatTimestamp(timestamp: string): string {
@@ -87,11 +85,11 @@
       {#if isLoading}
         <div class="loading-spinner"></div>
       {/if}
-      <button class="refresh-button" on:click={fetchActionLogs} disabled={isLoading}>
+      <button class="refresh-button" onclick={fetchActionLogs} disabled={isLoading}>
         🔄
       </button>
       {#if actionLogs.length > 0}
-        <button class="clear-button" on:click={clearLogs}>Clear All</button>
+        <button class="clear-button" onclick={clearLogs}>Clear All</button>
       {/if}
     </div>
   </div>
@@ -100,7 +98,7 @@
     {#if error}
       <div class="error-state">
         <p>Error: {error}</p>
-        <button on:click={fetchActionLogs}>Try Again</button>
+        <button onclick={fetchActionLogs}>Try Again</button>
       </div>
     {:else if actionLogs.length === 0 && !isLoading}
       <div class="empty-state">
@@ -140,14 +138,16 @@
 
 <style>
   .logs-section {
-    background: var(--surface);
-    border-radius: 16px;
-    padding: 2rem;
-    border: 1px solid var(--border);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    max-height: 600px;
+    background: transparent;
+    border-radius: 0;
+    padding: 1.5rem;
+    border: none;
+    box-shadow: none;
+    max-height: none;
+    height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
   .logs-header {

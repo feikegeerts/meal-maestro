@@ -3,8 +3,12 @@
   import ChatInput from '$lib/components/ChatInput.svelte';
   import ActionLogs from '$lib/components/ActionLogs.svelte';
   import RecipeDisplay from '$lib/components/RecipeDisplay.svelte';
+  import RecipeList from '$lib/components/RecipeList.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
+  import ToastContainer from '$lib/components/ToastContainer.svelte';
   import type { Recipe } from '$lib/types.js';
+  import { recipeStore } from '$lib/stores/recipeStore.js';
+  import { toasts } from '$lib/stores/toastStore.js';
   
   let conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [];
   let isProcessing = false;
@@ -12,10 +16,69 @@
   let actionLogs: any[] = [];
   let displayedRecipe: Recipe | null = null;
   let recipeDisplayTitle = 'Recipe';
+  
+  // Tab management
+  type TabType = 'browse' | 'details' | 'history';
+  let activeTab: TabType = 'browse';
+  let hasDisplayedRecipe = false;
 
   function handleNewMessage(message: string) {
     // Message handling is done in ChatInput component
     // This is just for any additional logic needed
+  }
+  
+  // Function to programmatically trigger chat message processing
+  async function triggerChatMessage(message: string) {
+    if (!message.trim() || isProcessing) return;
+    
+    try {
+      isProcessing = true;
+      
+      const response = await fetch('/api/recipes/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: message.trim(),
+          conversation_history: conversationHistory
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send message');
+      }
+      
+      // Update conversation history with response
+      conversationHistory = data.conversation_history || [];
+      
+      // Handle any recipe updates from the response
+      if (data.function_calls && data.function_calls.length > 0) {
+        for (const functionCall of data.function_calls) {
+          if (functionCall.function === 'update_recipe' && functionCall.result?.recipe) {
+            const updatedRecipe = functionCall.result.recipe;
+            
+            // Update displayed recipe
+            displayedRecipe = updatedRecipe;
+            recipeDisplayTitle = `Updated: ${updatedRecipe.title}`;
+            
+            // Update shared state
+            recipeStore.updateRecipe(updatedRecipe);
+            toasts.success(`Updated "${updatedRecipe.title}"`);
+          }
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error processing edit request:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process edit request';
+      handleError(errorMessage);
+      toasts.error('Edit Error', errorMessage);
+    } finally {
+      isProcessing = false;
+    }
   }
   
   function handleRecipesFound(recipes: Recipe[]) {
@@ -24,9 +87,27 @@
     if (recipes.length > 0) {
       displayedRecipe = recipes[0];
       recipeDisplayTitle = 'Recipe';
+      hasDisplayedRecipe = true;
+      // Auto-switch to details tab when a recipe is found
+      activeTab = 'details';
     } else {
       displayedRecipe = null;
       recipeDisplayTitle = 'Recipe';
+      hasDisplayedRecipe = false;
+    }
+  }
+  
+  function handleSearchResults(recipes: Recipe[], searchQuery: string) {
+    // When multiple search results are found, show them in browse tab
+    if (recipes.length > 1) {
+      // Auto-switch to browse tab to show filtered results
+      activeTab = 'browse';
+      
+      // Show toast with summary
+      toasts.info(`Found ${recipes.length} recipes`, `Click "Browse" tab to see all results`);
+    } else if (recipes.length === 1) {
+      // Single result - show in details tab
+      handleRecipesFound(recipes);
     }
   }
 
@@ -43,6 +124,41 @@
     // For now, we'll just refresh the ActionLogs component
     actionLogs = [];
   }
+
+  function handleRecipeSelected(recipe: Recipe) {
+    displayedRecipe = recipe;
+    recipeDisplayTitle = recipe.title;
+    hasDisplayedRecipe = true;
+    activeTab = 'details';
+  }
+
+  // Remove handleMarkEaten - now handled directly in RecipeList
+
+  function handleEditRecipe(recipe: Recipe) {
+    // Switch to details tab to show current recipe
+    displayedRecipe = recipe;
+    recipeDisplayTitle = `Edit: ${recipe.title}`;
+    hasDisplayedRecipe = true;
+    activeTab = 'details';
+    
+    // Add message to conversation history and trigger processing
+    const editMessage = `I want to edit "${recipe.title}". Please help me update it.`;
+    
+    // Add user message to history
+    conversationHistory = [
+      ...conversationHistory,
+      { role: 'user', content: editMessage }
+    ];
+    
+    // Trigger chat processing
+    triggerChatMessage(editMessage);
+  }
+
+  // Remove handleDeleteRecipe - now handled directly in RecipeList
+
+  function switchTab(tab: TabType) {
+    activeTab = tab;
+  }
 </script>
 
 <main>
@@ -55,7 +171,7 @@
     <div class="error-banner">
       <span class="error-icon">⚠️</span>
       <span class="error-message">{error}</span>
-      <button class="error-close" on:click={() => error = ''}>×</button>
+      <button class="error-close" onclick={() => error = ''}>×</button>
     </div>
   {/if}
 
@@ -67,25 +183,68 @@
         onNewMessage={handleNewMessage}
         onError={handleError}
         onRecipesFound={handleRecipesFound}
+        onSearchResults={handleSearchResults}
       />
     </div>
     
-    <div class="recipe-section">
-      <RecipeDisplay 
-        bind:recipe={displayedRecipe}
-        isLoading={isProcessing}
-        title={recipeDisplayTitle}
-      />
-    </div>
-    
-    <div class="logs-section">
-      <ActionLogs 
-        bind:actionLogs
-        on:clearLogs={clearLogs}
-      />
+    <div class="right-panel">
+      <!-- Tab Navigation -->
+      <div class="tab-nav">
+        <button 
+          class="tab-button" 
+          class:active={activeTab === 'browse'}
+          onclick={() => switchTab('browse')}
+        >
+          <span class="tab-icon">🍽️</span>
+          <span class="tab-label">Browse</span>
+        </button>
+        
+        <button 
+          class="tab-button" 
+          class:active={activeTab === 'details'}
+          class:has-content={hasDisplayedRecipe}
+          onclick={() => switchTab('details')}
+        >
+          <span class="tab-icon">📄</span>
+          <span class="tab-label">Details</span>
+        </button>
+        
+        <button 
+          class="tab-button" 
+          class:active={activeTab === 'history'}
+          onclick={() => switchTab('history')}
+        >
+          <span class="tab-icon">📋</span>
+          <span class="tab-label">History</span>
+        </button>
+      </div>
+      
+      <!-- Tab Content -->
+      <div class="tab-content">
+        {#if activeTab === 'browse'}
+          <RecipeList 
+            onRecipeSelected={handleRecipeSelected}
+            onEditRecipe={handleEditRecipe}
+          />
+        {:else if activeTab === 'details'}
+          <RecipeDisplay 
+            bind:recipe={displayedRecipe}
+            isLoading={isProcessing}
+            title={recipeDisplayTitle}
+          />
+        {:else if activeTab === 'history'}
+          <ActionLogs 
+            bind:actionLogs
+            onClearLogs={clearLogs}
+          />
+        {/if}
+      </div>
     </div>
   </div>
 </main>
+
+<!-- Toast Container -->
+<ToastContainer />
 
 <style>
   main {
@@ -143,24 +302,81 @@
   .container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
     gap: 2rem;
     align-items: start;
   }
   
   .chat-section {
-    grid-column: 1;
-    grid-row: 1;
+    min-height: 600px;
   }
   
-  .recipe-section {
-    grid-column: 2;
-    grid-row: 1 / span 2;
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    overflow: hidden;
+    min-height: 600px;
   }
   
-  .logs-section {
-    grid-column: 1;
-    grid-row: 2;
+  .tab-nav {
+    display: flex;
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .tab-button {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 1rem 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    position: relative;
+    min-height: 56px;
+  }
+  
+  .tab-button:hover {
+    color: var(--text-primary);
+    background: var(--surface);
+  }
+  
+  .tab-button.active {
+    color: var(--primary);
+    background: var(--surface);
+    border-bottom: 2px solid var(--primary);
+  }
+  
+  .tab-button.has-content {
+    color: var(--text-primary);
+  }
+  
+  .tab-icon {
+    font-size: 1.1rem;
+  }
+  
+  .tab-label {
+    font-weight: 500;
+  }
+  
+  .tab-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .tab-content > :global(*) {
+    height: 100%;
   }
 
   /* Animations */
@@ -175,33 +391,70 @@
     }
   }
 
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(1.2);
+    }
+  }
+
   /* Mobile Responsiveness */
   @media (max-width: 768px) {
     .container {
       grid-template-columns: 1fr;
-      grid-template-rows: auto auto auto;
       gap: 1.5rem;
     }
     
     .chat-section {
-      grid-column: 1;
-      grid-row: 1;
+      min-height: 500px;
     }
     
-    .recipe-section {
-      grid-column: 1;
-      grid-row: 2;
+    .right-panel {
+      min-height: 500px;
     }
     
-    .logs-section {
-      grid-column: 1;
-      grid-row: 3;
+    .tab-button {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.8rem;
+      gap: 0.25rem;
+      min-height: 48px;
+    }
+    
+    .tab-icon {
+      font-size: 1rem;
+    }
+    
+    .tab-label {
+      font-size: 0.8rem;
     }
   }
 
   @media (max-width: 480px) {
     main {
       padding: 0.5rem;
+    }
+    
+    .container {
+      gap: 1rem;
+    }
+    
+    .tab-button {
+      padding: 0.5rem 0.25rem;
+      gap: 0.125rem;
+      flex-direction: column;
+      min-height: 52px;
+    }
+    
+    .tab-label {
+      font-size: 0.75rem;
+    }
+    
+    .tab-icon {
+      font-size: 0.9rem;
     }
   }
 </style>

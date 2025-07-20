@@ -15,7 +15,7 @@
   <div class="display-header">
     <h3 class="display-title">{title}</h3>
     {#if recipe}
-      <button class="clear-button" on:click={clearRecipe}>Clear</button>
+      <button class="clear-button" onclick={clearRecipe}>Clear</button>
     {/if}
   </div>
   
@@ -41,13 +41,13 @@
 
 <style>
   .recipe-display {
-    background: var(--surface);
-    border-radius: 16px;
-    border: 1px solid var(--border);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    background: transparent;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
     display: flex;
     flex-direction: column;
-    height: 600px;
+    height: 100%;
     overflow: hidden;
   }
 
