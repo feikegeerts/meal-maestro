@@ -1,12 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { Recipe } from '$lib/types.js';
+  import { recipeStore } from '$lib/stores/recipeStore.js';
+  import { toasts } from '$lib/stores/toastStore.js';
   
   export let isProcessing = false;
   export let conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [];
   export let onNewMessage: (message: string) => void = () => {};
   export let onError: (error: string) => void = () => {};
   export let onRecipesFound: (recipes: Recipe[]) => void = () => {};
+  export let onSearchResults: (recipes: Recipe[], searchQuery: string) => void = () => {};
 
   let currentMessage = '';
   let chatContainer: HTMLDivElement;
@@ -64,29 +67,85 @@
       // Update conversation history
       conversationHistory = data.conversation_history || [];
       
-      // If the response contains recipe data, extract and pass to parent
+      // Handle function calls and update shared state
       if (data.function_calls && data.function_calls.length > 0) {
-        const recipes: Recipe[] = [];
+        const foundRecipes: Recipe[] = [];
+        let searchQuery = '';
         
         // Extract recipes from function call results
         for (const functionCall of data.function_calls) {
+          // Process function call
           if (functionCall.function === 'search_recipes' && functionCall.result?.recipes) {
-            // Only show recipe if there's exactly one result
-            if (functionCall.result.recipes.length === 1) {
-              recipes.push(functionCall.result.recipes[0]);
+            const searchResults = functionCall.result.recipes;
+            foundRecipes.push(...searchResults);
+            
+            // Extract search query from function arguments
+            if (functionCall.arguments?.query) {
+              searchQuery = functionCall.arguments.query;
+            }
+            
+            // Update shared state with search results
+            if (searchResults.length > 0) {
+              // Set search filters in store to show filtered results
+              const filters: any = {};
+              if (functionCall.arguments?.query) filters.query = functionCall.arguments.query;
+              if (functionCall.arguments?.category) filters.category = functionCall.arguments.category;
+              if (functionCall.arguments?.season) filters.season = functionCall.arguments.season;
+              if (functionCall.arguments?.tags) filters.tags = functionCall.arguments.tags;
+              
+              // Infer filters from search results and message  
+              const inferredFilters = inferFiltersFromResults(searchResults, message);
+              
+              if (Object.keys(inferredFilters).length > 0) {
+                recipeStore.setSearchFilters(inferredFilters);
+              }
+              
+              // Notify parent about search results
+              onSearchResults(searchResults, searchQuery);
+              
+              // Show toast with search summary
+              if (searchResults.length === 1) {
+                toasts.info(`Found 1 recipe: "${searchResults[0].title}"`);
+              } else {
+                toasts.info(`Found ${searchResults.length} recipes${searchQuery ? ` for "${searchQuery}"` : ''}`);
+              }
+            } else {
+              toasts.warning('No recipes found', 'Try adjusting your search criteria');
             }
           } else if (functionCall.function === 'get_recipe_details' && functionCall.result?.recipe) {
-            recipes.push(functionCall.result.recipe);
+            foundRecipes.push(functionCall.result.recipe);
           } else if (functionCall.function === 'add_recipe' && functionCall.result?.recipe) {
-            recipes.push(functionCall.result.recipe);
+            const newRecipe = functionCall.result.recipe;
+            foundRecipes.push(newRecipe);
+            
+            // Add to shared state
+            recipeStore.addRecipe(newRecipe);
+            toasts.success(`Added "${newRecipe.title}" to your recipes!`);
           } else if (functionCall.function === 'update_recipe' && functionCall.result?.recipe) {
-            recipes.push(functionCall.result.recipe);
+            const updatedRecipe = functionCall.result.recipe;
+            foundRecipes.push(updatedRecipe);
+            
+            // Update shared state
+            recipeStore.updateRecipe(updatedRecipe);
+            toasts.success(`Updated "${updatedRecipe.title}"`);
+          } else if (functionCall.function === 'delete_recipe' && functionCall.result?.success) {
+            // Handle deletion in shared state
+            if (functionCall.arguments?.id) {
+              recipeStore.removeRecipe(functionCall.arguments.id);
+              toasts.success('Recipe deleted successfully');
+            }
+          } else if (functionCall.function === 'mark_recipe_eaten' && functionCall.result?.recipe) {
+            const updatedRecipe = functionCall.result.recipe;
+            
+            // Update shared state
+            recipeStore.updateRecipe(updatedRecipe);
+            toasts.success(`Marked "${updatedRecipe.title}" as eaten!`);
           }
         }
         
-        // Pass recipes to parent component
-        if (recipes.length > 0) {
-          onRecipesFound(recipes);
+        // Pass recipes to parent component for single recipe display
+        if (foundRecipes.length === 1) {
+          onRecipesFound(foundRecipes);
         }
       }
       
@@ -95,7 +154,9 @@
       
     } catch (error) {
       console.error('Error sending message:', error);
-      onError(error instanceof Error ? error.message : 'Failed to send message');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+      onError(errorMessage);
+      toasts.error('Chat Error', errorMessage);
     } finally {
       isProcessing = false;
     }
@@ -112,6 +173,56 @@
     conversationHistory = [];
   }
 
+  // Function to infer filters from search results and user message
+  function inferFiltersFromResults(results: Recipe[], userMessage: string): any {
+    const filters: any = {};
+    
+    if (results.length === 0) return filters;
+    
+    const message = userMessage.toLowerCase();
+    
+    // Check if all results have the same category
+    const categories = [...new Set(results.map(r => r.category))];
+    if (categories.length === 1) {
+      // If the user mentioned that category in their message, use it as a filter
+      const category = categories[0].toLowerCase();
+      if (message.includes(category) || 
+          message.includes('dinner') && category === 'dinner' ||
+          message.includes('breakfast') && category === 'breakfast' ||
+          message.includes('lunch') && category === 'lunch' ||
+          message.includes('dessert') && category === 'dessert' ||
+          message.includes('snack') && category === 'snack') {
+        filters.category = categories[0];
+      }
+    }
+    
+    // Check if all results have the same season
+    const seasons = [...new Set(results.map(r => r.season).filter(Boolean))];
+    if (seasons.length === 1 && seasons[0]) {
+      const season = seasons[0].toLowerCase();
+      if (message.includes(season) || 
+          message.includes('spring') && season === 'spring' ||
+          message.includes('summer') && season === 'summer' ||
+          message.includes('fall') && season === 'fall' ||
+          message.includes('winter') && season === 'winter') {
+        filters.season = seasons[0];
+      }
+    }
+    
+    // Check for common search terms that might be queries
+    if (message.includes('chocolate') || message.includes('pasta') || message.includes('chicken')) {
+      const terms = message.split(' ');
+      const foodTerms = terms.filter(term => 
+        ['chocolate', 'pasta', 'chicken', 'beef', 'fish', 'vegetarian', 'vegan'].includes(term)
+      );
+      if (foodTerms.length > 0) {
+        filters.query = foodTerms[0];
+      }
+    }
+    
+    return filters;
+  }
+
   // Focus input on mount
   onMount(() => {
     if (messageInput) {
@@ -124,12 +235,12 @@
   <div class="chat-header">
     <h3>Chat with Meal Maestro</h3>
     {#if conversationHistory.length > 0}
-      <button class="clear-button" on:click={clearConversation}>Clear Chat</button>
+      <button class="clear-button" onclick={clearConversation}>Clear Chat</button>
     {/if}
   </div>
 
   <!-- Conversation Display -->
-  <div class="conversation" bind:this={chatContainer} on:scroll={checkScrollPosition}>
+  <div class="conversation" bind:this={chatContainer} onscroll={checkScrollPosition}>
     {#if conversationHistory.length === 0}
       <div class="welcome-message">
         <div class="welcome-icon">🍽️</div>
@@ -181,14 +292,14 @@
       <input
         bind:this={messageInput}
         bind:value={currentMessage}
-        on:keypress={handleKeyPress}
+        onkeypress={handleKeyPress}
         placeholder="Type your message about recipes..."
         disabled={isProcessing}
         class="message-input"
       />
       <button
         class="send-button"
-        on:click={sendMessage}
+        onclick={sendMessage}
         disabled={isProcessing || !currentMessage.trim()}
       >
         {#if isProcessing}

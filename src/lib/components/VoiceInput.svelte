@@ -22,7 +22,7 @@
       class="voice-button" 
       class:recording={isRecording}
       class:processing={isProcessing}
-      on:click={toggleRecording}
+      onclick={toggleRecording}
       disabled={isProcessing}
     >
       {#if isRecording}
