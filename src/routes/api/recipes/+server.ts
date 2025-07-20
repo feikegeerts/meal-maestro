@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { dev } from '$app/environment';
 import * as dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+import { validateRecipeInput, isValidCategory, isValidSeason, isValidTag, RECIPE_CATEGORIES, RECIPE_SEASONS, RECIPE_TAGS } from '$lib/services/recipeFunctions.js';
 
 if (dev) {
   dotenv.config({ path: '.env.local' });
@@ -24,6 +25,21 @@ export const GET: RequestHandler = async ({ url }) => {
     const category = url.searchParams.get('category');
     const season = url.searchParams.get('season');
     const tags = url.searchParams.get('tags');
+
+    // Validate filter parameters
+    if (category && !isValidCategory(category)) {
+      return json({ error: `Invalid category. Must be one of: ${RECIPE_CATEGORIES.join(', ')}` }, { status: 400 });
+    }
+    if (season && !isValidSeason(season)) {
+      return json({ error: `Invalid season. Must be one of: ${RECIPE_SEASONS.join(', ')}` }, { status: 400 });
+    }
+    if (tags) {
+      const tagArray = tags.split(',');
+      const invalidTags = tagArray.filter(tag => !isValidTag(tag));
+      if (invalidTags.length > 0) {
+        return json({ error: `Invalid tags: ${invalidTags.join(', ')}. Available tags: ${RECIPE_TAGS.join(', ')}` }, { status: 400 });
+      }
+    }
 
     let query = supabase
       .from('recipes')
@@ -69,6 +85,20 @@ export const POST: RequestHandler = async ({ request }) => {
       return json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Validate recipe input using our validation function
+    const validation = validateRecipeInput({
+      title,
+      ingredients,
+      description,
+      category,
+      tags: tags || [],
+      season
+    });
+
+    if (!validation.valid) {
+      return json({ error: validation.errors.join(', ') }, { status: 400 });
+    }
+
     const { data: recipe, error } = await supabase
       .from('recipes')
       .insert([{
@@ -102,6 +132,22 @@ export const PUT: RequestHandler = async ({ request }) => {
     // Validate required fields
     if (!id) {
       return json({ error: 'Recipe ID is required' }, { status: 400 });
+    }
+
+    // Validate only the fields being updated
+    if (category && !isValidCategory(category)) {
+      return json({ error: `Invalid category "${category}". Must be one of: ${RECIPE_CATEGORIES.join(', ')}` }, { status: 400 });
+    }
+
+    if (season && !isValidSeason(season)) {
+      return json({ error: `Invalid season "${season}". Must be one of: ${RECIPE_SEASONS.join(', ')}` }, { status: 400 });
+    }
+
+    if (tags) {
+      const invalidTags = tags.filter((tag: string) => !isValidTag(tag));
+      if (invalidTags.length > 0) {
+        return json({ error: `Invalid tags: ${invalidTags.join(', ')}. Available tags: ${RECIPE_TAGS.join(', ')}` }, { status: 400 });
+      }
     }
 
     const updateData: any = { updated_at: new Date() };

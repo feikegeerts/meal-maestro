@@ -1,6 +1,39 @@
 import type { OpenAI } from 'openai';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Recipe } from '$lib/types.js';
+import type { Recipe, RecipeInput } from '$lib/types.js';
+import { RecipeCategory, RecipeSeason, RecipeTag, RECIPE_CATEGORIES, RECIPE_SEASONS, RECIPE_TAGS } from '$lib/types.js';
+
+// Validation functions
+export function isValidCategory(category: string): category is RecipeCategory {
+  return RECIPE_CATEGORIES.includes(category as RecipeCategory);
+}
+
+export function isValidSeason(season: string): season is RecipeSeason {
+  return RECIPE_SEASONS.includes(season as RecipeSeason);
+}
+
+export function isValidTag(tag: string): tag is RecipeTag {
+  return RECIPE_TAGS.includes(tag as RecipeTag);
+}
+
+export function validateRecipeInput(input: RecipeInput): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  
+  if (!isValidCategory(input.category)) {
+    errors.push(`Invalid category "${input.category}". Must be one of: ${RECIPE_CATEGORIES.join(', ')}`);
+  }
+  
+  if (input.season && !isValidSeason(input.season)) {
+    errors.push(`Invalid season "${input.season}". Must be one of: ${RECIPE_SEASONS.join(', ')}`);
+  }
+  
+  const invalidTags = input.tags.filter(tag => !isValidTag(tag));
+  if (invalidTags.length > 0) {
+    errors.push(`Invalid tags: ${invalidTags.join(', ')}. Available tags: ${RECIPE_TAGS.join(', ')}`);
+  }
+  
+  return { valid: errors.length === 0, errors };
+}
 
 // OpenAI function definitions for recipe operations
 export const recipeTools: OpenAI.Chat.Completions.ChatCompletionCreateParams['tools'] = [
@@ -18,16 +51,16 @@ export const recipeTools: OpenAI.Chat.Completions.ChatCompletionCreateParams['to
           },
           category: { 
             type: 'string', 
-            description: 'Recipe category filter (e.g., "dinner", "dessert", "breakfast", "lunch")' 
+            description: 'Recipe category filter. Must be one of: "breakfast", "lunch", "dinner", "dessert", "snack", "appetizer", "beverage"' 
           },
           tags: { 
             type: 'array', 
             items: { type: 'string' }, 
-            description: 'Tags to filter by (e.g., ["vegetarian", "quick", "healthy"])' 
+            description: 'Tags to filter by. Common tags include dietary (vegetarian, vegan, gluten-free, keto, paleo), cuisine (italian, mexican, chinese, thai, mediterranean), cooking methods (baking, grilling, one-pot, slow-cooking, instant-pot), characteristics (quick, easy, healthy, spicy, creamy), occasions (party, weeknight, meal-prep, kid-friendly), proteins (chicken, beef, fish, tofu, beans), and dish types (soup, salad, pasta, pizza)' 
           },
           season: { 
             type: 'string', 
-            description: 'Seasonal filter (e.g., "summer", "winter", "spring", "fall", "year-round")' 
+            description: 'Seasonal filter. Must be one of: "spring", "summer", "fall", "winter", "year-round"' 
           },
           limit: {
             type: 'number',
@@ -60,16 +93,16 @@ export const recipeTools: OpenAI.Chat.Completions.ChatCompletionCreateParams['to
           },
           category: { 
             type: 'string', 
-            description: 'Recipe category (e.g., "dinner", "dessert", "breakfast", "lunch")' 
+            description: 'Recipe category. Must be one of: "breakfast", "lunch", "dinner", "dessert", "snack", "appetizer", "beverage"' 
           },
           tags: { 
             type: 'array', 
             items: { type: 'string' }, 
-            description: 'Optional tags for the recipe (e.g., ["vegetarian", "quick", "healthy"])' 
+            description: 'Optional tags for the recipe. Choose from dietary restrictions (vegetarian, vegan, gluten-free, dairy-free, nut-free, keto, paleo, low-carb), cuisines (italian, mexican, chinese, indian, thai, french, mediterranean, american, japanese), cooking methods (baking, grilling, frying, roasting, slow-cooking, air-fryer, instant-pot, one-pot), characteristics (quick, easy, healthy, comfort-food, spicy, mild, sweet, savory, creamy), occasions (party, holiday, weeknight, meal-prep, kid-friendly, date-night), proteins (chicken, beef, pork, fish, seafood, tofu, beans, eggs), and dish types (soup, salad, sandwich, pasta, pizza, cookies, cake)' 
           },
           season: { 
             type: 'string', 
-            description: 'Optional seasonal relevance (e.g., "summer", "winter", "spring", "fall", "year-round")' 
+            description: 'Optional seasonal relevance. Must be one of: "spring", "summer", "fall", "winter", "year-round"' 
           },
         },
         required: ['title', 'ingredients', 'description', 'category'],
@@ -103,16 +136,16 @@ export const recipeTools: OpenAI.Chat.Completions.ChatCompletionCreateParams['to
           },
           category: { 
             type: 'string', 
-            description: 'Updated recipe category' 
+            description: 'Updated recipe category. Must be one of: "breakfast", "lunch", "dinner", "dessert", "snack", "appetizer", "beverage"' 
           },
           tags: { 
             type: 'array', 
             items: { type: 'string' }, 
-            description: 'Updated tags' 
+            description: 'Updated tags. Choose from dietary restrictions (vegetarian, vegan, gluten-free, dairy-free, nut-free, keto, paleo, low-carb), cuisines (italian, mexican, chinese, indian, thai, french, mediterranean, american, japanese), cooking methods (baking, grilling, frying, roasting, slow-cooking, air-fryer, instant-pot, one-pot), characteristics (quick, easy, healthy, comfort-food, spicy, mild, sweet, savory, creamy), occasions (party, holiday, weeknight, meal-prep, kid-friendly, date-night), proteins (chicken, beef, pork, fish, seafood, tofu, beans, eggs), and dish types (soup, salad, sandwich, pasta, pizza, cookies, cake)' 
           },
           season: { 
             type: 'string', 
-            description: 'Updated seasonal relevance' 
+            description: 'Updated seasonal relevance. Must be one of: "spring", "summer", "fall", "winter", "year-round"' 
           },
         },
         required: ['id'],
@@ -253,6 +286,20 @@ export class RecipeFunctionHandler {
   }): Promise<{ recipe: Recipe; success: boolean }> {
     const { title, ingredients, description, category, tags, season } = args;
 
+    // Validate input
+    const validation = validateRecipeInput({
+      title,
+      ingredients,
+      description,
+      category,
+      tags: tags || [],
+      season
+    });
+
+    if (!validation.valid) {
+      throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+    }
+
     const { data: recipe, error } = await this.supabase
       .from('recipes')
       .insert([{
@@ -285,7 +332,7 @@ export class RecipeFunctionHandler {
   }): Promise<{ recipe: Recipe; success: boolean }> {
     const { id, ...updateData } = args;
 
-    // Get original recipe data for logging
+    // Get original recipe data for validation and logging
     const { data: originalRecipe } = await this.supabase
       .from('recipes')
       .select('*')
@@ -294,6 +341,22 @@ export class RecipeFunctionHandler {
 
     if (!originalRecipe) {
       throw new Error('Recipe not found');
+    }
+
+    // Validate only the fields being updated
+    if (updateData.category && !isValidCategory(updateData.category)) {
+      throw new Error(`Invalid category "${updateData.category}". Must be one of: ${RECIPE_CATEGORIES.join(', ')}`);
+    }
+
+    if (updateData.season && !isValidSeason(updateData.season)) {
+      throw new Error(`Invalid season "${updateData.season}". Must be one of: ${RECIPE_SEASONS.join(', ')}`);
+    }
+
+    if (updateData.tags) {
+      const invalidTags = updateData.tags.filter(tag => !isValidTag(tag));
+      if (invalidTags.length > 0) {
+        throw new Error(`Invalid tags: ${invalidTags.join(', ')}. Available tags: ${RECIPE_TAGS.join(', ')}`);
+      }
     }
 
     // Prepare update data
