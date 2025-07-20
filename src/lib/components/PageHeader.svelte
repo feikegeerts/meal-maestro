@@ -49,6 +49,7 @@
   .text-content {
     text-align: center;
     flex: 1;
+    margin-right: -160px;
   }
 
   .title {
@@ -77,6 +78,10 @@
       text-align: center;
       gap: 1.5rem;
     }
+
+    .text-content {
+      margin-right: 0;
+    } 
     
     .title {
       font-size: 2rem;

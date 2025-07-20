@@ -36,11 +36,9 @@ function createAuthStore() {
     // Initialize auth state
     async initialize() {
       try {
-        console.log('Initializing auth state...');
         
         // Set up auth state change listener first
         const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(async (event, session) => {
-          console.log('Auth state change:', event, session ? 'Session exists' : 'No session');
           
           if (event === 'SIGNED_IN' && session) {
             await this.setSession(session);
@@ -56,37 +54,41 @@ function createAuthStore() {
             await this.setSession(session);
           } else if (event === 'INITIAL_SESSION' && session) {
             await this.setSession(session);
+          } else if (event === 'INITIAL_SESSION' && !session) {
+            set({
+              user: null,
+              session: null,
+              profile: null,
+              loading: false,
+              initialized: true
+            });
           }
         });
         
-        // Get initial session
-        const { data: { session }, error } = await supabaseBrowser.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting initial session:', error);
-          set({
-            user: null,
-            session: null,
-            profile: null,
-            loading: false,
-            initialized: true
+        // Set a timeout to ensure we initialize even if no session event comes
+        setTimeout(() => {
+          // Check if we're still not initialized after 3 seconds
+          const currentState = new Promise<AuthState>((resolve) => {
+            let unsubscribe: (() => void) | undefined;
+            unsubscribe = subscribe((state) => {
+              if (unsubscribe) unsubscribe();
+              resolve(state);
+            });
           });
-          return;
-        }
+          
+          currentState.then(state => {
+            if (!state.initialized) {
+              set({
+                user: null,
+                session: null,
+                profile: null,
+                loading: false,
+                initialized: true
+              });
+            }
+          });
+        }, 3000);
 
-        if (session) {
-          console.log('Found existing session for:', session.user?.email);
-          await this.setSession(session);
-        } else {
-          console.log('No existing session found');
-          set({
-            user: null,
-            session: null,
-            profile: null,
-            loading: false,
-            initialized: true
-          });
-        }
 
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -108,21 +110,67 @@ function createAuthStore() {
         const user = session.user;
         let profile: UserProfile | null = null;
 
-        // Fetch user profile
+        // Fetch or create user profile with retry logic
         if (user) {
-          const { data: profileData, error: profileError } = await supabaseBrowser
-            .from('user_profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
+          // Try to fetch profile, but don't block auth if it fails on first attempt
+          const fetchProfile = async (retryCount = 0): Promise<void> => {
+            try {
+              const { data: profileData, error: profileError } = await Promise.race([
+                supabaseBrowser
+                  .from('user_profiles')
+                  .select('*')
+                  .eq('id', user.id)
+                  .single(),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Profile fetch timeout')), retryCount === 0 ? 3000 : 8000)
+                )
+              ]) as any;
+              if (profileError && profileError.code === 'PGRST116') {
+                // Profile doesn't exist, create it
+                const { data: newProfile, error: createError } = await supabaseBrowser
+                  .from('user_profiles')
+                  .insert({
+                    id: user.id,
+                    email: user.email,
+                    display_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || null,
+                    avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null
+                  })
+                  .select()
+                  .single();
 
-          if (profileError) {
-            console.error('Error fetching user profile:', profileError);
-          } else {
-            profile = profileData;
-          }
+                profile = newProfile;
+                update(state => ({ ...state, profile: newProfile }));
+              } else if (profileError) {
+                console.error('🔥 AUTH STORE: Error fetching user profile:', profileError);
+                if (retryCount === 0) {
+                  throw new Error('Retry needed');
+                }
+              } else {
+                profile = profileData;
+                // Update the store with the fetched profile
+                update(state => ({ ...state, profile: profileData }));
+              }
+            } catch (profileFetchError) {
+              console.error('🔥 AUTH STORE: Profile fetch error:', profileFetchError);
+              if (
+                retryCount === 0 &&
+                typeof profileFetchError === 'object' &&
+                profileFetchError !== null &&
+                'message' in profileFetchError &&
+                (profileFetchError as { message?: string }).message !== 'Retry needed'
+              ) {
+                setTimeout(() => fetchProfile(1), 2000);
+              } else {
+                profile = null;
+              }
+            }
+          };
+
+          // Start profile fetch but don't await it - let auth continue
+          fetchProfile();
         }
 
+        // Always set the session, even if profile operations fail
         set({
           user,
           session,
@@ -131,11 +179,13 @@ function createAuthStore() {
           initialized: true
         });
 
+
       } catch (error) {
         console.error('Error setting session:', error);
+        // Even if there's an error, we should still initialize
         set({
-          user: null,
-          session: null,
+          user: session?.user || null,
+          session: session || null,
           profile: null,
           loading: false,
           initialized: true
@@ -175,6 +225,17 @@ function createAuthStore() {
           return { success: false, error: error.message };
         }
 
+        // Also clear server-side session cookies
+        try {
+          await fetch('/api/auth/sign-out', {
+            method: 'POST'
+          });
+          
+        } catch (cookieError) {
+          console.error('Error clearing session cookies:', cookieError);
+          // Continue anyway - client-side sign out succeeded
+        }
+
         return { success: true };
       } catch (error) {
         update(state => ({ ...state, loading: false }));
@@ -187,8 +248,9 @@ function createAuthStore() {
     async updateProfile(updates: Partial<Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>>) {
       try {
         const currentState = await new Promise<AuthState>((resolve) => {
-          const unsubscribe = subscribe((state) => {
-            unsubscribe();
+          let unsubscribe: (() => void) | undefined;
+          unsubscribe = subscribe((state) => {
+            if (unsubscribe) unsubscribe();
             resolve(state);
           });
         });

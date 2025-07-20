@@ -14,14 +14,7 @@ export async function getAuthenticatedUser(event: RequestEvent): Promise<AuthUse
     const accessToken = event.cookies.get('sb-access-token');
     const refreshToken = event.cookies.get('sb-refresh-token');
 
-    console.log('Checking auth cookies:', { 
-      hasAccessToken: !!accessToken, 
-      hasRefreshToken: !!refreshToken,
-      accessTokenLength: accessToken?.length 
-    });
-
     if (!accessToken) {
-      console.log('No access token found in cookies');
       return null;
     }
 

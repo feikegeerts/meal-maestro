@@ -150,8 +150,6 @@ export const POST: RequestHandler = async (event) => {
             const functionName = toolCall.function.name;
             const functionArgs = JSON.parse(toolCall.function.arguments);
             
-            console.log(`Executing function: ${functionName}`, functionArgs);
-            
             // Execute the function
             const result = await functionHandler.handleFunctionCall(functionName, functionArgs);
             functionResults.push({ function: functionName, result });

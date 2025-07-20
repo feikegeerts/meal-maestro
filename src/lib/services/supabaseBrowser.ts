@@ -14,7 +14,7 @@ export const supabaseBrowser = createClient<Database>(
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true,
+      detectSessionInUrl: false, // Disabled because we handle callback manually
       // Configure OAuth flow
       flowType: 'pkce'
     }
@@ -30,8 +30,6 @@ export const auth = {
       ? 'http://localhost:5173/auth/callback'
       : `${window.location.origin}/auth/callback`;
       
-    console.log('Starting Google OAuth with redirect:', redirectTo);
-    
     const { data, error } = await supabaseBrowser.auth.signInWithOAuth({
       provider: 'google',
       options: {
