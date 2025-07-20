@@ -3,7 +3,8 @@ import type { RequestHandler } from './$types';
 import { dev } from '$app/environment';
 import * as dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-import { validateRecipeInput, isValidCategory, isValidSeason, isValidTag, RECIPE_CATEGORIES, RECIPE_SEASONS, RECIPE_TAGS } from '$lib/services/recipeFunctions.js';
+import { validateRecipeInput, isValidCategory, isValidSeason, isValidTag } from '$lib/services/recipeFunctions.js';
+import { RECIPE_CATEGORIES, RECIPE_SEASONS, RECIPE_TAGS } from '$lib/types';
 
 if (dev) {
   dotenv.config({ path: '.env.local' });
