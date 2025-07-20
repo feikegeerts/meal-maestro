@@ -1,11 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { 
-  logRecipeCreated, 
-  logRecipeUpdated, 
-  logRecipeDeleted, 
-  logRecipeSearch,
   logApiUsage,
-  getActionLogs,
   getApiUsageStats
 } from '../../lib/services/actionLogger.js';
 import type { Recipe } from '../../lib/types.js';
@@ -176,100 +171,6 @@ describe('Action Logging Integration', () => {
     });
   });
 
-  describe('Recipe action logging', () => {
-    it('should log recipe creation', async () => {
-      await logRecipeCreated(mockSupabaseClient as any, mockRecipe);
-      
-      expect(mockSupabaseClient.from).toHaveBeenCalledWith('action_logs');
-      
-      const insertCall = mockSupabaseClient.from('action_logs').insert;
-      expect(insertCall).toHaveBeenCalledWith([
-        expect.objectContaining({
-          action_type: 'create',
-          recipe_id: '1',
-          description: 'Created recipe: Test Recipe',
-          details: { newData: mockRecipe }
-        })
-      ]);
-    });
-
-    it('should log recipe update', async () => {
-      const originalData = { ...mockRecipe };
-      const newData = { ...mockRecipe, title: 'Updated Recipe' };
-      
-      await logRecipeUpdated(mockSupabaseClient as any, '1', originalData, newData);
-      
-      expect(mockSupabaseClient.from).toHaveBeenCalledWith('action_logs');
-      
-      const insertCall = mockSupabaseClient.from('action_logs').insert;
-      expect(insertCall).toHaveBeenCalledWith([
-        expect.objectContaining({
-          action_type: 'update',
-          recipe_id: '1',
-          description: expect.stringContaining('Updated recipe'),
-          details: expect.objectContaining({
-            originalData,
-            newData,
-            changedFields: expect.any(Array)
-          })
-        })
-      ]);
-    });
-
-    it('should log recipe deletion', async () => {
-      await logRecipeDeleted(mockSupabaseClient as any, mockRecipe);
-      
-      expect(mockSupabaseClient.from).toHaveBeenCalledWith('action_logs');
-      
-      const insertCall = mockSupabaseClient.from('action_logs').insert;
-      expect(insertCall).toHaveBeenCalledWith([
-        expect.objectContaining({
-          action_type: 'delete',
-          recipe_id: '1',
-          description: 'Deleted recipe: Test Recipe',
-          details: { originalData: mockRecipe }
-        })
-      ]);
-    });
-
-    it('should log recipe search', async () => {
-      const searchQuery = 'pasta';
-      const filters = { category: 'dinner' };
-      const resultCount = 2;
-      
-      await logRecipeSearch(mockSupabaseClient as any, searchQuery, filters, resultCount);
-      
-      expect(mockSupabaseClient.from).toHaveBeenCalledWith('action_logs');
-      
-      const insertCall = mockSupabaseClient.from('action_logs').insert;
-      expect(insertCall).toHaveBeenCalledWith([
-        expect.objectContaining({
-          action_type: 'search',
-          recipe_id: null,
-          description: 'Searched recipes: "pasta" (2 results)',
-          details: {
-            searchQuery,
-            filters,
-            resultCount
-          }
-        })
-      ]);
-    });
-
-    it('should handle logging errors gracefully', async () => {
-      const errorClient = {
-        from: vi.fn(() => ({
-          insert: vi.fn().mockResolvedValue({ error: new Error('Database error') })
-        }))
-      };
-      
-      // Should not throw error
-      await expect(
-        logRecipeCreated(errorClient as any, mockRecipe)
-      ).resolves.not.toThrow();
-    });
-  });
-
   describe('API usage logging', () => {
     it('should log API usage', async () => {
       await logApiUsage(mockSupabaseClient as any, 'chat', 150, 0.001);
@@ -297,41 +198,6 @@ describe('Action Logging Integration', () => {
       await expect(
         logApiUsage(errorClient as any, 'chat', 150, 0.001)
       ).resolves.not.toThrow();
-    });
-  });
-
-  describe('Action log retrieval', () => {
-    it('should get action logs', async () => {
-      const logs = await getActionLogs(mockSupabaseClient as any, 50);
-      
-      expect(logs).toEqual(mockActionLogs);
-      expect(mockSupabaseClient.from).toHaveBeenCalledWith('action_logs');
-    });
-
-    it('should handle custom limit', async () => {
-      const logs = await getActionLogs(mockSupabaseClient as any, 10);
-      
-      expect(logs).toEqual(mockActionLogs);
-      
-      expect(actionLogsLimitSpy).toHaveBeenCalledWith(10);
-    });
-
-    it('should handle retrieval errors', async () => {
-      const errorClient = {
-        from: vi.fn(() => {
-          const mock: any = {};
-          mock.select = vi.fn(() => mock);
-          mock.order = vi.fn(() => mock);
-          mock.limit = vi.fn(() => mock);
-          mock.then = vi.fn((resolve) => {
-            return Promise.resolve({ data: null, error: new Error('Database error') }).then(resolve);
-          });
-          return mock;
-        })
-      };
-      
-      const logs = await getActionLogs(errorClient as any, 50);
-      expect(logs).toEqual([]);
     });
   });
 
@@ -404,48 +270,6 @@ describe('Action Logging Integration', () => {
         requestCount: 0,
         averageCostPerRequest: 0
       });
-    });
-  });
-
-  describe('Action log completeness', () => {
-    it('should ensure all required fields are logged', async () => {
-      await logRecipeCreated(mockSupabaseClient as any, mockRecipe);
-      
-      const insertCall = mockSupabaseClient.from('action_logs').insert;
-      const logData = insertCall.mock.calls[0][0][0];
-      
-      expect(logData).toHaveProperty('action_type');
-      expect(logData).toHaveProperty('recipe_id');
-      expect(logData).toHaveProperty('description');
-      expect(logData).toHaveProperty('details');
-    });
-
-    it('should capture all changed fields in updates', async () => {
-      const originalData = { ...mockRecipe };
-      const newData = { 
-        ...mockRecipe, 
-        title: 'Updated Recipe',
-        ingredients: ['new ingredient'],
-        tags: ['new tag']
-      };
-      
-      await logRecipeUpdated(mockSupabaseClient as any, '1', originalData, newData);
-      
-      const insertCall = mockSupabaseClient.from('action_logs').insert;
-      const logData = insertCall.mock.calls[0][0][0];
-      
-      expect(logData.details.changedFields).toContain('title');
-      expect(logData.details.changedFields).toContain('ingredients');
-      expect(logData.details.changedFields).toContain('tags');
-    });
-
-    it('should preserve all original data in delete logs', async () => {
-      await logRecipeDeleted(mockSupabaseClient as any, mockRecipe);
-      
-      const insertCall = mockSupabaseClient.from('action_logs').insert;
-      const logData = insertCall.mock.calls[0][0][0];
-      
-      expect(logData.details.originalData).toEqual(mockRecipe);
     });
   });
 });

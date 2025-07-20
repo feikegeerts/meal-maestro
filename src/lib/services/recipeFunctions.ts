@@ -1,7 +1,6 @@
 import type { OpenAI } from 'openai';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Recipe } from '$lib/types.js';
-import { logRecipeCreated, logRecipeUpdated, logRecipeDeleted, logRecipeSearch } from '$lib/services/actionLogger.js';
 
 // OpenAI function definitions for recipe operations
 export const recipeTools: OpenAI.Chat.Completions.ChatCompletionCreateParams['tools'] = [
@@ -238,9 +237,6 @@ export class RecipeFunctionHandler {
       throw new Error('Failed to search recipes');
     }
 
-    // Log the search action
-    await logRecipeSearch(this.supabase, query || '', { category, tags, season }, recipes?.length || 0);
-
     return {
       recipes: recipes || [],
       total: recipes?.length || 0
@@ -274,9 +270,6 @@ export class RecipeFunctionHandler {
       console.error('Error creating recipe:', error);
       throw new Error('Failed to create recipe');
     }
-
-    // Log the recipe creation
-    await logRecipeCreated(this.supabase, recipe as Recipe);
 
     return { recipe: recipe as Recipe, success: true };
   }
@@ -323,9 +316,6 @@ export class RecipeFunctionHandler {
       throw new Error('Failed to update recipe');
     }
 
-    // Log the recipe update
-    await logRecipeUpdated(this.supabase, id, originalRecipe, updateFields);
-
     return { recipe: recipe as Recipe, success: true };
   }
 
@@ -362,9 +352,6 @@ export class RecipeFunctionHandler {
       throw new Error('Failed to mark recipe as eaten');
     }
 
-    // Log the recipe update
-    await logRecipeUpdated(this.supabase, id, originalRecipe, { last_eaten: eatenDate });
-
     return { recipe: recipe as Recipe, success: true };
   }
 
@@ -384,9 +371,6 @@ export class RecipeFunctionHandler {
       console.error('Error fetching recipe for deletion:', fetchError);
       throw new Error('Recipe not found');
     }
-
-    // Log the recipe deletion BEFORE actually deleting
-    await logRecipeDeleted(this.supabase, recipeToDelete as Recipe);
 
     const { error } = await this.supabase
       .from('recipes')

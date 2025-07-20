@@ -3,7 +3,6 @@ import type { RequestHandler } from './$types';
 import { dev } from '$app/environment';
 import * as dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-import { logRecipeUpdated, logRecipeDeleted } from '$lib/services/actionLogger.js';
 import type { Recipe } from '$lib/types.js';
 
 if (dev) {
@@ -85,11 +84,6 @@ export const PUT: RequestHandler = async ({ request, params }) => {
       return json({ error: 'Failed to update recipe' }, { status: 500 });
     }
 
-    // Log the recipe update
-    if (originalRecipe) {
-      await logRecipeUpdated(supabase, id, originalRecipe, updateData);
-    }
-
     return json({ recipe, success: true });
   } catch (error) {
     console.error('Error updating recipe:', error);
@@ -116,11 +110,6 @@ export const DELETE: RequestHandler = async ({ request, params }) => {
     if (fetchError) {
       console.error('Error fetching recipe for deletion:', fetchError);
       return json({ error: 'Recipe not found' }, { status: 404 });
-    }
-
-    // Log the recipe deletion BEFORE actually deleting
-    if (recipeToDelete) {
-      await logRecipeDeleted(supabase, recipeToDelete as Recipe);
     }
 
     const { error } = await supabase

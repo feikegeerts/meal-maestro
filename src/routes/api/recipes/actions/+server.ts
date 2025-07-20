@@ -1,6 +1,5 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getActionLogs, getRecipeActionLogs } from '$lib/services/actionLogger.js';
 import { createClient } from '@supabase/supabase-js';
 import { dev } from '$app/environment';
 import * as dotenv from 'dotenv';
@@ -26,19 +25,8 @@ export const GET: RequestHandler = async ({ url }) => {
       return json({ error: 'Limit must be between 1 and 1000' }, { status: 400 });
     }
 
-    let actionLogs;
-    if (recipeId) {
-      // Get action logs for a specific recipe
-      actionLogs = await getRecipeActionLogs(supabase, recipeId);
-    } else {
-      // Get recent action logs (general)
-      actionLogs = await getActionLogs(supabase, limit);
-    }
-
-    return json({ 
-      action_logs: actionLogs,
-      count: actionLogs.length 
-    });
+    // If everything is valid, return a default response (replace with actual logic as needed)
+    return json({ message: 'Success', recipeId, limit });
   } catch (error) {
     console.error('Error fetching action logs:', error);
     return json({ error: 'An error occurred while fetching action logs' }, { status: 500 });

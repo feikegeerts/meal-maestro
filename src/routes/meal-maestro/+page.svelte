@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import ChatInput from '$lib/components/ChatInput.svelte';
-  import ActionLogs from '$lib/components/ActionLogs.svelte';
   import RecipeDisplay from '$lib/components/RecipeDisplay.svelte';
   import RecipeList from '$lib/components/RecipeList.svelte';
   import PageHeader from '$lib/components/PageHeader.svelte';
@@ -208,15 +207,6 @@
           <span class="tab-icon">📄</span>
           <span class="tab-label">Details</span>
         </button>
-        
-        <button 
-          class="tab-button" 
-          class:active={activeTab === 'history'}
-          onclick={() => switchTab('history')}
-        >
-          <span class="tab-icon">📋</span>
-          <span class="tab-label">History</span>
-        </button>
       </div>
       
       <!-- Tab Content -->
@@ -231,11 +221,6 @@
             bind:recipe={displayedRecipe}
             isLoading={isProcessing}
             title={recipeDisplayTitle}
-          />
-        {:else if activeTab === 'history'}
-          <ActionLogs 
-            bind:actionLogs
-            onClearLogs={clearLogs}
           />
         {/if}
       </div>
