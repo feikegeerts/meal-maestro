@@ -109,11 +109,12 @@ An AI-powered recipe management system integrated into the Career Timeline appli
 
 ### Phase 5: Post-MVP Enhancements
 
+- [ ] **5.0** Implement edit functionality in the detail view for the user to edit the description or tags, or category and so on.
+- [ ] **5.0** Implement languages Dutch and English
 - [ ] **5.1** Add user authentication integration
 - [ ] **5.2** Implement user-specific recipe storage
 - [ ] **5.3** Add recipe sharing capabilities
 - [ ] **5.4** Enhanced search with semantic capabilities
-- [ ] **5.5** Cost optimization for OpenAI API usage
 - [ ] **5.6** Implement caching strategies
 
 ### Phase 6: Voice Integration
