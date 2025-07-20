@@ -1,5 +1,5 @@
 {
-  "name": "career-timeline",
+  "name": "meal-maestro",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -11,25 +11,37 @@
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "init-edge-config": "node ./scripts/initialize-edge-config.js"
+    "init-edge-config": "node ./scripts/initialize-edge-config.js",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.8",
     "@sveltejs/adapter-vercel": "^5.7.0",
     "@sveltejs/kit": "^2.16.0",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/svelte": "^5.2.8",
     "@types/node": "^22.14.1",
+    "@vitest/coverage-v8": "3.2.4",
+    "@vitest/ui": "^3.2.4",
     "dotenv": "^16.5.0",
+    "jsdom": "^26.1.0",
     "prettier": "^3.5.3",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "typescript": "^5.0.0",
     "vercel": "^41.6.1",
-    "vite": "^6.2.5"
+    "vite": "^6.2.5",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.51.0",
     "@types/bcrypt": "^5.0.2",
     "@vercel/edge-config": "^1.4.0",
-    "bcrypt": "^5.1.1"
+    "bcrypt": "^5.1.1",
+    "openai": "^5.10.1"
   }
 }
