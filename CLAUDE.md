@@ -21,15 +21,15 @@ function createActionLogsQueryMock(data = mockActionLogs, error = null) {
   mock.eq = vi.fn(() => mock);
   mock.overlaps = vi.fn(() => mock);
   mock.or = vi.fn(() => mock);
-  
+
   // Final method can return result directly
   mock.limit = vi.fn(() => ({ data, error }));
-  
+
   // CRITICAL: Implement .then() for await compatibility
-  mock.then = vi.fn((resolve) => {
+  mock.then = vi.fn(resolve => {
     return Promise.resolve({ data, error }).then(resolve);
   });
-  
+
   return mock;
 }
 ```
@@ -58,11 +58,11 @@ const errorClient = {
     mock.select = vi.fn(() => mock);
     mock.order = vi.fn(() => mock);
     mock.limit = vi.fn(() => mock);
-    mock.then = vi.fn((resolve) => {
+    mock.then = vi.fn(resolve => {
       return Promise.resolve({ data: null, error: new Error('Database error') }).then(resolve);
     });
     return mock;
-  })
+  }),
 };
 ```
 
@@ -101,8 +101,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Environment Setup
 
 - Uses `.env.local` for local development environment variables
-- Requires `TIMELINE_PASSWORD` (bcrypt hash) and `EDGE_CONFIG` (Vercel Edge Config URL)
-- `yarn init-edge-config` - Initialize Vercel Edge Config (requires setup script)
 
 ## Architecture Overview
 
@@ -124,24 +122,12 @@ src/
 ├── lib/
 │   ├── components/     # Reusable Svelte components
 │   ├── services/       # API service layer
-│   ├── authUtils.ts    # Client-side auth utilities
-│   └── types.ts        # TypeScript type definitions
-├── routes/
 │   ├── +layout.svelte  # Root layout with theme and navigation
 │   ├── +page.svelte    # Homepage with navigation tiles
 │   ├── api/            # SvelteKit API routes
-│   │   ├── auth/       # Authentication endpoints
-│   │   ├── career-events/ # Career data CRUD operations
-│   │   └── recipes/    # Meal Maestro API endpoints
-│   ├── career/         # Career timeline page
-│   └── meal-maestro/   # Meal planning feature
-├── server/
 │   └── utils/          # Server-side utilities (duplicated from lib/)
 └── test/
     ├── api/            # API endpoint unit tests
-    ├── integration/    # Integration tests
-    ├── performance/    # Performance benchmarks
-    └── mocks/          # Test mocks and utilities
 ```
 
 ### Key Components
@@ -155,14 +141,6 @@ src/
 ### Authentication System
 
 - Password-based authentication using bcrypt hashing
-- Session management with secure HTTP-only cookies
-- CSRF protection for state-changing operations
-- Rate limiting on login attempts (5 attempts, 15-minute lockout)
-- Session tokens expire after 4 hours
-
-### Data Storage
-
-- Uses Vercel Edge Config for storing career events data
 - No traditional database - leverages Vercel's edge infrastructure
 - Career events stored as JSON objects with id, title, company, period, description
 

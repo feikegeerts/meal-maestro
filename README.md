@@ -1,6 +1,6 @@
-# Career Timeline
+# Meal Maestro
 
-A comprehensive career timeline web application built with Svelte.
+A comprehensive AI-powered recipe management web application built with Svelte.
 
 ## Table of Contents
 
@@ -24,7 +24,7 @@ A comprehensive career timeline web application built with Svelte.
 
 ## Overview
 
-This project visualizes a professional career timeline, highlighting key milestones, experiences, and skills developed over time. It offers an interactive and visually appealing way to present career progression.
+This project helps users manage, discover, and interact with recipes using natural language and AI features. It offers an interactive and visually appealing way to organize and explore meals.
 
 ## Tech Stack
 
@@ -46,8 +46,8 @@ Clone the repository and install dependencies:
 
 ```bash
 # Clone the repository
-git clone https://github.com/feikegeerts/career-timeline.git
-cd career-timeline
+git clone https://github.com/feikegeerts/meal-maestro.git
+cd meal-maestro
 
 # Install dependencies
 yarn install
@@ -116,6 +116,7 @@ yarn check
 ### Test Results Summary
 
 The test suite includes **93 comprehensive tests** with:
+
 - **71% pass rate** (66 passing tests)
 - **100% performance benchmark success** (all API responses <2s)
 - Complete validation of OpenAI function calling integration
@@ -125,6 +126,7 @@ The test suite includes **93 comprehensive tests** with:
 ### Test Configuration
 
 Tests are configured with:
+
 - **TypeScript support** for type-safe testing
 - **Supabase mocking** for database operations
 - **OpenAI API mocking** for AI integration testing

@@ -2,8 +2,6 @@
     import '../app.css'; 
     import { onMount } from 'svelte';
     import ThemeToggle from '$lib/components/ThemeToggle.svelte';
-    import GitHubButton from '$lib/components/GitHubButton.svelte';
-    import LinkedInButton from '$lib/components/LinkedInButton.svelte';
     
     let currentTheme = 'light';
     
@@ -22,5 +20,3 @@
   
 <slot />
 <ThemeToggle bind:theme={currentTheme} />
-<GitHubButton />
-<LinkedInButton />
