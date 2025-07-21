@@ -7,7 +7,6 @@
   export let title: string = 'Meal Maestro';
   export let showHeader: boolean = true;
   export let showBottomNav: boolean = true;
-  export let headerActions: any[] = [];
   
   let isMobile = false;
   let screenWidth = 0;

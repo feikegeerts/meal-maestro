@@ -112,6 +112,7 @@ An AI-powered recipe management system. The system provides natural language rec
 - [ ] Fix icons on recipe detail page
 - [ ] Add recipe detail page to bottom nav list
 - [ ] Fix desktop layout
+- [ ] Scrolling on mobile is very jumpy because of the browser navigation popping in and out from the bottom
 - [ ] **5.0** Implement edit functionality in the detail view for the user to edit the description or tags, or category and so on.
 - [ ] **5.0** Implement languages Dutch and English
 - [ ] **5.1** Add user authentication integration
