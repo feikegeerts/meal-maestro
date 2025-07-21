@@ -42,7 +42,9 @@ function createAuthStore() {
           
           if (event === 'SIGNED_IN' && session) {
             await this.setSession(session);
+            await this.syncServerSession(session);
           } else if (event === 'SIGNED_OUT') {
+            await this.clearServerSession();
             set({
               user: null,
               session: null,
@@ -52,8 +54,10 @@ function createAuthStore() {
             });
           } else if (event === 'TOKEN_REFRESHED' && session) {
             await this.setSession(session);
+            await this.syncServerSession(session);
           } else if (event === 'INITIAL_SESSION' && session) {
             await this.setSession(session);
+            await this.syncServerSession(session);
           } else if (event === 'INITIAL_SESSION' && !session) {
             set({
               user: null,
@@ -141,7 +145,7 @@ function createAuthStore() {
                 profile = newProfile;
                 update(state => ({ ...state, profile: newProfile }));
               } else if (profileError) {
-                console.error('🔥 AUTH STORE: Error fetching user profile:', profileError);
+                console.error('Error fetching user profile:', profileError);
                 if (retryCount === 0) {
                   throw new Error('Retry needed');
                 }
@@ -151,7 +155,7 @@ function createAuthStore() {
                 update(state => ({ ...state, profile: profileData }));
               }
             } catch (profileFetchError) {
-              console.error('🔥 AUTH STORE: Profile fetch error:', profileFetchError);
+              console.error('Profile fetch error:', profileFetchError);
               if (
                 retryCount === 0 &&
                 typeof profileFetchError === 'object' &&
@@ -190,6 +194,40 @@ function createAuthStore() {
           loading: false,
           initialized: true
         });
+      }
+    },
+
+    // Sync session with server cookies
+    async syncServerSession(session: Session) {
+      try {
+        const response = await fetch('/api/auth/set-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+            expires_in: session.expires_in
+          })
+        });
+
+        if (!response.ok) {
+          console.error('Failed to sync session with server');
+        }
+      } catch (error) {
+        console.error('Error syncing session with server:', error);
+      }
+    },
+
+    // Clear server session cookies
+    async clearServerSession() {
+      try {
+        await fetch('/api/auth/sign-out', {
+          method: 'POST'
+        });
+      } catch (error) {
+        console.error('Error clearing server session:', error);
       }
     },
 

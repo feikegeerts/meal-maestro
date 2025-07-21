@@ -1,6 +1,7 @@
 <script lang="ts">
   import { filteredRecipes, hasActiveSearch, isLoading, recipeStore, recipes, searchFilters, searchResultCount } from '$lib/stores/recipeStore.js';
   import { toasts } from '$lib/stores/toastStore.js';
+  import { apiClient } from '$lib/services/authenticatedFetch.js';
   import type { Recipe } from '$lib/types.js';
   import { onMount } from 'svelte';
   import { Icon } from '@steeze-ui/svelte-icon';
@@ -40,26 +41,12 @@ import { Cake, MagnifyingGlass, PencilSquare, Trash, CheckCircle, ArrowLeft, Arr
   
   async function fetchRecipes() {
     try {
-      recipeStore.setLoading(true);
+      await recipeStore.loadRecipes();
       error = '';
-      
-      const response = await fetch('/api/recipes', {
-        credentials: 'include' // Include cookies for authentication
-      });
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch recipes');
-      }
-      
-      recipeStore.setRecipes(data.recipes || []);
     } catch (err) {
       console.error('Error fetching recipes:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch recipes';
       error = errorMessage;
-      recipeStore.setError(errorMessage);
-    } finally {
-      recipeStore.setLoading(false);
     }
   }
   
@@ -110,16 +97,9 @@ import { Cake, MagnifyingGlass, PencilSquare, Trash, CheckCircle, ArrowLeft, Arr
     const loadingToastId = toasts.info(`Marking "${recipe.title}" as eaten...`, '', { duration: 0 });
     
     try {
-      const response = await fetch(`/api/recipes/${recipe.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies for authentication
-        body: JSON.stringify({
-          id: recipe.id,
-          last_eaten: new Date().toISOString()
-        })
+      const response = await apiClient.put(`/api/recipes/${recipe.id}`, {
+        id: recipe.id,
+        last_eaten: new Date().toISOString()
       });
       
       const data = await response.json();
@@ -161,14 +141,7 @@ import { Cake, MagnifyingGlass, PencilSquare, Trash, CheckCircle, ArrowLeft, Arr
     const loadingToastId = toasts.info(`Deleting "${recipe.title}"...`, '', { duration: 0 });
     
     try {
-      const response = await fetch(`/api/recipes/${recipe.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies for authentication
-        body: JSON.stringify({ id: recipe.id })
-      });
+      const response = await apiClient.delete(`/api/recipes/${recipe.id}`, { id: recipe.id });
       
       const data = await response.json();
       
