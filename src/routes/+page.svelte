@@ -202,6 +202,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Meal Maestro</title>
+</svelte:head>
+
 <main>
   <PageHeader 
     title="Meal Maestro" 
