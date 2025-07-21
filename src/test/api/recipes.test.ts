@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 
-// Mock Supabase client
+
+// Mock Supabase client and auth
 const mockSupabaseClient = {
   from: vi.fn((table: string) => {
     // Chainable query object for select, insert, update
@@ -39,7 +40,12 @@ const mockSupabaseClient = {
         })
       })
     };
-  })
+  }),
+  auth: {
+    getUser: vi.fn(),
+    setSession: vi.fn(),
+    refreshSession: vi.fn()
+  }
 };
 
 vi.mock('@supabase/supabase-js', () => ({
@@ -64,12 +70,40 @@ vi.mock('dotenv', () => ({
   config: vi.fn()
 }));
 
-describe('Recipe API endpoints', () => {
-  let mockEvent: RequestEvent<any, "/api/recipes">;
+// ---
+// Helper and documentation for mocking authentication in tests
+//
+// By default, mockEvent.locals.user is set to a valid user object.
+// To simulate unauthenticated requests, set mockEvent.locals.user = undefined/null in your test.
+// You can customize the user object as needed for permission/role-based tests.
+// ---
 
+describe('Recipe API endpoints', () => {
+  let mockEvent: any;
+
+  /**
+   * By default, mockEvent.locals includes a mock authenticated user.
+   * To test unauthenticated scenarios, set mockEvent.locals.user = undefined/null in the test.
+   */
   beforeEach(() => {
     vi.clearAllMocks();
-    
+    // Mock cookies.get to return a valid access token for authenticated tests
+    const cookies = {
+      get: vi.fn((name: string) => {
+        if (name === 'sb-access-token') return 'test-access-token';
+        if (name === 'sb-refresh-token') return 'test-refresh-token';
+        return undefined;
+      }),
+      set: vi.fn(),
+      delete: vi.fn()
+    };
+    // Mock supabase.auth.getUser to return a user if access token is present
+    mockSupabaseClient.auth.getUser.mockImplementation(async (token: string) => {
+      if (token === 'test-access-token') {
+        return { data: { user: { id: 'user-123', email: 'testuser@example.com' } }, error: null };
+      }
+      return { data: { user: null }, error: { message: 'Invalid token' } };
+    });
     mockEvent = {
       url: new URL('http://localhost:3000/api/recipes'),
       request: new Request('http://localhost:3000/api/recipes', {
@@ -81,15 +115,22 @@ describe('Recipe API endpoints', () => {
       platform: undefined,
       route: { id: "/api/recipes" },
       setHeaders: vi.fn(),
-      cookies: {} as any,
+      cookies,
       fetch: vi.fn(),
       getClientAddress: vi.fn(),
       isDataRequest: false,
       isSubRequest: false
-    } as RequestEvent<any, "/api/recipes">;
+    };
   });
 
   describe('GET /api/recipes', () => {
+    it('should return 401 if unauthenticated', async () => {
+      const { GET } = await import('../../routes/api/recipes/+server.js');
+      // Remove the access token from cookies
+      mockEvent.cookies.get = vi.fn(() => undefined);
+      const response = await GET(mockEvent);
+      expect(response.status).toBe(401);
+    });
     it('should return all recipes', async () => {
       const { GET } = await import('../../routes/api/recipes/+server.js');
       
@@ -139,6 +180,17 @@ describe('Recipe API endpoints', () => {
   });
 
   describe('POST /api/recipes', () => {
+    it('should return 401 if unauthenticated', async () => {
+      const { POST } = await import('../../routes/api/recipes/+server.js');
+      mockEvent.cookies.get = vi.fn(() => undefined);
+      mockEvent.request = new Request('http://localhost:3000/api/recipes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'Test', ingredients: [], description: '', category: '' })
+      });
+      const response = await POST(mockEvent);
+      expect(response.status).toBe(401);
+    });
     it('should create a new recipe', async () => {
       const { POST } = await import('../../routes/api/recipes/+server.js');
       
@@ -186,6 +238,17 @@ describe('Recipe API endpoints', () => {
   });
 
   describe('PUT /api/recipes', () => {
+    it('should return 401 if unauthenticated', async () => {
+      const { PUT } = await import('../../routes/api/recipes/+server.js');
+      mockEvent.cookies.get = vi.fn(() => undefined);
+      mockEvent.request = new Request('http://localhost:3000/api/recipes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: '1', title: 'Test', ingredients: [], description: '', category: '' })
+      });
+      const response = await PUT(mockEvent);
+      expect(response.status).toBe(401);
+    });
     it('should update a recipe', async () => {
       const { PUT } = await import('../../routes/api/recipes/+server.js');
       
@@ -234,6 +297,17 @@ describe('Recipe API endpoints', () => {
   });
 
   describe('DELETE /api/recipes', () => {
+    it('should return 401 if unauthenticated', async () => {
+      const { DELETE } = await import('../../routes/api/recipes/+server.js');
+      mockEvent.cookies.get = vi.fn(() => undefined);
+      mockEvent.request = new Request('http://localhost:3000/api/recipes', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: '1' })
+      });
+      const response = await DELETE(mockEvent);
+      expect(response.status).toBe(401);
+    });
     it('should delete a recipe', async () => {
       const { DELETE } = await import('../../routes/api/recipes/+server.js');
       
