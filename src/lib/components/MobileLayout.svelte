@@ -1,67 +1,20 @@
 <script lang="ts">
-  import { page } from '$app/stores';
-  import MobileBottomNav from './MobileBottomNav.svelte';
-  import ThemeToggle from './ThemeToggle.svelte';
-  import { onMount } from 'svelte';
+  import TopNav from './TopNav.svelte';
   
-  export let title: string = 'Meal Maestro';
   export let showHeader: boolean = true;
-  export let showBottomNav: boolean = true;
-  
-  let isMobile = false;
-  let screenWidth = 0;
-  
-  onMount(() => {
-    function updateScreenSize() {
-      screenWidth = window.innerWidth;
-      isMobile = screenWidth < 768;
-    }
-    
-    updateScreenSize();
-    window.addEventListener('resize', updateScreenSize);
-    
-    return () => {
-      window.removeEventListener('resize', updateScreenSize);
-    };
-  });
-  
-  $: currentPath = $page.url.pathname;
-  $: pageTitle = getPageTitle(currentPath);
-  
-  function getPageTitle(path: string): string {
-    switch (path) {
-      case '/':
-        return 'My Recipes';
-      case '/chat':
-        return 'Recipe Chat';
-      case '/settings':
-        return 'Settings';
-      default:
-        if (path.startsWith('/recipes/')) {
-          return 'Recipe Details';
-        }
-        return title;
-    }
-  }
 </script>
 
-<div class="mobile-layout" class:has-bottom-nav={showBottomNav && isMobile}>
+<div class="mobile-layout">
+  <!-- Top navigation - always visible and sticky -->
+  {#if showHeader}
+    <TopNav />
+  {/if}
   
   <main class="main-content" class:with-header={showHeader}>
     <div class="content-container">
       <slot />
     </div>
   </main>
-  
-  {#if showBottomNav && isMobile}
-    <MobileBottomNav />
-  {/if}
-  
-  {#if isMobile}
-    <div class="mobile-theme-toggle">
-      <ThemeToggle />
-    </div>
-  {/if}
 </div>
 
 <style>
@@ -72,7 +25,35 @@
     background: var(--background, #ffffff);
   }
   
-  .mobile-layout.has-bottom-nav {
-    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0));
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .main-content.with-header {
+    /* Add top padding to account for sticky top nav */
+    padding-top: 0; /* Top nav handles its own spacing */
+  }
+  
+  .content-container {
+    flex: 1;
+    padding: 16px;
+  }
+  
+  /* Adjust content padding on different screen sizes */
+  @media (min-width: 768px) {
+    .content-container {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .content-container {
+      padding: 32px;
+    }
   }
 </style>
