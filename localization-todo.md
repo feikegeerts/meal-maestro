@@ -41,7 +41,6 @@ Create a comprehensive i18n system for the SvelteKit application with Dutch as t
 
 - `src/routes/+page.svelte` - Homepage content
 - `src/routes/+layout.svelte` - Navigation elements
-- `src/lib/components/ThemeToggle.svelte` - Theme switcher
 - `src/lib/components/PageHeader.svelte` - Headers
 
 **Key translations needed:**

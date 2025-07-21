@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import ThemeToggle from '$lib/components/ThemeToggle.svelte';
   import { Icon } from '@steeze-ui/svelte-icon';
   import { ClipboardDocumentList } from '@steeze-ui/heroicons';
   import ToastContainer from '$lib/components/ToastContainer.svelte';

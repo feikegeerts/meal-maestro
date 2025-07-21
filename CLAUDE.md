@@ -132,9 +132,6 @@ src/
 ### Key Components
 
 - **TimelineView.svelte**: Main career timeline visualization
-- **ThemeToggle.svelte**: Light/dark theme switching with localStorage persistence
-
-- **ActionLogs.svelte**: Admin interface for data management
 - **VoiceInput.svelte**: Voice-to-text input capability
 
 ### Theme System
