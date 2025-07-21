@@ -33,6 +33,28 @@ This project helps users manage, discover, and interact with recipes using natur
 - **Deployment**: GitHub Pages via GitHub Actions
 - **CDN/DNS**: Cloudflare
 
+```mermaid
+graph TD
+User[User (Browser)] -->|Interacts with| Frontend[SvelteKit UI (Svelte 5)]
+Frontend -->|Bundled with| Vite[Vite]
+Frontend -->|Uses| SteezeUI[Steeze UI + Heroicons]
+
+    Frontend -->|Calls| API[SvelteKit Endpoints (Serverless)]
+    API -->|Deployed on| Vercel[Vercel (Edge Functions)]
+
+    API -->|Handles| Auth[Supabase Auth]
+    API -->|Reads/Writes| DB[Supabase PostgreSQL]
+    API -->|Stores Files| Storage[Supabase Storage]
+
+    API -->|Sends requests to| OpenAI[OpenAI API]
+
+    DevTools[Dev Environment] -->|Code| Frontend
+    DevTools -->|Type Checking| TS[TypeScript]
+    DevTools -->|Formatting| Prettier
+    DevTools -->|Environment Config| Dotenv
+    DevTools -->|Testing| Testing[Vitest + Testing Library (Svelte + Jest-DOM)]
+```
+
 ## Getting Started
 
 ### Prerequisites

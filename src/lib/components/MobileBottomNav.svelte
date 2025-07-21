@@ -101,7 +101,6 @@
     min-width: 60px;
     min-height: 44px; /* Minimum touch target size */
     color: var(--text-secondary, #6b7280);
-    tap-highlight-color: transparent;
     -webkit-tap-highlight-color: transparent;
   }
   
@@ -126,14 +125,6 @@
     line-height: 1;
     filter: grayscale(0.3);
     transition: filter 0.2s ease;
-  }
-
-  .icon-svg {
-    width: 22px;
-    height: 22px;
-    stroke-width: 2.2;
-    color: currentColor;
-    display: block;
   }
 
   .nav-item.active .nav-icon {
