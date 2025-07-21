@@ -131,6 +131,34 @@ describe('Recipe API endpoints', () => {
       const response = await GET(mockEvent);
       expect(response.status).toBe(401);
     });
+
+    it('should authenticate with Authorization header (Bearer only)', async () => {
+      const { GET } = await import('../../routes/api/recipes/+server.js');
+      // Remove cookies, set Authorization header
+      mockEvent.cookies.get = vi.fn(() => undefined);
+      mockEvent.request = new Request('http://localhost:3000/api/recipes', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer test-access-token' }
+      });
+      const response = await GET(mockEvent);
+      const data = await response.json();
+      expect(response.status).toBe(200);
+      expect(data).toHaveProperty('recipes');
+    });
+
+    it('should authenticate with Authorization header (Bearer and Refresh)', async () => {
+      const { GET } = await import('../../routes/api/recipes/+server.js');
+      // Remove cookies, set Authorization header with both tokens
+      mockEvent.cookies.get = vi.fn(() => undefined);
+      mockEvent.request = new Request('http://localhost:3000/api/recipes', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer test-access-token; Refresh test-refresh-token' }
+      });
+      const response = await GET(mockEvent);
+      const data = await response.json();
+      expect(response.status).toBe(200);
+      expect(data).toHaveProperty('recipes');
+    });
     it('should return all recipes', async () => {
       const { GET } = await import('../../routes/api/recipes/+server.js');
       
@@ -190,6 +218,48 @@ describe('Recipe API endpoints', () => {
       });
       const response = await POST(mockEvent);
       expect(response.status).toBe(401);
+    });
+
+    it('should authenticate with Authorization header (Bearer only)', async () => {
+      const { POST } = await import('../../routes/api/recipes/+server.js');
+      mockEvent.cookies.get = vi.fn(() => undefined);
+      const recipeData = {
+        title: 'Test Recipe',
+        ingredients: ['ingredient1'],
+        description: 'desc',
+        category: 'dinner'
+      };
+      mockEvent.request = new Request('http://localhost:3000/api/recipes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer test-access-token' },
+        body: JSON.stringify(recipeData)
+      });
+      const response = await POST(mockEvent);
+      const data = await response.json();
+      expect(response.status).toBe(200);
+      expect(data).toHaveProperty('recipe');
+      expect(data).toHaveProperty('success', true);
+    });
+
+    it('should authenticate with Authorization header (Bearer and Refresh)', async () => {
+      const { POST } = await import('../../routes/api/recipes/+server.js');
+      mockEvent.cookies.get = vi.fn(() => undefined);
+      const recipeData = {
+        title: 'Test Recipe',
+        ingredients: ['ingredient1'],
+        description: 'desc',
+        category: 'dinner'
+      };
+      mockEvent.request = new Request('http://localhost:3000/api/recipes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer test-access-token; Refresh test-refresh-token' },
+        body: JSON.stringify(recipeData)
+      });
+      const response = await POST(mockEvent);
+      const data = await response.json();
+      expect(response.status).toBe(200);
+      expect(data).toHaveProperty('recipe');
+      expect(data).toHaveProperty('success', true);
     });
     it('should create a new recipe', async () => {
       const { POST } = await import('../../routes/api/recipes/+server.js');
