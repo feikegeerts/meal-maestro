@@ -194,13 +194,6 @@
     white-space: nowrap;
   }
 
-  .nav-actions {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
   /* Mobile responsive design */
   @media (max-width: 767px) {
     .nav-container {

@@ -4,6 +4,7 @@
   import { goto } from '$app/navigation';
   import RecipeDisplay from '$lib/components/RecipeDisplay.svelte';
   import ToastContainer from '$lib/components/ToastContainer.svelte';
+  import { apiClient } from '$lib/services/authenticatedFetch.js';
   import type { Recipe } from '$lib/types.js';
   import { isAuthenticated } from '$lib/stores/auth.js';
   import { toasts } from '$lib/stores/toastStore.js';
@@ -25,9 +26,7 @@
       isLoading = true;
       error = '';
       
-      const response = await fetch(`/api/recipes/${recipeId}`, {
-        credentials: 'include'
-      });
+      const response = await apiClient.get(`/api/recipes/${recipeId}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -35,7 +34,8 @@
       } else if (response.status === 404) {
         error = 'Recipe not found';
       } else {
-        throw new Error('Failed to load recipe');
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to load recipe');
       }
     } catch (err) {
       console.error('Error loading recipe:', err);
@@ -50,10 +50,7 @@
     if (!recipe) return;
 
     try {
-      const response = await fetch(`/api/recipes/${recipe.id}/eaten`, {
-        method: 'POST',
-        credentials: 'include'
-      });
+      const response = await apiClient.post(`/api/recipes/${recipe.id}/eaten`);
 
       if (response.ok) {
         const data = await response.json();

@@ -42,22 +42,31 @@ export async function getAuthenticatedUser(event: RequestEvent): Promise<AuthUse
     if (error || !user) {
       // Try to refresh the token if we have a refresh token
       if (refreshToken) {
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
-          refresh_token: refreshToken
-        });
+        try {
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+            refresh_token: refreshToken
+          });
 
-        if (refreshError || !refreshData.session) {
-          // Clear invalid cookies
-          event.cookies.delete('sb-access-token', { path: '/' });
-          event.cookies.delete('sb-refresh-token', { path: '/' });
-          return null;
-        }
+          if (refreshError) {
+            console.error('Token refresh failed:', refreshError);
+            // Clear invalid cookies
+            event.cookies.delete('sb-access-token', { path: '/' });
+            event.cookies.delete('sb-refresh-token', { path: '/' });
+            return null;
+          }
 
-        // Update cookies with new tokens (if using cookies)
-        if (event.cookies) {
+          if (!refreshData.session) {
+            console.error('Token refresh returned no session');
+            // Clear invalid cookies
+            event.cookies.delete('sb-access-token', { path: '/' });
+            event.cookies.delete('sb-refresh-token', { path: '/' });
+            return null;
+          }
+
+          // Update cookies with new tokens
           event.cookies.set('sb-access-token', refreshData.session.access_token, {
             path: '/',
-            maxAge: refreshData.session.expires_in,
+            maxAge: refreshData.session.expires_in || 3600, // Default 1 hour
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax'
@@ -72,12 +81,22 @@ export async function getAuthenticatedUser(event: RequestEvent): Promise<AuthUse
               sameSite: 'lax'
             });
           }
-        }
 
-        return {
-          id: refreshData.session.user.id,
-          email: refreshData.session.user.email
-        };
+          return {
+            id: refreshData.session.user.id,
+            email: refreshData.session.user.email
+          };
+        } catch (refreshError) {
+          console.error('Token refresh exception:', refreshError);
+          // Clear cookies on any refresh failure
+          event.cookies.delete('sb-access-token', { path: '/' });
+          event.cookies.delete('sb-refresh-token', { path: '/' });
+          return null;
+        }
+      } else {
+        // Clear access token cookie if no refresh token
+        event.cookies.delete('sb-access-token', { path: '/' });
+        return null;
       }
 
       return null;

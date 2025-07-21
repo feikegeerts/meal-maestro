@@ -1,4 +1,5 @@
 import { writable, derived } from 'svelte/store';
+import { apiClient } from '../services/authenticatedFetch.js';
 import type { Recipe } from '../types.js';
 
 export interface SearchFilters {
@@ -40,6 +41,43 @@ function createRecipeStore() {
 
   return {
     subscribe,
+    
+    // Load recipes from API
+    async loadRecipes() {
+      try {
+        update(state => ({ ...state, isLoading: true, error: null }));
+        
+        const response = await apiClient.get('/api/recipes');
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch recipes');
+        }
+        
+        const recipes = data.recipes || [];
+        update(state => {
+          const filteredRecipes = filterRecipes(recipes, state.searchFilters);
+          return {
+            ...state,
+            recipes,
+            filteredRecipes,
+            searchResultCount: filteredRecipes.length,
+            isLoading: false,
+            error: null
+          };
+        });
+        
+        return recipes;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to fetch recipes';
+        update(state => ({ 
+          ...state, 
+          isLoading: false, 
+          error: errorMessage 
+        }));
+        throw error;
+      }
+    },
     
     // Set loading state
     setLoading: (loading: boolean) => {
@@ -176,7 +214,7 @@ function filterRecipes(recipes: Recipe[], filters: SearchFilters): Recipe[] {
   // Apply tags filter
   if (filters.tags.length > 0) {
     filtered = filtered.filter(recipe => 
-      filters.tags.some(tag => recipe.tags.includes(tag))
+      filters.tags.some(tag => recipe.tags.includes(tag as any))
     );
   }
   
