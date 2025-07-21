@@ -30,7 +30,7 @@ This project helps users manage, discover, and interact with recipes using natur
 
 - **Frontend Framework**: [Svelte](https://svelte.dev/) - A radical new approach to building user interfaces
 - **Build Tool**: [SvelteKit](https://kit.svelte.dev/) - The fastest way to build Svelte apps
-- **Deployment**: GitHub Pages via GitHub Actions
+- **Deployment**: Vercel (Edge Functions & Static/SSR)
 - **CDN/DNS**: Cloudflare
 
 ```mermaid
@@ -39,8 +39,9 @@ graph TD
     Frontend -->|Bundled with| Vite["Vite"]
     Frontend -->|Uses| SteezeUI["Steeze UI + Heroicons"]
 
+    Frontend -->|Served from| VercelFrontend["Vercel (Static/SSR)"]
     Frontend -->|Calls| API["SvelteKit Endpoints (Serverless)"]
-    API -->|Deployed on| Vercel["Vercel (Edge Functions)"]
+    API -->|Deployed on| VercelAPI["Vercel (Edge Functions)"]
 
     API -->|Handles| Auth["Supabase Auth"]
     API -->|Reads/Writes| DB["Supabase PostgreSQL"]
@@ -178,23 +179,23 @@ This project uses GitHub Actions for continuous integration and deployment. The 
 1. Triggers on push to the main branch
 2. Runs tests and linting
 3. Builds the application
-4. Deploys to GitHub Pages
+4. Deploys to Vercel
 
 You can find the workflow configuration in `.github/workflows/deploy.yml`.
 
-### GitHub Pages Deployment
+### Vercel Deployment
 
-The application is automatically deployed to GitHub Pages on successful builds of the main branch. The deployment:
+The application is automatically deployed to Vercel on successful builds of the main branch. The deployment:
 
-- Uses the `gh-pages` branch for hosting
-- Configures the application for the appropriate base path
-- Sets up necessary CNAME records for custom domain
+- Uses Vercel for both static and serverless/edge deployments
+- Supports custom domains via Vercel's dashboard
+- Handles environment variables and preview deployments out of the box
 
 ## Infrastructure
 
 ### Cloudflare Configuration
 
-Cloudflare sits in front of our GitHub Pages deployment, providing:
+Cloudflare can be used in front of the Vercel deployment, providing:
 
 - CDN capabilities for improved performance
 - DDoS protection
@@ -205,9 +206,9 @@ Cloudflare sits in front of our GitHub Pages deployment, providing:
 
 The application is accessible via a custom domain configured through:
 
-1. GitHub Pages custom domain setting
-2. DNS records in Cloudflare pointing to GitHub Pages
-3. CNAME file in the project repository
+1. Vercel custom domain settings
+2. DNS records in Cloudflare pointing to Vercel
+3. CNAME or A records as required by Vercel
 
 ## License
 
