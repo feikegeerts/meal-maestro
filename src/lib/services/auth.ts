@@ -11,8 +11,26 @@ export interface AuthUser {
  */
 export async function getAuthenticatedUser(event: RequestEvent): Promise<AuthUser | null> {
   try {
-    const accessToken = event.cookies.get('sb-access-token');
-    const refreshToken = event.cookies.get('sb-refresh-token');
+    // Try to get tokens from cookies first
+    let accessToken = event.cookies.get('sb-access-token');
+    let refreshToken = event.cookies.get('sb-refresh-token');
+
+    // If not found in cookies, try Authorization header (Bearer <accessToken>; Refresh <refreshToken>)
+    if (!accessToken) {
+      const authHeader = event.request.headers.get('authorization');
+      if (authHeader) {
+        // Support: "Bearer <accessToken>" or "Bearer <accessToken>; Refresh <refreshToken>"
+        const parts = authHeader.split(';').map(p => p.trim());
+        const bearer = parts.find(p => p.toLowerCase().startsWith('bearer '));
+        if (bearer) {
+          accessToken = bearer.substring(7).trim();
+        }
+        const refresh = parts.find(p => p.toLowerCase().startsWith('refresh '));
+        if (refresh) {
+          refreshToken = refresh.substring(8).trim();
+        }
+      }
+    }
 
     if (!accessToken) {
       return null;
@@ -35,23 +53,25 @@ export async function getAuthenticatedUser(event: RequestEvent): Promise<AuthUse
           return null;
         }
 
-        // Update cookies with new tokens
-        event.cookies.set('sb-access-token', refreshData.session.access_token, {
-          path: '/',
-          maxAge: refreshData.session.expires_in,
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax'
-        });
-
-        if (refreshData.session.refresh_token) {
-          event.cookies.set('sb-refresh-token', refreshData.session.refresh_token, {
+        // Update cookies with new tokens (if using cookies)
+        if (event.cookies) {
+          event.cookies.set('sb-access-token', refreshData.session.access_token, {
             path: '/',
-            maxAge: 60 * 60 * 24 * 7, // 7 days
+            maxAge: refreshData.session.expires_in,
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax'
           });
+
+          if (refreshData.session.refresh_token) {
+            event.cookies.set('sb-refresh-token', refreshData.session.refresh_token, {
+              path: '/',
+              maxAge: 60 * 60 * 24 * 7, // 7 days
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax'
+            });
+          }
         }
 
         return {
@@ -78,13 +98,27 @@ export async function getAuthenticatedUser(event: RequestEvent): Promise<AuthUse
  */
 export async function createAuthenticatedClient(event: RequestEvent) {
   const user = await getAuthenticatedUser(event);
-  
   if (!user) {
     return null;
   }
 
-  const accessToken = event.cookies.get('sb-access-token');
-  
+  // Get tokens from cookies or Authorization header (same logic as getAuthenticatedUser)
+  let accessToken = event.cookies.get('sb-access-token');
+  let refreshToken = event.cookies.get('sb-refresh-token');
+  if (!accessToken) {
+    const authHeader = event.request.headers.get('authorization');
+    if (authHeader) {
+      const parts = authHeader.split(';').map(p => p.trim());
+      const bearer = parts.find(p => p.toLowerCase().startsWith('bearer '));
+      if (bearer) {
+        accessToken = bearer.substring(7).trim();
+      }
+      const refresh = parts.find(p => p.toLowerCase().startsWith('refresh '));
+      if (refresh) {
+        refreshToken = refresh.substring(8).trim();
+      }
+    }
+  }
   if (!accessToken) {
     return null;
   }
@@ -93,7 +127,7 @@ export async function createAuthenticatedClient(event: RequestEvent) {
   const authenticatedSupabase = supabase;
   await authenticatedSupabase.auth.setSession({
     access_token: accessToken,
-    refresh_token: event.cookies.get('sb-refresh-token') || ''
+    refresh_token: refreshToken || ''
   });
 
   return {
