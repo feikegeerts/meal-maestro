@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 
-// Mock Supabase client
+// Mock Supabase client and auth
 const mockSupabaseClient = {
   from: vi.fn(() => ({
     select: vi.fn().mockReturnThis(),
@@ -9,7 +9,12 @@ const mockSupabaseClient = {
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     then: vi.fn().mockResolvedValue({ data: [], error: null })
-  }))
+  })),
+  auth: {
+    getUser: vi.fn(),
+    setSession: vi.fn(),
+    refreshSession: vi.fn()
+  }
 };
 
 vi.mock('@supabase/supabase-js', () => ({
@@ -88,7 +93,25 @@ describe('Chat API endpoint', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+    // Mock cookies.get to return a valid access token for authenticated tests
+    const cookies = {
+      get: vi.fn((name: string) => {
+        if (name === 'sb-access-token') return 'test-access-token';
+        if (name === 'sb-refresh-token') return 'test-refresh-token';
+        return undefined;
+      }),
+      set: vi.fn(),
+      delete: vi.fn(),
+      getAll: vi.fn(() => []),
+      serialize: vi.fn(() => '')
+    };
+    // Mock supabase.auth.getUser to return a user if access token is present
+    mockSupabaseClient.auth.getUser.mockImplementation(async (token: string) => {
+      if (token === 'test-access-token') {
+        return { data: { user: { id: 'user-123', email: 'testuser@example.com' } }, error: null };
+      }
+      return { data: { user: null }, error: { message: 'Invalid token' } };
+    });
     mockEvent = {
       url: new URL('http://localhost:3000/api/recipes/chat'),
       request: new Request('http://localhost:3000/api/recipes/chat', {
@@ -100,12 +123,12 @@ describe('Chat API endpoint', () => {
       platform: undefined,
       route: { id: "/api/recipes/chat" },
       setHeaders: vi.fn(),
-      cookies: {} as any,
+      cookies,
       fetch: vi.fn(),
       getClientAddress: vi.fn(),
       isDataRequest: false,
       isSubRequest: false
-    } as RequestEvent<any, "/api/recipes/chat">;
+    };
   });
 
   describe('GET /api/recipes/chat', () => {
@@ -199,6 +222,7 @@ describe('Chat API endpoint', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(chatData)
       });
+
 
       const response = await POST(mockEvent);
       const data = await response.json();
