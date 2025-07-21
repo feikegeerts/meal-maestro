@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import type { Recipe } from '$lib/types.js';
   import { recipeStore } from '$lib/stores/recipeStore.js';
+  import { Icon } from '@steeze-ui/svelte-icon';
+import { ClipboardDocumentList } from '@steeze-ui/heroicons';
   import { toasts } from '$lib/stores/toastStore.js';
   
   export let isProcessing = false;
@@ -11,7 +13,9 @@
   export let onRecipesFound: (recipes: Recipe[]) => void = () => {};
   export let onSearchResults: (recipes: Recipe[], searchQuery: string) => void = () => {};
   export let onRecipeUpdated: (recipe: Recipe) => void = () => {};
-  
+
+  export let messageInputValue: string = '';
+
   // Context props for LLM awareness
   export let currentTab: string = 'browse';
   export let selectedRecipe: Recipe | null = null;
@@ -19,7 +23,6 @@
   let currentMessage = '';
   let chatContainer: HTMLDivElement;
   let messageInput: HTMLInputElement;
-
   let shouldAutoScroll = true;
   let previousHistoryLength = 0;
 
@@ -256,7 +259,14 @@
     if (messageInput) {
       messageInput.focus();
     }
+    
+    // Set initial value of the message input
+    currentMessage = messageInputValue;
   });
+
+  $: if (messageInputValue && currentMessage === '') {
+    currentMessage = messageInputValue;
+  }
 </script>
 
 <section class="chat-section">
@@ -271,7 +281,7 @@
   <div class="conversation" bind:this={chatContainer} onscroll={checkScrollPosition}>
     {#if conversationHistory.length === 0}
       <div class="welcome-message">
-        <div class="welcome-icon">🍽️</div>
+        <div class="welcome-icon"><Icon src={ClipboardDocumentList} size="48" /></div>
         <h4>Welcome to Meal Maestro!</h4>
         <p>I'm your AI-powered recipe assistant. Ask me to:</p>
         <ul>
@@ -346,12 +356,12 @@
 <style>
   .chat-section {
     background: var(--surface);
-    border-radius: 16px;
     border: 1px solid var(--border);
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     display: flex;
     flex-direction: column;
-    height: 600px;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow: hidden;
   }
 

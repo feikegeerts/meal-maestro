@@ -1,7 +1,7 @@
 <script>
     import '../app.css'; 
     import { onMount } from 'svelte';
-    import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+    import MobileLayout from '$lib/components/MobileLayout.svelte';
     import { authStore, isInitialized } from '$lib/stores/auth.js';
     
     let currentTheme = 'light';
@@ -23,15 +23,15 @@
 </script>
   
 {#if $isInitialized}
-  <slot />
+  <MobileLayout>
+    <slot />
+  </MobileLayout>
 {:else}
   <div class="loading-screen">
     <div class="loading-spinner"></div>
     <p>Initializing...</p>
   </div>
 {/if}
-
-<ThemeToggle bind:theme={currentTheme} />
 
 <style>
   .loading-screen {
