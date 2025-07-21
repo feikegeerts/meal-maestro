@@ -3,6 +3,8 @@
   import { toasts } from '$lib/stores/toastStore.js';
   import type { Recipe } from '$lib/types.js';
   import { onMount } from 'svelte';
+  import { Icon } from '@steeze-ui/svelte-icon';
+import { Cake, MagnifyingGlass, PencilSquare, Trash, CheckCircle, ArrowLeft, ArrowRight, ClipboardDocumentList } from '@steeze-ui/heroicons';
   
   // Callback props for actions that still need parent interaction
   export let onRecipeSelected: ((recipe: Recipe) => void) | undefined = undefined;
@@ -253,13 +255,6 @@
 
 <section class="recipe-list">
   <div class="list-header">
-    <div class="header-top">
-      <h3 class="list-title">Recipe Collection</h3>
-      <button class="refresh-button" onclick={fetchRecipes} disabled={$isLoading}>
-        <div class="refresh-icon" class:spinning={$isLoading}>🔄</div>
-      </button>
-    </div>
-    
     <!-- Filters and Search -->
     <div class="filters-section">
       <div class="search-box">
@@ -325,7 +320,11 @@
     {:else if sortedRecipes.length === 0}
       <div class="empty-state">
         <div class="empty-icon">
-          {$hasActiveSearch ? '🔍' : '🍽️'}
+          {#if $hasActiveSearch}
+            <Icon src={MagnifyingGlass} size="48" />
+          {:else}
+            <Icon src={Cake} size="48" />
+          {/if}
         </div>
         <h4>
           {$hasActiveSearch ? 'No recipes found' : 'No recipes yet'}
@@ -354,21 +353,21 @@
                   onclick={e => handleMarkEaten(recipe, e)}
                   title="Mark as eaten"
                 >
-                  🍽️
+                  <Icon src={CheckCircle} size="20" />
                 </button>
                 <button 
                   class="action-button edit" 
                   onclick={e => handleEditRecipe(recipe, e)}
                   title="Edit recipe"
                 >
-                  ✏️
+                  <Icon src={PencilSquare} size="20" />
                 </button>
                 <button 
                   class="action-button delete" 
                   onclick={e => handleDeleteRecipe(recipe, e)}
                   title="Delete recipe"
                 >
-                  🗑️
+                  <Icon src={Trash} size="20" />
                 </button>
               </div>
             </div>
@@ -378,13 +377,13 @@
                 {recipe.category}
               </span>
               {#if recipe.season}
-                <span class="season-badge">🌿 {recipe.season}</span>
+                <span class="season-badge"><Icon src={Cake} size="16" style="vertical-align: middle; margin-right: 2px;" /> {recipe.season}</span>
               {/if}
             </div>
             
             <div class="recipe-preview">
               <div class="ingredients-count">
-                📋 {recipe.ingredients.length} ingredients
+                <Icon src={ClipboardDocumentList} size="16" style="vertical-align: middle; margin-right: 2px;" /> {recipe.ingredients.length} ingredients
               </div>
               {#if recipe.tags.length > 0}
                 <div class="tags-preview">
@@ -400,7 +399,7 @@
             
             <div class="recipe-footer">
               <span class="last-eaten">
-                🍽️ {formatDate(recipe.last_eaten)}
+                <Icon src={CheckCircle} size="14" style="vertical-align: middle; margin-right: 2px;" /> {formatDate(recipe.last_eaten)}
               </span>
               <span class="created-date">
                 Added {formatDate(recipe.created_at)}
@@ -418,7 +417,7 @@
             onclick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
           >
-            ←
+            <Icon src={ArrowLeft} size="18" />
           </button>
           
           {#each Array(totalPages) as _, i}
@@ -436,7 +435,7 @@
             onclick={() => goToPage(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
-            →
+            <Icon src={ArrowRight} size="18" />
           </button>
         </div>
       {/if}
@@ -460,50 +459,6 @@
     padding: 1.5rem;
     border-bottom: 1px solid var(--border);
     background: var(--surface);
-  }
-  
-  .header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-  
-  .list-title {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 1.2rem;
-    font-weight: 600;
-  }
-  
-  .refresh-button {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-light);
-    padding: 0.5rem;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.2s ease;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .refresh-button:hover:not(:disabled) {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-  }
-  
-  .refresh-icon {
-    transition: transform 0.2s ease;
-  }
-  
-  .refresh-icon.spinning {
-    animation: spin 1s linear infinite;
   }
   
   .filters-section {
@@ -853,12 +808,7 @@
     .list-header {
       padding: 1rem;
     }
-    
-    .header-top {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.5rem;
-    }
+  
     
     .recipe-header {
       flex-direction: column;

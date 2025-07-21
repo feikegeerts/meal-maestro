@@ -732,6 +732,16 @@
   resolved "https://registry.npmjs.org/@sinclair/typebox/-/typebox-0.25.24.tgz"
   integrity sha512-XJfwUVUKDHF5ugKwIcxEgc9k8b7HbznCp6eUfWgu710hMPNIO4aw4/zB5RogDQz8nd6gyCDpU9O/m6qYEWY6yQ==
 
+"@steeze-ui/heroicons@^2.4.2":
+  version "2.4.2"
+  resolved "https://registry.yarnpkg.com/@steeze-ui/heroicons/-/heroicons-2.4.2.tgz#d1f84d685b3a31b8d08c2cab5fadac9302ef9b7c"
+  integrity sha512-66luL+uaxyC6mcZigewH4phfDxNWj4sH+n6qK2VnY3zcgpMmNAgVQbMGfZYfKhLqrUo13BlqpmhWuHqAUpehlA==
+
+"@steeze-ui/svelte-icon@^1.6.2":
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/@steeze-ui/svelte-icon/-/svelte-icon-1.6.2.tgz#de49a98209e00c1ce9bef4368b612f0bfbef7f12"
+  integrity sha512-Q2WP/RkM1JhMueX0FJogSj4J1bncSHaAiiPCqjcseRcHKqfpjYFPJa8bA50I+4KbyOVJ9fdUvTQ3ww9X0ITRxQ==
+
 "@supabase/auth-js@2.71.0":
   version "2.71.0"
   resolved "https://registry.yarnpkg.com/@supabase/auth-js/-/auth-js-2.71.0.tgz#5545a42294875e859f970fd91f8a76457b2c94ed"

@@ -83,11 +83,12 @@
     transform: translateY(-1px);
   }
 
-  .display-content {
-    flex: 1;
+.display-content {
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
-    padding: 1rem;
-  }
+    padding: 0;
+}
 
   .loading-state {
     display: flex;
@@ -152,16 +153,13 @@
 
   /* Mobile responsiveness */
   @media (max-width: 768px) {
-    .recipe-display {
-      height: 500px;
-    }
     
     .display-header {
       padding: 1rem;
     }
     
     .display-content {
-      padding: 0.75rem;
+      padding: 0.0;
     }
   }
 
