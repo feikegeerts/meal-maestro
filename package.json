@@ -38,8 +38,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@steeze-ui/heroicons": "^2.4.2",
-    "@steeze-ui/svelte-icon": "^1.6.2",
+    "@iconify/svelte": "^5.0.0",
     "@supabase/supabase-js": "^2.51.0",
     "@vercel/edge-config": "^1.4.0",
     "openai": "^5.10.1"

@@ -1,40 +1,40 @@
 :root {
   /* Light theme - Mobile First Design System */
-  
+
   /* Primary Colors */
   --primary: #3b82f6;
   --primary-dark: #1d4ed8;
   --primary-light: #dbeafe;
   --primary-bg: #dbeafe;
   --primary-border: #93c5fd;
-  
+
   /* Secondary Colors */
   --secondary: #10b981;
   --secondary-dark: #047857;
   --secondary-light: #a7f3d0;
-  
+
   /* Accent Colors */
   --accent: #f59e0b;
   --accent-dark: #d97706;
   --accent-light: #fef3c7;
-  
+
   /* Neutral Colors */
   --background: #f8fafc;
   --surface: #ffffff;
   --surface-color: #ffffff;
-  
+
   /* Text Colors */
   --text-primary: #111827;
   --text-secondary: #6b7280;
   --text-tertiary: #9ca3af;
   --text: #1f2937;
   --text-light: #6b7280;
-  
+
   /* Border Colors */
   --border: #e5e7eb;
   --border-color: #e5e7eb;
   --border-light: #f3f4f6;
-  
+
   /* Status Colors */
   --error: #dc2626;
   --error-light: #fef2f2;
@@ -42,26 +42,26 @@
   --error-color: #dc2626;
   --error-bg: #fef2f2;
   --error-hover: #fca5a5;
-  
+
   --success: #16a34a;
   --success-light: #f0fdf4;
   --success-border: #86efac;
-  
+
   --warning: #f59e0b;
   --warning-light: #fffbeb;
   --warning-border: #fcd34d;
-  
+
   /* Interactive Colors */
   --hover: #f3f4f6;
   --hover-color: #f3f4f6;
   --active: #e5e7eb;
   --active-color: #e5e7eb;
-  
+
   /* Button Colors */
   --button-secondary-bg: #f3f4f6;
   --button-secondary-hover: #e5e7eb;
   --button-secondary-active: #d1d5db;
-  
+
   /* Mobile Typography Scale */
   --text-xs: 12px;
   --text-sm: 14px;
@@ -71,7 +71,7 @@
   --text-2xl: 24px;
   --text-3xl: 28px;
   --text-4xl: 32px;
-  
+
   /* Spacing Scale - Mobile First */
   --space-1: 4px;
   --space-2: 8px;
@@ -84,14 +84,14 @@
   --space-12: 48px;
   --space-16: 64px;
   --space-20: 80px;
-  
+
   /* Border Radius */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-2xl: 24px;
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -107,34 +107,34 @@
   --primary-light: #1e3a8a;
   --primary-bg: #1e3a8a;
   --primary-border: #3b82f6;
-  
+
   /* Secondary Colors */
   --secondary: #34d399;
   --secondary-dark: #065f46;
   --secondary-light: #064e3b;
-  
+
   /* Accent Colors */
   --accent: #fbbf24;
   --accent-dark: #92400e;
   --accent-light: #92400e;
-  
+
   /* Neutral Colors */
   --background: #0f172a;
   --surface: #1e293b;
   --surface-color: #1f2937;
-  
+
   /* Text Colors */
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-tertiary: #64748b;
   --text: #f9fafb;
   --text-light: #9ca3af;
-  
+
   /* Border Colors */
   --border: #334155;
   --border-color: #374151;
   --border-light: #334155;
-  
+
   /* Status Colors */
   --error: #ef4444;
   --error-light: #7f1d1d;
@@ -142,21 +142,21 @@
   --error-color: #ef4444;
   --error-bg: #7f1d1d;
   --error-hover: #dc2626;
-  
+
   --success: #22c55e;
   --success-light: #14532d;
   --success-border: #16a34a;
-  
+
   --warning: #f59e0b;
   --warning-light: #92400e;
   --warning-border: #d97706;
-  
+
   /* Interactive Colors */
   --hover: #374151;
   --hover-color: #374151;
   --active: #4b5563;
   --active-color: #6b7280;
-  
+
   /* Button Colors */
   --button-secondary-bg: #374151;
   --button-secondary-hover: #4b5563;
@@ -181,16 +181,25 @@ body {
   padding: 0;
   background-color: var(--background);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: var(--text-base);
   line-height: 1.5;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
 /* Typography - Mobile First */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
   font-weight: 600;
   line-height: 1.2;
@@ -198,12 +207,24 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
 }
 
-h1 { font-size: var(--text-3xl); }
-h2 { font-size: var(--text-2xl); }
-h3 { font-size: var(--text-xl); }
-h4 { font-size: var(--text-lg); }
-h5 { font-size: var(--text-base); }
-h6 { font-size: var(--text-sm); }
+h1 {
+  font-size: var(--text-3xl);
+}
+h2 {
+  font-size: var(--text-2xl);
+}
+h3 {
+  font-size: var(--text-xl);
+}
+h4 {
+  font-size: var(--text-lg);
+}
+h5 {
+  font-size: var(--text-base);
+}
+h6 {
+  font-size: var(--text-sm);
+}
 
 p {
   margin: 0;
@@ -248,7 +269,9 @@ button:disabled {
 }
 
 /* Form Elements - Mobile Optimized */
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: inherit;
   font-size: var(--text-base);
   line-height: inherit;
@@ -260,16 +283,24 @@ input, select, textarea {
   border: 2px solid var(--border);
   border-radius: var(--radius-md);
   padding: 12px 16px;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
   width: 100%;
   min-height: 44px;
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   outline: none;
   border-color: var(--primary);
   background: var(--surface-color);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.iconify--lucide {
+  margin-bottom: -2px;
 }
 
 /* Main Layout - Mobile First */
@@ -301,13 +332,22 @@ main {
 
 /* Loading States */
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* Focus Visible for Better Accessibility */
@@ -326,16 +366,24 @@ main {
   html {
     font-size: 18px;
   }
-  
-  h1 { font-size: var(--text-4xl); }
-  h2 { font-size: var(--text-3xl); }
-  h3 { font-size: var(--text-2xl); }
-  
-  input, select, textarea {
+
+  h1 {
+    font-size: var(--text-4xl);
+  }
+  h2 {
+    font-size: var(--text-3xl);
+  }
+  h3 {
+    font-size: var(--text-2xl);
+  }
+
+  input,
+  select,
+  textarea {
     min-height: 48px;
     padding: 14px 18px;
   }
-  
+
   button {
     min-height: 48px;
   }
@@ -346,7 +394,7 @@ main {
     width: 8px;
     height: 8px;
   }
-  
+
   ::-webkit-scrollbar-thumb {
     border-radius: 4px;
   }

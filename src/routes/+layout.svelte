@@ -55,7 +55,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--background, #ffffff);
+    background: var(--background);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -67,14 +67,14 @@
   .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid var(--border, #e5e7eb);
-    border-top: 3px solid var(--primary, #3b82f6);
+    border: 3px solid var(--border);
+    border-top: 3px solid var(--primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
 
   .loading-screen p {
-    color: var(--text-secondary, #6b7280);
+    color: var(--text-secondary);
     font-size: 0.9rem;
   }
 

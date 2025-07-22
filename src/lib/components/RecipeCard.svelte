@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '@iconify/svelte';
   import type { Recipe } from '$lib/types.js';
   
   export let recipe: Recipe;
@@ -35,14 +36,14 @@
         {recipe.category}
       </span>
       {#if recipe.season}
-        <span class="season-badge">🌿 {recipe.season}</span>
+        <span class="season-badge"><Icon icon="lucide:sprout" width="1em" height="1em" />{recipe.season}</span>
       {/if}
     </div>
   </div>
 
   <div class="recipe-body">
     <div class="ingredients-section">
-      <h4 class="section-title">📋 Ingredients</h4>
+      <h4 class="section-title"><Icon icon="lucide:clipboard-list" width="1em" height="1em" />Ingredients</h4>
       <ul class="ingredients-list">
         {#each recipe.ingredients as ingredient}
           <li class="ingredient-item">{ingredient}</li>
@@ -51,7 +52,7 @@
     </div>
 
     <div class="instructions-section">
-      <h4 class="section-title">👨‍🍳 Instructions</h4>
+      <h4 class="section-title"><Icon icon="lucide:chef-hat" width="1em" height="1em" />Instructions</h4>
       <div class="instructions-content">
         {recipe.description}
       </div>
@@ -59,7 +60,7 @@
 
     {#if recipe.tags && recipe.tags.length > 0}
       <div class="tags-section">
-        <h4 class="section-title">🏷️ Tags</h4>
+        <h4 class="section-title"><Icon icon="lucide:tag" width="1em" height="1em" />Tags</h4>
         <div class="tags-container">
           {#each recipe.tags as tag}
             <span class="tag">{tag}</span>
@@ -70,7 +71,7 @@
 
     {#if recipe.last_eaten}
       <div class="last-eaten-section">
-        <span class="last-eaten-label">🍽️ Last enjoyed:</span>
+        <span class="last-eaten-label"><Icon icon="lucide:utensils" width="1em" height="1em" />Last enjoyed:</span>
         <span class="last-eaten-date">{formatDate(recipe.last_eaten)}</span>
       </div>
     {/if}
@@ -148,8 +149,9 @@
     font-weight: 600;
     margin: 0 0 0.75rem 0;
     display: flex;
+    flex-direction: row;
     align-items: center;
-    gap: 0.5rem;
+    gap: .5rem;
   }
 
   .ingredients-section {
@@ -237,6 +239,10 @@
   .last-eaten-label {
     color: var(--text-secondary);
     font-weight: 500;
+  }
+  
+  .last-eaten-label :global(svg) {
+    margin-right: .5rem;
   }
 
   .last-eaten-date {

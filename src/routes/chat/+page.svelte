@@ -83,7 +83,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: var(--background, #f8fafc);
+    background: var(--background);
   }
 
   .chat-container {

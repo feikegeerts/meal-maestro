@@ -4,8 +4,7 @@
   import { apiClient } from '$lib/services/authenticatedFetch.js';
   import type { Recipe } from '$lib/types.js';
   import { onMount } from 'svelte';
-  import { Icon } from '@steeze-ui/svelte-icon';
-import { Cake, MagnifyingGlass, PencilSquare, Trash, CheckCircle, ArrowLeft, ArrowRight, ClipboardDocumentList } from '@steeze-ui/heroicons';
+import Icon from '@iconify/svelte';
   
   // Callback props for actions that still need parent interaction
   export let onRecipeSelected: ((recipe: Recipe) => void) | undefined = undefined;
@@ -294,9 +293,9 @@ import { Cake, MagnifyingGlass, PencilSquare, Trash, CheckCircle, ArrowLeft, Arr
       <div class="empty-state">
         <div class="empty-icon">
           {#if $hasActiveSearch}
-            <Icon src={MagnifyingGlass} size="48" />
+            <Icon icon="lucide:search" width="48" height="48" />
           {:else}
-            <Icon src={Cake} size="48" />
+            <Icon icon="lucide:cake" width="48" height="48" />
           {/if}
         </div>
         <h4>
@@ -326,21 +325,21 @@ import { Cake, MagnifyingGlass, PencilSquare, Trash, CheckCircle, ArrowLeft, Arr
                   onclick={e => handleMarkEaten(recipe, e)}
                   title="Mark as eaten"
                 >
-                  <Icon src={CheckCircle} size="20" />
+                  <Icon icon="lucide:check-circle" width="20" height="20" />
                 </button>
                 <button 
                   class="action-button edit" 
                   onclick={e => handleEditRecipe(recipe, e)}
                   title="Edit recipe"
                 >
-                  <Icon src={PencilSquare} size="20" />
+                  <Icon icon="lucide:pencil" width="20" height="20" />
                 </button>
                 <button 
                   class="action-button delete" 
                   onclick={e => handleDeleteRecipe(recipe, e)}
                   title="Delete recipe"
                 >
-                  <Icon src={Trash} size="20" />
+                  <Icon icon="lucide:trash-2" width="20" height="20" />
                 </button>
               </div>
             </div>
@@ -350,13 +349,13 @@ import { Cake, MagnifyingGlass, PencilSquare, Trash, CheckCircle, ArrowLeft, Arr
                 {recipe.category}
               </span>
               {#if recipe.season}
-                <span class="season-badge"><Icon src={Cake} size="16" style="vertical-align: middle; margin-right: 2px;" /> {recipe.season}</span>
+                <span class="season-badge"><Icon icon="lucide:cake" width="16" height="16" /> {recipe.season}</span>
               {/if}
             </div>
             
             <div class="recipe-preview">
               <div class="ingredients-count">
-                <Icon src={ClipboardDocumentList} size="16" style="vertical-align: middle; margin-right: 2px;" /> {recipe.ingredients.length} ingredients
+                <Icon icon="lucide:clipboard-list" width="16" height="16" /> {recipe.ingredients.length} ingredients
               </div>
               {#if recipe.tags.length > 0}
                 <div class="tags-preview">
@@ -372,7 +371,7 @@ import { Cake, MagnifyingGlass, PencilSquare, Trash, CheckCircle, ArrowLeft, Arr
             
             <div class="recipe-footer">
               <span class="last-eaten">
-                <Icon src={CheckCircle} size="14" style="vertical-align: middle; margin-right: 2px;" /> {formatDate(recipe.last_eaten)}
+                <Icon icon="lucide:check-circle" width="14" height="14" /> {formatDate(recipe.last_eaten)}
               </span>
               <span class="created-date">
                 Added {formatDate(recipe.created_at)}
@@ -390,7 +389,7 @@ import { Cake, MagnifyingGlass, PencilSquare, Trash, CheckCircle, ArrowLeft, Arr
             onclick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
           >
-            <Icon src={ArrowLeft} size="18" />
+            <Icon icon="lucide:arrow-left" width="18" height="18" />
           </button>
           
           {#each Array(totalPages) as _, i}
@@ -408,7 +407,7 @@ import { Cake, MagnifyingGlass, PencilSquare, Trash, CheckCircle, ArrowLeft, Arr
             onclick={() => goToPage(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
-            <Icon src={ArrowRight} size="18" />
+            <Icon icon="lucide:arrow-right" width="18" height="18" />
           </button>
         </div>
       {/if}
@@ -519,7 +518,7 @@ import { Cake, MagnifyingGlass, PencilSquare, Trash, CheckCircle, ArrowLeft, Arr
   }
   
   .clear-filters-button:hover {
-    background: #dc2626;
+    background: var(--error-hover);
   }
   
   .list-content {

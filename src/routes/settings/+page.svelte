@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Icon } from '@steeze-ui/svelte-icon';
-  import { ClipboardDocumentList } from '@steeze-ui/heroicons';
+  import Icon from '@iconify/svelte';
   import ToastContainer from '$lib/components/ToastContainer.svelte';
   import { isAuthenticated, authStore } from '$lib/stores/auth.js';
   import { toasts } from '$lib/stores/toastStore.js';
@@ -287,7 +286,7 @@
         <h2 class="section-title" id="about-title">About</h2>
         <div class="settings-group">
           <div class="app-info" role="region" aria-label="App Information">
-            <div class="app-icon" aria-hidden="true"><Icon src={ClipboardDocumentList} size="48" /></div>
+            <div class="app-icon" aria-hidden="true"><Icon icon="lucide:chef-hat" width="48" height="48" /></div>
             <div class="app-details">
               <h3 class="app-name">Meal Maestro</h3>
                 <p class="app-version">Version {__APP_VERSION__}</p>
@@ -309,7 +308,7 @@
     display: flex;
     flex-direction: column;
     min-height: 100%;
-    background: var(--background, #f8fafc);
+    background: var(--background);
   }
 
   .settings-container {
@@ -321,17 +320,17 @@
   }
 
   .settings-section {
-    background: var(--surface, #ffffff);
+    background: var(--surface);
     border-radius: 16px;
     padding: 24px;
-    border: 1px solid var(--border, #e5e7eb);
+    border: 1px solid var(--border);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   }
 
   .section-title {
     font-size: 20px;
     font-weight: 600;
-    color: var(--text-primary, #111827);
+    color: var(--text-primary);
     margin: 0 0 20px 0;
     letter-spacing: -0.01em;
   }
@@ -367,14 +366,14 @@
   .setting-name {
     font-size: 16px;
     font-weight: 500;
-    color: var(--text-primary, #111827);
+    color: var(--text-primary);
     margin: 0 0 4px 0;
     letter-spacing: -0.01em;
   }
 
   .setting-description {
     font-size: 14px;
-    color: var(--text-secondary, #6b7280);
+    color: var(--text-secondary);
     margin: 0;
     line-height: 1.4;
   }
@@ -407,7 +406,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--border, #e5e7eb);
+    background-color: var(--border);
     transition: 0.2s;
     border-radius: 32px;
   }
@@ -426,7 +425,7 @@
   }
 
   input:checked + .toggle-slider {
-    background-color: var(--primary, #3b82f6);
+    background-color: var(--primary);
   }
 
   input:checked + .toggle-slider:before {
@@ -436,10 +435,10 @@
   /* Select */
   .setting-select {
     padding: 8px 12px;
-    border: 2px solid var(--border, #e5e7eb);
+    border: 2px solid var(--border);
     border-radius: 8px;
-    background: var(--background, #f8fafc);
-    color: var(--text-primary, #111827);
+    background: var(--background);
+    color: var(--text-primary);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -449,8 +448,8 @@
 
   .setting-select:focus {
     outline: none;
-    border-color: var(--primary, #3b82f6);
-    background: var(--surface, #ffffff);
+    border-color: var(--primary);
+    background: var(--surface);
   }
 
   /* Buttons */
@@ -467,26 +466,26 @@
   }
 
   .setting-button.secondary {
-    background: var(--background, #f8fafc);
-    color: var(--text-primary, #111827);
-    border-color: var(--border, #e5e7eb);
+    background: var(--background);
+    color: var(--text-primary);
+    border-color: var(--border);
   }
 
   .setting-button.secondary:hover {
-    background: var(--surface, #ffffff);
-    border-color: var(--primary-light, #93c5fd);
+    background: var(--surface);
+    border-color: var(--primary-light);
   }
 
   .setting-button.danger {
-    background: var(--error-light, #fef2f2);
-    color: var(--error, #dc2626);
-    border-color: var(--error-light, #fecaca);
+    background: var(--error-light);
+    color: var(--error);
+    border-color: var(--error-light);
   }
 
   .setting-button.danger:hover {
-    background: var(--error, #dc2626);
+    background: var(--error);
     color: white;
-    border-color: var(--error, #dc2626);
+    border-color: var(--error);
   }
 
   .setting-button:disabled {
@@ -496,9 +495,9 @@
   }
 
   .setting-button:disabled:hover {
-    background: var(--error-light, #fef2f2);
-    color: var(--error, #dc2626);
-    border-color: var(--error-light, #fecaca);
+    background: var(--error-light);
+    color: var(--error);
+    border-color: var(--error-light);
   }
 
   /* App Info */
@@ -522,7 +521,11 @@
     background: var(--surface);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
-    color: var(--text-primary);
+    color: var(--primary);
+  }
+
+  .app-icon :global(svg) {
+    color: var(--primary);
   }
 
   .app-details {

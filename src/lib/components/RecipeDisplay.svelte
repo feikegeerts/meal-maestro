@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '@iconify/svelte';
   import RecipeCard from '$lib/components/RecipeCard.svelte';
   import type { Recipe } from '$lib/types.js';
   
@@ -27,7 +28,7 @@
       </div>
     {:else if !recipe}
       <div class="empty-state">
-        <div class="empty-icon">🍽️</div>
+        <div class="empty-icon"><Icon icon="lucide:utensils" width="3em" height="3em" /></div>
         <h4>No recipe to display</h4>
         <p>Ask Meal Maestro to search for a recipe or add a new one!</p>
       </div>
@@ -79,7 +80,7 @@
   }
 
   .clear-button:hover {
-    background: #dc2626;
+    background: var(--error-hover);
     transform: translateY(-1px);
   }
 

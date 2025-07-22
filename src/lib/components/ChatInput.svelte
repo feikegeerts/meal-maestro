@@ -2,8 +2,7 @@
   import { onMount } from 'svelte';
   import type { Recipe } from '$lib/types.js';
   import { recipeStore } from '$lib/stores/recipeStore.js';
-  import { Icon } from '@steeze-ui/svelte-icon';
-import { ClipboardDocumentList } from '@steeze-ui/heroicons';
+import Icon from '@iconify/svelte';
   import { toasts } from '$lib/stores/toastStore.js';
   
   export let isProcessing = false;
@@ -281,7 +280,7 @@ import { ClipboardDocumentList } from '@steeze-ui/heroicons';
   <div class="conversation" bind:this={chatContainer} onscroll={checkScrollPosition}>
     {#if conversationHistory.length === 0}
       <div class="welcome-message">
-        <div class="welcome-icon"><Icon src={ClipboardDocumentList} size="48" /></div>
+        <div class="welcome-icon"><Icon icon="lucide:clipboard-list" width="48" height="48" /></div>
         <h4>Welcome to Meal Maestro!</h4>
         <p>I'm your AI-powered recipe assistant. Ask me to:</p>
         <ul>

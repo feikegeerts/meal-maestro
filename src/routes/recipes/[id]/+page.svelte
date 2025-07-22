@@ -9,8 +9,7 @@
   import { isAuthenticated } from '$lib/stores/auth.js';
   import { toasts } from '$lib/stores/toastStore.js';
   import LoginButton from '$lib/components/LoginButton.svelte';
-  import { Icon } from '@steeze-ui/svelte-icon';
-  import { ArrowLeft, Check, PencilSquare, ExclamationCircle } from '@steeze-ui/heroicons';
+import Icon from '@iconify/svelte';
 
   let recipe: Recipe | null = null;
   let isLoading = true;
@@ -112,7 +111,7 @@
           type="button"
         >
           <span class="back-icon">
-            <Icon src={ArrowLeft} size="18" />
+            <Icon icon="lucide:arrow-left" width="18" height="18" />
           </span>
           <span class="back-text">Recipes</span>
         </button>
@@ -126,7 +125,7 @@
               type="button"
             >
               <span class="action-icon">
-                <Icon src={Check} size="16" />
+                <Icon icon="lucide:check" width="16" height="16" />
               </span>
               <span class="action-text">Mark as Eaten</span>
             </button>
@@ -138,7 +137,7 @@
               type="button"
             >
               <span class="action-icon">
-                <Icon src={PencilSquare} size="16" />
+                <Icon icon="lucide:pencil" width="16" height="16" />
               </span>
               <span class="action-text">Edit</span>
             </button>
@@ -156,7 +155,7 @@
         {:else if error}
           <div class="error-state">
             <span class="error-icon">
-              <Icon src={ExclamationCircle} size="48" />
+              <Icon icon="lucide:alert-circle" width="48" height="48" />
             </span>
             <h2 class="error-title">Recipe Not Found</h2>
             <p class="error-text">The recipe you're looking for doesn't exist or has been removed.</p>
@@ -204,8 +203,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    background: var(--surface, #ffffff);
-    border-bottom: 1px solid var(--border, #e5e7eb);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
     gap: 16px;
   }
 
@@ -215,7 +214,7 @@
     gap: 8px;
     background: none;
     border: none;
-    color: var(--text-primary, #111827);
+    color: var(--text-primary);
     font-size: 16px;
     font-weight: 500;
     cursor: pointer;
@@ -226,8 +225,8 @@
   }
 
   .back-button:hover {
-    background: var(--hover, #f3f4f6);
-    color: var(--primary, #3b82f6);
+    background: var(--hover);
+    color: var(--primary);
   }
 
   .back-button:active {
@@ -264,26 +263,26 @@
   }
 
   .action-button.secondary {
-    background: var(--background, #f8fafc);
-    color: var(--text-primary, #111827);
-    border-color: var(--border, #e5e7eb);
+    background: var(--background);
+    color: var(--text-primary);
+    border-color: var(--border);
   }
 
   .action-button.secondary:hover {
-    background: var(--surface, #ffffff);
-    border-color: var(--primary-light, #93c5fd);
-    color: var(--primary, #3b82f6);
+    background: var(--surface);
+    border-color: var(--primary-light);
+    color: var(--primary);
   }
 
   .action-button.primary {
-    background: var(--primary, #3b82f6);
+    background: var(--primary);
     color: white;
-    border-color: var(--primary, #3b82f6);
+    border-color: var(--primary);
   }
 
   .action-button.primary:hover {
-    background: var(--primary-dark, #1d4ed8);
-    border-color: var(--primary-dark, #1d4ed8);
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
     transform: translateY(-1px);
   }
 
@@ -322,14 +321,14 @@
   .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid var(--border, #e5e7eb);
-    border-top: 3px solid var(--primary, #3b82f6);
+    border: 3px solid var(--border);
+    border-top: 3px solid var(--primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
 
   .loading-state p {
-    color: var(--text-secondary, #6b7280);
+    color: var(--text-secondary);
     margin: 0;
     font-size: 14px;
   }
@@ -353,12 +352,12 @@
   .error-title {
     font-size: 20px;
     font-weight: 600;
-    color: var(--text-primary, #111827);
+    color: var(--text-primary);
     margin: 0;
   }
 
   .error-text {
-    color: var(--text-secondary, #6b7280);
+    color: var(--text-secondary);
     font-size: 14px;
     margin: 0;
     line-height: 1.5;
@@ -366,7 +365,7 @@
   }
 
   .error-action {
-    background: var(--primary, #3b82f6);
+    background: var(--primary);
     color: white;
     border: none;
     padding: 12px 24px;
@@ -379,7 +378,7 @@
   }
 
   .error-action:hover {
-    background: var(--primary-dark, #1d4ed8);
+    background: var(--primary-dark);
     transform: translateY(-1px);
   }
 
@@ -390,34 +389,6 @@
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-  }
-
-  /* Dark theme support */
-  @media (prefers-color-scheme: dark) {
-    .recipe-detail-page {
-      background: var(--background, #0f172a);
-    }
-  
-    .back-button {
-      color: var(--text-primary, #f8fafc);
-    }
-
-    .back-button:hover {
-      background: var(--hover, #334155);
-      color: var(--primary-light, #60a5fa);
-    }
-
-    .action-button.secondary {
-      background: var(--background, #0f172a);
-      border-color: var(--border, #334155);
-      color: var(--text-primary, #f8fafc);
-    }
-
-    .action-button.secondary:hover {
-      background: var(--surface, #1e293b);
-      border-color: var(--primary, #3b82f6);
-      color: var(--primary-light, #60a5fa);
-    }
   }
 
   /* Tablet and desktop adjustments */

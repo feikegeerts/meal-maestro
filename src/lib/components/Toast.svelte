@@ -5,7 +5,7 @@
   export let type: 'success' | 'error' | 'info' | 'warning' = 'info';
   export let title: string;
   export let message: string = '';
-  export let duration: number = 5000; // Auto-dismiss after 5 seconds
+  export let duration: number = 4000; // Auto-dismiss after 5 seconds
   export let dismissible: boolean = true;
   export let onClose: ((id: string) => void) | undefined = undefined;
   
@@ -56,12 +56,14 @@
     }
   }
   
-  // Icon mapping
+  import Icon from '@iconify/svelte';
+
+  // Icon mapping using Lucide
   const icons = {
-    success: '✅',
-    error: '❌',
-    warning: '⚠️',
-    info: 'ℹ️'
+    success: 'lucide:check-circle',
+    error: 'lucide:x-circle',
+    warning: 'lucide:alert-triangle',
+    info: 'lucide:info'
   };
 </script>
 
@@ -75,7 +77,7 @@
 >
   <div class="toast-content">
     <div class="toast-icon">
-      {icons[type]}
+      <Icon icon={icons[type]} width="1.5em" height="1.5em" />
     </div>
     
     <div class="toast-text">
@@ -119,19 +121,19 @@
   }
   
   .toast-success {
-    border-left: 4px solid #22c55e;
+    border-left: 4px solid var(--success);
   }
   
   .toast-error {
-    border-left: 4px solid #ef4444;
+    border-left: 4px solid var(--error);
   }
   
   .toast-warning {
-    border-left: 4px solid #f59e0b;
+    border-left: 4px solid var(--warning);
   }
   
   .toast-info {
-    border-left: 4px solid #3b82f6;
+    border-left: 4px solid var(--primary);
   }
   
   .toast-content {
@@ -142,7 +144,7 @@
   }
   
   .toast-icon {
-    font-size: 1.25rem;
+    font-size: 1rem;
     flex-shrink: 0;
     margin-top: 0.125rem;
   }
@@ -161,7 +163,7 @@
   
   .toast-message {
     color: var(--text-secondary);
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     line-height: 1.4;
     word-wrap: break-word;
   }
@@ -170,7 +172,7 @@
     background: none;
     border: none;
     color: var(--text-secondary);
-    font-size: 1.5rem;
+    font-size: 1rem;
     cursor: pointer;
     padding: 0;
     width: 24px;
@@ -199,19 +201,19 @@
   }
   
   .toast-success .toast-progress {
-    background: #22c55e;
+    background: var(--success);
   }
   
   .toast-error .toast-progress {
-    background: #ef4444;
+    background: var(--error);
   }
   
   .toast-warning .toast-progress {
-    background: #f59e0b;
+    background: var(--warning);
   }
   
   .toast-info .toast-progress {
-    background: #3b82f6;
+    background: var(--primary);
   }
   
   .toast-progress.paused {
@@ -248,7 +250,7 @@
     }
     
     .toast-icon {
-      font-size: 1.1rem;
+      font-size: 1rem;
     }
   }
 </style>
