@@ -111,7 +111,7 @@ An AI-powered recipe management system. The system provides natural language rec
 
 - [x] **5.1** Add user authentication integration
 - [x] **5.2** Implement user-specific recipe storage
-- [ ] **5.3** Fix icons on recipe detail page
+- [x] **5.3** Fix icons on recipe detail page
 - [ ] **5.4** Add recipe detail page to nav list
 - [ ] **5.5** Fix desktop layout
 - [ ] **5.6** Favicon

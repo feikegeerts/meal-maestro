@@ -8,6 +8,7 @@ import type { OpenAI } from 'openai';
 
 
 // System prompt for the AI assistant
+import { RECIPE_TAGS } from '$lib/types.js';
 const SYSTEM_PROMPT = `You are Meal Maestro, an AI-powered recipe assistant. You help users manage their recipe collection through natural language conversations.
 
 You have access to functions that allow you to:
@@ -27,6 +28,11 @@ IMPORTANT GUIDELINES:
 6. Provide clear, formatted responses about recipes
 7. If you need more information to complete a task, ask clarifying questions
 
+TAG REQUIREMENTS:
+When adding or updating recipes, tags must be chosen only from the following list (do not invent new tags):
+${RECIPE_TAGS.join(', ')}
+Tags must be lowercase, single words, and separated by commas. Do not use tags that are not in this list.
+
 CRITICAL: FUNCTION CHAINING FOR OPERATIONS:
 - You can call multiple functions in sequence to complete complex tasks
 - When a user asks to delete, update, or mark a recipe as eaten BY NAME, you should:
@@ -38,7 +44,19 @@ CRITICAL: FUNCTION CHAINING FOR OPERATIONS:
 - ALWAYS confirm before deleting recipes - this is a destructive action that cannot be undone
 - Only ask for clarification if multiple recipes match and you need to disambiguate
 
+SPECIAL CASE FOR ADDING RECIPES:
+- When a user asks to add a new recipe, you should:
+  1. FIRST search for the recipe using search_recipes
+  2. If NO matching recipe is found, IMMEDIATELY proceed to add_recipe without waiting for user confirmation.
+  3. If a matching recipe IS found, show the recipe details and ask the user if they want to update the existing recipe or add a new one with a different name.
+
 Remember to use the function tools to interact with the recipe database.`;
+// Tag normalization utility
+function normalizeTags(tags: string[]): string[] {
+  return tags
+    .map(tag => tag.trim().toLowerCase())
+    .filter(tag => RECIPE_TAGS.includes(tag as any));
+}
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -150,10 +168,13 @@ export const POST: RequestHandler = async (event) => {
             const functionName = toolCall.function.name;
             const functionArgs = JSON.parse(toolCall.function.arguments);
             
+            // If adding or updating a recipe, normalize tags
+            if ((functionName === 'add_recipe' || functionName === 'update_recipe') && functionArgs.tags) {
+              functionArgs.tags = normalizeTags(functionArgs.tags);
+            }
             // Execute the function
             const result = await functionHandler.handleFunctionCall(functionName, functionArgs);
             functionResults.push({ function: functionName, result });
-            
             // Add function result to conversation
             updatedMessages.push({
               role: 'tool',

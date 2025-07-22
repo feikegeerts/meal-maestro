@@ -37,7 +37,7 @@ This project helps users manage, discover, and interact with recipes using natur
 graph TD
     User["User (Browser)"] -->|Interacts with| Frontend["SvelteKit UI (Svelte 5)"]
     Frontend -->|Bundled with| Vite["Vite"]
-    Frontend -->|Uses| SteezeUI["Steeze UI + Heroicons"]
+    Frontend -->|Uses| iconify["For lucide icons"]
 
     Frontend -->|Served from| VercelFrontend["Vercel (Static/SSR)"]
     Frontend -->|Calls| API["SvelteKit Endpoints (Serverless)"]
