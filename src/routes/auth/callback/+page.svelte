@@ -118,11 +118,11 @@
 
   .loading h2, .error h2 {
     margin-bottom: 1rem;
-    color: var(--text-primary, #333);
+    color: var(--text-primary);
   }
 
   .loading p, .error p {
-    color: var(--text-secondary, #666);
+    color: var(--text-secondary);
     margin-bottom: 0.5rem;
   }
 
@@ -130,8 +130,8 @@
     display: inline-block;
     width: 40px;
     height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid var(--primary, #3b82f6);
+    border: 4px solid var(--border);
+    border-top: 4px solid var(--primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 1rem;
@@ -143,6 +143,6 @@
   }
 
   .error {
-    color: #dc2626;
+    color: var(--text-error);
   }
 </style>

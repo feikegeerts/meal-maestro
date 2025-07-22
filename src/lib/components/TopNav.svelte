@@ -2,8 +2,7 @@
 <script lang="ts">
 import { page } from '$app/state';
 import { goto } from '$app/navigation';
-import { BookOpen, ChatBubbleLeftRight, Cog6Tooth } from '@steeze-ui/heroicons';
-import { Icon } from '@steeze-ui/svelte-icon';
+import Icon from '@iconify/svelte';
 
 interface NavItem {
   path: string;
@@ -15,17 +14,17 @@ const navItems: NavItem[] = [
   {
     path: '/',
     label: 'Recipes',
-    icon: BookOpen
+    icon: 'lucide:book-open'
   },
   {
     path: '/chat',
     label: 'Chat',
-    icon: ChatBubbleLeftRight
+    icon: 'lucide:messages-square'
   },
   {
     path: '/settings',
     label: 'Settings',
-    icon: Cog6Tooth
+    icon: 'lucide:settings'
   }
 ];
 
@@ -50,7 +49,7 @@ function isActive(itemPath: string): boolean {
         onclick={() => handleNavClick('/')}
         aria-label="Go to home page"
       >
-        <span class="brand-icon">🍽️</span>
+        <span class="brand-icon"><Icon icon="lucide:chef-hat" width="24" height="24" /></span>
         <span class="brand-text">Meal Maestro</span>
       </button>
     </div>
@@ -66,7 +65,7 @@ function isActive(itemPath: string): boolean {
           type="button"
         >
           <span class="nav-icon" aria-hidden="true">
-            <Icon src={item.icon} size="20px" theme="default" />
+            <Icon icon={item.icon} width="20px" height="20px" />
           </span>
           <span class="nav-label">{item.label}</span>
         </button>
@@ -85,8 +84,8 @@ function isActive(itemPath: string): boolean {
     left: 0;
     right: 0;
     z-index: 1000;
-    background: var(--surface-color, #ffffff);
-    border-bottom: 1px solid var(--border-color, #e5e7eb);
+    background: var(--surface-color);
+    border-bottom: 1px solid var(--border-color);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     /* Safe area handling for devices with notch */
@@ -117,18 +116,22 @@ function isActive(itemPath: string): boolean {
     padding: 8px;
     border-radius: 8px;
     transition: background-color 0.2s ease;
-    color: var(--text-primary, #111827);
+    color: var(--text-primary);
     text-decoration: none;
     -webkit-tap-highlight-color: transparent;
   }
   
   .brand-button:hover {
-    background-color: var(--hover-color, #f3f4f6);
+    background-color: var(--hover-color);
   }
   
   .brand-icon {
     font-size: 24px;
     line-height: 1;
+    color: var(--primary);
+  }
+  .brand-icon :global(svg) {
+    color: var(--primary);
   }
   
   .brand-text {
@@ -154,25 +157,25 @@ function isActive(itemPath: string): boolean {
     transition: all 0.2s ease;
     border-radius: 8px;
     min-height: 44px; /* Minimum touch target size */
-    color: var(--text-secondary, #6b7280);
+    color: var(--text-secondary);
     font-size: 14px;
     font-weight: 500;
     -webkit-tap-highlight-color: transparent;
   }
   
   .nav-item:hover {
-    background-color: var(--hover-color, #f3f4f6);
-    color: var(--text-primary, #111827);
+    background-color: var(--hover-color);
+    color: var(--text-primary);
   }
   
   .nav-item:active {
     transform: scale(0.96);
-    background-color: var(--active-color, #e5e7eb);
+    background-color: var(--active-color);
   }
   
   .nav-item.active {
-    color: var(--primary-color, #3b82f6);
-    background-color: var(--primary-bg, #dbeafe);
+    color: var(--primary);
+    background-color: var(--primary-bg);
     font-weight: 600;
   }
   
@@ -183,6 +186,12 @@ function isActive(itemPath: string): boolean {
     line-height: 1;
     filter: grayscale(0.2);
     transition: filter 0.2s ease;
+  }
+  .nav-icon :global(svg) {
+    color: var(--text-secondary);
+  }
+  .nav-item.active .nav-icon :global(svg) {
+    color: var(--primary);
   }
 
   .nav-item.active .nav-icon {
@@ -243,40 +252,6 @@ function isActive(itemPath: string): boolean {
     .nav-item {
       padding: 10px 16px;
       font-size: 15px;
-    }
-  }
-
-  /* Dark theme support */
-  @media (prefers-color-scheme: dark) {
-    .top-nav {
-      background: var(--surface-color, #1f2937);
-      border-bottom-color: var(--border-color, #374151);
-    }
-    
-    .brand-button {
-      color: var(--text-primary, #f9fafb);
-    }
-    
-    .brand-button:hover {
-      background-color: var(--hover-color, #374151);
-    }
-    
-    .nav-item {
-      color: var(--text-secondary, #9ca3af);
-    }
-    
-    .nav-item:hover {
-      background-color: var(--hover-color, #374151);
-      color: var(--text-primary, #f9fafb);
-    }
-    
-    .nav-item:active {
-      background-color: var(--active-color, #4b5563);
-    }
-    
-    .nav-item.active {
-      color: var(--primary-color, #60a5fa);
-      background-color: var(--primary-bg, #1e3a8a);
     }
   }
 </style>
