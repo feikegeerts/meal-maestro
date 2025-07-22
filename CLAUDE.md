@@ -106,7 +106,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Tech Stack
 
-- **Frontend**: SvelteKit with TypeScript
+- **Frontend**: SvelteKit with TypeScript using Svelte 5
 - **Deployment**: Vercel with Edge Config for data storage
 - **Styling**: Component-scoped CSS with theme support
 - **Database**: Supabase (for Meal Maestro feature)

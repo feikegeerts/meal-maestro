@@ -1,47 +1,44 @@
+
 <script lang="ts">
-  import { page } from '$app/stores';
-  import { goto } from '$app/navigation';
-  import { BookOpen, ChatBubbleLeftRight, Cog6Tooth } from '@steeze-ui/heroicons';
-  import { Icon } from '@steeze-ui/svelte-icon';
+import { page } from '$app/state';
+import { goto } from '$app/navigation';
+import { BookOpen, ChatBubbleLeftRight, Cog6Tooth } from '@steeze-ui/heroicons';
+import { Icon } from '@steeze-ui/svelte-icon';
 
-  export let currentPath: string = '';
-  
-  $: currentPath = $page.url.pathname;
-  
-  interface NavItem {
-    path: string;
-    label: string;
-    icon: any;
-  }
+interface NavItem {
+  path: string;
+  label: string;
+  icon: any;
+}
 
-  const navItems: NavItem[] = [
-    {
-      path: '/',
-      label: 'Recipes',
-      icon: BookOpen
-    },
-    {
-      path: '/chat',
-      label: 'Chat',
-      icon: ChatBubbleLeftRight
-    },
-    {
-      path: '/settings',
-      label: 'Settings',
-      icon: Cog6Tooth
-    }
-  ];
-  
-  function handleNavClick(path: string) {
-    goto(path);
+const navItems: NavItem[] = [
+  {
+    path: '/',
+    label: 'Recipes',
+    icon: BookOpen
+  },
+  {
+    path: '/chat',
+    label: 'Chat',
+    icon: ChatBubbleLeftRight
+  },
+  {
+    path: '/settings',
+    label: 'Settings',
+    icon: Cog6Tooth
   }
-  
-  function isActive(itemPath: string): boolean {
-    if (itemPath === '/') {
-      return currentPath === '/';
-    }
-    return currentPath.startsWith(itemPath);
+];
+
+function handleNavClick(path: string) {
+  goto(path);
+}
+
+function isActive(itemPath: string): boolean {
+  if (itemPath === '/') {
+    return page.url.pathname === '/';
   }
+  return page.url.pathname.startsWith(itemPath);
+}
 </script>
 
 <header class="top-nav" aria-label="Main navigation">
@@ -50,7 +47,7 @@
     <div class="nav-brand">
       <button 
         class="brand-button"
-        on:click={() => handleNavClick('/')}
+        onclick={() => handleNavClick('/')}
         aria-label="Go to home page"
       >
         <span class="brand-icon">🍽️</span>
@@ -64,7 +61,7 @@
         <button
           class="nav-item"
           class:active={isActive(item.path)}
-          on:click={() => handleNavClick(item.path)}
+          onclick={() => handleNavClick(item.path)}
           aria-label={`Navigate to ${item.label}`}
           type="button"
         >
@@ -75,6 +72,8 @@
         </button>
       {/each}
     </nav>
+
+      
 
   </div>
 </header>
