@@ -56,7 +56,7 @@ export const recipeTools: OpenAI.Chat.Completions.ChatCompletionCreateParams['to
           tags: { 
             type: 'array', 
             items: { type: 'string' }, 
-            description: 'Tags to filter by. Common tags include dietary (vegetarian, vegan, gluten-free, keto, paleo), cuisine (italian, mexican, chinese, thai, mediterranean), cooking methods (baking, grilling, one-pot, slow-cooking, instant-pot), characteristics (quick, easy, healthy, spicy, creamy), occasions (party, weeknight, meal-prep, kid-friendly), proteins (chicken, beef, fish, tofu, beans), and dish types (soup, salad, pasta, pizza)' 
+            description: `Tags to filter by. Must be one of: ${RECIPE_TAGS.join(', ')}` 
           },
           season: { 
             type: 'string', 

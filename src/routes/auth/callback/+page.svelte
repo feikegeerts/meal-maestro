@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { supabaseBrowser } from '$lib/services/supabaseBrowser.js';
 
   let loading = true;
@@ -10,9 +10,9 @@
   onMount(async () => {
     try {
       
-      const code = $page.url.searchParams.get('code');
-      const error_param = $page.url.searchParams.get('error');
-      const next = $page.url.searchParams.get('next') ?? '/';
+      const code = page.url.searchParams.get('code');
+      const error_param = page.url.searchParams.get('error');
+      const next = page.url.searchParams.get('next') ?? '/';
 
       // Handle OAuth errors from provider
       if (error_param) {

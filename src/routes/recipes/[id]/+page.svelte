@@ -8,7 +8,7 @@
   import type { Recipe } from '$lib/types.js';
   import { isAuthenticated } from '$lib/stores/auth.js';
   import { toasts } from '$lib/stores/toastStore.js';
-  import LoginForm from '$lib/components/LoginForm.svelte';
+  import LoginButton from '$lib/components/LoginButton.svelte';
   import { Icon } from '@steeze-ui/svelte-icon';
   import { ArrowLeft, Check, PencilSquare, ExclamationCircle } from '@steeze-ui/heroicons';
 
@@ -77,15 +77,6 @@
 
   function handleBackToRecipes() {
     goto('/');
-  }
-
-  function handleAuthSuccess() {
-    toasts.success('Welcome!', 'You can now view recipe details.');
-    loadRecipe();
-  }
-
-  function handleAuthError(event: CustomEvent<{ message: string }>) {
-    toasts.error('Sign In Error', event.detail.message);
   }
 
   onMount(() => {
@@ -187,16 +178,7 @@
       </div>
     </div>
   {:else}
-    <div class="auth-section">
-      <div class="auth-card">
-        <h1 class="auth-title">Sign In Required</h1>
-        <p class="auth-subtitle">Please sign in to view recipe details</p>
-        <LoginForm 
-          on:success={handleAuthSuccess}
-          on:error={handleAuthError}
-        />
-      </div>
-    </div>
+    <LoginButton />
   {/if}
 </main>
 
@@ -405,41 +387,6 @@
     transform: scale(0.98);
   }
 
-  /* Auth Section */
-  .auth-section {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 60vh;
-    padding: 20px;
-  }
-
-  .auth-card {
-    background: var(--surface, #ffffff);
-    border-radius: 16px;
-    padding: 32px 24px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--border, #e5e7eb);
-    text-align: center;
-    max-width: 400px;
-    width: 100%;
-  }
-
-  .auth-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-primary, #111827);
-    margin: 0 0 8px 0;
-    letter-spacing: -0.01em;
-  }
-
-  .auth-subtitle {
-    font-size: 14px;
-    color: var(--text-secondary, #6b7280);
-    margin: 0 0 24px 0;
-    line-height: 1.4;
-  }
-
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -450,13 +397,7 @@
     .recipe-detail-page {
       background: var(--background, #0f172a);
     }
-
-    .detail-header,
-    .auth-card {
-      background: var(--surface, #1e293b);
-      border-color: var(--border, #334155);
-    }
-
+  
     .back-button {
       color: var(--text-primary, #f8fafc);
     }

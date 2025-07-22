@@ -109,16 +109,19 @@ An AI-powered recipe management system. The system provides natural language rec
 
 ### Phase 5: Post-MVP Enhancements
 
-- [ ] Fix icons on recipe detail page
-- [ ] Add recipe detail page to bottom nav list
-- [ ] Fix desktop layout
-- [ ] Scrolling on mobile is very jumpy because of the browser navigation popping in and out from the bottom
-- [ ] **5.0** Implement edit functionality in the detail view for the user to edit the description or tags, or category and so on.
-- [ ] **5.0** Implement languages Dutch and English
-- [ ] **5.1** Add user authentication integration
+- [x] **5.1** Add user authentication integration
 - [x] **5.2** Implement user-specific recipe storage
-- [ ] **5.4** Enhanced search with semantic capabilities
-- [ ] **5.6** Implement caching strategies
+- [ ] **5.3** Fix icons on recipe detail page
+- [ ] **5.4** Add recipe detail page to nav list
+- [ ] **5.5** Fix desktop layout
+- [ ] **5.6** Favicon
+- [ ] **5.7** Add ability for the AI to fetch a website and process it as a recipe
+- [ ] **5.8** Implement edit functionality in the detail view for the user to edit the description or tags, or category and so on.
+- [ ] **5.9** Implement languages Dutch and English
+- [ ] **5.10** Enhanced search with semantic capabilities
+- [ ] **5.11** Implement caching strategies
+- [ ] **5.12** Add buy me a coffee functionality
+- [ ] **5.13** Improve deployment pipeline with automatic testing and version bumping
 
 ### Phase 6: Voice Integration
 
@@ -136,66 +139,18 @@ An AI-powered recipe management system. The system provides natural language rec
 ### Phase 7: Advanced Features
 
 - [ ] **7.1** Semantic search using vector embeddings
-- [ ] **7.2** Recipe recommendations based on preferences
-- [ ] **7.3** Meal planning and calendar integration
-- [ ] **7.4** Shopping list generation
-- [ ] **7.5** Nutritional information integration
 - [ ] **7.6** Image upload and recipe photo management
-- [ ] **7.7** Recipe sharing and community features
 
 ### Phase 8: Analytics & Optimization
 
 - [ ] **9.1** Usage analytics and metrics
 - [ ] **9.2** Performance monitoring
-- [ ] **9.3** A/B testing for UX improvements
-- [ ] **9.4** Advanced cost optimization
-- [ ] **9.5** Caching strategies for improved performance
 
 ## Technical Specifications
 
 ### MVP Database Schema
 
-```sql
--- Recipes table (no user relationship for MVP)
-CREATE TABLE recipes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  ingredients TEXT[] NOT NULL,
-  description TEXT NOT NULL,
-  category TEXT NOT NULL,
-  tags TEXT[] DEFAULT '{}',
-  season TEXT,
-  last_eaten TIMESTAMP,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- Action logs table
-CREATE TABLE action_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  action_type TEXT NOT NULL, -- 'create', 'update', 'delete', 'search'
-  recipe_id UUID REFERENCES recipes(id),
-  description TEXT NOT NULL,
-  details JSONB,
-  timestamp TIMESTAMP DEFAULT NOW()
-);
-
--- Usage tracking table
-CREATE TABLE api_usage (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  endpoint TEXT NOT NULL,
-  tokens_used INTEGER,
-  cost_usd DECIMAL(10,4),
-  timestamp TIMESTAMP DEFAULT NOW()
-);
-
--- Indexes for performance
-CREATE INDEX idx_recipes_category ON recipes(category);
-CREATE INDEX idx_recipes_tags ON recipes USING GIN(tags);
-CREATE INDEX idx_recipes_last_eaten ON recipes(last_eaten);
-CREATE INDEX idx_action_logs_timestamp ON action_logs(timestamp);
-CREATE INDEX idx_api_usage_timestamp ON api_usage(timestamp);
-```
+supabase/migrations
 
 ### MVP API Endpoints
 
@@ -209,92 +164,8 @@ CREATE INDEX idx_api_usage_timestamp ON api_usage(timestamp);
 
 ### OpenAI Function Definitions
 
-```javascript
-const functions = [
-  {
-    name: 'search_recipes',
-    description: 'Search for recipes based on various criteria',
-    parameters: {
-      type: 'object',
-      properties: {
-        query: { type: 'string', description: 'Search query' },
-        category: { type: 'string', description: 'Recipe category' },
-        tags: { type: 'array', items: { type: 'string' }, description: 'Tags to filter by' },
-        season: { type: 'string', description: 'Seasonal filter' },
-      },
-    },
-  },
-  {
-    name: 'add_recipe',
-    description: 'Add a new recipe to the database',
-    parameters: {
-      type: 'object',
-      properties: {
-        title: { type: 'string', description: 'Recipe title' },
-        ingredients: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'List of ingredients',
-        },
-        description: { type: 'string', description: 'Cooking instructions' },
-        category: { type: 'string', description: 'Recipe category' },
-        tags: { type: 'array', items: { type: 'string' }, description: 'Recipe tags' },
-        season: { type: 'string', description: 'Seasonal relevance' },
-      },
-      required: ['title', 'ingredients', 'description', 'category'],
-    },
-  },
-  {
-    name: 'update_recipe',
-    description: 'Update an existing recipe',
-    parameters: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', description: 'Recipe ID' },
-        title: { type: 'string', description: 'Recipe title' },
-        ingredients: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'List of ingredients',
-        },
-        description: { type: 'string', description: 'Cooking instructions' },
-        category: { type: 'string', description: 'Recipe category' },
-        tags: { type: 'array', items: { type: 'string' }, description: 'Recipe tags' },
-        season: { type: 'string', description: 'Seasonal relevance' },
-      },
-      required: ['id'],
-    },
-  },
-  {
-    name: 'mark_recipe_eaten',
-    description: 'Update the last_eaten timestamp for a recipe',
-    parameters: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', description: 'Recipe ID' },
-      },
-      required: ['id'],
-    },
-  },
-  {
-    name: 'delete_recipe',
-    description: 'Delete a recipe from the database',
-    parameters: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', description: 'Recipe ID' },
-      },
-      required: ['id'],
-    },
-  },
-];
+/src/lib/services/recipeFunctions.ts
+
 ```
 
-## Post-MVP Roadmap
-
-1. **User Authentication** - Add user-specific recipe storage
-2. **Frontend Interface** - Build conversational UI
-3. **Voice Integration** - Add speech-to-text and text-to-speech
-4. **Advanced Features** - Semantic search, recommendations, etc.
-5. **Mobile & PWA** - Mobile-optimized experience
-6. **Analytics** - Usage monitoring and optimization
+```

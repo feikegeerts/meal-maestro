@@ -1,54 +1,48 @@
 <script lang="ts">
-  import { authStore, isLoading, isAuthenticated } from '$lib/stores/auth.js';
-  import { createEventDispatcher } from 'svelte';
 
-  const dispatch = createEventDispatcher<{
-    success: { message: string };
-    error: { message: string };
-  }>();
+import { authStore, isLoading, isAuthenticated } from '$lib/stores/auth.js';
+import { toasts } from '$lib/stores/toastStore';
 
-  let errorMessage = '';
-  let successMessage = '';
 
-  async function handleGoogleSignIn() {
-    errorMessage = '';
-    successMessage = '';
-    
-    try {
-      const result = await authStore.signInWithGoogle();
-      
-      if (result.success) {
-        successMessage = 'Redirecting to Google...';
-        dispatch('success', { message: 'Sign in initiated successfully' });
-      } else {
-        errorMessage = result.error || 'Failed to sign in with Google';
-        dispatch('error', { message: errorMessage });
-      }
-    } catch (error) {
-      errorMessage = 'An unexpected error occurred';
-      dispatch('error', { message: errorMessage });
+
+let errorMessage = $state('');
+let successMessage = $state('');
+
+async function handleGoogleSignIn() {
+  errorMessage = '';
+  successMessage = '';
+  try {
+    const result = await authStore.signInWithGoogle();
+    if (result.success) {
+      successMessage = 'Redirecting to Google...';
+      toasts.success('Welcome!', 'You can now browse your recipes.');
+    } else {
+      errorMessage = result.error || 'Failed to sign in with Google';
+      toasts.error('Sign In Error', errorMessage);
     }
+  } catch (error) {
+    errorMessage = 'An unexpected error occurred';
+    toasts.error('Sign In Error', errorMessage);
   }
+}
 
-  async function handleSignOut() {
-    errorMessage = '';
-    successMessage = '';
-    
-    try {
-      const result = await authStore.signOut();
-      
-      if (result.success) {
-        successMessage = 'Signed out successfully';
-        dispatch('success', { message: 'Signed out successfully' });
-      } else {
-        errorMessage = result.error || 'Failed to sign out';
-        dispatch('error', { message: errorMessage });
-      }
-    } catch (error) {
-      errorMessage = 'An unexpected error occurred';
-      dispatch('error', { message: errorMessage });
+async function handleSignOut() {
+  errorMessage = '';
+  successMessage = '';
+  try {
+    const result = await authStore.signOut();
+    if (result.success) {
+      successMessage = 'Signed out successfully';
+      toasts.success('Signed out', 'Signed out successfully.');
+    } else {
+      errorMessage = result.error || 'Failed to sign out';
+      toasts.error('Sign Out Error', errorMessage);
     }
+  } catch (error) {
+    errorMessage = 'An unexpected error occurred';
+    toasts.error('Sign Out Error', errorMessage);
   }
+}
 </script>
 
 <div class="auth-container">
@@ -60,7 +54,7 @@
       
       <button
         class="sign-out-button"
-        on:click={handleSignOut}
+        onclick={handleSignOut}
         disabled={$isLoading}
       >
         {#if $isLoading}
@@ -79,7 +73,7 @@
       
       <button
         class="google-sign-in-button"
-        on:click={handleGoogleSignIn}
+        onclick={handleGoogleSignIn}
         disabled={$isLoading}
       >
         {#if $isLoading}
@@ -122,26 +116,26 @@
   }
 
   .auth-card {
-    background: var(--bg-secondary, #f8f9fa);
-    border-radius: 12px;
+    background: var(--surface);
+    border-radius: var(--radius-md);
     padding: 2rem;
     max-width: 400px;
     width: 100%;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--border-color, #e9ecef);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
   }
 
   h2 {
     margin: 0 0 0.5rem 0;
-    color: var(--text-primary, #333);
-    font-size: 1.5rem;
+    color: var(--text-primary);
+    font-size: var(--text-2xl);
     font-weight: 600;
   }
 
   p {
     margin: 0 0 2rem 0;
-    color: var(--text-secondary, #666);
+    color: var(--text-secondary);
     line-height: 1.5;
   }
 
@@ -151,12 +145,12 @@
     justify-content: center;
     gap: 0.75rem;
     width: 100%;
-    padding: 0.75rem 1.5rem;
-    background: #fff;
-    color: #333;
-    border: 1px solid #dadce0;
-    border-radius: 8px;
-    font-size: 1rem;
+    padding: 0.75rem;
+    background: var(--surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -164,8 +158,8 @@
   }
 
   .google-sign-in-button:hover:not(:disabled) {
-    background: #f8f9fa;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: var(--hover);
+    box-shadow: var(--shadow-sm);
   }
 
   .google-sign-in-button:disabled {
@@ -179,11 +173,11 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.75rem 2rem;
-    background: #dc3545;
-    color: white;
+    background: var(--error);
+    color: var(--surface);
     border: none;
-    border-radius: 8px;
-    font-size: 1rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -191,7 +185,7 @@
   }
 
   .sign-out-button:hover:not(:disabled) {
-    background: #c82333;
+    background: var(--error-hover);
   }
 
   .sign-out-button:disabled {
@@ -215,8 +209,8 @@
 
   .message {
     padding: 0.75rem 1rem;
-    border-radius: 8px;
-    font-size: 0.9rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
     font-weight: 500;
     max-width: 400px;
     width: 100%;
@@ -224,40 +218,19 @@
   }
 
   .message.error {
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+    background: var(--error-bg);
+    color: var(--error-color);
+    border: 1px solid var(--error-border);
   }
 
   .message.success {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+    background: var(--success-light);
+    color: var(--success);
+    border: 1px solid var(--success-border);
   }
 
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-  }
-
-  /* Dark theme support */
-  @media (prefers-color-scheme: dark) {
-    .auth-card {
-      background: var(--bg-secondary, #2d3748);
-      border-color: var(--border-color, #4a5568);
-    }
-
-    h2 {
-      color: var(--text-primary, #f7fafc);
-    }
-
-    p {
-      color: var(--text-secondary, #e2e8f0);
-    }
-
-    .google-sign-in-button {
-      background: #fff;
-      color: #333;
-    }
   }
 </style>

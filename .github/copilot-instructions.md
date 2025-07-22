@@ -2,6 +2,7 @@
 
 ## General Principles
 
+- Copilot should write svelte 5
 - Copilot should act autonomously when the user prompt is clear and a change is required. Do not ask for permission before making changes if the user's request is explicit.
 - Always follow the user's instructions precisely and avoid unnecessary clarifying questions if the intent is clear.
 - Adhere to good coding principles: write clean, maintainable, and well-documented code. Prefer readability and simplicity. Use descriptive names, avoid code duplication, and follow project conventions.
@@ -9,6 +10,7 @@
 - When editing code, use the minimal diff necessary. Do not repeat unchanged code; use comments to indicate omitted regions.
 - If a popular library or best practice exists for a problem, prefer that solution and document your choice.
 - When adding new features, include relevant tests and update documentation as needed.
+- Do not add comments when the code is self-explanatory. Use comments to clarify complex logic or decisions, but avoid stating the obvious.
 
 ## Supabase Mocking (from CLAUDE.md)
 
