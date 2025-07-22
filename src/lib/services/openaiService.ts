@@ -9,8 +9,8 @@ if (dev) {
 // OpenAI Configuration
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-nano';
-const OPENAI_MAX_TOKENS = parseInt(process.env.OPENAI_MAX_TOKENS || '1000', 10);
-const OPENAI_TEMPERATURE = parseFloat(process.env.OPENAI_TEMPERATURE || '0.6');
+const OPENAI_MAX_TOKENS = parseInt(process.env.OPENAI_MAX_TOKENS || '2000', 10);
+const OPENAI_TEMPERATURE = parseFloat(process.env.OPENAI_TEMPERATURE || '0.9');
 
 if (!OPENAI_API_KEY) {
   console.error('Missing OPENAI_API_KEY environment variable. Please set it in your .env.local file.');
