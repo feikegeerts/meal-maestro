@@ -150,14 +150,6 @@ src/
 - Reactive statements for derived data
 - Component-scoped styling with CSS variables
 
-### Authentication Flow
-
-1. User submits password via LoginForm
-2. Server validates against bcrypt hash
-3. Session cookies set with secure flags
-4. CSRF token generated and stored
-5. Protected routes check authentication state
-
 ## Development Notes
 
 ### Type Safety
@@ -168,7 +160,6 @@ src/
 
 ### Environment Variables
 
-- `TIMELINE_PASSWORD`: Bcrypt hash of the admin password
 - `EDGE_CONFIG`: Vercel Edge Config connection string
 - `OPENAI_API_KEY`: OpenAI API key for LLM and voice features
 - `SUPABASE_URL`: Supabase project URL
@@ -178,7 +169,6 @@ src/
 ### Code Organization
 
 - Utilities are duplicated between client (`lib/`) and server (`server/`) directories
-- Server utilities handle bcrypt operations and session management
 - Client utilities handle form validation and API calls
 
 ## Meal Maestro Feature
