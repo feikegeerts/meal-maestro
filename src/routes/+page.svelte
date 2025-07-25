@@ -6,6 +6,7 @@
   import { isAuthenticated } from '$lib/stores/auth.js';
   import { toasts } from '$lib/stores/toastStore.js';
   import LoginButton from '$lib/components/LoginButton.svelte';
+  import { Button } from '$lib/components/ui/button';
 
   function handleRecipeSelected(recipe: Recipe) {
     goto(`/recipes/${recipe.id}`);
@@ -23,6 +24,24 @@
 <main class="recipes-page">
   {#if $isAuthenticated}
     <div class="recipes-container">
+      <!-- Test Tailwind integration with shadcn Button -->
+      <div class="mb-4 p-4 border rounded-lg bg-card">
+        <h3 class="text-lg font-semibold mb-2">Tailwind CSS Test:</h3>
+        <div class="flex gap-2 flex-wrap">
+          <Button>Default Button</Button>
+          <Button variant="secondary">Secondary</Button>
+          <Button variant="outline">Outline</Button>
+          <Button variant="destructive">Destructive</Button>
+          <Button variant="ghost">Ghost</Button>
+          <Button variant="link">Link</Button>
+        </div>
+        <div class="flex gap-2 flex-wrap mt-2">
+          <Button size="sm">Small</Button>
+          <Button>Default Size</Button>
+          <Button size="lg">Large</Button>
+          <Button size="icon">🚀</Button>
+        </div>
+      </div>
       <RecipeList
         onRecipeSelected={handleRecipeSelected}
         onEditRecipe={handleEditRecipe}

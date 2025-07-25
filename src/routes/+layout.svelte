@@ -1,25 +1,24 @@
 <script>
-    import '../app.css'; 
-    import { onMount } from 'svelte';
-    import { authStore, isInitialized } from '$lib/stores/auth.js';
-    import TopNav from '$lib/components/TopNav.svelte';
-    
-    let currentTheme = 'light';
-    
-    onMount(() => {
-      const savedTheme = localStorage.getItem('theme');
-      
-      if (savedTheme) {
-        currentTheme = savedTheme;
-      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        currentTheme = 'dark';
-      }
-      
-      document.documentElement.setAttribute('data-theme', currentTheme);
-      
-      // Initialize authentication
-      authStore.initialize();
-    });
+  import '../app.css';
+  import { onMount } from 'svelte';
+  import { authStore, isInitialized } from '$lib/stores/auth.js';
+  import TopNav from '$lib/components/TopNav.svelte';
+  
+  let currentTheme = 'light';
+  
+  onMount(() => {
+    const savedTheme = localStorage.getItem('theme');
+  
+    if (savedTheme) {
+      currentTheme = savedTheme;
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      currentTheme = 'dark';
+    }
+  
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    // Initialize authentication
+    authStore.initialize();
+  });
 </script>
   
 {#if $isInitialized}

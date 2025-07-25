@@ -1,17 +1,9 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createClient } from '@supabase/supabase-js';
-import { dev } from '$app/environment';
-import * as dotenv from 'dotenv';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '$env/static/private';
 
-if (dev) {
-  dotenv.config({ path: '.env.local' });
-}
-
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_ANON_KEY || ''
-);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export const GET: RequestHandler = async ({ url }) => {
   try {
