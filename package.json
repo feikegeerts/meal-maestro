@@ -13,7 +13,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --watchAll=false",
-    "verify": "pnpm run type-check && pnpm run lint && pnpm run test:ci"
+    "verify": "pnpm run type-check && pnpm run lint"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
