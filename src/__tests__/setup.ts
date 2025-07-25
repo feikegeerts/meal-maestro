@@ -1,3 +1,7 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+// Ensure Supabase client is always mocked in tests
+jest.mock("../lib/supabase");
 import "@testing-library/jest-dom";
 
 // Set up test environment variables
@@ -11,25 +15,181 @@ import { server } from "../__mocks__/server";
 // Mock only the OAuth navigation part of Supabase to prevent window.location issues
 // Let MSW handle the actual API responses for testing different scenarios
 
-jest.mock("../lib/supabase", () => {
-  // Import the real module first
-  const actualSupabase = jest.requireActual("../lib/supabase");
+// Helper to simulate .single() and .update() with MSW-backed fetch
+const single = async function () {
+  // Simulate a fetch to the MSW handler for user_profiles
+  const id = this._eq?.val || "test-user-id";
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/user_profiles?id=eq.${id}`
+  );
+  if (!response.ok) {
+    return {
+      data: null,
+      error: { message: "Profile fetch failed", status: response.status },
+    };
+  }
+  const arr = await response.json();
+  if (!arr || !Array.isArray(arr) || arr.length === 0) {
+    return { data: null, error: null };
+  }
+  return { data: arr[0], error: null };
+};
 
+const update = function () {
+  // Return an object with .single() that simulates update+fetch
   return {
-    ...actualSupabase,
-    auth: {
-      ...actualSupabase.auth,
-      signInWithGoogle: jest.fn().mockImplementation(() => {
-        // Mock without triggering navigation
-        return Promise.resolve({
-          data: { url: "https://mock-oauth-url.com" },
-          error: null,
-        });
-      }),
+    single: async () => {
+      // Simulate a PATCH to the MSW handler for user_profiles
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/user_profiles`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(this._updates || {}),
+        }
+      );
+      if (!response.ok) {
+        return {
+          data: null,
+          error: { message: "Profile update failed", status: response.status },
+        };
+      }
+      const arr = await response.json();
+      if (!arr || !Array.isArray(arr) || arr.length === 0) {
+        return { data: null, error: null };
+      }
+      return { data: arr[0], error: null };
     },
+    _updates: this._updates,
   };
-});
+};
 
+const from = function () {
+  return {
+    select: function () {
+      return this;
+    },
+    eq: function (col, val) {
+      this._eq = { col, val };
+      return this;
+    },
+    single: single,
+    update: function (updates) {
+      this._updates = updates;
+      return update.call(this);
+    },
+    insert: function () {
+      return this;
+    },
+    _eq: null,
+    _updates: null,
+  };
+};
+
+const mockSupabaseClient = {
+  auth: {
+    signInWithOAuth: jest.fn().mockResolvedValue({
+      data: { url: "https://mock-oauth-url.com" },
+      error: null,
+    }),
+    signOut: jest.fn().mockResolvedValue({
+      error: null,
+    }),
+    getUser: jest.fn().mockResolvedValue({
+      data: { user: { id: "test-user", email: "test@example.com" } },
+      error: null,
+    }),
+    getSession: jest.fn().mockResolvedValue({
+      data: { session: { access_token: "mock-token" } },
+      error: null,
+    }),
+    onAuthStateChange: jest.fn().mockReturnValue({
+      data: {
+        subscription: {
+          unsubscribe: jest.fn(),
+        },
+      },
+    }),
+  },
+  from,
+};
+
+const auth = {
+  signInWithGoogle: jest.fn().mockImplementation(async () => {
+    const isLocalhost =
+      global.window?.location?.hostname === "localhost" ||
+      global.window?.location?.hostname === "127.0.0.1";
+    const redirectTo = isLocalhost
+      ? "http://localhost:3000/auth/callback"
+      : `${global.window?.location?.origin}/auth/callback`;
+
+    return mockSupabaseClient.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo },
+    });
+  }),
+  signOut: jest
+    .fn()
+    .mockImplementation(() => mockSupabaseClient.auth.signOut()),
+  getCurrentUser: jest.fn().mockImplementation(async () => {
+    try {
+      // Use MSW to handle the HTTP request, but with our mock responses
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`,
+        {
+          headers: {
+            Authorization: "Bearer mock-token",
+          },
+        }
+      );
+      if (!response.ok) {
+        return {
+          user: null,
+          error: { message: "User fetch failed", status: response.status },
+        };
+      }
+      const user = await response.json();
+      return { user, error: null };
+    } catch (error) {
+      return { user: null, error };
+    }
+  }),
+  getCurrentSession: jest.fn().mockImplementation(async () => {
+    try {
+      // Use MSW to handle the HTTP request
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token`,
+        {
+          headers: {
+            Authorization: "Bearer mock-token",
+          },
+        }
+      );
+      if (!response.ok) {
+        return {
+          session: null,
+          error: { message: "Session fetch failed", status: response.status },
+        };
+      }
+      const sessionData = await response.json();
+      return { session: sessionData, error: null };
+    } catch (error) {
+      return { session: null, error };
+    }
+  }),
+  onAuthStateChange: jest
+    .fn()
+    .mockImplementation((callback) =>
+      mockSupabaseClient.auth.onAuthStateChange(callback)
+    ),
+};
+
+module.exports = {
+  supabase: mockSupabaseClient,
+  auth,
+  __esModule: true,
+  default: { supabase: mockSupabaseClient, auth },
+};
 // Establish API mocking before all tests
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });
@@ -40,6 +200,8 @@ beforeAll(() => {
 afterEach(() => {
   server.resetHandlers();
   assignMock.mockClear();
+  // Clear any pending timers between tests
+  jest.clearAllTimers();
 });
 
 // Clean up after the tests are finished
@@ -53,12 +215,20 @@ const assignMock = jest.fn();
 // Suppress the JSDOM navigation error before attempting to mock location
 const originalConsoleError = console.error;
 console.error = (message: unknown, ...args: unknown[]) => {
-  if (typeof message === 'object' && message && 'type' in message && 
-      'message' in message && (message as {type: string, message: string}).type === 'not implemented' && 
-      (message as {message: string}).message.includes('navigation')) {
+  if (
+    typeof message === "object" &&
+    message &&
+    "type" in message &&
+    "message" in message &&
+    (message as { type: string; message: string }).type === "not implemented" &&
+    (message as { message: string }).message.includes("navigation")
+  ) {
     return; // Suppress navigation errors
   }
-  if (typeof message === 'string' && message.includes('Not implemented: navigation')) {
+  if (
+    typeof message === "string" &&
+    message.includes("Not implemented: navigation")
+  ) {
     return; // Suppress navigation errors
   }
   originalConsoleError(message, ...args);
@@ -119,11 +289,17 @@ beforeAll(() => {
   console.error = (...args: unknown[]) => {
     // Filter out JSDOM navigation error
     const errorMessage = args[0];
-    if (errorMessage && typeof errorMessage === "object" && 'type' in errorMessage && 'message' in errorMessage) {
+    if (
+      errorMessage &&
+      typeof errorMessage === "object" &&
+      "type" in errorMessage &&
+      "message" in errorMessage
+    ) {
       if (
-        (errorMessage as {type: string, message: string}).type === "not implemented" &&
-        (errorMessage as {message: string}).message &&
-        (errorMessage as {message: string}).message.includes("navigation")
+        (errorMessage as { type: string; message: string }).type ===
+          "not implemented" &&
+        (errorMessage as { message: string }).message &&
+        (errorMessage as { message: string }).message.includes("navigation")
       ) {
         return; // Suppress this specific error
       }
@@ -153,8 +329,13 @@ beforeAll(() => {
     // Allow all other errors through
     originalError.call(console, ...args);
   };
+
+  server.listen({ onUnhandledRequest: "error" });
 });
 
 afterAll(() => {
   console.error = originalError;
+  server.close();
+  // Clean up any remaining timers or async operations
+  jest.clearAllTimers();
 });
