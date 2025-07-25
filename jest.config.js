@@ -14,7 +14,7 @@ const config = {
   // Add more setup options before each test is run
   setupFiles: [
     "<rootDir>/src/__tests__/react-act-polyfill.js",
-    "<rootDir>/src/__tests__/msw-setup.js"
+    "<rootDir>/src/__tests__/msw-setup.js",
   ],
   setupFilesAfterEnv: ["<rootDir>/src/__tests__/setup.ts"],
   modulePathIgnorePatterns: ["<rootDir>/old/"],
