@@ -61,7 +61,7 @@ graph TD
 ### Prerequisites
 
 - Node.js (version 14.x or higher recommended)
-- yarn
+- pnpm
 
 ### Installation
 
@@ -73,7 +73,7 @@ git clone https://github.com/feikegeerts/meal-maestro.git
 cd meal-maestro
 
 # Install dependencies
-yarn install
+pnpm install
 ```
 
 ### Running Locally
@@ -81,10 +81,10 @@ yarn install
 Start the development server:
 
 ```bash
-yarn dev
+pnpm dev
 
 # or start the server and open the app in a new browser tab
-yarn dev -- --open
+pnpm dev -- --open
 ```
 
 The application will be available at `http://localhost:5173` by default.
@@ -95,16 +95,16 @@ This project follows standard Svelte development practices. Here are some key co
 
 ```bash
 # Run tests
-yarn test
+pnpm test
 
 # Type checking
-yarn check
+pnpm check
 
 # Lint code
-yarn lint
+pnpm lint
 
 # Format code
-yarn format
+pnpm format
 ```
 
 ## Testing
@@ -124,16 +124,16 @@ The test suite is organized into several categories:
 
 ```bash
 # Run all tests
-yarn test
+pnpm test
 
 # Run tests in watch mode
-yarn test:watch
+pnpm test:watch
 
 # Run tests with coverage
-yarn test:coverage
+pnpm test:coverage
 
 # Run type checking
-yarn check
+pnpm check
 ```
 
 ### Test Results Summary
@@ -163,13 +163,13 @@ The test setup ensures reliable validation of the Meal Maestro AI-powered recipe
 To create a production build:
 
 ```bash
-yarn build
+pnpm build
 ```
 
 You can preview the production build locally:
 
 ```bash
-yarn preview
+pnpm preview
 ```
 
 ### CI/CD Pipeline

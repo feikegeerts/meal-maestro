@@ -85,18 +85,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Core Development
 
-- `yarn dev` - Start development server on localhost:5173
-- `yarn build` - Build production bundle
-- `yarn preview` - Preview production build locally
-- `yarn check` - Run TypeScript type checking with svelte-check
-- `yarn check:watch` - Run type checking in watch mode
+- `pnpm dev` - Start development server on localhost:5173
+- `pnpm build` - Build production bundle
+- `pnpm preview` - Preview production build locally
+- `pnpm check` - Run TypeScript type checking with svelte-check
+- `pnpm check:watch` - Run type checking in watch mode
 
 ### Testing Commands
 
-- `yarn test` - Run tests in watch mode with Vitest
-- `yarn test:run` - Run tests once and exit
-- `yarn test:ui` - Run tests with interactive UI
-- `yarn test:coverage` - Run tests with coverage report
+- `pnpm test` - Run tests in watch mode with Vitest
+- `pnpm test:run` - Run tests once and exit
+- `pnpm test:ui` - Run tests with interactive UI
+- `pnpm test:coverage` - Run tests with coverage report
 
 ### Environment Setup
 
@@ -149,6 +149,8 @@ src/
 - Props passed down, events bubbled up
 - Reactive statements for derived data
 - Component-scoped styling with CSS variables
+
+For detailed component development guidelines including Tailwind 4 and shadcn-svelte usage, see @src/lib/components/CLAUDE.md
 
 ## Development Notes
 
@@ -237,7 +239,7 @@ CREATE TABLE recipes (
 - **Environment**: Node.js for API testing
 - **Mocking**: Vitest built-in mocking for Supabase and OpenAI
 - **Coverage**: HTML and JSON coverage reports
-- **UI**: Interactive test runner with `yarn test:ui`
+- **UI**: Interactive test runner with `pnpm test:ui`
 
 ### Test Structure
 
@@ -294,22 +296,22 @@ src/test/
 
 ```bash
 # Run all tests once
-yarn test:run
+pnpm test:run
 
 # Run tests in watch mode
-yarn test
+pnpm test
 
 # Run with interactive UI
-yarn test:ui
+pnpm test:ui
 
 # Run with coverage report
-yarn test:coverage
+pnpm test:coverage
 
 # Run specific test file
-yarn test:run src/test/api/recipes.test.ts
+pnpm test:run src/test/api/recipes.test.ts
 
 # Run performance tests only
-yarn test:run src/test/performance/
+pnpm test:run src/test/performance/
 ```
 
 ### Test Configuration

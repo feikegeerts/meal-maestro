@@ -1,7 +1,7 @@
 <script lang="ts">
-
 import { authStore, isLoading, isAuthenticated } from '$lib/stores/auth.js';
 import { toasts } from '$lib/stores/toastStore';
+import { Button } from '$lib/components/ui/button';
 
 
 
@@ -45,42 +45,46 @@ async function handleSignOut() {
 }
 </script>
 
-<div class="auth-container">
+<div class="flex flex-col items-center gap-4 p-8">
   {#if $isAuthenticated}
     <!-- User is authenticated - show sign out -->
-    <div class="auth-card">
-      <h2>Welcome back!</h2>
-      <p>You are currently signed in.</p>
+    <div class="bg-background border border-border rounded-xl p-8 max-w-md w-full text-center shadow-lg">
+      <h2 class="text-2xl font-semibold text-foreground mb-2">Welcome back!</h2>
+      <p class="text-muted-foreground mb-8 leading-relaxed">You are currently signed in.</p>
       
-      <button
-        class="sign-out-button"
+      <Button
+        variant="destructive"
+        size="lg"
         onclick={handleSignOut}
         disabled={$isLoading}
+        class="w-full min-h-12"
       >
         {#if $isLoading}
-          <span class="spinner"></span>
+          <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
           Signing out...
         {:else}
           Sign Out
         {/if}
-      </button>
+      </Button>
     </div>
   {:else}
     <!-- User is not authenticated - show sign in options -->
-    <div class="auth-card">
-      <h2>Sign in to Meal Maestro</h2>
-      <p>Sign in to save and manage your personal recipe collection</p>
+    <div class="bg-background border border-border rounded-xl p-8 max-w-md w-full text-center shadow-lg">
+      <h2 class="text-2xl font-semibold text-foreground mb-2">Sign in to Meal Maestro</h2>
+      <p class="text-muted-foreground mb-8 leading-relaxed">Sign in to save and manage your personal recipe collection</p>
       
-      <button
-        class="google-sign-in-button"
+      <Button
+        variant="outline"
+        size="lg"
         onclick={handleGoogleSignIn}
         disabled={$isLoading}
+        class="w-full min-h-12 gap-3"
       >
         {#if $isLoading}
-          <span class="spinner"></span>
+          <div class="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin"></div>
           Signing in...
         {:else}
-          <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
+          <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -88,149 +92,21 @@ async function handleSignOut() {
           </svg>
           Continue with Google
         {/if}
-      </button>
+      </Button>
     </div>
   {/if}
 
   <!-- Messages -->
   {#if errorMessage}
-    <div class="message error" role="alert">
+    <div class="bg-red-50 border border-red-200 rounded-xl p-4 max-w-md w-full text-center text-red-700 text-sm font-medium dark:bg-red-950 dark:border-red-800 dark:text-red-300" role="alert">
       {errorMessage}
     </div>
   {/if}
 
   {#if successMessage}
-    <div class="message success" role="status">
+    <div class="bg-green-50 border border-green-200 rounded-xl p-4 max-w-md w-full text-center text-green-700 text-sm font-medium dark:bg-green-950 dark:border-green-800 dark:text-green-300" role="status">
       {successMessage}
     </div>
   {/if}
 </div>
 
-<style>
-  .auth-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    padding: 2rem;
-  }
-
-  .auth-card {
-    background: var(--surface);
-    border-radius: var(--radius-md);
-    padding: 2rem;
-    max-width: 400px;
-    width: 100%;
-    text-align: center;
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--border-color);
-  }
-
-  h2 {
-    margin: 0 0 0.5rem 0;
-    color: var(--text-primary);
-    font-size: var(--text-2xl);
-    font-weight: 600;
-  }
-
-  p {
-    margin: 0 0 2rem 0;
-    color: var(--text-secondary);
-    line-height: 1.5;
-  }
-
-  .google-sign-in-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    width: 100%;
-    padding: 0.75rem;
-    background: var(--surface);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-height: 48px;
-  }
-
-  .google-sign-in-button:hover:not(:disabled) {
-    background: var(--hover);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .google-sign-in-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .sign-out-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.75rem 2rem;
-    background: var(--error);
-    color: var(--surface);
-    border: none;
-    border-radius: var(--radius-md);
-    font-size: var(--text-base);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-height: 48px;
-  }
-
-  .sign-out-button:hover:not(:disabled) {
-    background: var(--error-hover);
-  }
-
-  .sign-out-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .google-icon {
-    flex-shrink: 0;
-  }
-
-  .spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid transparent;
-    border-top: 2px solid currentColor;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
-  .message {
-    padding: 0.75rem 1rem;
-    border-radius: var(--radius-md);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    max-width: 400px;
-    width: 100%;
-    text-align: center;
-  }
-
-  .message.error {
-    background: var(--error-bg);
-    color: var(--error-color);
-    border: 1px solid var(--error-border);
-  }
-
-  .message.success {
-    background: var(--success-light);
-    color: var(--success);
-    border: 1px solid var(--success-border);
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-</style>
