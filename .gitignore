@@ -1,28 +1,41 @@
-node_modules
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
 
-# Output
-.output
-.vercel
-.netlify
-.wrangler
-/.svelte-kit
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Production
 /build
 
-# OS
+# Misc
 .DS_Store
-Thumbs.db
+*.tsbuildinfo
+next-env.d.ts
 
-# Sensitive data
-/data/careerEvents.json
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Env
-.env
-.env.*
-!.env.example
-!.env.test
-
-# Vite
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
-
+# Local env files
 .env*.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Supabase
+.branches
+.temp
+
+# dotenvx
+.env.keys
