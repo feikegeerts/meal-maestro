@@ -23,9 +23,6 @@ importers:
       lucide-react:
         specifier: ^0.525.0
         version: 0.525.0(react@19.1.0)
-      next:
-        specifier: 15.4.4
-        version: 15.4.4(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react:
         specifier: 19.1.0
         version: 19.1.0
@@ -84,6 +81,9 @@ importers:
       msw:
         specifier: ^2.10.4
         version: 2.10.4(@types/node@20.19.9)(typescript@5.8.3)
+      next:
+        specifier: 15.4.4
+        version: 15.4.4(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       tailwindcss:
         specifier: ^4
         version: 4.1.11
