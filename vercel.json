@@ -2,10 +2,5 @@
   "framework": "nextjs",
   "buildCommand": "pnpm run verify && pnpm run build",
   "devCommand": "pnpm dev",
-  "installCommand": "pnpm install",
-  "functions": {
-    "src/app/**/*.{js,jsx,ts,tsx}": {
-      "maxDuration": 15
-    }
-  }
+  "installCommand": "pnpm install"
 }
