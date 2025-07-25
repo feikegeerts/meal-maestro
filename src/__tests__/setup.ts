@@ -12,11 +12,97 @@ import { server } from "../__mocks__/server";
 // Let MSW handle the actual API responses for testing different scenarios
 
 jest.mock("../lib/supabase", () => {
-  // Import the real module first
+  // Import the real module first to get the actual implementation
   const actualSupabase = jest.requireActual("../lib/supabase");
 
-  return {
-    ...actualSupabase,
+  // Create a mock Supabase client that uses MSW for HTTP calls
+  const mockSupabaseClient = {
+    from: jest.fn().mockImplementation((table: string) => {
+      let currentUserId = "test-user-id";
+      let updateData = {};
+
+      const mockQuery = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockImplementation((column: string, value: string) => {
+          if (column === "id") {
+            currentUserId = value;
+          }
+          return mockQuery;
+        }),
+        single: jest.fn().mockImplementation(async () => {
+          // This will trigger MSW handlers with proper headers
+          const response = await fetch(
+            `https://test.supabase.co/rest/v1/${table}?id=eq.${currentUserId}&select=*`,
+            {
+              headers: {
+                Accept: "application/vnd.pgrst.object+json",
+                Prefer: "return=representation",
+                apikey: "test-anon-key",
+                Authorization: "Bearer test-anon-key",
+              },
+            }
+          );
+
+          if (!response.ok) {
+            return {
+              data: null,
+              error: { message: "Error", details: response.statusText },
+            };
+          }
+
+          const data = await response.json();
+          return { data, error: null };
+        }),
+        update: jest
+          .fn()
+          .mockImplementation((updates: Record<string, unknown>) => {
+            updateData = updates;
+            return {
+              eq: jest
+                .fn()
+                .mockImplementation((column: string, value: string) => {
+                  if (column === "id") {
+                    currentUserId = value;
+                  }
+                  return {
+                    select: jest.fn().mockReturnThis(),
+                    single: jest.fn().mockImplementation(async () => {
+                      // This will trigger MSW handlers for PATCH requests
+                      const response = await fetch(
+                        `https://test.supabase.co/rest/v1/${table}?id=eq.${currentUserId}`,
+                        {
+                          method: "PATCH",
+                          headers: {
+                            Accept: "application/vnd.pgrst.object+json",
+                            Prefer: "return=representation",
+                            "Content-Type": "application/json",
+                            apikey: "test-anon-key",
+                            Authorization: "Bearer test-anon-key",
+                          },
+                          body: JSON.stringify(updateData),
+                        }
+                      );
+
+                      if (!response.ok) {
+                        return {
+                          data: null,
+                          error: {
+                            message: "Error",
+                            details: response.statusText,
+                          },
+                        };
+                      }
+
+                      const data = await response.json();
+                      return { data, error: null };
+                    }),
+                  };
+                }),
+            };
+          }),
+      };
+      return mockQuery;
+    }),
     auth: {
       ...actualSupabase.auth,
       signInWithGoogle: jest.fn().mockImplementation(() => {
@@ -26,7 +112,37 @@ jest.mock("../lib/supabase", () => {
           error: null,
         });
       }),
+      signOut: jest.fn().mockImplementation(() => {
+        return Promise.resolve({ error: null });
+      }),
+      getUser: jest.fn().mockImplementation(() => {
+        return Promise.resolve({
+          data: { user: null },
+          error: null,
+        });
+      }),
+      getSession: jest.fn().mockImplementation(() => {
+        return Promise.resolve({
+          data: { session: null },
+          error: null,
+        });
+      }),
+      onAuthStateChange: jest.fn().mockImplementation(() => {
+        return {
+          data: {
+            subscription: {
+              unsubscribe: jest.fn(),
+            },
+          },
+        };
+      }),
     },
+  };
+
+  return {
+    ...actualSupabase,
+    supabase: mockSupabaseClient,
+    default: mockSupabaseClient,
   };
 });
 
@@ -53,12 +169,20 @@ const assignMock = jest.fn();
 // Suppress the JSDOM navigation error before attempting to mock location
 const originalConsoleError = console.error;
 console.error = (message: unknown, ...args: unknown[]) => {
-  if (typeof message === 'object' && message && 'type' in message && 
-      'message' in message && (message as {type: string, message: string}).type === 'not implemented' && 
-      (message as {message: string}).message.includes('navigation')) {
+  if (
+    typeof message === "object" &&
+    message &&
+    "type" in message &&
+    "message" in message &&
+    (message as { type: string; message: string }).type === "not implemented" &&
+    (message as { message: string }).message.includes("navigation")
+  ) {
     return; // Suppress navigation errors
   }
-  if (typeof message === 'string' && message.includes('Not implemented: navigation')) {
+  if (
+    typeof message === "string" &&
+    message.includes("Not implemented: navigation")
+  ) {
     return; // Suppress navigation errors
   }
   originalConsoleError(message, ...args);
@@ -119,11 +243,17 @@ beforeAll(() => {
   console.error = (...args: unknown[]) => {
     // Filter out JSDOM navigation error
     const errorMessage = args[0];
-    if (errorMessage && typeof errorMessage === "object" && 'type' in errorMessage && 'message' in errorMessage) {
+    if (
+      errorMessage &&
+      typeof errorMessage === "object" &&
+      "type" in errorMessage &&
+      "message" in errorMessage
+    ) {
       if (
-        (errorMessage as {type: string, message: string}).type === "not implemented" &&
-        (errorMessage as {message: string}).message &&
-        (errorMessage as {message: string}).message.includes("navigation")
+        (errorMessage as { type: string; message: string }).type ===
+          "not implemented" &&
+        (errorMessage as { message: string }).message &&
+        (errorMessage as { message: string }).message.includes("navigation")
       ) {
         return; // Suppress this specific error
       }
