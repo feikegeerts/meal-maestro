@@ -4,6 +4,15 @@
 jest.mock("../lib/supabase");
 import "@testing-library/jest-dom";
 
+// React.act compatibility is handled by react-act-polyfill.js
+import { configure } from '@testing-library/react';
+
+// Configure testing library with better CI compatibility
+configure({ 
+  testIdAttribute: 'data-testid',
+  asyncUtilTimeout: 15000, // Increased timeout for CI
+});
+
 // Set up test environment variables
 process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-anon-key";
