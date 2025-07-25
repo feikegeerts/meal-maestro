@@ -12,9 +12,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage --watchAll=false",
-    "verify": "pnpm run type-check && pnpm run lint",
-    "verify-with-tests": "pnpm run type-check && pnpm run lint && pnpm run test:ci"
+    "test:ci": "jest --ci --watchAll=false",
+    "verify": "pnpm run type-check && pnpm run lint && pnpm run test:ci"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
@@ -22,7 +21,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.525.0",
-    "next": "15.4.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "tailwind-merge": "^3.3.1"
@@ -44,6 +42,7 @@
     "jest-fixed-jsdom": "^0.0.9",
     "jest-location-mock": "^2.0.0",
     "msw": "^2.10.4",
+    "next": "15.4.4",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.6",
     "typescript": "^5",
