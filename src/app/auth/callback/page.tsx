@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { PageLoading } from '@/components/ui/page-loading'
+import { PageWrapper } from '@/components/ui/page-wrapper'
 
 export default function AuthCallback() {
   const router = useRouter()
@@ -55,5 +56,9 @@ export default function AuthCallback() {
     }
   }, [router])
 
-  return <PageLoading text="Sign in successful, redirecting..." />
+  return (
+    <PageWrapper>
+      <PageLoading text="Sign in successful, redirecting..." />
+    </PageWrapper>
+  )
 }

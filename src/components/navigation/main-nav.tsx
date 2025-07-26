@@ -43,7 +43,7 @@ export function MainNav() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo and Brand */}
           <Link href="/" className="flex items-center space-x-2">
-            <ChefHat className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+            <ChefHat className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold">Meal Maestro</span>
           </Link>
 
@@ -85,7 +85,7 @@ export function MainNav() {
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
               <SheetHeader>
                 <SheetTitle className="flex items-center space-x-2">
-                  <ChefHat className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                  <ChefHat className="h-6 w-6 text-primary" />
                   <span>Navigation</span>
                 </SheetTitle>
               </SheetHeader>

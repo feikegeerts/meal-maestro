@@ -36,7 +36,30 @@ export async function getAuthenticatedUser(): Promise<AuthUser | null> {
 
           if (refreshError || !refreshData.session) {
             console.error('Token refresh failed:', refreshError);
+            // Clear invalid cookies
+            cookieStore.delete('sb-access-token');
+            cookieStore.delete('sb-refresh-token');
             return null;
+          }
+
+          // Update cookies with new tokens
+          const isProduction = process.env.NODE_ENV === 'production';
+          cookieStore.set('sb-access-token', refreshData.session.access_token, {
+            path: '/',
+            maxAge: refreshData.session.expires_in || 3600,
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: 'lax'
+          });
+
+          if (refreshData.session.refresh_token) {
+            cookieStore.set('sb-refresh-token', refreshData.session.refresh_token, {
+              path: '/',
+              maxAge: 60 * 60 * 24 * 7, // 7 days
+              httpOnly: true,
+              secure: isProduction,
+              sameSite: 'lax'
+            });
           }
 
           return {
@@ -45,6 +68,9 @@ export async function getAuthenticatedUser(): Promise<AuthUser | null> {
           };
         } catch (refreshError) {
           console.error('Token refresh exception:', refreshError);
+          // Clear invalid cookies
+          cookieStore.delete('sb-access-token');
+          cookieStore.delete('sb-refresh-token');
           return null;
         }
       }

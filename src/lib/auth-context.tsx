@@ -35,6 +35,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Sync tokens with server for HTTP-only cookie auth
+  const syncTokensWithServer = async (session: Session) => {
+    try {
+      await fetch('/api/auth/set-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token,
+          expires_in: session.expires_in
+        })
+      });
+    } catch (error) {
+      console.error('Failed to sync tokens with server:', error);
+    }
+  };
+
   useEffect(() => {
     // Get initial session
     const initializeAuth = async () => {
@@ -42,6 +59,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const { session } = await auth.getCurrentSession();
         setSession(session);
         setUser(session?.user ?? null);
+
+        // Sync tokens with server for API access
+        if (session) {
+          await syncTokensWithServer(session);
+        }
 
         // Fetch user profile if user exists
         if (session?.user) {
@@ -62,11 +84,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
-      async (_event, session: Session | null) => {
+      async (event, session: Session | null) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         setLoading(false);
+
+        // Sync tokens with server whenever session changes
+        if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+          await syncTokensWithServer(session);
+        }
 
         if (session?.user) {
           setTimeout(async () => {
@@ -103,6 +130,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = async () => {
     setLoading(true);
     try {
+      // Clear server-side cookies first
+      await fetch('/api/auth/sign-out', { method: 'POST' });
+      
+      // Then sign out from Supabase client
       const result = await auth.signOut();
       return result;
     } catch (error) {
