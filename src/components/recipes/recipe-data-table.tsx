@@ -14,6 +14,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Recipe } from "@/types/recipe";
+import { useRouter } from "next/navigation";
 
 import {
   Table,
@@ -61,6 +62,7 @@ export function RecipeDataTable<TData, TValue>({
   data,
   loading = false,
 }: DataTableProps<TData, TValue>) {
+  const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -142,6 +144,10 @@ export function RecipeDataTable<TData, TValue>({
   };
 
   const hasFilters = globalFilter || columnFilters.length > 0;
+
+  const handleRowClick = (recipe: Recipe) => {
+    router.push(`/recipe/${recipe.id}`);
+  };
 
   return (
     <div className="w-full space-y-4">
@@ -311,6 +317,20 @@ export function RecipeDataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={(e) => {
+                    // Don't trigger row click if clicking on interactive elements
+                    const target = e.target as HTMLElement;
+                    if (
+                      target.closest('button') || 
+                      target.closest('[role="checkbox"]') ||
+                      target.closest('.dropdown-menu') ||
+                      target.closest('[data-dropdown-trigger]')
+                    ) {
+                      return;
+                    }
+                    handleRowClick(row.original as Recipe);
+                  }}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

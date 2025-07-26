@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, ArrowUpDown, Eye, Edit, Utensils, Trash2 } from "lucide-react";
+import Link from "next/link";
 
 export const recipeColumns: ColumnDef<Recipe>[] = [
   {
@@ -213,7 +214,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
+            <Button variant="ghost" className="h-8 w-8 p-0" data-dropdown-trigger>
               <span className="sr-only">Open menu</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
@@ -226,9 +227,11 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
               Copy recipe ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Eye className="mr-2 h-4 w-4" />
-              View details
+            <DropdownMenuItem asChild>
+              <Link href={`/recipe/${recipe.id}`}>
+                <Eye className="mr-2 h-4 w-4" />
+                View details
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Edit className="mr-2 h-4 w-4" />
