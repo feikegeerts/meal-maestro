@@ -31,6 +31,16 @@ export const mockProfile = {
 };
 
 export const handlers = [
+  // Auth API endpoints
+  http.post("/api/auth/set-session", async ({ request }) => {
+    await request.json();
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.post("/api/auth/sign-out", () => {
+    return HttpResponse.json({ success: true });
+  }),
+
   // Auth endpoints
   http.get(`${SUPABASE_URL}/auth/v1/token`, () => {
     return HttpResponse.json({
