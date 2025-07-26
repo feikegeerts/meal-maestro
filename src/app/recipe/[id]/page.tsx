@@ -13,23 +13,27 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { recipeService } from "@/lib/recipe-service";
 import { Recipe } from "@/types/recipe";
-import { 
-  ArrowLeft, 
-  Edit, 
-  Trash2, 
-  Utensils, 
-  Clock, 
+import {
+  ArrowLeft,
+  Edit,
+  Trash2,
+  Utensils,
+  Clock,
   Calendar,
   CalendarDays,
   Tag,
-  ChefHat
+  ChefHat,
 } from "lucide-react";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { getRecipeById, updateRecipe: updateRecipeInContext, removeRecipe } = useRecipes();
+  const {
+    getRecipeById,
+    updateRecipe: updateRecipeInContext,
+    removeRecipe,
+  } = useRecipes();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +49,7 @@ export default function RecipeDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // First, try to get recipe from context (instant if coming from recipes list)
       const contextRecipe = getRecipeById(id as string);
       if (contextRecipe) {
@@ -53,13 +57,13 @@ export default function RecipeDetailPage() {
         setLoading(false);
         return;
       }
-      
+
       // Fallback to API call if not in context (direct navigation)
       const recipeData = await recipeService.getRecipe(id as string);
       setRecipe(recipeData);
     } catch (err) {
-      console.error('Error loading recipe:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load recipe');
+      console.error("Error loading recipe:", err);
+      setError(err instanceof Error ? err.message : "Failed to load recipe");
     } finally {
       setLoading(false);
     }
@@ -67,16 +71,20 @@ export default function RecipeDetailPage() {
 
   const handleMarkAsEaten = async () => {
     if (!recipe) return;
-    
+
     try {
-      setActionLoading('eaten');
-      const { recipe: updatedRecipe } = await recipeService.markRecipeAsEaten(recipe.id);
+      setActionLoading("eaten");
+      const { recipe: updatedRecipe } = await recipeService.markRecipeAsEaten(
+        recipe.id
+      );
       setRecipe(updatedRecipe);
       // Update the context so recipes list shows updated data
       updateRecipeInContext(recipe.id, updatedRecipe);
     } catch (err) {
-      console.error('Error marking recipe as eaten:', err);
-      alert(err instanceof Error ? err.message : 'Failed to mark recipe as eaten');
+      console.error("Error marking recipe as eaten:", err);
+      alert(
+        err instanceof Error ? err.message : "Failed to mark recipe as eaten"
+      );
     } finally {
       setActionLoading(null);
     }
@@ -84,30 +92,30 @@ export default function RecipeDetailPage() {
 
   const handleDelete = async () => {
     if (!recipe) return;
-    
+
     const confirmed = confirm(
       `Are you sure you want to delete "${recipe.title}"? This action cannot be undone.`
     );
-    
+
     if (!confirmed) return;
-    
+
     try {
-      setActionLoading('delete');
+      setActionLoading("delete");
       await recipeService.deleteRecipe(recipe.id);
-      router.push('/recipes');
+      router.push("/recipes");
     } catch (err) {
-      console.error('Error deleting recipe:', err);
-      alert(err instanceof Error ? err.message : 'Failed to delete recipe');
+      console.error("Error deleting recipe:", err);
+      alert(err instanceof Error ? err.message : "Failed to delete recipe");
       setActionLoading(null);
     }
   };
 
   const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    if (!dateString) return "Never";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -122,10 +130,10 @@ export default function RecipeDetailPage() {
           <div className="max-w-4xl mx-auto">
             {/* Header - Real Back Button */}
             <div className="flex items-center gap-4 mb-6">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
-                onClick={() => router.push('/recipes')}
+                onClick={() => router.push("/recipes")}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Recipes
@@ -143,14 +151,10 @@ export default function RecipeDetailPage() {
                       <Skeleton className="h-6 w-16" />
                     </div>
                   </div>
-                  
+
                   {/* Real Action Buttons (disabled during loading) */}
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled
-                    >
+                    <Button variant="outline" size="sm" disabled>
                       <Utensils className="mr-2 h-4 w-4" />
                       Mark as Eaten
                     </Button>
@@ -259,17 +263,16 @@ export default function RecipeDetailPage() {
                 <h1 className="text-2xl font-bold text-foreground mb-4">
                   Recipe Not Found
                 </h1>
-                <p className="text-muted-foreground mb-6">
-                  {error}
-                </p>
+                <p className="text-muted-foreground mb-6">{error}</p>
                 <div className="flex gap-4 justify-center">
-                  <Button variant="outline" onClick={() => router.push('/recipes')}>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push("/recipes")}
+                  >
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Recipes
                   </Button>
-                  <Button onClick={loadRecipe}>
-                    Try Again
-                  </Button>
+                  <Button onClick={loadRecipe}>Try Again</Button>
                 </div>
               </CardContent>
             </Card>
@@ -291,9 +294,13 @@ export default function RecipeDetailPage() {
                   Recipe Not Found
                 </h1>
                 <p className="text-muted-foreground mb-6">
-                  The recipe you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.
+                  The recipe you&apos;re looking for doesn&apos;t exist or you
+                  don&apos;t have access to it.
                 </p>
-                <Button variant="outline" onClick={() => router.push('/recipes')}>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push("/recipes")}
+                >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to Recipes
                 </Button>
@@ -311,10 +318,10 @@ export default function RecipeDetailPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="flex items-center gap-4 mb-6">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
-              onClick={() => router.push('/recipes')}
+              onClick={() => router.push("/recipes")}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Recipes
@@ -326,7 +333,9 @@ export default function RecipeDetailPage() {
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="flex-1">
-                  <CardTitle className="text-3xl mb-2">{recipe.title}</CardTitle>
+                  <CardTitle className="text-3xl mb-2">
+                    {recipe.title}
+                  </CardTitle>
                   <div className="flex flex-wrap gap-2 mb-4">
                     <Badge variant="secondary" className="capitalize">
                       <ChefHat className="mr-1 h-3 w-3" />
@@ -340,7 +349,7 @@ export default function RecipeDetailPage() {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-2">
                   <Button
@@ -350,20 +359,20 @@ export default function RecipeDetailPage() {
                     disabled={!!actionLoading}
                   >
                     <Utensils className="mr-2 h-4 w-4" />
-                    {actionLoading === 'eaten' ? 'Marking...' : 'Mark as Eaten'}
+                    {actionLoading === "eaten" ? "Marking..." : "Mark as Eaten"}
                   </Button>
                   <Button variant="outline" size="sm">
                     <Edit className="mr-2 h-4 w-4" />
                     Edit
                   </Button>
-                  <Button 
-                    variant="destructive" 
+                  <Button
+                    variant="destructive"
                     size="sm"
                     onClick={handleDelete}
                     disabled={!!actionLoading}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    {actionLoading === 'delete' ? 'Deleting...' : 'Delete'}
+                    {actionLoading === "delete" ? "Deleting..." : "Delete"}
                   </Button>
                 </div>
               </div>
