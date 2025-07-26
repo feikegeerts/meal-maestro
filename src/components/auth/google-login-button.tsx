@@ -165,7 +165,7 @@ export function GoogleLoginButton({ className }: GoogleLoginButtonProps) {
       </button>
       
       {error && (
-        <div className="text-red-600 dark:text-red-400 text-sm text-center px-2">
+        <div className="text-destructive text-sm text-center px-2">
           {error}
         </div>
       )}

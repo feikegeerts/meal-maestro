@@ -13,6 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { Recipe } from "@/types/recipe";
 
 import {
   Table,
@@ -117,7 +118,7 @@ export function RecipeDataTable<TData, TValue>({
         return true;
 
       // Search in description (if available in row data)
-      const original = row.original as any;
+      const original = row.original as Recipe;
       if (original?.description?.toLowerCase().includes(searchValue))
         return true;
 

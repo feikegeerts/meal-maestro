@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { PageLoading } from "@/components/ui/page-loading";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { recipeService } from "@/lib/recipe-service";
 import { Recipe, RecipesResponse } from "@/types/recipe";
@@ -42,30 +43,30 @@ export default function RecipesPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <PageWrapper className="flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-2xl font-bold text-foreground mb-4">
             Authentication Required
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-muted-foreground">
             Please sign in to access your recipes.
           </p>
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-100 dark:from-gray-900 dark:to-gray-800">
+    <PageWrapper>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-bold text-foreground">
                 Your Recipes
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-2">
+              <p className="text-muted-foreground mt-2">
                 Manage and search through your recipe collection
               </p>
             </div>
@@ -88,12 +89,12 @@ export default function RecipesPage() {
 
           {/* Error State */}
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
-              <p className="text-red-700 dark:text-red-300">{error}</p>
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6">
+              <p className="text-destructive">{error}</p>
               <Button 
                 variant="link" 
                 onClick={loadRecipes}
-                className="mt-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 p-0 h-auto"
+                className="mt-2 text-destructive hover:text-destructive/80 p-0 h-auto"
               >
                 Try again
               </Button>
@@ -101,14 +102,14 @@ export default function RecipesPage() {
           )}
 
           {/* Data Table */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <div className="bg-card rounded-lg shadow-lg p-6">
             {!recipesLoading && recipes.length === 0 && !error ? (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">🍽️</div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-xl font-semibold text-foreground mb-2">
                   No recipes yet
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                <p className="text-muted-foreground mb-6">
                   Start building your recipe collection! Add your first recipe to get started.
                 </p>
                 <Button className="flex items-center gap-2 mx-auto">
@@ -126,6 +127,6 @@ export default function RecipesPage() {
           </div>
         </div>
       </div>
-    </div>
+    </PageWrapper>
   );
 }
