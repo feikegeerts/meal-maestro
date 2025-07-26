@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { useRecipes } from "@/contexts/recipe-context";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ export default function RecipeDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { getRecipeById, updateRecipe: updateRecipeInContext, removeRecipe } = useRecipes();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +45,16 @@ export default function RecipeDetailPage() {
     try {
       setLoading(true);
       setError(null);
+      
+      // First, try to get recipe from context (instant if coming from recipes list)
+      const contextRecipe = getRecipeById(id as string);
+      if (contextRecipe) {
+        setRecipe(contextRecipe);
+        setLoading(false);
+        return;
+      }
+      
+      // Fallback to API call if not in context (direct navigation)
       const recipeData = await recipeService.getRecipe(id as string);
       setRecipe(recipeData);
     } catch (err) {
@@ -60,6 +72,8 @@ export default function RecipeDetailPage() {
       setActionLoading('eaten');
       const { recipe: updatedRecipe } = await recipeService.markRecipeAsEaten(recipe.id);
       setRecipe(updatedRecipe);
+      // Update the context so recipes list shows updated data
+      updateRecipeInContext(recipe.id, updatedRecipe);
     } catch (err) {
       console.error('Error marking recipe as eaten:', err);
       alert(err instanceof Error ? err.message : 'Failed to mark recipe as eaten');

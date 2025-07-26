@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { useRecipes } from "@/contexts/recipe-context";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -13,15 +14,19 @@ import { Plus, RefreshCw } from "lucide-react";
 
 export default function RecipesPage() {
   const { user, loading } = useAuth();
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const { recipes: contextRecipes, setRecipes: setRecipesInContext } =
+    useRecipes();
+  const [recipes, setRecipes] = useState<Recipe[]>(contextRecipes);
   const [recipesLoading, setRecipesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
+    if (user && contextRecipes.length === 0) {
       loadRecipes();
+    } else {
+      setRecipes(contextRecipes);
     }
-  }, [user]);
+  }, [user, contextRecipes]);
 
   const loadRecipes = async () => {
     try {
@@ -29,9 +34,10 @@ export default function RecipesPage() {
       setError(null);
       const response: RecipesResponse = await recipeService.getUserRecipes();
       setRecipes(response.recipes);
+      setRecipesInContext(response.recipes);
     } catch (err) {
-      console.error('Error loading recipes:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load recipes');
+      console.error("Error loading recipes:", err);
+      setError(err instanceof Error ? err.message : "Failed to load recipes");
     } finally {
       setRecipesLoading(false);
     }
@@ -77,7 +83,9 @@ export default function RecipesPage() {
                 disabled={recipesLoading}
                 className="flex items-center gap-2"
               >
-                <RefreshCw className={`h-4 w-4 ${recipesLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${recipesLoading ? "animate-spin" : ""}`}
+                />
                 Refresh
               </Button>
               <Button className="flex items-center gap-2">
@@ -91,8 +99,8 @@ export default function RecipesPage() {
           {error && (
             <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6">
               <p className="text-destructive">{error}</p>
-              <Button 
-                variant="link" 
+              <Button
+                variant="link"
                 onClick={loadRecipes}
                 className="mt-2 text-destructive hover:text-destructive/80 p-0 h-auto"
               >
@@ -110,7 +118,8 @@ export default function RecipesPage() {
                   No recipes yet
                 </h3>
                 <p className="text-muted-foreground mb-6">
-                  Start building your recipe collection! Add your first recipe to get started.
+                  Start building your recipe collection! Add your first recipe
+                  to get started.
                 </p>
                 <Button className="flex items-center gap-2 mx-auto">
                   <Plus className="h-4 w-4" />
@@ -118,9 +127,9 @@ export default function RecipesPage() {
                 </Button>
               </div>
             ) : (
-              <RecipeDataTable 
-                columns={recipeColumns} 
-                data={recipes} 
+              <RecipeDataTable
+                columns={recipeColumns}
+                data={recipes}
                 loading={recipesLoading}
               />
             )}
