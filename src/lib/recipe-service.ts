@@ -107,6 +107,52 @@ export const recipeService = {
 
   async getRecipesByTags(tags: string[]): Promise<RecipesResponse> {
     return this.getUserRecipes({ tags });
+  },
+
+  async getRecipe(id: string): Promise<Recipe> {
+    const response = await authenticatedFetch(`/api/recipes/${id}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to fetch recipe: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.recipe;
+  },
+
+  async updateRecipe(id: string, recipeData: Partial<RecipeInput>): Promise<{ recipe: Recipe; success: boolean }> {
+    const response = await authenticatedFetch(`/api/recipes/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(recipeData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to update recipe: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  async deleteRecipe(id: string): Promise<{ success: boolean }> {
+    const response = await authenticatedFetch(`/api/recipes/${id}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to delete recipe: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  async markRecipeAsEaten(id: string): Promise<{ recipe: Recipe; success: boolean }> {
+    return this.updateRecipe(id, { last_eaten: new Date().toISOString() });
   }
 };
 
