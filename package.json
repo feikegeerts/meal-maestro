@@ -13,7 +13,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --watchAll=false",
-    "verify": "pnpm run type-check && pnpm run lint"
+    "verify": "pnpm run type-check && pnpm run lint",
+    "prepare": "husky"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.2",
@@ -44,10 +45,12 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.4",
+    "husky": "^9.1.7",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
     "jest-fixed-jsdom": "^0.0.9",
     "jest-location-mock": "^2.0.0",
+    "lint-staged": "^16.1.2",
     "msw": "^2.10.4",
     "next": "15.4.4",
     "tailwindcss": "^4",
