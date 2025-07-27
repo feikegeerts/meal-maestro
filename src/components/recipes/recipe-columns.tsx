@@ -13,7 +13,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, ArrowUpDown, Eye, Edit, Utensils, Trash2 } from "lucide-react";
+import {
+  MoreHorizontal,
+  ArrowUpDown,
+  Eye,
+  Edit,
+  Utensils,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 
 export const recipeColumns: ColumnDef<Recipe>[] = [
@@ -125,7 +132,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
       if (!tags || tags.length === 0) {
         return <span className="text-muted-foreground">-</span>;
       }
-      
+
       return (
         <div className="flex flex-wrap gap-1 max-w-[200px]">
           {tags.slice(0, 2).map((tag) => (
@@ -174,11 +181,10 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
     sortingFn: (rowA, rowB, columnId) => {
       const dateA = rowA.getValue(columnId) as string | undefined;
       const dateB = rowB.getValue(columnId) as string | undefined;
-      
+
       if (!dateA && !dateB) return 0;
-      if (!dateA) return 1;
-      if (!dateB) return -1;
-      
+      if (!dateA) return -1;
+      if (!dateB) return 1;
       return new Date(dateA).getTime() - new Date(dateB).getTime();
     },
   },
@@ -214,7 +220,11 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0" data-dropdown-trigger>
+            <Button
+              variant="ghost"
+              className="h-8 w-8 p-0"
+              data-dropdown-trigger
+            >
               <span className="sr-only">Open menu</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
