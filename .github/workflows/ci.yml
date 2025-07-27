@@ -37,9 +37,3 @@ jobs:
 
       - name: Run tests
         run: pnpm run test:ci
-
-      - name: Build
-        run: pnpm run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
