@@ -12,10 +12,7 @@ const config = {
   coverageProvider: "v8",
   testEnvironment: "jest-fixed-jsdom",
   // Add more setup options before each test is run
-  setupFiles: [
-    "<rootDir>/src/__tests__/react-act-polyfill.js",
-    "<rootDir>/src/__tests__/msw-setup.js",
-  ],
+  setupFiles: ["<rootDir>/src/__tests__/msw-setup.js"],
   setupFilesAfterEnv: ["<rootDir>/src/__tests__/setup.ts"],
   modulePathIgnorePatterns: ["<rootDir>/old/"],
   testPathIgnorePatterns: [
@@ -23,7 +20,6 @@ const config = {
     "<rootDir>/src/__tests__/setup.ts",
     "<rootDir>/src/__tests__/test-utils.tsx",
     "<rootDir>/src/__tests__/msw-setup.js",
-    "<rootDir>/src/__tests__/react-act-polyfill.js",
   ],
   // CI-specific optimizations
   maxWorkers: process.env.CI ? 1 : "50%",

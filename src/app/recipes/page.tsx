@@ -26,7 +26,7 @@ export default function RecipesPage() {
     } else {
       setRecipes(contextRecipes);
     }
-  }, [user, contextRecipes]);
+  }, [user, contextRecipes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadRecipes = async () => {
     try {
