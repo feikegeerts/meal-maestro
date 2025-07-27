@@ -34,8 +34,16 @@ export async function getAuthenticatedUser(): Promise<AuthUser | null> {
             refresh_token: refreshToken
           });
 
-          if (refreshError || !refreshData.session) {
-            console.error('Token refresh failed:', refreshError);
+          if (refreshError) {
+            console.error('Token refresh failed:', refreshError.message, refreshError.status);
+            // Clear invalid cookies
+            cookieStore.delete('sb-access-token');
+            cookieStore.delete('sb-refresh-token');
+            return null;
+          }
+
+          if (!refreshData.session || !refreshData.session.user) {
+            console.error('Token refresh returned no session or user');
             // Clear invalid cookies
             cookieStore.delete('sb-access-token');
             cookieStore.delete('sb-refresh-token');
@@ -44,6 +52,8 @@ export async function getAuthenticatedUser(): Promise<AuthUser | null> {
 
           // Update cookies with new tokens
           const isProduction = process.env.NODE_ENV === 'production';
+          
+          // Always update access token
           cookieStore.set('sb-access-token', refreshData.session.access_token, {
             path: '/',
             maxAge: refreshData.session.expires_in || 3600,
@@ -52,6 +62,7 @@ export async function getAuthenticatedUser(): Promise<AuthUser | null> {
             sameSite: 'lax'
           });
 
+          // Update refresh token if provided (Supabase may rotate it)
           if (refreshData.session.refresh_token) {
             cookieStore.set('sb-refresh-token', refreshData.session.refresh_token, {
               path: '/',

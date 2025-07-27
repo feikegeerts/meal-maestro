@@ -4,7 +4,6 @@
 jest.mock("../lib/supabase");
 import "@testing-library/jest-dom";
 
-// React.act compatibility is handled by react-act-polyfill.js
 import { configure } from "@testing-library/react";
 
 // Configure testing library with better CI compatibility

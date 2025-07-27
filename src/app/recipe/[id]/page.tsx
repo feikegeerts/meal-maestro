@@ -32,7 +32,6 @@ export default function RecipeDetailPage() {
   const {
     getRecipeById,
     updateRecipe: updateRecipeInContext,
-    removeRecipe,
   } = useRecipes();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
