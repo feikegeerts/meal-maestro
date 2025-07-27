@@ -90,11 +90,11 @@ An AI-powered recipe management system. The system provides natural language rec
 
 - [ ] Choose Framer Motion for page and shared element transitions.
 - [ ] Consider modal/drawer for quick detail previews.
-- [ ] **5.6** Favicon
+- [ ] About page
+- [ ] add cookie consent message to login?
 - [ ] **5.7** Add ability for the AI to fetch a website and process it as a recipe
 - [ ] **5.8** Implement edit functionality in the detail view for the user to edit the description or tags, or category and so on.
 - [ ] **5.9** Implement languages Dutch and English
-- [ ] **5.10** Enhanced search with semantic capabilities
 - [ ] **5.11** Implement caching strategies
 - [ ] **5.12** Add buy me a coffee functionality
 - [ ] **5.13** Improve deployment pipeline with automatic testing and version bumping

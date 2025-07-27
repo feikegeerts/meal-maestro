@@ -44,13 +44,12 @@
 | Playwright            | [playwright.dev](https://playwright.dev)           | [github.com/microsoft/playwright](https://github.com/microsoft/playwright)                                   |
 | Mock Service Worker   | [mswjs.io](https://mswjs.io)                       | [github.com/mswjs/msw](https://github.com/mswjs/msw)                                                         |
 
-# Coding guidelines
-
-**IMPORTANT**
-
-- Do not add comments when the code is self explanatory
-- use shadcn components when possible to avoid custom components
-
 # Auth Notes
 
 - Google OAuth PKCE: Use client-side callback page (`/auth/callback/page.tsx`), not server-side route. Supabase handles PKCE with `detectSessionInUrl: true`.
+
+## Development Guidelines
+
+- Let the user always test with pnpm dev
+- Do not add comments when the code is self explanatory
+- use shadcn components when possible to avoid custom components
