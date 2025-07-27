@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useRecipes } from "@/contexts/recipe-context";
 import { PageLoading } from "@/components/ui/page-loading";
@@ -11,8 +12,10 @@ import { Recipe, RecipesResponse } from "@/types/recipe";
 import { RecipeDataTable } from "@/components/recipes/recipe-data-table";
 import { recipeColumns } from "@/components/recipes/recipe-columns";
 import { Plus, RefreshCw } from "lucide-react";
+import { setRedirectUrl } from "@/lib/utils";
 
 export default function RecipesPage() {
+  const router = useRouter();
   const { user, loading } = useAuth();
   const { recipes: contextRecipes, setRecipes: setRecipesInContext } =
     useRecipes();
@@ -21,12 +24,18 @@ export default function RecipesPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!loading && !user) {
+      setRedirectUrl("/recipes");
+      router.push("/");
+      return;
+    }
+
     if (user && contextRecipes.length === 0) {
       loadRecipes();
     } else {
       setRecipes(contextRecipes);
     }
-  }, [user, contextRecipes]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, loading, contextRecipes, router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadRecipes = async () => {
     try {
@@ -43,23 +52,8 @@ export default function RecipesPage() {
     }
   };
 
-  if (loading) {
+  if (loading || !user) {
     return <PageLoading />;
-  }
-
-  if (!user) {
-    return (
-      <PageWrapper className="flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">
-            Authentication Required
-          </h1>
-          <p className="text-muted-foreground">
-            Please sign in to access your recipes.
-          </p>
-        </div>
-      </PageWrapper>
-    );
   }
 
   return (

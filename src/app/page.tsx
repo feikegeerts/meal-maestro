@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { GoogleLoginButton } from "@/components/auth/google-login-button";
 import { Button } from "@/components/ui/button";
@@ -7,8 +9,10 @@ import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { User, LogOut, ChefHat } from "lucide-react";
 import Image from "next/image";
+import { getRedirectUrl, clearRedirectUrl } from "@/lib/utils";
 
 export default function Home() {
+  const router = useRouter();
   const { user, profile, loading, signOut } = useAuth();
 
   const handleSignOut = async () => {
@@ -17,6 +21,16 @@ export default function Home() {
       console.error("Error signing out:", error);
     }
   };
+
+  useEffect(() => {
+    if (user && !loading) {
+      const redirectUrl = getRedirectUrl();
+      if (redirectUrl) {
+        clearRedirectUrl();
+        router.push(redirectUrl);
+      }
+    }
+  }, [user, loading, router]);
 
   if (loading) {
     return <PageLoading />;

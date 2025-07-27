@@ -24,6 +24,7 @@ import {
   Tag,
   ChefHat,
 } from "lucide-react";
+import { setRedirectUrl } from "@/lib/utils";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
@@ -39,10 +40,16 @@ export default function RecipeDetailPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!authLoading && !user) {
+      setRedirectUrl(`/recipe/${id}`);
+      router.push('/');
+      return;
+    }
+    
     if (user && id) {
       loadRecipe();
     }
-  }, [user, id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, authLoading, id, router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadRecipe = async () => {
     try {
@@ -118,7 +125,7 @@ export default function RecipeDetailPage() {
     });
   };
 
-  if (authLoading) {
+  if (authLoading || !user) {
     return <PageLoading />;
   }
 
@@ -236,20 +243,6 @@ export default function RecipeDetailPage() {
     );
   }
 
-  if (!user) {
-    return (
-      <PageWrapper className="flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">
-            Authentication Required
-          </h1>
-          <p className="text-muted-foreground">
-            Please sign in to view recipe details.
-          </p>
-        </div>
-      </PageWrapper>
-    );
-  }
 
   if (error) {
     return (
