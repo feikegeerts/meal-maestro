@@ -92,6 +92,7 @@ An AI-powered recipe management system. The system provides natural language rec
 - [ ] Consider modal/drawer for quick detail previews.
 - [ ] About page
 - [ ] add cookie consent message to login?
+- [ ] use typescript types everywhere instead of hardcoded lists of tags categories and seasons.
 - [ ] **5.7** Add ability for the AI to fetch a website and process it as a recipe
 - [ ] **5.8** Implement edit functionality in the detail view for the user to edit the description or tags, or category and so on.
 - [ ] **5.9** Implement languages Dutch and English
