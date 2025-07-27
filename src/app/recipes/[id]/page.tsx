@@ -41,7 +41,7 @@ export default function RecipeDetailPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      setRedirectUrl(`/recipe/${id}`);
+      setRedirectUrl(`/recipes/${id}`);
       router.push('/');
       return;
     }

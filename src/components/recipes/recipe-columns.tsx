@@ -228,7 +228,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href={`/recipe/${recipe.id}`}>
+              <Link href={`/recipes/${recipe.id}`}>
                 <Eye className="mr-2 h-4 w-4" />
                 View details
               </Link>

@@ -146,7 +146,7 @@ export function RecipeDataTable<TData, TValue>({
   const hasFilters = globalFilter || columnFilters.length > 0;
 
   const handleRowClick = (recipe: Recipe) => {
-    router.push(`/recipe/${recipe.id}`);
+    router.push(`/recipes/${recipe.id}`);
   };
 
   return (
