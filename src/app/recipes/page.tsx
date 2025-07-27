@@ -13,6 +13,14 @@ import { RecipeDataTable } from "@/components/recipes/recipe-data-table";
 import { recipeColumns } from "@/components/recipes/recipe-columns";
 import { Plus, RefreshCw } from "lucide-react";
 import { setRedirectUrl } from "@/lib/utils";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { RecipeAddForm } from "@/components/recipe-add-form";
 
 export default function RecipesPage() {
   const router = useRouter();
@@ -22,6 +30,7 @@ export default function RecipesPage() {
   const [recipes, setRecipes] = useState<Recipe[]>(contextRecipes);
   const [recipesLoading, setRecipesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [addRecipeLoading, setAddRecipeLoading] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -52,12 +61,62 @@ export default function RecipesPage() {
     }
   };
 
+  const handleAddRecipeSuccess = (newRecipe: Recipe) => {
+    setRecipes([newRecipe, ...recipes]);
+    setRecipesInContext([newRecipe, ...recipes]);
+    setAddRecipeLoading(false);
+    // Close the sheet by triggering the hidden close button
+    document.getElementById("add-recipe-sheet-close")?.click();
+  };
+
+  const handleAddRecipeStart = () => {
+    setAddRecipeLoading(true);
+  };
+
+  const handleAddRecipeError = (error: Error) => {
+    setAddRecipeLoading(false);
+    console.error("Failed to add recipe:", error);
+  };
+
   if (loading || !user) {
     return <PageLoading />;
   }
 
   return (
-    <PageWrapper>
+    <>
+      {/* Add Recipe Sheet */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <button
+            id="add-recipe-sheet-trigger"
+            className="hidden"
+            aria-hidden="true"
+          />
+        </SheetTrigger>
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-2xl overflow-y-auto"
+        >
+          <SheetHeader>
+            <SheetTitle>Add New Recipe</SheetTitle>
+          </SheetHeader>
+          <RecipeAddForm
+            onSuccess={handleAddRecipeSuccess}
+            onStart={handleAddRecipeStart}
+            onError={handleAddRecipeError}
+            loading={addRecipeLoading}
+          />
+          {/* Hidden close button for programmatic closing */}
+          <button
+            id="add-recipe-sheet-close"
+            className="hidden"
+            aria-hidden="true"
+            onClick={() => {}}
+          />
+        </SheetContent>
+      </Sheet>
+
+      <PageWrapper>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -82,7 +141,10 @@ export default function RecipesPage() {
                 />
                 Refresh
               </Button>
-              <Button className="flex items-center gap-2">
+              <Button 
+                className="flex items-center gap-2"
+                onClick={() => document.getElementById("add-recipe-sheet-trigger")?.click()}
+              >
                 <Plus className="h-4 w-4" />
                 Add Recipe
               </Button>
@@ -115,7 +177,10 @@ export default function RecipesPage() {
                   Start building your recipe collection! Add your first recipe
                   to get started.
                 </p>
-                <Button className="flex items-center gap-2 mx-auto">
+                <Button 
+                  className="flex items-center gap-2 mx-auto"
+                  onClick={() => document.getElementById("add-recipe-sheet-trigger")?.click()}
+                >
                   <Plus className="h-4 w-4" />
                   Add Your First Recipe
                 </Button>
@@ -131,5 +196,6 @@ export default function RecipesPage() {
         </div>
       </div>
     </PageWrapper>
+    </>
   );
 }
