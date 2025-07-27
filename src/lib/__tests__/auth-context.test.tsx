@@ -1,4 +1,5 @@
-import { renderHook, waitFor, act, render } from "@testing-library/react";
+import { renderHook, waitFor, render } from "@testing-library/react";
+import { act } from "react";
 import { AuthProvider, useAuth } from "../auth-context";
 import { server } from "../../__mocks__/server";
 import { http, HttpResponse } from "msw";
@@ -16,7 +17,7 @@ describe("AuthContext", () => {
     // Clear all timers
     jest.clearAllTimers();
     // Mock console.error to suppress error messages in tests
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -175,7 +176,7 @@ describe("AuthContext", () => {
 
     it("should handle TOKEN_REFRESHED events and sync tokens", async () => {
       const mockSetSession = jest.fn().mockResolvedValue({ success: true });
-      
+
       // Mock the /api/auth/set-session endpoint
       server.use(
         http.post("/api/auth/set-session", async ({ request }) => {
@@ -191,13 +192,13 @@ describe("AuthContext", () => {
             { children: React.ReactNode }
           >
         | undefined;
-      
+
       await act(async () => {
         result = renderHook(() => useAuth(), { wrapper });
       });
-      
+
       expect(result).toBeDefined();
-      
+
       // Wait for initial auth to complete
       await waitFor(() => {
         expect(result!.result.current.loading).toBe(false);
@@ -210,16 +211,16 @@ describe("AuthContext", () => {
         expires_in: 3600,
         user: {
           id: "test-user-id",
-          email: "test@example.com"
-        }
+          email: "test@example.com",
+        },
       };
 
       await act(async () => {
         // Trigger the auth state change listener with TOKEN_REFRESHED
         const { supabase } = await import("../supabase");
-        const onAuthStateChange = (supabase.auth.onAuthStateChange as jest.Mock);
+        const onAuthStateChange = supabase.auth.onAuthStateChange as jest.Mock;
         const callback = onAuthStateChange.mock.calls[0][0];
-        await callback('TOKEN_REFRESHED', refreshedSession);
+        await callback("TOKEN_REFRESHED", refreshedSession);
       });
 
       // Wait for the token sync to complete
@@ -227,14 +228,14 @@ describe("AuthContext", () => {
         expect(mockSetSession).toHaveBeenCalledWith({
           access_token: "new-access-token",
           refresh_token: "new-refresh-token",
-          expires_in: 3600
+          expires_in: 3600,
         });
       });
     });
 
     it("should handle SIGNED_OUT events and clear server cookies", async () => {
       const mockSignOut = jest.fn().mockResolvedValue({ success: true });
-      
+
       // Mock the /api/auth/sign-out endpoint
       server.use(
         http.post("/api/auth/sign-out", () => {
@@ -249,13 +250,13 @@ describe("AuthContext", () => {
             { children: React.ReactNode }
           >
         | undefined;
-      
+
       await act(async () => {
         result = renderHook(() => useAuth(), { wrapper });
       });
-      
+
       expect(result).toBeDefined();
-      
+
       // Wait for initial auth to complete
       await waitFor(() => {
         expect(result!.result.current.loading).toBe(false);
@@ -264,9 +265,9 @@ describe("AuthContext", () => {
       // Simulate a SIGNED_OUT event
       await act(async () => {
         const { supabase } = await import("../supabase");
-        const onAuthStateChange = (supabase.auth.onAuthStateChange as jest.Mock);
+        const onAuthStateChange = supabase.auth.onAuthStateChange as jest.Mock;
         const callback = onAuthStateChange.mock.calls[0][0];
-        await callback('SIGNED_OUT', null);
+        await callback("SIGNED_OUT", null);
       });
 
       // Wait for the sign out to complete
@@ -278,24 +279,24 @@ describe("AuthContext", () => {
     it("should retry token sync on failure", async () => {
       const retryCallCounts: number[] = [];
       let retryAttempts = 0;
-      
+
       // Mock the /api/auth/set-session endpoint to fail twice, then succeed
       server.use(
         http.post("/api/auth/set-session", async ({ request }) => {
-          const data = await request.json() as { access_token?: string };
-          
+          const data = (await request.json()) as { access_token?: string };
+
           // Only count calls for our specific test token
           if (data?.access_token === "retry-test-token") {
             retryAttempts++;
             retryCallCounts.push(retryAttempts);
-            
+
             if (retryAttempts <= 2) {
               return new HttpResponse(null, { status: 500 });
             }
-            
+
             return HttpResponse.json({ success: true });
           }
-          
+
           // Let other calls through
           return HttpResponse.json({ success: true });
         })
@@ -307,13 +308,13 @@ describe("AuthContext", () => {
             { children: React.ReactNode }
           >
         | undefined;
-      
+
       await act(async () => {
         result = renderHook(() => useAuth(), { wrapper });
       });
-      
+
       expect(result).toBeDefined();
-      
+
       // Wait for initial auth to complete
       await waitFor(() => {
         expect(result!.result.current.loading).toBe(false);
@@ -329,29 +330,29 @@ describe("AuthContext", () => {
         expires_in: 3600,
         user: {
           id: "test-user-id",
-          email: "test@example.com"
-        }
+          email: "test@example.com",
+        },
       };
 
       // Start the token refresh process
       const { supabase } = await import("../supabase");
-      const onAuthStateChange = (supabase.auth.onAuthStateChange as jest.Mock);
+      const onAuthStateChange = supabase.auth.onAuthStateChange as jest.Mock;
       const callback = onAuthStateChange.mock.calls[0][0];
-      
+
       // Trigger the callback without awaiting to let it run in background
-      callback('TOKEN_REFRESHED', refreshedSession);
+      callback("TOKEN_REFRESHED", refreshedSession);
 
       // Fast-forward through the retry delays
       await act(async () => {
         // First attempt should happen immediately
         await jest.advanceTimersByTimeAsync(100);
-        
+
         // Advance through first retry delay (1s)
         await jest.advanceTimersByTimeAsync(1000);
-        
-        // Advance through second retry delay (2s)  
+
+        // Advance through second retry delay (2s)
         await jest.advanceTimersByTimeAsync(2000);
-        
+
         // Give a bit more time for async operations
         await jest.advanceTimersByTimeAsync(100);
       });
@@ -359,7 +360,7 @@ describe("AuthContext", () => {
       // Verify exactly 3 attempts were made for our test token
       expect(retryAttempts).toBe(3);
       expect(retryCallCounts).toEqual([1, 2, 3]);
-      
+
       jest.useRealTimers();
     });
   });

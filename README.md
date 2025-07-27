@@ -2,14 +2,14 @@
 
 ### Frontend
 
-| Technology   | Website                                            | GitHub                                                                   |
-| ------------ | -------------------------------------------------- | ------------------------------------------------------------------------ |
-| React        | [react.dev](https://react.dev)                     | [github.com/facebook/react](https://github.com/facebook/react)           |
-| Next.js      | [nextjs.org](https://nextjs.org)                   | [github.com/vercel/next.js](https://github.com/vercel/next.js)           |
-| Tailwind CSS | [tailwindcss.com](https://tailwindcss.com)         | [github.com/tailwindlabs/tailwindcss](https://github.com/tailwindlabs/tailwindcss) |
-| shadcn/ui    | [ui.shadcn.com](https://ui.shadcn.com)             | [github.com/shadcn-ui/ui](https://github.com/shadcn-ui/ui)               |
-| TypeScript   | [typescriptlang.org](https://typescriptlang.org)   | [github.com/microsoft/TypeScript](https://github.com/microsoft/TypeScript) |
-| Lucide Icons | [lucide.dev](https://lucide.dev)                   | [github.com/lucide-icons/lucide](https://github.com/lucide-icons/lucide) |
+| Technology   | Website                                          | GitHub                                                                             |
+| ------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| React        | [react.dev](https://react.dev)                   | [github.com/facebook/react](https://github.com/facebook/react)                     |
+| Next.js      | [nextjs.org](https://nextjs.org)                 | [github.com/vercel/next.js](https://github.com/vercel/next.js)                     |
+| Tailwind CSS | [tailwindcss.com](https://tailwindcss.com)       | [github.com/tailwindlabs/tailwindcss](https://github.com/tailwindlabs/tailwindcss) |
+| shadcn/ui    | [ui.shadcn.com](https://ui.shadcn.com)           | [github.com/shadcn-ui/ui](https://github.com/shadcn-ui/ui)                         |
+| TypeScript   | [typescriptlang.org](https://typescriptlang.org) | [github.com/microsoft/TypeScript](https://github.com/microsoft/TypeScript)         |
+| Lucide Icons | [lucide.dev](https://lucide.dev)                 | [github.com/lucide-icons/lucide](https://github.com/lucide-icons/lucide)           |
 
 ### Tooling
 
