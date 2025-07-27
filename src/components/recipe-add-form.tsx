@@ -12,10 +12,19 @@ interface RecipeAddFormProps {
   loading?: boolean;
 }
 
+const generateIngredientId = () => `ingredient-${Date.now()}-${Math.random()}`;
+
 const defaultRecipe: Recipe = {
   id: "",
   title: "",
-  ingredients: [""],
+  ingredients: [{
+    id: generateIngredientId(),
+    name: "",
+    amount: null,
+    unit: null,
+    notes: ""
+  }],
+  servings: 4,
   description: "",
   category: RecipeCategory.DINNER,
   tags: [],
@@ -38,6 +47,7 @@ export function RecipeAddForm({ onSuccess, onStart, onError, loading = false }: 
       const createData: Omit<RecipeInput, 'id'> = {
         title: recipeData.title!,
         ingredients: recipeData.ingredients!,
+        servings: recipeData.servings!,
         description: recipeData.description!,
         category: recipeData.category!,
         tags: recipeData.tags || [],

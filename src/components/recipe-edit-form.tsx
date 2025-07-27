@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Recipe,
   RecipeInput,
+  RecipeIngredient,
   RECIPE_CATEGORIES,
   RECIPE_SEASONS,
   validateRecipeInput,
@@ -20,10 +21,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SheetClose } from "@/components/ui/sheet";
-import { Plus, X, Search } from "lucide-react";
+import { Search } from "lucide-react";
+import { StructuredIngredientInput } from "@/components/structured-ingredient-input";
 
 interface RecipeEditFormProps {
   recipe: Recipe;
@@ -55,6 +57,7 @@ export const triggerAutoSave = async (): Promise<boolean> => {
     const updateData: Partial<RecipeInput> = {
       title: formData.title,
       ingredients: formData.ingredients,
+      servings: formData.servings,
       description: formData.description,
       category: formData.category,
       tags: formData.tags,
@@ -283,16 +286,26 @@ export function RecipeEditForm({
   onSave,
   loading = false,
 }: RecipeEditFormProps) {
+  const generateIngredientId = () => `ingredient-${Date.now()}-${Math.random()}`;
+
   const [formData, setFormData] = useState<RecipeInput>({
     title: recipe.title,
-    ingredients: [...recipe.ingredients],
+    ingredients: recipe.ingredients.length > 0 ? recipe.ingredients.map(ing => ({ ...ing })) : [
+      {
+        id: generateIngredientId(),
+        name: "",
+        amount: null,
+        unit: null,
+        notes: ""
+      }
+    ],
+    servings: recipe.servings || 4,
     description: recipe.description,
     category: recipe.category,
     tags: [...recipe.tags],
     season: recipe.season || "none",
   });
   const [errors, setErrors] = useState<string[]>([]);
-  const [hasChanges, setHasChanges] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Check for changes and update global state
@@ -301,13 +314,13 @@ export function RecipeEditForm({
       formData.title !== recipe.title ||
       JSON.stringify(formData.ingredients) !==
         JSON.stringify(recipe.ingredients) ||
+      formData.servings !== recipe.servings ||
       formData.description !== recipe.description ||
       formData.category !== recipe.category ||
       JSON.stringify(formData.tags) !== JSON.stringify(recipe.tags) ||
       (formData.season === "none" ? undefined : formData.season) !==
         recipe.season;
 
-    setHasChanges(hasFormChanges);
 
     // Update global state for auto-save
     currentFormState = {
@@ -336,6 +349,7 @@ export function RecipeEditForm({
     const updateData: Partial<RecipeInput> = {
       title: formData.title,
       ingredients: formData.ingredients,
+      servings: formData.servings,
       description: formData.description,
       category: formData.category,
       tags: formData.tags,
@@ -352,27 +366,8 @@ export function RecipeEditForm({
     }
   };
 
-  const addIngredient = () => {
-    setFormData((prev) => ({
-      ...prev,
-      ingredients: [...prev.ingredients, ""],
-    }));
-  };
-
-  const removeIngredient = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      ingredients: prev.ingredients.filter((_, i) => i !== index),
-    }));
-  };
-
-  const updateIngredient = (index: number, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      ingredients: prev.ingredients.map((ing, i) =>
-        i === index ? value : ing
-      ),
-    }));
+  const handleIngredientsChange = (ingredients: RecipeIngredient[]) => {
+    setFormData((prev) => ({ ...prev, ingredients }));
   };
 
   const toggleTag = (tag: string) => {
@@ -385,7 +380,7 @@ export function RecipeEditForm({
   };
 
   return (
-    <div className="space-y-6 p-1">
+    <div className="space-y-4 sm:space-y-6 p-0">
       {errors.length > 0 && (
         <Card>
           <CardContent className="pt-6">
@@ -400,10 +395,8 @@ export function RecipeEditForm({
 
       {/* Basic Information */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Basic Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 sm:space-y-4">
+          <h3 className="text-lg font-semibold mb-3">Basic Information</h3>
           <div className="space-y-2">
             <Label htmlFor="title">Recipe Title</Label>
             <Input
@@ -417,7 +410,7 @@ export function RecipeEditForm({
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <Select
@@ -471,87 +464,49 @@ export function RecipeEditForm({
               </Select>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Tags */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Tags</CardTitle>
-          {formData.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {formData.tags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="text-xs cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
-                  onClick={() => toggleTag(tag)}
-                >
-                  {tag} ×
-                </Badge>
-              ))}
+          {/* Serving Size */}
+          <div className="space-y-2">
+            <Label htmlFor="servings">Servings</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="servings"
+                type="number"
+                min="1"
+                max="100"
+                value={formData.servings}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  if (!isNaN(value) && value > 0 && value <= 100) {
+                    setFormData((prev) => ({ ...prev, servings: value }));
+                  }
+                }}
+                placeholder="4"
+                disabled={loading}
+                className="w-20"
+              />
+              <span className="text-sm text-muted-foreground">people</span>
             </div>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <TagSelector
-            selectedTags={formData.tags}
-            onTagToggle={toggleTag}
-            disabled={loading}
-          />
+          </div>
         </CardContent>
       </Card>
 
       {/* Ingredients */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center justify-between">
-            Ingredients
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addIngredient}
-              disabled={loading}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {formData.ingredients.map((ingredient, index) => (
-            <div key={index} className="flex gap-2">
-              <Input
-                value={ingredient}
-                onChange={(e) => updateIngredient(index, e.target.value)}
-                placeholder={`Ingredient ${index + 1}`}
-                disabled={loading}
-                className="flex-1"
-              />
-              {formData.ingredients.length > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeIngredient(index)}
-                  disabled={loading}
-                  className="px-2"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          ))}
+        <CardContent>
+          <h3 className="text-lg font-semibold mb-3">Ingredients</h3>
+          <StructuredIngredientInput
+            ingredients={formData.ingredients}
+            onChange={handleIngredientsChange}
+            disabled={loading}
+          />
         </CardContent>
       </Card>
 
       {/* Instructions */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Instructions</CardTitle>
-        </CardHeader>
         <CardContent>
+          <h3 className="text-lg font-semibold mb-3">Instructions</h3>
           <div className="space-y-2">
             <Label htmlFor="description">Cooking Instructions</Label>
             <Textarea
@@ -568,6 +523,34 @@ export function RecipeEditForm({
               disabled={loading}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Tags */}
+      <Card>
+        <CardContent className="space-y-3 sm:space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-3">Tags</h3>
+            {formData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-3">
+                {formData.tags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    className="text-xs cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
+                    onClick={() => toggleTag(tag)}
+                  >
+                    {tag} ×
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+          <TagSelector
+            selectedTags={formData.tags}
+            onTagToggle={toggleTag}
+            disabled={loading}
+          />
         </CardContent>
       </Card>
 

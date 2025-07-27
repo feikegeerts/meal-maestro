@@ -88,6 +88,8 @@ An AI-powered recipe management system. The system provides natural language rec
 
 ### Phase 5: Post-MVP Enhancements
 
+- [ ] Fix unit tests
+- [ ] Mobile nav click doesn't close sheet
 - [ ] Choose Framer Motion for page and shared element transitions.
 - [ ] Consider modal/drawer for quick detail previews.
 - [ ] About page

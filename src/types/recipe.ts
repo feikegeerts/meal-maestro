@@ -130,10 +130,19 @@ export const RECIPE_CATEGORIES = Object.values(RecipeCategory);
 export const RECIPE_SEASONS = Object.values(RecipeSeason);
 export const RECIPE_TAGS = Object.values(RecipeTag);
 
+export interface RecipeIngredient {
+  id: string;
+  name: string;
+  amount: number | null;
+  unit: string | null;
+  notes?: string;
+}
+
 export interface Recipe {
   id: string;
   title: string;
-  ingredients: string[];
+  ingredients: RecipeIngredient[];
+  servings: number;
   description: string;
   category: RecipeCategory;
   tags: RecipeTag[];
@@ -147,7 +156,8 @@ export interface Recipe {
 export interface RecipeInput {
   id?: string;
   title: string;
-  ingredients: string[];
+  ingredients: RecipeIngredient[];
+  servings: number;
   description: string;
   category: string;
   tags: string[];
@@ -183,6 +193,31 @@ export function isValidTag(tag: string): tag is RecipeTag {
 export function validateRecipeInput(input: RecipeInput): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   
+  if (!input.title || input.title.trim().length === 0) {
+    errors.push('Recipe title is required');
+  }
+  
+  if (!input.description || input.description.trim().length === 0) {
+    errors.push('Recipe description is required');
+  }
+  
+  if (!input.ingredients || input.ingredients.length === 0) {
+    errors.push('At least one ingredient is required');
+  } else {
+    input.ingredients.forEach((ingredient, index) => {
+      if (!ingredient.name || ingredient.name.trim().length === 0) {
+        errors.push(`Ingredient ${index + 1} name is required`);
+      }
+      if (ingredient.amount !== null && (isNaN(ingredient.amount) || ingredient.amount <= 0)) {
+        errors.push(`Ingredient ${index + 1} amount must be a positive number or empty for "to taste"`);
+      }
+    });
+  }
+  
+  if (!input.servings || input.servings <= 0 || input.servings > 100) {
+    errors.push('Servings must be between 1 and 100');
+  }
+  
   if (!isValidCategory(input.category)) {
     errors.push(`Invalid category "${input.category}". Must be one of: ${RECIPE_CATEGORIES.join(', ')}`);
   }
@@ -198,3 +233,135 @@ export function validateRecipeInput(input: RecipeInput): { valid: boolean; error
   
   return { valid: errors.length === 0, errors };
 }
+
+// Utility functions for ingredient scaling
+function formatFraction(num: number): string {
+  const tolerance = 1e-6;
+  const commonFractions: [number, string][] = [
+    [1/4, '¼'], [1/3, '⅓'], [1/2, '½'], [2/3, '⅔'], [3/4, '¾'],
+    [1/8, '⅛'], [3/8, '⅜'], [5/8, '⅝'], [7/8, '⅞']
+  ];
+  
+  const wholePart = Math.floor(num);
+  const fractionalPart = num - wholePart;
+  
+  if (fractionalPart < tolerance) {
+    return wholePart.toString();
+  }
+  
+  for (const [decimal, fraction] of commonFractions) {
+    if (Math.abs(fractionalPart - decimal) < tolerance) {
+      return wholePart > 0 ? `${wholePart} ${fraction}` : fraction;
+    }
+  }
+  
+  return num.toFixed(2).replace(/\.?0+$/, '');
+}
+
+function pluralizeUnit(unit: string | null, amount: number): string | null {
+  if (!unit) return null;
+  
+  const singularToPlural: Record<string, string> = {
+    'cup': 'cups',
+    'tablespoon': 'tablespoons',
+    'tbsp': 'tbsp',
+    'teaspoon': 'teaspoons',
+    'tsp': 'tsp',
+    'pound': 'pounds',
+    'lb': 'lbs',
+    'ounce': 'ounces',
+    'oz': 'oz',
+    'gram': 'grams',
+    'g': 'g',
+    'kilogram': 'kilograms',
+    'kg': 'kg',
+    'liter': 'liters',
+    'l': 'l',
+    'milliliter': 'milliliters',
+    'ml': 'ml',
+    'piece': 'pieces',
+    'slice': 'slices',
+    'clove': 'cloves',
+    'can': 'cans',
+    'package': 'packages',
+    'bag': 'bags'
+  };
+  
+  if (amount === 1) {
+    const singularForm = Object.keys(singularToPlural).find(key => 
+      singularToPlural[key] === unit
+    );
+    return singularForm || unit;
+  }
+  
+  return singularToPlural[unit] || unit;
+}
+
+export function scaleIngredient(ingredient: RecipeIngredient, ratio: number): RecipeIngredient {
+  if (ingredient.amount === null) {
+    return { ...ingredient };
+  }
+  
+  const scaledAmount = ingredient.amount * ratio;
+  const scaledUnit = pluralizeUnit(ingredient.unit, scaledAmount);
+  
+  return {
+    ...ingredient,
+    amount: scaledAmount,
+    unit: scaledUnit
+  };
+}
+
+export function scaleRecipe(recipe: Recipe, newServings: number): Recipe {
+  const ratio = newServings / recipe.servings;
+  const scaledIngredients = recipe.ingredients.map(ingredient => 
+    scaleIngredient(ingredient, ratio)
+  );
+  
+  return {
+    ...recipe,
+    ingredients: scaledIngredients,
+    servings: newServings
+  };
+}
+
+export function formatIngredientDisplay(ingredient: RecipeIngredient): string {
+  if (ingredient.amount === null) {
+    const notes = ingredient.notes ? ` (${ingredient.notes})` : '';
+    return `${ingredient.name}${notes}`;
+  }
+  
+  // Handle NaN or invalid numbers
+  if (isNaN(ingredient.amount) || !isFinite(ingredient.amount)) {
+    const notes = ingredient.notes ? ` (${ingredient.notes})` : '';
+    return `${ingredient.name}${notes}`;
+  }
+  
+  const amount = formatFraction(ingredient.amount);
+  const unit = ingredient.unit ? ` ${ingredient.unit}` : '';
+  const notes = ingredient.notes ? ` (${ingredient.notes})` : '';
+  
+  return `${amount}${unit} ${ingredient.name}${notes}`;
+}
+
+// Common cooking units for dropdown
+export const COOKING_UNITS = [
+  'cup', 'cups',
+  'tablespoon', 'tablespoons', 'tbsp',
+  'teaspoon', 'teaspoons', 'tsp',
+  'pound', 'pounds', 'lb', 'lbs',
+  'ounce', 'ounces', 'oz',
+  'gram', 'grams', 'g',
+  'kilogram', 'kilograms', 'kg',
+  'liter', 'liters', 'l',
+  'milliliter', 'milliliters', 'ml',
+  'piece', 'pieces',
+  'slice', 'slices',
+  'clove', 'cloves',
+  'can', 'cans',
+  'package', 'packages',
+  'bag', 'bags',
+  'large', 'medium', 'small',
+  'whole', 'half'
+];
+

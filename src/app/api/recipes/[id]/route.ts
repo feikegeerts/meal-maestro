@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
-import { Recipe } from "@/types/recipe";
+import { Recipe, RecipeIngredient } from "@/types/recipe";
 
 export async function GET(
   request: NextRequest,
@@ -71,7 +71,7 @@ export async function PUT(
   try {
     const { id: recipeId } = await params;
     const body = await request.json();
-    const { title, ingredients, description, category, tags, season, last_eaten } = body;
+    const { title, ingredients, servings, description, category, tags, season, last_eaten } = body;
 
     if (!recipeId) {
       return NextResponse.json(
@@ -82,7 +82,8 @@ export async function PUT(
 
     const updateData: Partial<{
       title: string;
-      ingredients: string[];
+      ingredients: RecipeIngredient[];
+      servings: number;
       description: string;
       category: string;
       tags: string[];
@@ -90,7 +91,42 @@ export async function PUT(
       last_eaten: string;
     }> = {};
     if (title !== undefined) updateData.title = title;
-    if (ingredients !== undefined) updateData.ingredients = ingredients;
+    if (ingredients !== undefined) {
+      // Validate structured ingredients
+      if (!Array.isArray(ingredients)) {
+        return NextResponse.json(
+          { error: 'Ingredients must be an array of structured ingredient objects' },
+          { status: 400 }
+        );
+      }
+      
+      for (const ingredient of ingredients) {
+        if (!ingredient.id || !ingredient.name) {
+          return NextResponse.json(
+            { error: 'Each ingredient must have an id and name' },
+            { status: 400 }
+          );
+        }
+        if (ingredient.amount !== null && (typeof ingredient.amount !== 'number' || ingredient.amount <= 0)) {
+          return NextResponse.json(
+            { error: 'Ingredient amounts must be positive numbers or null' },
+            { status: 400 }
+          );
+        }
+      }
+      
+      updateData.ingredients = ingredients;
+    }
+    if (servings !== undefined) {
+      const servingsNum = parseInt(servings);
+      if (isNaN(servingsNum) || servingsNum <= 0 || servingsNum > 100) {
+        return NextResponse.json(
+          { error: 'Servings must be a number between 1 and 100' },
+          { status: 400 }
+        );
+      }
+      updateData.servings = servingsNum;
+    }
     if (description !== undefined) updateData.description = description;
     if (category !== undefined) updateData.category = category;
     if (tags !== undefined) updateData.tags = tags;

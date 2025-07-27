@@ -152,9 +152,9 @@ export function RecipeDataTable<TData, TValue>({
   return (
     <div className="w-full space-y-4">
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col gap-3">
         {/* Search */}
-        <div className="relative flex-1">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search recipes..."
@@ -164,104 +164,107 @@ export function RecipeDataTable<TData, TValue>({
           />
         </div>
 
-        {/* Category Filter */}
-        <Select
-          value={
-            (table.getColumn("category")?.getFilterValue() as string[])?.join(
-              ","
-            ) || ""
-          }
-          onValueChange={(value) => {
-            const column = table.getColumn("category");
-            if (value && value !== "all") {
-              column?.setFilterValue([value]);
-            } else {
-              column?.setFilterValue(undefined);
+        {/* Filters Row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Category Filter */}
+          <Select
+            value={
+              (table.getColumn("category")?.getFilterValue() as string[])?.join(
+                ","
+              ) || ""
             }
-          }}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {RECIPE_CATEGORIES.map((category) => (
-              <SelectItem
-                key={category}
-                value={category}
-                className="capitalize"
-              >
-                {category}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            onValueChange={(value) => {
+              const column = table.getColumn("category");
+              if (value && value !== "all") {
+                column?.setFilterValue([value]);
+              } else {
+                column?.setFilterValue(undefined);
+              }
+            }}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {RECIPE_CATEGORIES.map((category) => (
+                <SelectItem
+                  key={category}
+                  value={category}
+                  className="capitalize"
+                >
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        {/* Season Filter */}
-        <Select
-          value={
-            (table.getColumn("season")?.getFilterValue() as string[])?.join(
-              ","
-            ) || ""
-          }
-          onValueChange={(value) => {
-            const column = table.getColumn("season");
-            if (value && value !== "all") {
-              column?.setFilterValue([value]);
-            } else {
-              column?.setFilterValue(undefined);
+          {/* Season Filter */}
+          <Select
+            value={
+              (table.getColumn("season")?.getFilterValue() as string[])?.join(
+                ","
+              ) || ""
             }
-          }}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Season" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Seasons</SelectItem>
-            {RECIPE_SEASONS.map((season) => (
-              <SelectItem key={season} value={season} className="capitalize">
-                {season}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            onValueChange={(value) => {
+              const column = table.getColumn("season");
+              if (value && value !== "all") {
+                column?.setFilterValue([value]);
+              } else {
+                column?.setFilterValue(undefined);
+              }
+            }}
+          >
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Season" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Seasons</SelectItem>
+              {RECIPE_SEASONS.map((season) => (
+                <SelectItem key={season} value={season} className="capitalize">
+                  {season}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        {/* Clear Filters */}
-        {hasFilters && (
-          <Button variant="ghost" onClick={clearFilters} className="h-10 px-3">
-            <X className="mr-2 h-4 w-4" />
-            Clear
-          </Button>
-        )}
-
-        {/* Column Visibility */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="h-10">
-              <Settings className="mr-2 h-4 w-4" />
-              View
+          {/* Clear Filters */}
+          {hasFilters && (
+            <Button variant="ghost" onClick={clearFilters} className="h-10 px-3">
+              <X className="mr-2 h-4 w-4" />
+              Clear
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          )}
+
+          {/* Column Visibility */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-10 w-10 p-0">
+                <Settings className="h-4 w-4" />
+                <span className="sr-only">View options</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  );
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Selection Info */}
@@ -281,7 +284,7 @@ export function RecipeDataTable<TData, TValue>({
       )}
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-md border text-sm sm:text-base">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

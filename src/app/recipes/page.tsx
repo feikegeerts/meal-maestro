@@ -31,6 +31,7 @@ export default function RecipesPage() {
   const [recipesLoading, setRecipesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [addRecipeLoading, setAddRecipeLoading] = useState(false);
+  const [hasLoadedRecipes, setHasLoadedRecipes] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -39,7 +40,7 @@ export default function RecipesPage() {
       return;
     }
 
-    if (user && contextRecipes.length === 0) {
+    if (user && !hasLoadedRecipes) {
       loadRecipes();
     } else {
       setRecipes(contextRecipes);
@@ -53,6 +54,7 @@ export default function RecipesPage() {
       const response: RecipesResponse = await recipeService.getUserRecipes();
       setRecipes(response.recipes);
       setRecipesInContext(response.recipes);
+      setHasLoadedRecipes(true);
     } catch (err) {
       console.error("Error loading recipes:", err);
       setError(err instanceof Error ? err.message : "Failed to load recipes");
@@ -95,7 +97,7 @@ export default function RecipesPage() {
         </SheetTrigger>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-2xl overflow-y-auto"
+          className="w-full sm:max-w-3xl lg:max-w-4xl overflow-y-auto"
         >
           <SheetHeader>
             <SheetTitle>Add New Recipe</SheetTitle>
@@ -117,15 +119,15 @@ export default function RecipesPage() {
       </Sheet>
 
       <PageWrapper>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-4 pb-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
                 Your Recipes
               </h1>
-              <p className="text-muted-foreground mt-2">
+              <p className="text-muted-foreground mt-1 sm:mt-2">
                 Manage and search through your recipe collection
               </p>
             </div>
@@ -166,7 +168,7 @@ export default function RecipesPage() {
           )}
 
           {/* Data Table */}
-          <div className="bg-card rounded-lg shadow-lg p-6">
+          <div className="bg-card rounded-lg shadow-lg p-3 sm:p-6">
             {!recipesLoading && recipes.length === 0 && !error ? (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">🍽️</div>

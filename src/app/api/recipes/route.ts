@@ -82,18 +82,42 @@ export async function POST(request: NextRequest) {
   
   try {
     const body = await request.json();
-    const { title, ingredients, description, category, tags, season } = body;
+    const { title, ingredients, servings, description, category, tags, season } = body;
 
-    if (!title || !ingredients || !description || !category) {
+    if (!title || !ingredients || !description || !category || !servings) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, ingredients, description, category' },
+        { error: 'Missing required fields: title, ingredients, servings, description, category' },
         { status: 400 }
       );
+    }
+
+    // Validate structured ingredients
+    if (!Array.isArray(ingredients)) {
+      return NextResponse.json(
+        { error: 'Ingredients must be an array of structured ingredient objects' },
+        { status: 400 }
+      );
+    }
+
+    for (const ingredient of ingredients) {
+      if (!ingredient.id || !ingredient.name) {
+        return NextResponse.json(
+          { error: 'Each ingredient must have an id and name' },
+          { status: 400 }
+        );
+      }
+      if (ingredient.amount !== null && (typeof ingredient.amount !== 'number' || ingredient.amount <= 0)) {
+        return NextResponse.json(
+          { error: 'Ingredient amounts must be positive numbers or null' },
+          { status: 400 }
+        );
+      }
     }
 
     const insertData = {
       title,
       ingredients,
+      servings: parseInt(servings),
       description,
       category,
       tags: tags || [],
