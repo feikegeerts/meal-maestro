@@ -229,7 +229,7 @@ export default function RecipeDetailPage() {
                     <span>Created: </span>
                     <Skeleton className="h-4 w-24 ml-1" />
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center sm:justify-end">
                     <Clock className="mr-2 h-4 w-4" />
                     <span>Last eaten: </span>
                     <Skeleton className="h-4 w-20 ml-1" />
@@ -423,7 +423,7 @@ export default function RecipeDetailPage() {
                   <CalendarDays className="mr-2 h-4 w-4" />
                   <span>Created: {formatDate(recipe.created_at)}</span>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center sm:justify-end">
                   <Clock className="mr-2 h-4 w-4" />
                   <span>Last eaten: {formatDate(recipe.last_eaten)}</span>
                 </div>

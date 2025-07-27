@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Meal Maestro",
   description: "AI-powered recipe management system",
+  icons: {
+    icon: "/chef-hat.svg",
+  },
 };
 
 export default function RootLayout({
