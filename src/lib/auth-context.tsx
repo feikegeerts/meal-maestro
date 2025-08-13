@@ -139,10 +139,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         // Fetch user profile if user exists
         if (session?.user) {
-          const userProfile = await profileService.getUserProfile(
-            session.user.id
-          );
-          setProfile(userProfile);
+          try {
+            const userProfile = await profileService.getUserProfile(
+              session.user.id
+            );
+            setProfile(userProfile);
+          } catch (error) {
+            console.error("Error fetching initial user profile:", error);
+            setProfile(null);
+          }
         }
       } catch (error) {
         console.error("Error getting initial session:", error);
@@ -178,7 +183,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         if (session?.user) {
-          setTimeout(async () => {
+          const fetchProfile = async () => {
             try {
               const userProfile = await profileService.getUserProfile(
                 session.user.id
@@ -188,7 +193,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
               console.error("Error fetching user profile:", error);
               setProfile(null);
             }
-          }, 200); // 200ms delay to let Supabase client settle
+          };
+
+          setTimeout(fetchProfile, 200);
         } else {
           setProfile(null);
         }

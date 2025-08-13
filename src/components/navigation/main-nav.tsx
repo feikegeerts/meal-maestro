@@ -109,7 +109,7 @@ export function MainNav() {
                   <Avatar className="h-8 w-8">
                     <AvatarImage
                       src={profile?.avatar_url || undefined}
-                      alt={profile?.display_name || "User"}
+                      alt={profile?.display_name || user?.email || "User"}
                     />
                     <AvatarFallback>
                       <User className="h-4 w-4" />
@@ -149,7 +149,7 @@ export function MainNav() {
                   <Avatar className="h-8 w-8">
                     <AvatarImage
                       src={profile?.avatar_url || undefined}
-                      alt={profile?.display_name || "User"}
+                      alt={profile?.display_name || user?.email || "User"}
                     />
                     <AvatarFallback>
                       <User className="h-4 w-4" />
