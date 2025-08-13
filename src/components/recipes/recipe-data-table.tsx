@@ -145,9 +145,26 @@ export function RecipeDataTable<TData, TValue>({
 
   const hasFilters = globalFilter || columnFilters.length > 0;
 
+  const [clickedRecipeId, setClickedRecipeId] = React.useState<string | null>(null);
+
   const handleRowClick = (recipe: Recipe) => {
+    setClickedRecipeId(recipe.id);
     router.push(`/recipes/${recipe.id}`);
   };
+
+  const handleRowMouseEnter = (recipeId: string) => {
+    router.prefetch(`/recipes/${recipeId}`);
+  };
+
+  React.useEffect(() => {
+    const handleRouteChange = () => {
+      setClickedRecipeId(null);
+    };
+    
+    return () => {
+      setClickedRecipeId(null);
+    };
+  }, []);
 
   return (
     <div className="w-full space-y-4">
@@ -320,9 +337,11 @@ export function RecipeDataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  className={`cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors ${
+                    clickedRecipeId === (row.original as Recipe).id ? 'bg-muted animate-pulse' : ''
+                  }`}
+                  onMouseEnter={() => handleRowMouseEnter((row.original as Recipe).id)}
                   onClick={(e) => {
-                    // Don't trigger row click if clicking on interactive elements
                     const target = e.target as HTMLElement;
                     if (
                       target.closest('button') || 

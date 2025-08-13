@@ -62,10 +62,8 @@ export default function RecipeDetailPage() {
       }
 
       try {
-        setLoading(true);
         setError(null);
-
-        // Try to get from context first
+        
         const contextRecipe = getRecipeById(id);
         if (contextRecipe) {
           setRecipe(contextRecipe);
@@ -73,6 +71,8 @@ export default function RecipeDetailPage() {
           setLoading(false);
           return;
         }
+
+        setLoading(true);
 
         // Fallback to API call
         const response = await fetch(`/api/recipes/${id}`);

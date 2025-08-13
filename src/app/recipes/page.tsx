@@ -27,11 +27,9 @@ export default function RecipesPage() {
   const { user, loading } = useAuth();
   const { recipes: contextRecipes, setRecipes: setRecipesInContext } =
     useRecipes();
-  const [recipes, setRecipes] = useState<Recipe[]>(contextRecipes);
   const [recipesLoading, setRecipesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [addRecipeLoading, setAddRecipeLoading] = useState(false);
-  const [hasLoadedRecipes, setHasLoadedRecipes] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -40,21 +38,17 @@ export default function RecipesPage() {
       return;
     }
 
-    if (user && !hasLoadedRecipes) {
+    if (user && contextRecipes.length === 0) {
       loadRecipes();
-    } else {
-      setRecipes(contextRecipes);
     }
-  }, [user, loading, contextRecipes, router]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, loading, contextRecipes.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadRecipes = async () => {
     try {
       setRecipesLoading(true);
       setError(null);
       const response: RecipesResponse = await recipeService.getUserRecipes();
-      setRecipes(response.recipes);
       setRecipesInContext(response.recipes);
-      setHasLoadedRecipes(true);
     } catch (err) {
       console.error("Error loading recipes:", err);
       setError(err instanceof Error ? err.message : "Failed to load recipes");
@@ -64,10 +58,8 @@ export default function RecipesPage() {
   };
 
   const handleAddRecipeSuccess = (newRecipe: Recipe) => {
-    setRecipes([newRecipe, ...recipes]);
-    setRecipesInContext([newRecipe, ...recipes]);
+    setRecipesInContext([newRecipe, ...contextRecipes]);
     setAddRecipeLoading(false);
-    // Close the sheet by triggering the hidden close button
     document.getElementById("add-recipe-sheet-close")?.click();
   };
 
@@ -169,7 +161,7 @@ export default function RecipesPage() {
 
           {/* Data Table */}
           <div className="bg-card rounded-lg shadow-lg p-3 sm:p-6">
-            {!recipesLoading && recipes.length === 0 && !error ? (
+            {!recipesLoading && contextRecipes.length === 0 && !error ? (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">🍽️</div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">
@@ -190,7 +182,7 @@ export default function RecipesPage() {
             ) : (
               <RecipeDataTable
                 columns={recipeColumns}
-                data={recipes}
+                data={contextRecipes}
                 loading={recipesLoading}
               />
             )}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import { ChefHat, BookOpen, Menu, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
@@ -41,6 +42,7 @@ const navigationItems = [
 export function MainNav() {
   const pathname = usePathname();
   const { user, profile, signOut } = useAuth();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -48,6 +50,11 @@ export function MainNav() {
       console.error("Error signing out:", error);
     }
   };
+
+  // Close mobile sheet when route changes
+  useEffect(() => {
+    setSheetOpen(false);
+  }, [pathname]);
 
   if (!user) {
     return null;
@@ -170,7 +177,7 @@ export function MainNav() {
             </DropdownMenu>
 
             {/* Mobile Menu Sheet */}
-            <Sheet>
+            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Toggle menu">
                   <Menu className="h-6 w-6" />
