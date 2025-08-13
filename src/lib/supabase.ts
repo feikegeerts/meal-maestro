@@ -39,6 +39,29 @@ export const auth = {
     return { data, error };
   },
 
+  async signInWithMagicLink(email: string) {
+    const isLocalhost =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
+    const redirectTo = isLocalhost
+      ? "http://localhost:3000/auth/callback"
+      : `${window.location.origin}/auth/callback`;
+
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: redirectTo,
+        shouldCreateUser: true, // Allow user creation but use magic link template
+      },
+    });
+
+    if (error) {
+      console.error("Magic link initiation error:", error);
+    }
+
+    return { data, error };
+  },
+
   async signOut() {
     const { error } = await supabase.auth.signOut();
     return { error };

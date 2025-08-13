@@ -20,9 +20,12 @@ export default function AuthCallback() {
           if (event === 'SIGNED_IN' && session) {
             hasHandledAuth.current = true
             router.push('/')
-          } else if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
+          } else if (event === 'SIGNED_OUT') {
             hasHandledAuth.current = true
-            router.push('/?error=auth_error')
+            router.push('/?error=auth_cancelled')
+          } else if (event === 'INITIAL_SESSION' && !session) {
+            hasHandledAuth.current = true
+            router.push('/?error=invalid_link')
           }
         }
       )
@@ -58,7 +61,7 @@ export default function AuthCallback() {
 
   return (
     <PageWrapper>
-      <PageLoading text="Sign in successful, redirecting..." />
+      <PageLoading text="Completing authentication..." />
     </PageWrapper>
   )
 }

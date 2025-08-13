@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { GoogleLoginButton } from "@/components/auth/google-login-button";
+import { MagicLinkForm } from "@/components/auth/magic-link-form";
 import { Button } from "@/components/ui/button";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -13,7 +14,9 @@ import { getRedirectUrl, clearRedirectUrl } from "@/lib/utils";
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, profile, loading, signOut } = useAuth();
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -30,7 +33,36 @@ export default function Home() {
         router.push(redirectUrl);
       }
     }
-  }, [user, loading, router]);
+
+    // Handle authentication errors from callback
+    const error = searchParams.get('error');
+    if (error && !user) {
+      let errorMessage = '';
+      switch (error) {
+        case 'invalid_link':
+          errorMessage = 'The magic link is invalid or has expired. Please request a new one.';
+          break;
+        case 'auth_cancelled':
+          errorMessage = 'Authentication was cancelled.';
+          break;
+        case 'timeout':
+          errorMessage = 'Authentication timed out. Please try again.';
+          break;
+        case 'auth_error':
+          errorMessage = 'An authentication error occurred. Please try again.';
+          break;
+        default:
+          errorMessage = 'An unexpected error occurred during authentication.';
+      }
+      setAuthError(errorMessage);
+      
+      // Clear error from URL after a delay
+      setTimeout(() => {
+        router.replace('/', undefined);
+        setAuthError(null);
+      }, 5000);
+    }
+  }, [user, loading, router, searchParams]);
 
   if (loading) {
     return <PageLoading />;
@@ -113,12 +145,32 @@ export default function Home() {
                     Get Started
                   </h2>
                   <p className="text-muted-foreground text-sm md:text-base">
-                    Sign in with your Google account to start organizing your
-                    recipes
+                    Sign in to start organizing your recipes with AI-powered management
                   </p>
                 </div>
 
-                <GoogleLoginButton />
+                {authError && (
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                    <p className="text-destructive text-sm">{authError}</p>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <GoogleLoginButton />
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">
+                        Or
+                      </span>
+                    </div>
+                  </div>
+
+                  <MagicLinkForm />
+                </div>
 
                 <div className="text-xs text-muted-foreground leading-relaxed">
                   <p>

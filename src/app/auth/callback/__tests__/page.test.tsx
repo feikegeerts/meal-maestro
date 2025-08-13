@@ -87,7 +87,7 @@ describe("AuthCallback", () => {
     render(<AuthCallback />);
 
     expect(
-      screen.getByText("Sign in successful, redirecting...")
+      screen.getByText("Completing authentication...")
     ).toBeInTheDocument();
   });
 
@@ -127,7 +127,7 @@ describe("AuthCallback", () => {
 
     await waitFor(
       () => {
-        expect(mockPush).toHaveBeenCalledWith("/?error=auth_error");
+        expect(mockPush).toHaveBeenCalledWith("/?error=auth_cancelled");
       },
       { timeout: 2000 }
     );
@@ -158,7 +158,7 @@ describe("AuthCallback", () => {
 
     await waitFor(
       () => {
-        expect(mockPush).toHaveBeenCalledWith("/?error=auth_error");
+        expect(mockPush).toHaveBeenCalledWith("/?error=invalid_link");
       },
       { timeout: 2000 }
     );

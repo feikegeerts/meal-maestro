@@ -100,6 +100,10 @@ const mockSupabaseClient = {
       data: { url: "https://mock-oauth-url.com" },
       error: null,
     }),
+    signInWithOtp: jest.fn().mockResolvedValue({
+      data: { user: null, session: null },
+      error: null,
+    }),
     signOut: jest.fn().mockResolvedValue({
       error: null,
     }),
@@ -134,6 +138,12 @@ const auth = {
     return mockSupabaseClient.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo },
+    });
+  }),
+  signInWithMagicLink: jest.fn().mockImplementation(async () => {
+    return mockSupabaseClient.auth.signInWithOtp({
+      email: "test@example.com",
+      options: { emailRedirectTo: "http://localhost:3000/auth/callback" },
     });
   }),
   signOut: jest

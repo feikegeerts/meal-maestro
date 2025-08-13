@@ -77,6 +77,43 @@ export const handlers = [
     });
   }),
 
+  // Magic link OTP endpoints
+  http.post(`${SUPABASE_URL}/auth/v1/otp`, async ({ request }) => {
+    const body = (await request.json()) as {
+      email?: string;
+      type?: string;
+      options?: { emailRedirectTo?: string };
+    };
+
+    // Simulate rate limiting for specific test email
+    if (body.email === "rate-limited@example.com") {
+      return new HttpResponse(
+        JSON.stringify({
+          error: "rate_limit_exceeded",
+          error_description: "For security purposes, you can only request this once every 60 seconds",
+        }),
+        { status: 429 }
+      );
+    }
+
+    // Simulate invalid email error
+    if (body.email === "invalid@domain") {
+      return new HttpResponse(
+        JSON.stringify({
+          error: "invalid_request",
+          error_description: "Invalid email address",
+        }),
+        { status: 400 }
+      );
+    }
+
+    // Successful OTP request
+    return HttpResponse.json({
+      data: { user: null, session: null },
+      error: null,
+    });
+  }),
+
   // User profiles endpoints
   http.get(`${SUPABASE_URL}/rest/v1/user_profiles`, ({ request }) => {
     const url = new URL(request.url);

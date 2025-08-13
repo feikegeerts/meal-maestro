@@ -21,6 +21,10 @@ interface AuthContextType {
     data: OAuthResponse["data"] | null;
     error: AuthError | null;
   }>;
+  signInWithMagicLink: (email: string) => Promise<{
+    data: { user: User | null; session: Session | null } | null;
+    error: AuthError | null;
+  }>;
   signOut: () => Promise<{ error: AuthError | null }>;
 }
 
@@ -225,6 +229,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const signInWithMagicLink = async (email: string) => {
+    setLoading(true);
+    try {
+      const result = await auth.signInWithMagicLink(email);
+      return result;
+    } catch (error) {
+      console.error("Error signing in with magic link:", error);
+      return { data: null, error: error as AuthError };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signOut = useCallback(async () => {
     setLoading(true);
     try {
@@ -264,6 +281,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     profile,
     loading,
     signInWithGoogle,
+    signInWithMagicLink,
     signOut,
   };
 
