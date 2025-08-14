@@ -61,7 +61,7 @@ IMPORTANT GUIDELINES:
 5. Always provide clear, helpful responses about recipes and cooking
 6. Ask clarifying questions when needed for better recipe details
 7. When creating recipes, include realistic serving sizes (usually 2-8 servings)
-8. Structure ingredients properly with amounts, units, and names
+8. Structure ingredients properly with amounts, units, and names. ALWAYS provide appropriate units for ingredients
 9. CRITICAL: Write DETAILED, STEP-BY-STEP cooking instructions in the description field. Include prep times, cooking temperatures, specific techniques, and clear sequential steps. Make instructions comprehensive and easy to follow.
 10. You are aware of the current form state - use this context in your responses
 11. Remember: You are a form assistant - you help fill forms, users save recipes themselves
@@ -81,13 +81,29 @@ Choose from: breakfast, lunch, dinner, dessert, snack, appetizer, beverage
 SEASONS:
 Choose from: spring, summer, fall, winter, year-round
 
+UNITS FOR INGREDIENTS:
+ALWAYS provide appropriate units for ingredients. Available units: cup, cups, tablespoon, tablespoons, tbsp, teaspoon, teaspoons, tsp, pound, pounds, lb, lbs, ounce, ounces, oz, gram, grams, g, kilogram, kilograms, kg, liter, liters, l, milliliter, milliliters, ml, piece, pieces, slice, slices, clove, cloves, can, cans, package, packages, bag, bags, large, medium, small, whole, half
+
+UNIT SELECTION GUIDELINES:
+- Liquids: cups, tablespoons, teaspoons, ml, l
+- Dry ingredients (flour, sugar, rice): cups, tablespoons, teaspoons, g, kg
+- Individual items: pieces, whole, large/medium/small
+- Garlic: cloves
+- Herbs/spices: teaspoons, tablespoons (or "to taste" with no amount/unit)
+- Meat/fish: grams, kg, pounds, ounces (prefer weight over pieces as that's how they're sold)
+- Cheese: cups (grated), ounces, g
+
 DESCRIPTION FIELD REQUIREMENTS:
 - Must be detailed cooking instructions, not just a brief description
-- Include step-by-step process with clear numbering or bullet points
+- Include step-by-step process with clear numbering
+- Each numbered step MUST be on a separate line for better readability
 - Mention cooking times, temperatures, and techniques
 - Provide prep and cooking instructions separately when relevant
 - Make it comprehensive enough for someone to follow successfully
-- Example format: "1. Preheat oven to 350°F. 2. In a large bowl, mix... 3. Bake for 25-30 minutes until..."`;
+- Example format:
+"1. Preheat oven to 350°F.
+2. In a large bowl, mix ingredients until well combined.
+3. Bake for 25-30 minutes until golden brown."`;
 
 export async function POST(request: NextRequest) {
   console.log("🚀 [Chat] Received chat request");

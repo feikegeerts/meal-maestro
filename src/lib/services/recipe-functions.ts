@@ -1,5 +1,5 @@
 import { OpenAI } from 'openai';
-import { RecipeCategory, RecipeSeason, RecipeTag, isValidTag } from '@/types/recipe';
+import { RecipeCategory, RecipeSeason, RecipeTag, isValidTag, COOKING_UNITS } from '@/types/recipe';
 
 // OpenAI function definition for recipe form assistance
 export const recipeFormFunction: OpenAI.Chat.Completions.ChatCompletionTool = {
@@ -21,12 +21,16 @@ export const recipeFormFunction: OpenAI.Chat.Completions.ChatCompletionTool = {
             properties: {
               name: { type: 'string', description: 'Ingredient name' },
               amount: { type: 'number', description: 'Amount (can be null for "to taste")' },
-              unit: { type: 'string', description: 'Unit of measurement (can be null)' },
+              unit: { 
+                type: 'string', 
+                enum: COOKING_UNITS,
+                description: 'Unit of measurement - REQUIRED for most ingredients. Choose appropriate unit: cups/tablespoons/teaspoons for liquids and dry goods, pieces/whole/cloves for individual items, oz/lb/g for weight. Only use null for "to taste" items.' 
+              },
               notes: { type: 'string', description: 'Additional notes (optional)' }
             },
             required: ['name']
           },
-          description: 'List of structured ingredients needed'
+          description: 'List of structured ingredients with proper amounts and units. IMPORTANT: Always provide appropriate units for ingredients (cups, tablespoons, pieces, cloves, etc.). Only omit units for "to taste" items.'
         },
         servings: {
           type: 'number',
