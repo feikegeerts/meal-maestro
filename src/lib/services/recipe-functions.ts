@@ -67,8 +67,6 @@ export const recipeFormFunction: OpenAI.Chat.Completions.ChatCompletionTool = {
 
 // Simple function handler for form updates only
 export async function updateRecipeForm(args: Record<string, unknown>): Promise<{ formUpdate: unknown; success: boolean }> {
-  console.log("🍳 [RecipeForm] Starting form update with args:", JSON.stringify(args, null, 2));
-  
   const { title, ingredients, servings, description, category, tags, season } = args as {
     title?: string;
     ingredients?: Array<{
@@ -83,13 +81,9 @@ export async function updateRecipeForm(args: Record<string, unknown>): Promise<{
     tags?: string[];
     season?: string;
   };
-  
-  console.log("🍳 [RecipeForm] Parsed description:", description ? `"${description.slice(0, 200)}..."` : 'null');
-  console.log("🍳 [RecipeForm] Description length:", description?.length || 0);
 
   try {
     // Process ingredients - ensure they have all required fields
-    console.log("🍳 [RecipeForm] Processing", ingredients?.length || 0, "ingredients");
     const processedIngredients = ingredients?.filter(ing => ing.name?.trim()).map((ingredient, index) => {
       // Clean up amount - handle invalid values
       let cleanAmount: number | null = ingredient.amount ?? null;
@@ -109,18 +103,14 @@ export async function updateRecipeForm(args: Record<string, unknown>): Promise<{
         cleanUnit = null;
       }
       
-      const processed = {
+      return {
         id: `ingredient-${Date.now()}-${index}`,
         name: ingredient.name.trim(),
         amount: cleanAmount ?? null,
         unit: cleanUnit ?? null,
         notes: ingredient.notes ?? ""
       };
-      
-      console.log(`🍳 [RecipeForm] Ingredient ${index + 1}: "${processed.name}" - amount: ${processed.amount}, unit: "${processed.unit}"`);
-      return processed;
     });
-    console.log("🍳 [RecipeForm] Processed ingredients:", processedIngredients?.length || 0, "items");
 
     // Validate tags if provided
     let validTags = tags;
@@ -141,15 +131,6 @@ export async function updateRecipeForm(args: Record<string, unknown>): Promise<{
       tags: validTags,
       season
     };
-    
-    console.log("🍳 [RecipeForm] Final form update object:");
-    console.log("🍳 [RecipeForm] - title:", title || 'null');
-    console.log("🍳 [RecipeForm] - servings:", servings || 'null');
-    console.log("🍳 [RecipeForm] - description:", description ? `"${description.slice(0, 100)}..."` : 'null');
-    console.log("🍳 [RecipeForm] - category:", category || 'null');
-    console.log("🍳 [RecipeForm] - tags:", validTags?.join(', ') || 'none');
-    console.log("🍳 [RecipeForm] - season:", season || 'null');
-    console.log("🍳 [RecipeForm] - ingredients count:", processedIngredients?.length || 0);
 
     return {
       formUpdate,

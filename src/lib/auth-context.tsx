@@ -310,7 +310,6 @@ export function useRequireAuth() {
   useEffect(() => {
     if (!loading && !user) {
       // Could redirect to login page or show login modal
-      console.log("User not authenticated");
     }
   }, [user, loading]);
 

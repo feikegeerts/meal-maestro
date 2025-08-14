@@ -54,28 +54,12 @@ export async function createChatCompletion(
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
   tools?: OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"]
 ): Promise<OpenAI.Chat.Completions.ChatCompletion> {
-  console.log("🔵 [OpenAI] Starting chat completion request");
-  console.log("🔵 [OpenAI] Model:", OPENAI_MODEL);
-  console.log("🔵 [OpenAI] Max tokens:", OPENAI_MAX_TOKENS);
-  console.log("🔵 [OpenAI] Temperature:", OPENAI_TEMPERATURE);
-  console.log("🔵 [OpenAI] Tools available:", tools ? tools.length : 0);
-  console.log("🔵 [OpenAI] Message count:", messages.length);
-  
-  // Log the last user message for context
-  const lastUserMessage = messages.findLast(m => m.role === 'user');
-  if (lastUserMessage) {
-    console.log("🔵 [OpenAI] Last user message:", lastUserMessage.content?.toString().slice(0, 200) + '...');
-  }
-
   // Check rate limit
   if (rateLimiter.isRateLimited()) {
-    console.log("🔴 [OpenAI] Rate limit exceeded");
     throw new Error("Rate limit exceeded. Please try again later.");
   }
 
   try {
-    const startTime = Date.now();
-    
     const completion = await openai.chat.completions.create({
       model: OPENAI_MODEL,
       messages,
@@ -85,31 +69,8 @@ export async function createChatCompletion(
       temperature: OPENAI_TEMPERATURE,
     });
 
-    const endTime = Date.now();
-    const duration = endTime - startTime;
-
     // Track the request
     rateLimiter.addRequest();
-
-    console.log("🟢 [OpenAI] Completion successful in", duration, "ms");
-    console.log("🟢 [OpenAI] Response content length:", completion.choices[0]?.message?.content?.length || 0);
-    console.log("🟢 [OpenAI] Tool calls:", completion.choices[0]?.message?.tool_calls?.length || 0);
-    
-    // Log tool calls if present
-    if (completion.choices[0]?.message?.tool_calls) {
-      completion.choices[0].message.tool_calls.forEach((toolCall, index) => {
-        if (toolCall.type === 'function') {
-          console.log(`🟢 [OpenAI] Tool call ${index + 1}:`, toolCall.function.name);
-          console.log(`🟢 [OpenAI] Tool arguments:`, toolCall.function.arguments);
-        }
-      });
-    }
-    
-    // Log response content (truncated)
-    if (completion.choices[0]?.message?.content) {
-      const content = completion.choices[0].message.content;
-      console.log("🟢 [OpenAI] Response content:", content.slice(0, 300) + (content.length > 300 ? '...' : ''));
-    }
 
     return completion;
   } catch (error) {

@@ -106,7 +106,6 @@ DESCRIPTION FIELD REQUIREMENTS:
 3. Bake for 25-30 minutes until golden brown."`;
 
 export async function POST(request: NextRequest) {
-  console.log("🚀 [Chat] Received chat request");
   
   const authResult = await requireAuth();
 
@@ -120,16 +119,6 @@ export async function POST(request: NextRequest) {
     const body: ChatRequest = await request.json();
     const { message, conversation_history = [], context } = body;
     
-    console.log("🚀 [Chat] User message:", message);
-    console.log("🚀 [Chat] Conversation history length:", conversation_history.length);
-    console.log("🚀 [Chat] Has context:", !!context);
-    
-    if (context?.current_form_state) {
-      console.log("🚀 [Chat] Current form state:");
-      console.log("🚀 [Chat] - title:", context.current_form_state.title || 'null');
-      console.log("🚀 [Chat] - description:", context.current_form_state.description ? `"${context.current_form_state.description.slice(0, 100)}..."` : 'null');
-      console.log("🚀 [Chat] - ingredients count:", context.current_form_state.ingredients?.length || 0);
-    }
 
     if (!message || message.trim().length === 0) {
       return NextResponse.json(
@@ -185,7 +174,6 @@ export async function POST(request: NextRequest) {
     // Add current user message
     messages.push({ role: "user", content: message });
 
-    console.log("🚀 [Chat] Sending", messages.length, "messages to OpenAI");
     
     // Create completion with optional function calling
     const completion = await createChatCompletion(
@@ -193,26 +181,19 @@ export async function POST(request: NextRequest) {
       [recipeFormFunction]
     );
     
-    console.log("🚀 [Chat] Received completion from OpenAI");
 
     let functionResult = null;
     const updatedHistory = [...conversation_history];
 
     // Handle function call if present
     if (completion.choices[0].message.tool_calls) {
-      console.log("🚀 [Chat] Processing tool calls:", completion.choices[0].message.tool_calls.length);
-      
       const toolCall = completion.choices[0].message.tool_calls[0];
       if (toolCall.type === "function" && toolCall.function.name === "update_recipe_form") {
-        console.log("🚀 [Chat] Executing update_recipe_form function");
-        console.log("🚀 [Chat] Function arguments:", toolCall.function.arguments);
         
         try {
           const result = await updateRecipeForm(
             JSON.parse(toolCall.function.arguments)
           );
-          console.log("🚀 [Chat] Function execution successful");
-          console.log("🚀 [Chat] Function result:", JSON.stringify(result, null, 2));
           
           functionResult = {
             function: toolCall.function.name,
@@ -226,8 +207,6 @@ export async function POST(request: NextRequest) {
           };
         }
       }
-    } else {
-      console.log("🚀 [Chat] No tool calls in response");
     }
 
     // Generate appropriate response content
@@ -262,10 +241,6 @@ export async function POST(request: NextRequest) {
       function_call: functionResult,
     };
     
-    console.log("🚀 [Chat] Sending response to client");
-    console.log("🚀 [Chat] Original OpenAI response length:", completion.choices[0].message.content?.length || 0);
-    console.log("🚀 [Chat] Final response content length:", responseContent?.length || 0);
-    console.log("🚀 [Chat] Function call result:", functionResult ? 'present' : 'none');
 
     return NextResponse.json(response);
   } catch (error) {
