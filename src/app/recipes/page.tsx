@@ -30,7 +30,6 @@ export default function RecipesPage() {
   const [recipesLoading, setRecipesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [addRecipeLoading, setAddRecipeLoading] = useState(false);
-
   useEffect(() => {
     if (!loading && !user) {
       setRedirectUrl("/recipes");
@@ -71,6 +70,7 @@ export default function RecipesPage() {
     setAddRecipeLoading(false);
     console.error("Failed to add recipe:", error);
   };
+
 
   if (loading || !user) {
     return <PageLoading />;

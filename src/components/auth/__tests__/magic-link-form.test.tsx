@@ -4,7 +4,6 @@ import userEvent from "@testing-library/user-event";
 import { MagicLinkForm } from "../magic-link-form";
 import { AuthProvider } from "../../../lib/auth-context";
 import { server } from "../../../__mocks__/server";
-import { http, HttpResponse } from "msw";
 
 // Import the mocked supabase to unmock specific methods
 jest.mock("../../../lib/supabase");
@@ -97,7 +96,6 @@ describe("MagicLinkForm", () => {
     });
 
     it("should show error message when email is empty on form submission", async () => {
-      const user = userEvent.setup();
       render(<MagicLinkForm />, { wrapper });
       
       const form = screen.getByRole("button", { name: /send magic link/i }).closest("form");

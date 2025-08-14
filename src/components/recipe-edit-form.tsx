@@ -26,11 +26,13 @@ import { Badge } from "@/components/ui/badge";
 import { SheetClose } from "@/components/ui/sheet";
 import { Search } from "lucide-react";
 import { StructuredIngredientInput } from "@/components/structured-ingredient-input";
+import { ChatInterface } from "@/components/chat/chat-interface";
 
 interface RecipeEditFormProps {
   recipe: Recipe;
   onSave: (recipeData: Partial<RecipeInput>) => Promise<void>;
   loading?: boolean;
+  includeChat?: boolean;
 }
 
 // Global variable to store the current form state for auto-save
@@ -285,6 +287,7 @@ export function RecipeEditForm({
   recipe,
   onSave,
   loading = false,
+  includeChat = false,
 }: RecipeEditFormProps) {
   const generateIngredientId = () => `ingredient-${Date.now()}-${Math.random()}`;
 
@@ -337,6 +340,48 @@ export function RecipeEditForm({
     };
   }, []);
 
+  // Define the expected structure of AI recipe data
+  interface AIRecipeData {
+    title?: string;
+    description?: string;
+    ingredients?: Array<{
+      id?: string;
+      name?: string;
+      amount?: number | null;
+      unit?: string | null;
+      notes?: string;
+    }>;
+    servings?: number;
+    category?: string;
+    tags?: string[];
+    season?: string;
+  }
+
+  // Handle AI-generated recipe updates
+  const handleAIRecipeUpdate = (aiRecipeData: unknown) => {
+    const recipeData = aiRecipeData as AIRecipeData;
+    
+    if (recipeData) {
+      setFormData(prev => ({
+        ...prev,
+        title: recipeData.title || prev.title,
+        description: recipeData.description || prev.description,
+        ingredients: recipeData.ingredients?.map((ing, index: number) => ({
+          id: ing.id || `ingredient-${Date.now()}-${index}`,
+          name: ing.name || "",
+          amount: ing.amount || null,
+          unit: ing.unit || null,
+          notes: ing.notes || ""
+        })) || prev.ingredients,
+        servings: recipeData.servings || prev.servings,
+        category: recipeData.category || prev.category,
+        tags: recipeData.tags || prev.tags,
+        season: recipeData.season || prev.season,
+      }));
+      setErrors([]);
+    }
+  };
+
   const handleSave = async () => {
     const validation = validateRecipeInput(formData);
     if (!validation.valid) {
@@ -381,6 +426,16 @@ export function RecipeEditForm({
 
   return (
     <div className="space-y-4 sm:space-y-6 p-0">
+      {/* AI Chat Assistant */}
+      {includeChat && (
+        <div className="mb-6">
+          <ChatInterface
+            selectedRecipe={recipe}
+            onRecipeGenerated={handleAIRecipeUpdate}
+          />
+        </div>
+      )}
+      
       {errors.length > 0 && (
         <Card>
           <CardContent className="pt-6">

@@ -157,10 +157,6 @@ export function RecipeDataTable<TData, TValue>({
   };
 
   React.useEffect(() => {
-    const handleRouteChange = () => {
-      setClickedRecipeId(null);
-    };
-    
     return () => {
       setClickedRecipeId(null);
     };

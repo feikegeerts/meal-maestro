@@ -75,6 +75,7 @@ export function RecipeAddForm({ onSuccess, onStart, onError, loading = false }: 
       recipe={defaultRecipe}
       onSave={handleSave}
       loading={loading}
+      includeChat={true}
     />
   );
 }

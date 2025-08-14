@@ -86,16 +86,52 @@ An AI-powered recipe management system. The system provides natural language rec
 
 ## Implementation Roadmap
 
+### Phase 4: OpenAI Integration
+
+#### 4.1 OpenAI Service Setup
+- [ ] **4.1.1** Create `src/lib/services/openai-service.ts` with basic OpenAI client setup
+  - Basic OpenAI client setup and configuration
+  - Simple cost calculation and usage tracking
+- [ ] **4.1.2** Add missing OpenAI environment variables to `.env.local`
+  - `OPENAI_MODEL`, `OPENAI_MAX_TOKENS`, `OPENAI_TEMPERATURE`, `OPENAI_DAILY_BUDGET`
+
+#### 4.2 Recipe Functions for AI
+- [ ] **4.2.1** Create `src/lib/services/recipe-functions.ts` with AI functions
+  - Implement basic functions: `search_recipes`, `add_recipe`, `get_recipe_details`
+  - Use existing `recipeService` methods
+
+#### 4.3 Chat API Endpoint
+- [ ] **4.3.1** Create `src/app/api/recipes/chat/route.ts` chat endpoint
+  - Basic chat completion with function calling
+  - Handle conversation history
+  - Return AI responses and function results
+
+#### 4.4 Simple Chat UI
+- [ ] **4.4.1** Create `src/components/chat/chat-interface.tsx` UI component
+  - Simple chat messages display
+  - Text input and send button
+  - Basic loading and error states
+
+#### 4.5 Integration with Recipe Page
+- [ ] **4.5.1** Add chat section to recipes page above recipe management
+  - Add chat interface above existing recipe management
+  - Simple collapsible panel design
+
+#### 4.6 Form Pre-filling Feature
+- [ ] **4.6.1** Connect AI responses to recipe form pre-filling
+  - Parse AI recipe data and pre-fill add recipe form
+  - Allow user to review and edit before saving
+
 ### Phase 5: Post-MVP Enhancements
 
-- [ ] Fix unit tests
-- [ ] Mobile nav click doesn't close sheet
+- [x] Fix unit tests
+- [x] Mobile nav click doesn't close sheet
 - [ ] Choose Framer Motion for page and shared element transitions.
 - [ ] Consider modal/drawer for quick detail previews.
 - [ ] About page
 - [ ] add cookie consent message to login?
 - [ ] use typescript types everywhere instead of hardcoded lists of tags categories and seasons.
-- [ ] login using magic link from supabase
+- [x] login using magic link from supabase
 - [ ] **5.7** Add ability for the AI to fetch a website and process it as a recipe
 - [ ] **5.8** Implement edit functionality in the detail view for the user to edit the description or tags, or category and so on.
 - [ ] **5.9** Implement languages Dutch and English
