@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { GoogleLoginButton } from "@/components/auth/google-login-button";
@@ -12,7 +12,7 @@ import { User, LogOut, ChefHat } from "lucide-react";
 import Image from "next/image";
 import { getRedirectUrl, clearRedirectUrl } from "@/lib/utils";
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, profile, loading, signOut } = useAuth();
@@ -185,5 +185,13 @@ export default function Home() {
         </div>
       </div>
     </PageWrapper>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <HomeContent />
+    </Suspense>
   );
 }
