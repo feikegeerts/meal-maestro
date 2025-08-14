@@ -1,6 +1,6 @@
 "use client";
 
-import { Recipe, RecipeInput, RecipeCategory } from "@/types/recipe";
+import { Recipe, RecipeInput, RecipeCategory, RecipeSeason } from "@/types/recipe";
 import { RecipeEditForm } from "@/components/recipe-edit-form";
 import { recipeService } from "@/lib/recipe-service";
 import { useRecipes } from "@/contexts/recipe-context";
@@ -28,7 +28,7 @@ const defaultRecipe: Recipe = {
   description: "",
   category: RecipeCategory.DINNER,
   tags: [],
-  season: undefined,
+  season: RecipeSeason.YEAR_ROUND,
   last_eaten: undefined,
   created_at: undefined,
   updated_at: undefined,
@@ -51,7 +51,7 @@ export function RecipeAddForm({ onSuccess, onStart, onError, loading = false }: 
         description: recipeData.description!,
         category: recipeData.category!,
         tags: recipeData.tags || [],
-        season: recipeData.season === "none" ? undefined : recipeData.season,
+        season: recipeData.season,
       };
 
       const { recipe: newRecipe } = await recipeService.createRecipe(createData);

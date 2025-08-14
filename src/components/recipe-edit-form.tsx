@@ -5,6 +5,7 @@ import {
   Recipe,
   RecipeInput,
   RecipeIngredient,
+  RecipeSeason,
   RECIPE_CATEGORIES,
   RECIPE_SEASONS,
   validateRecipeInput,
@@ -63,7 +64,7 @@ export const triggerAutoSave = async (): Promise<boolean> => {
       description: formData.description,
       category: formData.category,
       tags: formData.tags,
-      season: formData.season === "none" ? undefined : formData.season,
+      season: formData.season,
     };
 
     await onSave(updateData);
@@ -306,7 +307,7 @@ export function RecipeEditForm({
     description: recipe.description,
     category: recipe.category,
     tags: [...recipe.tags],
-    season: recipe.season || "none",
+    season: recipe.season || RecipeSeason.YEAR_ROUND,
   });
   const [errors, setErrors] = useState<string[]>([]);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -321,8 +322,7 @@ export function RecipeEditForm({
       formData.description !== recipe.description ||
       formData.category !== recipe.category ||
       JSON.stringify(formData.tags) !== JSON.stringify(recipe.tags) ||
-      (formData.season === "none" ? undefined : formData.season) !==
-        recipe.season;
+      formData.season !== recipe.season;
 
 
     // Update global state for auto-save
@@ -398,7 +398,7 @@ export function RecipeEditForm({
       description: formData.description,
       category: formData.category,
       tags: formData.tags,
-      season: formData.season === "none" ? undefined : formData.season,
+      season: formData.season,
     };
 
     try {
@@ -505,7 +505,6 @@ export function RecipeEditForm({
                   <SelectValue placeholder="Select season (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
                   {RECIPE_SEASONS.map((season) => (
                     <SelectItem
                       key={season}
