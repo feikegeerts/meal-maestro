@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
+import { createChatCompletion } from "@/lib/services/openai-service";
 import {
-  createChatCompletion,
-  usageTracker,
-} from "@/lib/services/openai-service";
-import {
-  RecipeFunctionHandler,
-  recipeFunctions,
-  formatFunctionResult,
+  updateRecipeForm,
+  recipeFormFunction,
 } from "@/lib/services/recipe-functions";
 import { OpenAI } from "openai";
 
@@ -17,11 +13,27 @@ interface ChatMessage {
   tool_call_id?: string;
 }
 
+interface FormUpdate {
+  title?: string;
+  ingredients?: Array<{
+    id: string;
+    name: string;
+    amount?: number | null;
+    unit?: string | null;
+    notes?: string;
+  }>;
+  servings?: number;
+  description?: string;
+  category?: string;
+  tags?: string[];
+  season?: string;
+}
+
 interface ChatRequest {
   message: string;
   conversation_history?: ChatMessage[];
   context?: {
-    current_tab?: string;
+    current_form_state?: FormUpdate;
     selected_recipe?: {
       id: string;
       title: string;
@@ -34,24 +46,25 @@ interface ChatRequest {
   };
 }
 
-const SYSTEM_PROMPT = `You are Meal Maestro, an AI-powered recipe assistant. You help users manage their recipe collection through natural language conversations.
+const SYSTEM_PROMPT = `You are Meal Maestro, an AI-powered recipe form assistant. You help users create and edit recipes by filling out recipe forms through natural conversation.
 
-AVAILABLE FUNCTIONS:
-- Search for recipes by various criteria (title, ingredients, category, tags, season)
-- Add new recipes to the database (only when explicitly creating new recipes)
-- Update recipe form with new data (use this to modify the current form fields)
-- Get detailed information about specific recipes
+YOUR PRIMARY FUNCTION:
+- Help users populate recipe form fields through conversation
+- Use the update_recipe_form function to fill form fields based on user requests
+- Provide cooking advice and recipe suggestions
 
 IMPORTANT GUIDELINES:
-1. Be helpful and conversational
-2. When users ask for recipes, use appropriate search criteria
-3. When users want to create NEW recipes, use add_recipe function
-4. When users want to MODIFY the current recipe form, use update_recipe_form function
-5. Always provide clear, formatted responses about recipes
-6. Ask clarifying questions when needed
-7. When creating recipes, make sure to include realistic serving sizes (usually 2-8 servings)
+1. Be helpful and conversational about cooking and recipes
+2. When users want to CREATE or MODIFY recipes, use update_recipe_form function to populate form fields
+3. CRITICAL: When creating a new recipe, make ONE comprehensive function call with ALL required fields (title, ingredients, description, category, servings) rather than multiple partial calls
+4. You can ONLY populate form fields - users must click "Save" to actually save recipes
+5. Always provide clear, helpful responses about recipes and cooking
+6. Ask clarifying questions when needed for better recipe details
+7. When creating recipes, include realistic serving sizes (usually 2-8 servings)
 8. Structure ingredients properly with amounts, units, and names
-9. IMPORTANT: Write detailed, step-by-step cooking instructions
+9. CRITICAL: Write DETAILED, STEP-BY-STEP cooking instructions in the description field. Include prep times, cooking temperatures, specific techniques, and clear sequential steps. Make instructions comprehensive and easy to follow.
+10. You are aware of the current form state - use this context in your responses
+11. Remember: You are a form assistant - you help fill forms, users save recipes themselves
 
 VALID TAGS (CHOOSE ONLY FROM THESE):
 Dietary: vegetarian, vegan, gluten-free, dairy-free, nut-free, keto, paleo, low-carb, low-fat, sugar-free, low-sodium, high-protein
@@ -68,20 +81,39 @@ Choose from: breakfast, lunch, dinner, dessert, snack, appetizer, beverage
 SEASONS:
 Choose from: spring, summer, fall, winter, year-round
 
-Remember to use the function tools to interact with the recipe database.`;
+DESCRIPTION FIELD REQUIREMENTS:
+- Must be detailed cooking instructions, not just a brief description
+- Include step-by-step process with clear numbering or bullet points
+- Mention cooking times, temperatures, and techniques
+- Provide prep and cooking instructions separately when relevant
+- Make it comprehensive enough for someone to follow successfully
+- Example format: "1. Preheat oven to 350°F. 2. In a large bowl, mix... 3. Bake for 25-30 minutes until..."`;
 
 export async function POST(request: NextRequest) {
+  console.log("🚀 [Chat] Received chat request");
+  
   const authResult = await requireAuth();
 
   if (authResult instanceof Response) {
     return authResult;
   }
 
-  const { user, client: supabase } = authResult;
+  const { } = authResult;
 
   try {
     const body: ChatRequest = await request.json();
     const { message, conversation_history = [], context } = body;
+    
+    console.log("🚀 [Chat] User message:", message);
+    console.log("🚀 [Chat] Conversation history length:", conversation_history.length);
+    console.log("🚀 [Chat] Has context:", !!context);
+    
+    if (context?.current_form_state) {
+      console.log("🚀 [Chat] Current form state:");
+      console.log("🚀 [Chat] - title:", context.current_form_state.title || 'null');
+      console.log("🚀 [Chat] - description:", context.current_form_state.description ? `"${context.current_form_state.description.slice(0, 100)}..."` : 'null');
+      console.log("🚀 [Chat] - ingredients count:", context.current_form_state.ingredients?.length || 0);
+    }
 
     if (!message || message.trim().length === 0) {
       return NextResponse.json(
@@ -95,7 +127,31 @@ export async function POST(request: NextRequest) {
       { role: "system", content: SYSTEM_PROMPT },
     ];
 
-    // Add context if provided
+    // Add form state context if provided
+    if (context?.current_form_state) {
+      const formState = context.current_form_state;
+      const formContextParts = [];
+      
+      if (formState.title) formContextParts.push(`Title: "${formState.title}"`);
+      if (formState.category) formContextParts.push(`Category: ${formState.category}`);
+      if (formState.servings) formContextParts.push(`Servings: ${formState.servings}`);
+      if (formState.ingredients && formState.ingredients.length > 0) {
+        const ingredientList = formState.ingredients.map(ing => 
+          `${ing.amount || ''} ${ing.unit || ''} ${ing.name}`.trim()
+        ).join(', ');
+        formContextParts.push(`Ingredients: ${ingredientList}`);
+      }
+      if (formState.description) formContextParts.push(`Instructions: ${formState.description.slice(0, 100)}${formState.description.length > 100 ? '...' : ''}`);
+      if (formState.tags && formState.tags.length > 0) formContextParts.push(`Tags: ${formState.tags.join(', ')}`);
+      if (formState.season) formContextParts.push(`Season: ${formState.season}`);
+      
+      if (formContextParts.length > 0) {
+        const contextMessage = `Current form state: ${formContextParts.join('; ')}`;
+        messages.push({ role: "system", content: contextMessage });
+      }
+    }
+
+    // Add selected recipe context if provided
     if (context?.selected_recipe) {
       const recipe = context.selected_recipe;
       const contextMessage = `The user is currently looking at the recipe: "${recipe.title}" (${recipe.category})`;
@@ -113,104 +169,87 @@ export async function POST(request: NextRequest) {
     // Add current user message
     messages.push({ role: "user", content: message });
 
-    // Initialize function handler
-    const functionHandler = new RecipeFunctionHandler(supabase, user.id);
-    const functionResults: { function: string; result: unknown }[] = [];
-
-    // Create initial completion with function calling
-    let currentCompletion = await createChatCompletion(
+    console.log("🚀 [Chat] Sending", messages.length, "messages to OpenAI");
+    
+    // Create completion with optional function calling
+    const completion = await createChatCompletion(
       messages,
-      recipeFunctions
+      [recipeFormFunction]
     );
-    const totalUsage = { ...currentCompletion.usage };
+    
+    console.log("🚀 [Chat] Received completion from OpenAI");
 
-    // Process function calls iteratively
-    while (currentCompletion.completion.choices[0].message.tool_calls) {
-      // Add assistant message with function calls
-      messages.push(currentCompletion.completion.choices[0].message);
+    let functionResult = null;
+    const updatedHistory = [...conversation_history];
 
-      // Process each function call
-      for (const toolCall of currentCompletion.completion.choices[0].message
-        .tool_calls) {
-        if (toolCall.type === "function") {
-          try {
-            const result = await functionHandler.handleFunctionCall(
-              toolCall.function.name,
-              JSON.parse(toolCall.function.arguments)
-            );
-
-            functionResults.push({
-              function: toolCall.function.name,
-              result,
-            });
-
-            // Add function result to conversation
-            messages.push({
-              role: "tool",
-              content: formatFunctionResult(toolCall.function.name, result),
-              tool_call_id: toolCall.id,
-            });
-          } catch (error) {
-            console.error(
-              `Function call error for ${toolCall.function.name}:`,
-              error
-            );
-
-            // Add error result to conversation
-            messages.push({
-              role: "tool",
-              content: JSON.stringify({
-                function: toolCall.function.name,
-                error: error instanceof Error ? error.message : "Unknown error",
-              }),
-              tool_call_id: toolCall.id,
-            });
-          }
+    // Handle function call if present
+    if (completion.choices[0].message.tool_calls) {
+      console.log("🚀 [Chat] Processing tool calls:", completion.choices[0].message.tool_calls.length);
+      
+      const toolCall = completion.choices[0].message.tool_calls[0];
+      if (toolCall.type === "function" && toolCall.function.name === "update_recipe_form") {
+        console.log("🚀 [Chat] Executing update_recipe_form function");
+        console.log("🚀 [Chat] Function arguments:", toolCall.function.arguments);
+        
+        try {
+          const result = await updateRecipeForm(
+            JSON.parse(toolCall.function.arguments)
+          );
+          console.log("🚀 [Chat] Function execution successful");
+          console.log("🚀 [Chat] Function result:", JSON.stringify(result, null, 2));
+          
+          functionResult = {
+            function: toolCall.function.name,
+            result,
+          };
+        } catch (error) {
+          console.error("🔴 [Chat] Function call error:", error);
+          functionResult = {
+            function: toolCall.function.name,
+            error: error instanceof Error ? error.message : "Unknown error",
+          };
         }
       }
+    } else {
+      console.log("🚀 [Chat] No tool calls in response");
+    }
 
-      // Get next response
-      const nextCompletion = await createChatCompletion(
-        messages,
-        recipeFunctions
-      );
-      currentCompletion = nextCompletion;
-
-      // Accumulate usage
-      totalUsage.tokens.prompt_tokens +=
-        nextCompletion.usage.tokens.prompt_tokens;
-      totalUsage.tokens.completion_tokens +=
-        nextCompletion.usage.tokens.completion_tokens;
-      totalUsage.tokens.total_tokens +=
-        nextCompletion.usage.tokens.total_tokens;
-      totalUsage.cost_usd += nextCompletion.usage.cost_usd;
-
-      // Safety check to prevent infinite loops
-      if (functionResults.length > 10) {
-        console.warn("Function call limit reached");
-        break;
+    // Generate appropriate response content
+    let responseContent = completion.choices[0].message.content;
+    
+    // If OpenAI didn't provide response text but made a successful function call, generate a helpful response
+    if (!responseContent && functionResult && !functionResult.error) {
+      if (functionResult.function === 'update_recipe_form') {
+        const formUpdate = functionResult.result?.formUpdate as FormUpdate;
+        if (formUpdate?.title) {
+          responseContent = `Perfect! I've created a complete recipe for "${formUpdate.title}" with detailed cooking instructions. You can review all the details in the form above and make any adjustments before saving.`;
+        } else {
+          responseContent = `Great! I've updated the recipe form with your requested changes. Please review the details above and save when ready.`;
+        }
+      } else {
+        responseContent = `I've successfully processed your request. Please check the form above for the updates.`;
       }
+    } else if (!responseContent) {
+      responseContent = "I apologize, but I encountered an issue processing your request.";
     }
 
     // Build updated conversation history
-    const updatedHistory: ChatMessage[] = [
-      ...conversation_history,
-      { role: "user", content: message },
-      {
-        role: "assistant",
-        content:
-          currentCompletion.completion.choices[0].message.content ||
-          "I apologize, but I encountered an issue processing your request.",
-      },
-    ];
+    updatedHistory.push({ role: "user", content: message });
+    updatedHistory.push({
+      role: "assistant",
+      content: responseContent,
+    });
 
     const response = {
-      response: currentCompletion.completion.choices[0].message.content,
+      response: responseContent,
       conversation_history: updatedHistory,
-      function_calls: functionResults,
-      usage: totalUsage,
-      system_stats: usageTracker.getUsageStats(),
+      function_call: functionResult,
     };
+    
+    console.log("🚀 [Chat] Sending response to client");
+    console.log("🚀 [Chat] Original OpenAI response length:", completion.choices[0].message.content?.length || 0);
+    console.log("🚀 [Chat] Final response content length:", responseContent?.length || 0);
+    console.log("🚀 [Chat] Function call result:", functionResult ? 'present' : 'none');
 
     return NextResponse.json(response);
   } catch (error) {

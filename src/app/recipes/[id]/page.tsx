@@ -24,7 +24,7 @@ import {
   Tag,
   ChefHat,
 } from "lucide-react";
-import { setRedirectUrl } from "@/lib/utils";
+import { setRedirectUrl, processInstructions } from "@/lib/utils";
 import {
   Sheet,
   SheetContent,
@@ -394,9 +394,27 @@ export default function RecipeDetailPage() {
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Instructions</h3>
                   <div className="prose prose-sm max-w-none">
-                    <p className="whitespace-pre-wrap leading-relaxed">
-                      {recipe.description}
-                    </p>
+                    {(() => {
+                      const processed = processInstructions(recipe.description);
+                      
+                      if (processed.isStepFormat && processed.steps.length > 1) {
+                        return (
+                          <ol className="space-y-3 list-decimal list-inside">
+                            {processed.steps.map((step, index) => (
+                              <li key={index} className="leading-relaxed pl-2">
+                                <span className="ml-1">{step}</span>
+                              </li>
+                            ))}
+                          </ol>
+                        );
+                      } else {
+                        return (
+                          <p className="whitespace-pre-wrap leading-relaxed">
+                            {processed.originalText}
+                          </p>
+                        );
+                      }
+                    })()}
                   </div>
                 </div>
 

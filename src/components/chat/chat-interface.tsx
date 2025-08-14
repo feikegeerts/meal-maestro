@@ -17,39 +17,41 @@ interface ChatMessage {
 
 interface FunctionCall {
   function: string;
-  result: unknown;
+  result?: unknown;
+  error?: string;
 }
 
 interface ChatResponse {
   response: string;
   conversation_history: ChatMessage[];
-  function_calls: FunctionCall[];
-  usage: {
-    tokens: {
-      prompt_tokens: number;
-      completion_tokens: number;
-      total_tokens: number;
-    };
-    cost_usd: number;
-    model: string;
-  };
-  system_stats: {
-    requests: number;
-    dailyCost: number;
-    maxDailyCost: number;
-  };
+  function_call?: FunctionCall;
 }
 
 interface ChatInterfaceProps {
   selectedRecipe?: Recipe;
   onRecipeGenerated?: (recipeData: unknown) => void;
+  currentFormState?: {
+    title?: string;
+    ingredients?: Array<{
+      id: string;
+      name: string;
+      amount?: number | null;
+      unit?: string | null;
+      notes?: string;
+    }>;
+    servings?: number;
+    description?: string;
+    category?: string;
+    tags?: string[];
+    season?: string;
+  };
 }
 
-export function ChatInterface({ selectedRecipe, onRecipeGenerated }: ChatInterfaceProps) {
+export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormState }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: 'Hello! I\'m Meal Maestro, your AI recipe assistant. I can help you search for recipes, add new ones, or get recipe details. What would you like to do today?',
+      content: 'Hello! I\'m Meal Maestro, your AI recipe form assistant. I can help you create and edit recipes by filling out recipe forms. What recipe would you like to work on today?',
       timestamp: new Date().toISOString()
     }
   ]);
@@ -86,19 +88,22 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated }: ChatInterfa
       const requestBody = {
         message: userMessage,
         conversation_history: messages,
-        context: selectedRecipe ? {
-          selected_recipe: {
-            id: selectedRecipe.id,
-            title: selectedRecipe.title,
-            category: selectedRecipe.category,
-            season: selectedRecipe.season,
-            tags: selectedRecipe.tags,
-            ingredients: selectedRecipe.ingredients.map(ing => 
-              `${ing.amount || ''} ${ing.unit || ''} ${ing.name}`.trim()
-            ),
-            description: selectedRecipe.description
-          }
-        } : undefined
+        context: {
+          ...(currentFormState && { current_form_state: currentFormState }),
+          ...(selectedRecipe && {
+            selected_recipe: {
+              id: selectedRecipe.id,
+              title: selectedRecipe.title,
+              category: selectedRecipe.category,
+              season: selectedRecipe.season,
+              tags: selectedRecipe.tags,
+              ingredients: selectedRecipe.ingredients.map(ing => 
+                `${ing.amount || ''} ${ing.unit || ''} ${ing.name}`.trim()
+              ),
+              description: selectedRecipe.description
+            }
+          })
+        }
       };
 
       const response = await fetch('/api/recipes/chat', {
@@ -120,19 +125,9 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated }: ChatInterfa
       // Update messages with full conversation history from response
       setMessages(data.conversation_history);
 
-      // Check if AI generated a recipe or updated the form
-      const recipeAddFunction = data.function_calls.find(fc => fc.function === 'add_recipe');
-      const recipeUpdateFunction = data.function_calls.find(fc => fc.function === 'update_recipe_form');
-      
-      if (recipeAddFunction && onRecipeGenerated) {
-        const result = recipeAddFunction.result as { recipe?: unknown; success?: boolean };
-        if (result?.recipe) {
-          onRecipeGenerated(result.recipe);
-        }
-      }
-      
-      if (recipeUpdateFunction && onRecipeGenerated) {
-        const result = recipeUpdateFunction.result as { formUpdate?: unknown; success?: boolean };
+      // Check if AI updated the form
+      if (data.function_call && data.function_call.function === 'update_recipe_form' && onRecipeGenerated) {
+        const result = data.function_call.result as { formUpdate?: unknown; success?: boolean };
         if (result?.formUpdate) {
           onRecipeGenerated(result.formUpdate);
         }
@@ -211,7 +206,7 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated }: ChatInterfa
                 <Input
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyPress}
                   placeholder="Type your message... (e.g., 'add a recipe for spaghetti bolognese')"
                   disabled={isLoading}
                   className="flex-1"

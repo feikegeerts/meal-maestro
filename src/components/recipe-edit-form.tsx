@@ -362,22 +362,28 @@ export function RecipeEditForm({
     const recipeData = aiRecipeData as AIRecipeData;
     
     if (recipeData) {
-      setFormData(prev => ({
-        ...prev,
-        title: recipeData.title || prev.title,
-        description: recipeData.description || prev.description,
-        ingredients: recipeData.ingredients?.map((ing, index: number) => ({
-          id: ing.id || `ingredient-${Date.now()}-${index}`,
-          name: ing.name || "",
-          amount: ing.amount || null,
-          unit: ing.unit || null,
-          notes: ing.notes || ""
-        })) || prev.ingredients,
-        servings: recipeData.servings || prev.servings,
-        category: recipeData.category || prev.category,
-        tags: recipeData.tags || prev.tags,
-        season: recipeData.season || prev.season,
-      }));
+      const updatedFormData: RecipeInput = {
+        ...formData,
+        ...(recipeData.title && { title: recipeData.title }),
+        ...(recipeData.description && { description: recipeData.description }),
+        ...(recipeData.servings && { servings: recipeData.servings }),
+        ...(recipeData.category && { category: recipeData.category }),
+        ...(recipeData.tags && { tags: recipeData.tags }),
+        ...(recipeData.season && { season: recipeData.season }),
+        ...(recipeData.ingredients && recipeData.ingredients.length > 0 && {
+          ingredients: recipeData.ingredients
+            .filter((ing): ing is typeof ing & { name: string } => Boolean(ing.name?.trim()))
+            .map((ing, index) => ({
+              id: ing.id || `ingredient-ai-${Date.now()}-${index}`,
+              name: ing.name.trim(),
+              amount: ing.amount ?? null,
+              unit: ing.unit ?? null,
+              notes: ing.notes ?? ""
+            }))
+        })
+      };
+      
+      setFormData(updatedFormData);
       setErrors([]);
     }
   };
@@ -432,6 +438,7 @@ export function RecipeEditForm({
           <ChatInterface
             selectedRecipe={recipe}
             onRecipeGenerated={handleAIRecipeUpdate}
+            currentFormState={formData}
           />
         </div>
       )}
@@ -562,7 +569,15 @@ export function RecipeEditForm({
         <CardContent>
           <h3 className="text-lg font-semibold mb-3">Instructions</h3>
           <div className="space-y-2">
-            <Label htmlFor="description">Cooking Instructions</Label>
+            <Label htmlFor="description">Step-by-Step Cooking Instructions</Label>
+            <div className="text-sm text-muted-foreground mb-2">
+              Enter detailed cooking instructions. You can format them as:
+              <ul className="list-disc list-inside mt-1 space-y-1">
+                <li>Numbered steps (1. Heat oil, 2. Add onions...)</li>
+                <li>Separate lines for each step</li>
+                <li>Or as a paragraph - we&apos;ll format it automatically</li>
+              </ul>
+            </div>
             <Textarea
               id="description"
               value={formData.description}
@@ -572,7 +587,7 @@ export function RecipeEditForm({
                   description: e.target.value,
                 }))
               }
-              placeholder="Enter detailed cooking instructions..."
+              placeholder="1. Heat oil in a large skillet over medium-high heat.&#10;2. Add rice and stir-fry for 3-4 minutes until heated through.&#10;3. Push rice to one side and scramble eggs on the other side.&#10;4. Mix eggs with rice and add vegetables.&#10;5. Season with soy sauce and serve hot."
               className="min-h-[120px]"
               disabled={loading}
             />
