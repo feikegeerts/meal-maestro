@@ -45,9 +45,10 @@ interface ChatInterfaceProps {
     tags?: string[];
     season?: string;
   };
+  isDesktopSidebar?: boolean;
 }
 
-export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormState }: ChatInterfaceProps) {
+export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormState, isDesktopSidebar = false }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
@@ -58,15 +59,15 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(isDesktopSidebar ? true : false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive - disabled on desktop
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (!isDesktopSidebar && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, isDesktopSidebar]);
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -149,23 +150,25 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full shadow-lg">
       <CardHeader 
-        className="cursor-pointer pb-3" 
-        onClick={() => setIsExpanded(!isExpanded)}
+        className={`${!isDesktopSidebar ? 'cursor-pointer' : ''} pb-3`}
+        onClick={() => !isDesktopSidebar && setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <MessageSquare className="h-5 w-5" />
+          <CardTitle className={`flex items-center gap-2 ${isDesktopSidebar ? 'text-base' : 'text-lg'}`}>
+            <MessageSquare className={`${isDesktopSidebar ? 'h-4 w-4' : 'h-5 w-5'}`} />
             AI Recipe Assistant
           </CardTitle>
-          <Button variant="ghost" size="sm">
-            {isExpanded ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </Button>
+          {!isDesktopSidebar && (
+            <Button variant="ghost" size="sm">
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
+          )}
         </div>
       </CardHeader>
 
@@ -174,7 +177,11 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
           <Separator />
           <CardContent className="p-0">
             {/* Chat Messages */}
-            <div className="max-h-96 overflow-y-auto p-4 space-y-4">
+            <div className={`overflow-y-auto p-4 space-y-4 ${
+              isDesktopSidebar 
+                ? 'max-h-[calc(100vh-300px)] lg:max-h-[calc(100vh-250px)]' 
+                : 'max-h-96'
+            }`}>
               {messages.map((message, index) => (
                 <ChatMessage
                   key={index}

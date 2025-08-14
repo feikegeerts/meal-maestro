@@ -34,6 +34,9 @@ interface RecipeEditFormProps {
   onSave: (recipeData: Partial<RecipeInput>) => Promise<void>;
   loading?: boolean;
   includeChat?: boolean;
+  standalone?: boolean;
+  onCancel?: () => void;
+  layoutMode?: "single-column" | "two-column";
 }
 
 // Global variable to store the current form state for auto-save
@@ -289,6 +292,9 @@ export function RecipeEditForm({
   onSave,
   loading = false,
   includeChat = false,
+  standalone = false,
+  onCancel,
+  layoutMode = "single-column",
 }: RecipeEditFormProps) {
   const generateIngredientId = () => `ingredient-${Date.now()}-${Math.random()}`;
 
@@ -385,6 +391,17 @@ export function RecipeEditForm({
       
       setFormData(updatedFormData);
       setErrors([]);
+      
+      // On mobile/tablet, scroll to form when AI updates it
+      if (layoutMode === "single-column" && typeof window !== 'undefined') {
+        // Use a small delay to ensure the form has updated
+        setTimeout(() => {
+          const formElement = document.querySelector('[data-form-start]');
+          if (formElement && window.innerWidth < 1024) {
+            formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 300);
+      }
     }
   };
 
@@ -409,8 +426,10 @@ export function RecipeEditForm({
 
     try {
       await onSave(updateData);
-      // Success - trigger the hidden close button
-      closeButtonRef.current?.click();
+      // Success - trigger the hidden close button only in sheet mode
+      if (!standalone) {
+        closeButtonRef.current?.click();
+      }
     } catch (error) {
       // Error handling - don't close sheet so user can see errors
       console.error("Save failed:", error);
@@ -430,19 +449,9 @@ export function RecipeEditForm({
     }));
   };
 
-  return (
-    <div className="space-y-4 sm:space-y-6 p-0">
-      {/* AI Chat Assistant */}
-      {includeChat && (
-        <div className="mb-6">
-          <ChatInterface
-            selectedRecipe={recipe}
-            onRecipeGenerated={handleAIRecipeUpdate}
-            currentFormState={formData}
-          />
-        </div>
-      )}
-      
+  // Form sections component
+  const FormSections = () => (
+    <>
       {errors.length > 0 && (
         <Card>
           <CardContent className="pt-6">
@@ -456,7 +465,7 @@ export function RecipeEditForm({
       )}
 
       {/* Basic Information */}
-      <Card>
+      <Card data-form-start>
         <CardContent className="space-y-3 sm:space-y-4">
           <h3 className="text-lg font-semibold mb-3">Basic Information</h3>
           <div className="space-y-2">
@@ -623,21 +632,91 @@ export function RecipeEditForm({
         </CardContent>
       </Card>
 
-      {/* Hidden close button for programmatic closing */}
-      <SheetClose asChild>
-        <button ref={closeButtonRef} className="hidden" aria-hidden="true" />
-      </SheetClose>
-
       {/* Action Buttons */}
       <div className="flex gap-3 pt-4 border-t">
-        <SheetClose asChild>
-          <Button variant="outline" disabled={loading} className="flex-1">
-            Cancel
-          </Button>
-        </SheetClose>
-        <Button onClick={handleSave} disabled={loading} className="flex-1">
-          {loading ? "Saving..." : "Save Changes"}
-        </Button>
+        {standalone ? (
+          <>
+            <Button 
+              variant="outline" 
+              disabled={loading} 
+              className="flex-1"
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={loading} className="flex-1">
+              {loading ? "Saving..." : recipe.id ? "Save Changes" : "Create Recipe"}
+            </Button>
+          </>
+        ) : (
+          <>
+            <SheetClose asChild>
+              <button ref={closeButtonRef} className="hidden" aria-hidden="true" />
+            </SheetClose>
+            <SheetClose asChild>
+              <Button variant="outline" disabled={loading} className="flex-1">
+                Cancel
+              </Button>
+            </SheetClose>
+            <Button onClick={handleSave} disabled={loading} className="flex-1">
+              {loading ? "Saving..." : "Save Changes"}
+            </Button>
+          </>
+        )}
+      </div>
+    </>
+  );
+
+  // Single column layout (original layout)
+  if (layoutMode === "single-column") {
+    return (
+      <div className="space-y-4 sm:space-y-6 p-0">
+        {/* AI Chat Assistant */}
+        {includeChat && (
+          <div className="mb-6">
+            <ChatInterface
+              selectedRecipe={recipe}
+              onRecipeGenerated={handleAIRecipeUpdate}
+              currentFormState={formData}
+            />
+          </div>
+        )}
+        
+        <FormSections />
+
+        {/* Hidden close button for programmatic closing - only in sheet mode */}
+        {!standalone && (
+          <button ref={closeButtonRef} className="hidden" aria-hidden="true" />
+        )}
+      </div>
+    );
+  }
+
+  // Two-column layout for desktop
+  return (
+    <div className="lg:grid lg:grid-cols-12 lg:gap-8 space-y-6 lg:space-y-0">
+      {/* Left Column - Chat Interface (Desktop: 5/12, Mobile: full width) */}
+      {includeChat && (
+        <div className="lg:col-span-5">
+          <div className="lg:sticky lg:top-6 lg:self-start">
+            <ChatInterface
+              selectedRecipe={recipe}
+              onRecipeGenerated={handleAIRecipeUpdate}
+              currentFormState={formData}
+              isDesktopSidebar={true}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Right Column - Form (Desktop: 7/12, Mobile: full width) */}
+      <div className={`space-y-4 sm:space-y-6 ${includeChat ? 'lg:col-span-7' : 'lg:col-span-12'}`}>
+        <FormSections />
+
+        {/* Hidden close button for programmatic closing - only in sheet mode */}
+        {!standalone && (
+          <button ref={closeButtonRef} className="hidden" aria-hidden="true" />
+        )}
       </div>
     </div>
   );

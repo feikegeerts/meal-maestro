@@ -25,14 +25,6 @@ import {
   ChefHat,
 } from "lucide-react";
 import { setRedirectUrl, processInstructions } from "@/lib/utils";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { RecipeEditForm, triggerAutoSave } from "@/components/recipe-edit-form";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
@@ -111,24 +103,6 @@ export default function RecipeDetailPage() {
     }
   };
 
-  const handleUpdateRecipe = async (
-    recipeData: Partial<import("@/types/recipe").RecipeInput>
-  ) => {
-    if (!recipe) return;
-
-    setActionLoading("update");
-    try {
-      const updatedRecipe = await updateRecipe(recipeData);
-      setRecipe(updatedRecipe);
-      setDisplayRecipe(updatedRecipe);
-    } catch (error) {
-      console.error("Error updating recipe:", error);
-      throw error; // Re-throw to let the form handle the error
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
   const updateRecipe = async (
     updateData: Partial<import("@/types/recipe").RecipeInput>
   ) => {
@@ -168,6 +142,12 @@ export default function RecipeDetailPage() {
       console.error("Error marking recipe as eaten:", error);
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleEdit = () => {
+    if (recipe) {
+      router.push(`/recipes/${recipe.id}/edit`);
     }
   };
 
@@ -276,35 +256,15 @@ export default function RecipeDetailPage() {
                   )}
                 </Button>
 
-                <Sheet
-                  onOpenChange={async (open) => {
-                    if (!open) {
-                      // Trigger auto-save when closing
-                      await triggerAutoSave();
-                    }
-                  }}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!!actionLoading}
+                  onClick={handleEdit}
                 >
-                  <SheetTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!!actionLoading}
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent className="w-full sm:max-w-3xl lg:max-w-4xl overflow-y-auto p-3 sm:p-6">
-                    <SheetHeader className="px-0 pb-4">
-                      <SheetTitle>Edit Recipe</SheetTitle>
-                    </SheetHeader>
-                    <RecipeEditForm
-                      recipe={recipe}
-                      onSave={handleUpdateRecipe}
-                      loading={actionLoading === "update"}
-                    />
-                  </SheetContent>
-                </Sheet>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </Button>
 
                 <Button
                   onClick={handleDelete}

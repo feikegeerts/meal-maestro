@@ -8,19 +8,11 @@ import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { recipeService } from "@/lib/recipe-service";
-import { Recipe, RecipesResponse } from "@/types/recipe";
+import { RecipesResponse } from "@/types/recipe";
 import { RecipeDataTable } from "@/components/recipes/recipe-data-table";
 import { recipeColumns } from "@/components/recipes/recipe-columns";
 import { Plus, RefreshCw } from "lucide-react";
 import { setRedirectUrl } from "@/lib/utils";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { RecipeAddForm } from "@/components/recipe-add-form";
 
 export default function RecipesPage() {
   const router = useRouter();
@@ -29,7 +21,8 @@ export default function RecipesPage() {
     useRecipes();
   const [recipesLoading, setRecipesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [addRecipeLoading, setAddRecipeLoading] = useState(false);
+  const [hasLoadedRecipes, setHasLoadedRecipes] = useState(false);
+
   useEffect(() => {
     if (!loading && !user) {
       setRedirectUrl("/recipes");
@@ -37,10 +30,11 @@ export default function RecipesPage() {
       return;
     }
 
-    if (user && contextRecipes.length === 0) {
+    // Load recipes when user is available and we haven't loaded them yet
+    if (user && !hasLoadedRecipes) {
       loadRecipes();
     }
-  }, [user, loading, contextRecipes.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, loading, hasLoadedRecipes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadRecipes = async () => {
     try {
@@ -48,6 +42,7 @@ export default function RecipesPage() {
       setError(null);
       const response: RecipesResponse = await recipeService.getUserRecipes();
       setRecipesInContext(response.recipes);
+      setHasLoadedRecipes(true);
     } catch (err) {
       console.error("Error loading recipes:", err);
       setError(err instanceof Error ? err.message : "Failed to load recipes");
@@ -56,19 +51,8 @@ export default function RecipesPage() {
     }
   };
 
-  const handleAddRecipeSuccess = (newRecipe: Recipe) => {
-    setRecipesInContext([newRecipe, ...contextRecipes]);
-    setAddRecipeLoading(false);
-    document.getElementById("add-recipe-sheet-close")?.click();
-  };
-
-  const handleAddRecipeStart = () => {
-    setAddRecipeLoading(true);
-  };
-
-  const handleAddRecipeError = (error: Error) => {
-    setAddRecipeLoading(false);
-    console.error("Failed to add recipe:", error);
+  const handleAddRecipe = () => {
+    router.push("/recipes/add");
   };
 
 
@@ -77,40 +61,7 @@ export default function RecipesPage() {
   }
 
   return (
-    <>
-      {/* Add Recipe Sheet */}
-      <Sheet>
-        <SheetTrigger asChild>
-          <button
-            id="add-recipe-sheet-trigger"
-            className="hidden"
-            aria-hidden="true"
-          />
-        </SheetTrigger>
-        <SheetContent
-          side="right"
-          className="w-full sm:max-w-3xl lg:max-w-4xl overflow-y-auto"
-        >
-          <SheetHeader>
-            <SheetTitle>Add New Recipe</SheetTitle>
-          </SheetHeader>
-          <RecipeAddForm
-            onSuccess={handleAddRecipeSuccess}
-            onStart={handleAddRecipeStart}
-            onError={handleAddRecipeError}
-            loading={addRecipeLoading}
-          />
-          {/* Hidden close button for programmatic closing */}
-          <button
-            id="add-recipe-sheet-close"
-            className="hidden"
-            aria-hidden="true"
-            onClick={() => {}}
-          />
-        </SheetContent>
-      </Sheet>
-
-      <PageWrapper>
+    <PageWrapper>
       <div className="container mx-auto px-4 pt-4 pb-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -126,7 +77,10 @@ export default function RecipesPage() {
             <div className="flex gap-2 mt-4 sm:mt-0">
               <Button
                 variant="outline"
-                onClick={loadRecipes}
+                onClick={() => {
+                  setHasLoadedRecipes(false);
+                  loadRecipes();
+                }}
                 disabled={recipesLoading}
                 className="flex items-center gap-2"
               >
@@ -137,7 +91,7 @@ export default function RecipesPage() {
               </Button>
               <Button 
                 className="flex items-center gap-2"
-                onClick={() => document.getElementById("add-recipe-sheet-trigger")?.click()}
+                onClick={handleAddRecipe}
               >
                 <Plus className="h-4 w-4" />
                 Add Recipe
@@ -173,7 +127,7 @@ export default function RecipesPage() {
                 </p>
                 <Button 
                   className="flex items-center gap-2 mx-auto"
-                  onClick={() => document.getElementById("add-recipe-sheet-trigger")?.click()}
+                  onClick={handleAddRecipe}
                 >
                   <Plus className="h-4 w-4" />
                   Add Your First Recipe
@@ -190,6 +144,5 @@ export default function RecipesPage() {
         </div>
       </div>
     </PageWrapper>
-    </>
   );
 }
