@@ -144,7 +144,7 @@ supabase/migrations
 
 ### OpenAI Function Definitions
 
-/src/lib/services/recipeFunctions.ts
+/src/lib/recipe-functions.ts
 
 ```
 

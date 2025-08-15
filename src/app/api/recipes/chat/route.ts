@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
-import { createChatCompletion } from "@/lib/services/openai-service";
+import { createChatCompletion } from "@/lib/openai-service";
 import {
   updateRecipeForm,
   recipeFormFunction,
-} from "@/lib/services/recipe-functions";
+} from "@/lib/recipe-functions";
 import { 
   RECIPE_CATEGORIES, 
   RECIPE_SEASONS, 
