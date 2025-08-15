@@ -94,7 +94,7 @@ PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 # OpenAI
 OPENAI_API_KEY=your_openai_api_key
-OPENAI_MODEL=gpt-4.1-nano
+OPENAI_MODEL=gpt-4.1-nano or mini
 OPENAI_DAILY_BUDGET=1.00
 ```
 

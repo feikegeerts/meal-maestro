@@ -5,6 +5,12 @@ import {
   updateRecipeForm,
   recipeFormFunction,
 } from "@/lib/services/recipe-functions";
+import { 
+  RECIPE_CATEGORIES, 
+  RECIPE_SEASONS, 
+  RECIPE_TAGS,
+  COOKING_UNITS 
+} from "@/types/recipe";
 import { OpenAI } from "openai";
 
 interface ChatMessage {
@@ -67,22 +73,16 @@ IMPORTANT GUIDELINES:
 11. Remember: You are a form assistant - you help fill forms, users save recipes themselves
 
 VALID TAGS (CHOOSE ONLY FROM THESE):
-Dietary: vegetarian, vegan, gluten-free, dairy-free, nut-free, keto, paleo, low-carb, low-fat, sugar-free, low-sodium, high-protein
-Cuisine: italian, mexican, chinese, indian, thai, french, mediterranean, american, japanese, korean, greek, spanish, middle-eastern, cajun, southern
-Cooking Methods: baking, grilling, frying, roasting, steaming, slow-cooking, air-fryer, instant-pot, no-cook, one-pot, stir-fry, braising, smoking, pressure-cooker
-Characteristics: quick, easy, healthy, comfort-food, spicy, mild, sweet, savory, crispy, creamy, fresh, hearty, light, rich
-Occasions: party, holiday, weeknight, meal-prep, kid-friendly, date-night, potluck, picnic, brunch, entertaining, budget-friendly, leftover-friendly
-Proteins: chicken, beef, pork, fish, seafood, tofu, beans, eggs, turkey, lamb, duck, plant-based
-Dish Types: soup, salad, sandwich, pasta, pizza, bread, cookies, cake, pie, smoothie, cocktail, sauce, dip, marinade, dressing
+${RECIPE_TAGS.join(', ')}
 
 RECIPE CATEGORIES:
-Choose from: breakfast, lunch, dinner, dessert, snack, appetizer, beverage
+Choose from: ${RECIPE_CATEGORIES.join(', ')}
 
 SEASONS:
-Choose from: spring, summer, fall, winter, year-round
+Choose from: ${RECIPE_SEASONS.join(', ')}
 
 UNITS FOR INGREDIENTS:
-ALWAYS provide appropriate units for ingredients. Available units: cup, cups, tablespoon, tablespoons, tbsp, teaspoon, teaspoons, tsp, pound, pounds, lb, lbs, ounce, ounces, oz, gram, grams, g, kilogram, kilograms, kg, liter, liters, l, milliliter, milliliters, ml, piece, pieces, slice, slices, clove, cloves, can, cans, package, packages, bag, bags, large, medium, small, whole, half
+ALWAYS provide appropriate units for ingredients. Available units: ${COOKING_UNITS.join(', ')}
 
 UNIT SELECTION GUIDELINES:
 - Liquids: cups, tablespoons, teaspoons, ml, l

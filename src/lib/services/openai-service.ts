@@ -2,9 +2,9 @@ import { OpenAI } from "openai";
 
 // OpenAI Configuration
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
-const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
-const OPENAI_MAX_TOKENS = parseInt(process.env.OPENAI_MAX_TOKENS || "2000", 10);
-const OPENAI_TEMPERATURE = parseFloat(process.env.OPENAI_TEMPERATURE || "0.9");
+const OPENAI_MODEL = "gpt-4.1-mini";
+const OPENAI_MAX_TOKENS = parseInt("2000", 10);
+const OPENAI_TEMPERATURE = parseFloat("0.9");
 
 if (!OPENAI_API_KEY) {
   console.error(
@@ -25,13 +25,13 @@ class SimpleRateLimiter {
 
   isRateLimited(): boolean {
     const now = Date.now();
-    
+
     // Reset counter if a minute has passed
     if (now - this.lastReset > 60000) {
       this.requests = 0;
       this.lastReset = now;
     }
-    
+
     return this.requests >= this.maxRequestsPerMinute;
   }
 
@@ -93,33 +93,4 @@ export function validateOpenAIConfig(): { valid: boolean; error?: string } {
   }
 
   return { valid: true };
-}
-
-// Test OpenAI connection
-export async function testOpenAIConnection(): Promise<{
-  success: boolean;
-  error?: string;
-}> {
-  try {
-    const completion = await createChatCompletion([
-      {
-        role: "user",
-        content:
-          'Hello, this is a test. Please respond with "Connection successful".',
-      },
-    ]);
-
-    const response = completion.choices[0]?.message?.content;
-
-    if (response && response.includes("Connection successful")) {
-      return { success: true };
-    } else {
-      return { success: false, error: "Unexpected response from OpenAI" };
-    }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
 }
