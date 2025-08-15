@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { ChefHat, BookOpen, Menu, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
+import { useUserCosts } from "@/lib/hooks/use-user-costs";
 import { cn } from "@/lib/utils";
 import {
   NavigationMenu,
@@ -43,11 +44,22 @@ export function MainNav() {
   const pathname = usePathname();
   const { user, profile, signOut } = useAuth();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { data: costData, loading: costLoading } = useUserCosts();
 
   const handleSignOut = async () => {
     const { error } = await signOut();
     if (error) {
       console.error("Error signing out:", error);
+    }
+  };
+
+  const formatCost = (cost: number): string => {
+    if (cost >= 1) {
+      return `$${cost.toFixed(2)}`;
+    } else if (cost >= 0.001) {
+      return `$${cost.toFixed(4)}`;
+    } else {
+      return `$${cost.toFixed(6)}`;
     }
   };
 
@@ -126,6 +138,21 @@ export function MainNav() {
                     <p className="text-xs leading-none text-muted-foreground">
                       {user.email}
                     </p>
+                    {costLoading ? (
+                      <div className="space-y-1">
+                        <div className="h-3 w-20 animate-pulse bg-muted rounded"></div>
+                        <div className="h-3 w-16 animate-pulse bg-muted rounded"></div>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <p className="text-xs leading-none text-muted-foreground">
+                          Total costs: {formatCost(costData?.totalCost || 0)}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          API calls: {costData?.totalCalls || 0}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -166,6 +193,21 @@ export function MainNav() {
                     <p className="text-xs leading-none text-muted-foreground">
                       {user.email}
                     </p>
+                    {costLoading ? (
+                      <div className="space-y-1">
+                        <div className="h-3 w-20 animate-pulse bg-muted rounded"></div>
+                        <div className="h-3 w-16 animate-pulse bg-muted rounded"></div>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <p className="text-xs leading-none text-muted-foreground">
+                          Total costs: {formatCost(costData?.totalCost || 0)}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          API calls: {costData?.totalCalls || 0}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

@@ -52,4 +52,14 @@
 
 - Let the user always test with pnpm dev
 - Do not add comments when the code is self explanatory
-- use shadcn components when possible to avoid custom components
+- Use shadcn components when possible to avoid custom components
+
+## TypeScript Guidelines
+
+- **NEVER use `any` type** - Always specify proper types or use generic types
+- Use explicit interface definitions for data structures
+- Prefer type-safe database queries with proper type definitions
+- Use union types instead of `any` when multiple types are possible
+- Always type function parameters and return values
+- Use `unknown` instead of `any` when the type is truly unknown
+- Leverage TypeScript's strict mode features for better type safety

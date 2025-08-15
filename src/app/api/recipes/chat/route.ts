@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
 import { createChatCompletion } from "@/lib/openai-service";
+import { usageTrackingService } from "@/lib/usage-tracking-service";
 import {
   updateRecipeForm,
   recipeFormFunction,
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
-  const { } = authResult;
+  const { user } = authResult;
 
   try {
     const body: ChatRequest = await request.json();
@@ -175,11 +176,22 @@ export async function POST(request: NextRequest) {
     messages.push({ role: "user", content: message });
 
     
-    // Create completion with optional function calling
-    const completion = await createChatCompletion(
+    // Create completion with optional function calling and usage tracking
+    const { completion, usage } = await createChatCompletion(
       messages,
       [recipeFormFunction]
     );
+
+    // Log usage for cost tracking and outlier detection
+    const usageLog = await usageTrackingService.logUsage(
+      user.id,
+      '/api/recipes/chat',
+      usage
+    );
+
+    if (!usageLog.success) {
+      console.warn('🟡 [Chat] Failed to log usage:', usageLog.error);
+    }
     
 
     let functionResult = null;

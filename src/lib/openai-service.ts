@@ -1,5 +1,17 @@
 import { OpenAI } from "openai";
 
+export interface OpenAIUsageData {
+  model: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+export interface OpenAICompletionWithUsage {
+  completion: OpenAI.Chat.Completions.ChatCompletion;
+  usage: OpenAIUsageData;
+}
+
 // OpenAI Configuration
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 const OPENAI_MODEL = "gpt-4.1-mini";
@@ -49,11 +61,11 @@ class SimpleRateLimiter {
 
 export const rateLimiter = new SimpleRateLimiter();
 
-// Simple OpenAI API wrapper with basic error handling
+// OpenAI API wrapper with usage tracking
 export async function createChatCompletion(
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
   tools?: OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"]
-): Promise<OpenAI.Chat.Completions.ChatCompletion> {
+): Promise<OpenAICompletionWithUsage> {
   // Check rate limit
   if (rateLimiter.isRateLimited()) {
     throw new Error("Rate limit exceeded. Please try again later.");
@@ -72,11 +84,33 @@ export async function createChatCompletion(
     // Track the request
     rateLimiter.addRequest();
 
-    return completion;
+    // Extract usage data from the response
+    const usage: OpenAIUsageData = {
+      model: OPENAI_MODEL,
+      promptTokens: completion.usage?.prompt_tokens || 0,
+      completionTokens: completion.usage?.completion_tokens || 0,
+      totalTokens: completion.usage?.total_tokens || 0,
+    };
+
+    console.log(`🟢 [OpenAI] Usage - Model: ${usage.model}, Prompt: ${usage.promptTokens}, Completion: ${usage.completionTokens}, Total: ${usage.totalTokens} tokens`);
+
+    return {
+      completion,
+      usage
+    };
   } catch (error) {
     console.error("🔴 [OpenAI] API error:", error);
     throw error;
   }
+}
+
+// Legacy function for backward compatibility (returns only completion)
+export async function createChatCompletionLegacy(
+  messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+  tools?: OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"]
+): Promise<OpenAI.Chat.Completions.ChatCompletion> {
+  const { completion } = await createChatCompletion(messages, tools);
+  return completion;
 }
 
 // Helper function to validate OpenAI configuration
