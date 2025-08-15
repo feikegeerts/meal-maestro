@@ -153,6 +153,40 @@ export const recipeService = {
 
   async markRecipeAsEaten(id: string): Promise<{ recipe: Recipe; success: boolean }> {
     return this.updateRecipe(id, { last_eaten: new Date().toISOString() });
+  },
+
+  async deleteRecipes(ids: string[]): Promise<{ success: boolean; deletedCount: number; deletedIds: string[] }> {
+    const response = await authenticatedFetch('/api/recipes', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to delete recipes: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  async markRecipesAsEaten(ids: string[]): Promise<{ success: boolean; updatedCount: number; updatedIds: string[] }> {
+    const response = await authenticatedFetch('/api/recipes', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids, action: 'mark_as_eaten' })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to mark recipes as eaten: ${response.status}`);
+    }
+
+    return response.json();
   }
 };
 

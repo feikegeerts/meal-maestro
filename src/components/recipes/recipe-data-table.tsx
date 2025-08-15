@@ -49,7 +49,13 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronLast,
+  Trash2,
+  Utensils,
+  Loader2,
 } from "lucide-react";
+import { useRecipes } from "@/contexts/recipe-context";
+import { recipeService } from "@/lib/recipe-service";
+import { toast } from "sonner";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -63,6 +69,7 @@ export function RecipeDataTable<TData, TValue>({
   loading = false,
 }: DataTableProps<TData, TValue>) {
   const router = useRouter();
+  const { removeRecipes, markRecipesAsEaten } = useRecipes();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -72,6 +79,7 @@ export function RecipeDataTable<TData, TValue>({
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [searchInput, setSearchInput] = React.useState("");
+  const [bulkOperationLoading, setBulkOperationLoading] = React.useState(false);
 
   // Debounce the search input
   React.useEffect(() => {
@@ -154,6 +162,52 @@ export function RecipeDataTable<TData, TValue>({
 
   const handleRowMouseEnter = (recipeId: string) => {
     router.prefetch(`/recipes/${recipeId}`);
+  };
+
+  const handleDeleteSelected = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const selectedIds = selectedRows.map(row => (row.original as Recipe).id);
+    
+    if (selectedIds.length === 0) return;
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ${selectedIds.length} recipe${selectedIds.length > 1 ? 's' : ''}? This action cannot be undone.`
+    );
+
+    if (!confirmDelete) return;
+
+    setBulkOperationLoading(true);
+    try {
+      const result = await recipeService.deleteRecipes(selectedIds);
+      removeRecipes(result.deletedIds);
+      setRowSelection({});
+      toast.success(`Successfully deleted ${result.deletedCount} recipe${result.deletedCount > 1 ? 's' : ''}`);
+    } catch (error) {
+      console.error('Error deleting recipes:', error);
+      toast.error('Failed to delete recipes. Please try again.');
+    } finally {
+      setBulkOperationLoading(false);
+    }
+  };
+
+  const handleMarkAsEaten = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const selectedIds = selectedRows.map(row => (row.original as Recipe).id);
+    
+    if (selectedIds.length === 0) return;
+
+    setBulkOperationLoading(true);
+    try {
+      const result = await recipeService.markRecipesAsEaten(selectedIds);
+      markRecipesAsEaten(result.updatedIds);
+      setRowSelection({});
+      toast.success(`Marked ${result.updatedCount} recipe${result.updatedCount > 1 ? 's' : ''} as eaten`);
+    } catch (error) {
+      console.error('Error marking recipes as eaten:', error);
+      toast.error('Failed to mark recipes as eaten. Please try again.');
+    } finally {
+      setBulkOperationLoading(false);
+    }
   };
 
   React.useEffect(() => {
@@ -287,10 +341,30 @@ export function RecipeDataTable<TData, TValue>({
             {selectedRowCount} of {table.getFilteredRowModel().rows.length}{" "}
             row(s) selected
           </Badge>
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={handleDeleteSelected}
+            disabled={bulkOperationLoading}
+          >
+            {bulkOperationLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="mr-2 h-4 w-4" />
+            )}
             Delete Selected
           </Button>
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleMarkAsEaten}
+            disabled={bulkOperationLoading}
+          >
+            {bulkOperationLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Utensils className="mr-2 h-4 w-4" />
+            )}
             Mark as Eaten
           </Button>
         </div>

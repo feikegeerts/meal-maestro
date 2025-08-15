@@ -10,6 +10,8 @@ interface RecipeContextType {
   addRecipe: (recipe: Recipe) => void;
   updateRecipe: (id: string, updatedRecipe: Recipe) => void;
   removeRecipe: (id: string) => void;
+  removeRecipes: (ids: string[]) => void;
+  markRecipesAsEaten: (ids: string[]) => void;
   clearRecipes: () => void;
 }
 
@@ -40,6 +42,21 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     setRecipesState(prev => prev.filter(recipe => recipe.id !== id));
   };
 
+  const removeRecipes = (ids: string[]) => {
+    setRecipesState(prev => prev.filter(recipe => !ids.includes(recipe.id)));
+  };
+
+  const markRecipesAsEaten = (ids: string[]) => {
+    const now = new Date().toISOString();
+    setRecipesState(prev => 
+      prev.map(recipe => 
+        ids.includes(recipe.id) 
+          ? { ...recipe, last_eaten: now }
+          : recipe
+      )
+    );
+  };
+
   const clearRecipes = () => {
     setRecipesState([]);
   };
@@ -51,6 +68,8 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     addRecipe,
     updateRecipe,
     removeRecipe,
+    removeRecipes,
+    markRecipesAsEaten,
     clearRecipes,
   };
 

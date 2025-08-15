@@ -90,8 +90,9 @@ An AI-powered recipe management system. The system provides natural language rec
 
 - [x] Fix unit tests
 - [x] Mobile nav click doesn't close sheet
-- [ ] Choose Framer Motion for page and shared element transitions.
-- [ ] Consider modal/drawer for quick detail previews.
+- [ ] should i use GPT5-mini ?
+- [ ] Add admin role to user table
+- [ ] Allow admin to see a dashboard with cost statistics
 - [ ] About page
 - [ ] add cookie consent message to login?
 - [ ] use typescript types everywhere instead of hardcoded lists of tags categories and seasons.

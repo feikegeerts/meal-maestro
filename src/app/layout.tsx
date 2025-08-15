@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { RecipeProvider } from "@/contexts/recipe-context";
 import { MainNav } from "@/components/navigation/main-nav";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
           <RecipeProvider>
             <MainNav />
             {children}
+            <Toaster richColors position="top-right" />
           </RecipeProvider>
         </AuthProvider>
       </body>

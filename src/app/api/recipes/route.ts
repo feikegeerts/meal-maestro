@@ -148,3 +148,108 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  const authResult = await requireAuth();
+  
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+
+  const { user, client: supabase } = authResult;
+  
+  try {
+    const body = await request.json();
+    const { ids } = body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json(
+        { error: 'Recipe IDs array is required' },
+        { status: 400 }
+      );
+    }
+
+    const { data: deletedRecipes, error } = await supabase
+      .from('recipes')
+      .delete()
+      .eq('user_id', user.id)
+      .in('id', ids)
+      .select('id');
+
+    if (error) {
+      console.error('Error deleting recipes:', error);
+      return NextResponse.json(
+        { error: 'Failed to delete recipes', details: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      deletedCount: deletedRecipes?.length || 0,
+      deletedIds: deletedRecipes?.map(r => r.id) || []
+    });
+  } catch (error) {
+    console.error('Unexpected error in bulk delete:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  const authResult = await requireAuth();
+  
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+
+  const { user, client: supabase } = authResult;
+  
+  try {
+    const body = await request.json();
+    const { ids, action } = body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json(
+        { error: 'Recipe IDs array is required' },
+        { status: 400 }
+      );
+    }
+
+    if (action === 'mark_as_eaten') {
+      const { data: updatedRecipes, error } = await supabase
+        .from('recipes')
+        .update({ last_eaten: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .in('id', ids)
+        .select('id');
+
+      if (error) {
+        console.error('Error marking recipes as eaten:', error);
+        return NextResponse.json(
+          { error: 'Failed to mark recipes as eaten', details: error.message },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ 
+        success: true, 
+        updatedCount: updatedRecipes?.length || 0,
+        updatedIds: updatedRecipes?.map(r => r.id) || []
+      });
+    }
+
+    return NextResponse.json(
+      { error: 'Invalid action' },
+      { status: 400 }
+    );
+  } catch (error) {
+    console.error('Unexpected error in bulk update:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
