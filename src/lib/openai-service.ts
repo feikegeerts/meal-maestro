@@ -92,7 +92,6 @@ export async function createChatCompletion(
       totalTokens: completion.usage?.total_tokens || 0,
     };
 
-    console.log(`🟢 [OpenAI] Usage - Model: ${usage.model}, Prompt: ${usage.promptTokens}, Completion: ${usage.completionTokens}, Total: ${usage.totalTokens} tokens`);
 
     return {
       completion,

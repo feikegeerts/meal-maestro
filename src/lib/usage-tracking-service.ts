@@ -76,7 +76,6 @@ export class UsageTrackingService {
         return { success: false, error: error.message };
       }
 
-      console.log(`🟢 [UsageTracking] Logged usage for user ${userId}: ${usage.totalTokens} tokens, $${costCalculation.totalCost.toFixed(6)}`);
       
       return { 
         success: true, 

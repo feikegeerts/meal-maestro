@@ -31,7 +31,6 @@ export async function GET() {
     const totalCalls = data?.length || 0;
     const totalTokens = data?.reduce((sum, entry) => sum + Number(entry.tokens_used || 0), 0) || 0;
 
-    console.log(`🟢 [UserUsageCost] Fetched costs for user ${user.id}: ${totalCalls} calls, $${totalCost.toFixed(6)}`);
 
     return NextResponse.json({
       totalCost: Number(totalCost.toFixed(6)),
