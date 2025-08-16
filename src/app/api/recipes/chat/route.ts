@@ -259,6 +259,13 @@ export async function POST(request: NextRequest) {
     console.error("Chat API error:", error);
 
     if (error instanceof Error) {
+      if (error.message.includes("timeout")) {
+        return NextResponse.json(
+          { error: "Request timeout - please try again with a shorter message" },
+          { status: 408 }
+        );
+      }
+
       if (error.message.includes("rate limit")) {
         return NextResponse.json(
           { error: "Rate limit exceeded. Please try again later." },

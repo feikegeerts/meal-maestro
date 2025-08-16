@@ -24,9 +24,10 @@ if (!OPENAI_API_KEY) {
   );
 }
 
-// Initialize OpenAI client
+// Initialize OpenAI client with timeout
 export const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
+  timeout: 30000, // 30 second timeout
 });
 
 // Simple rate limiter
@@ -72,7 +73,8 @@ export async function createChatCompletion(
   }
 
   try {
-    const completion = await openai.chat.completions.create({
+    // Create a promise race with timeout
+    const completionPromise = openai.chat.completions.create({
       model: OPENAI_MODEL,
       messages,
       tools,
@@ -80,6 +82,12 @@ export async function createChatCompletion(
       max_tokens: OPENAI_MAX_TOKENS,
       temperature: OPENAI_TEMPERATURE,
     });
+
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("OpenAI request timeout")), 25000); // 25 second timeout
+    });
+
+    const completion = await Promise.race([completionPromise, timeoutPromise]) as OpenAI.Chat.Completions.ChatCompletion;
 
     // Track the request
     rateLimiter.addRequest();
@@ -99,6 +107,12 @@ export async function createChatCompletion(
     };
   } catch (error) {
     console.error("🔴 [OpenAI] API error:", error);
+    
+    // Handle timeout errors specifically
+    if (error instanceof Error && error.message.includes("timeout")) {
+      throw new Error("Request timeout - please try again with a shorter message");
+    }
+    
     throw error;
   }
 }
