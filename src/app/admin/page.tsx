@@ -20,6 +20,7 @@ import {
   BookOpen
 } from "lucide-react";
 import { AdminUsageStatsResponse } from "@/app/api/admin/usage-stats/route";
+import { AdminChartsSection } from "@/components/admin/admin-charts-section";
 
 interface DashboardStats {
   totalUsers: number;
@@ -40,6 +41,7 @@ interface TopUser {
   rank?: number;
 }
 
+
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -52,42 +54,44 @@ export default function AdminDashboard() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [adminLoading, setAdminLoading] = useState(true);
 
-  const fetchStats = async () => {
+  const fetchOverviewStats = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Get current month's data by default
+      // Get overview stats for current month (for cards)
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       
-      const params = new URLSearchParams({
+      const overviewParams = new URLSearchParams({
         startDate: startOfMonth.toISOString().split('T')[0],
         endDate: endOfMonth.toISOString().split('T')[0]
       });
 
-      const response = await fetch(`/api/admin/usage-stats?${params}`);
+      const overviewResponse = await fetch(`/api/admin/usage-stats?${overviewParams}`);
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch stats: ${response.status}`);
+      if (!overviewResponse.ok) {
+        throw new Error(`Failed to fetch overview stats: ${overviewResponse.status}`);
       }
 
-      const data: AdminUsageStatsResponse = await response.json();
+      const overviewData: AdminUsageStatsResponse = await overviewResponse.json();
       
-      if (data.type === 'summary' && data.data.overview) {
-        setStats(data.data.overview);
-        setTopUsersByCost(data.data.topUsers?.byCost || []);
-        setOutliers(data.data.outliers?.users || []);
-        setLastUpdated(new Date());
+      if (overviewData.type === 'summary' && overviewData.data.overview) {
+        setStats(overviewData.data.overview);
+        setTopUsersByCost(overviewData.data.topUsers?.byCost || []);
+        setOutliers(overviewData.data.outliers?.users || []);
       }
+      
+      setLastUpdated(new Date());
     } catch (err) {
-      console.error('Error fetching admin stats:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch statistics');
+      console.error('Error fetching overview stats:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch overview statistics');
     } finally {
       setLoading(false);
     }
   };
+
 
   // Check admin status
   useEffect(() => {
@@ -123,10 +127,10 @@ export default function AdminDashboard() {
     checkAdminStatus();
   }, [user, authLoading, router]);
 
-  // Fetch stats once admin status is confirmed
+  // Fetch overview stats once admin status is confirmed
   useEffect(() => {
     if (isAdmin === true) {
-      fetchStats();
+      fetchOverviewStats();
     }
   }, [isAdmin]);
 
@@ -205,7 +209,7 @@ export default function AdminDashboard() {
                   <span>Error loading dashboard: {error}</span>
                 </div>
                 <Button 
-                  onClick={fetchStats} 
+                  onClick={fetchOverviewStats} 
                   className="mt-4"
                   variant="outline"
                 >
@@ -244,7 +248,7 @@ export default function AdminDashboard() {
             </div>
           )}
           <Button 
-            onClick={fetchStats} 
+            onClick={fetchOverviewStats} 
             variant="outline" 
             size="sm"
             disabled={loading}
@@ -323,6 +327,9 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
+      {/* Charts Section */}
+      <AdminChartsSection isAdmin={isAdmin === true} />
+
       {/* Top Users and Outliers */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Top Users by Cost */}
@@ -368,7 +375,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {outliers.slice(0, 5).map((user, index) => (
+              {outliers.slice(0, 5).map((user) => (
                 <div key={user.userId} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <AlertTriangle className="h-4 w-4 text-orange-500" />

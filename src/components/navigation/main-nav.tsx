@@ -51,7 +51,7 @@ export function MainNav() {
   const { user, profile, signOut } = useAuth();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminCheckLoading, setAdminCheckLoading] = useState(true);
+  const [, setAdminCheckLoading] = useState(true);
   const { data: costData, loading: costLoading } = useUserCosts();
 
   const handleSignOut = async () => {

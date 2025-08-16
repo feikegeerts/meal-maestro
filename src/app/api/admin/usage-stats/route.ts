@@ -6,7 +6,7 @@ interface UsageStatsQuery {
   startDate?: string;
   endDate?: string;
   userId?: string;
-  timeRange?: "day" | "hour";
+  timeRange?: "day" | "week" | "month";
 }
 
 export async function GET(request: NextRequest) {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     return authResult;
   }
 
-  const { user } = authResult;
+  const { } = authResult;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       startDate: searchParams.get("startDate") || undefined,
       endDate: searchParams.get("endDate") || undefined,
       userId: searchParams.get("userId") || undefined,
-      timeRange: (searchParams.get("timeRange") as "day" | "hour") || "day",
+      timeRange: (searchParams.get("timeRange") as "day" | "week" | "month") || "day",
     };
 
     // If specific user requested, return their stats
