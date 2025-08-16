@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth-server";
+import { requireAdmin } from "@/lib/auth-server";
 import { adminUsageService } from "@/lib/admin-usage-service";
 
 interface UsageStatsQuery {
   startDate?: string;
   endDate?: string;
   userId?: string;
-  timeRange?: 'day' | 'hour';
+  timeRange?: "day" | "hour";
 }
 
 export async function GET(request: NextRequest) {
-  
-  const authResult = await requireAuth();
+  const authResult = await requireAdmin();
 
   if (authResult instanceof Response) {
     return authResult;
@@ -19,19 +18,14 @@ export async function GET(request: NextRequest) {
 
   const { user } = authResult;
 
-  // TODO: Add admin role check here
-  // For now, we'll allow any authenticated user to access admin stats
-  // In production, you should check if user.role === 'admin' or similar
-  console.log(`🟢 [AdminUsageStats] Request from user: ${user.id}`);
-  
   try {
     const { searchParams } = new URL(request.url);
-    
+
     const query: UsageStatsQuery = {
-      startDate: searchParams.get('startDate') || undefined,
-      endDate: searchParams.get('endDate') || undefined,
-      userId: searchParams.get('userId') || undefined,
-      timeRange: (searchParams.get('timeRange') as 'day' | 'hour') || 'day'
+      startDate: searchParams.get("startDate") || undefined,
+      endDate: searchParams.get("endDate") || undefined,
+      userId: searchParams.get("userId") || undefined,
+      timeRange: (searchParams.get("timeRange") as "day" | "hour") || "day",
     };
 
     // If specific user requested, return their stats
@@ -50,8 +44,8 @@ export async function GET(request: NextRequest) {
       }
 
       return NextResponse.json({
-        type: 'user',
-        data: userStats
+        type: "user",
+        data: userStats,
       });
     }
 
@@ -61,27 +55,40 @@ export async function GET(request: NextRequest) {
       query.endDate
     );
 
+    // Get total recipe count
+    const totalRecipes = await adminUsageService.getTotalRecipeCount();
+
     // Get time-based usage data for charts
-    const timeRangeData = query.startDate && query.endDate 
-      ? await adminUsageService.getUsageByTimeRange(
-          query.startDate,
-          query.endDate,
-          query.timeRange
-        )
-      : [];
+    const timeRangeData =
+      query.startDate && query.endDate
+        ? await adminUsageService.getUsageByTimeRange(
+            query.startDate,
+            query.endDate,
+            query.timeRange
+          )
+        : [];
 
     // Calculate overall statistics
     const totalUsers = allUsersStats.length;
-    const totalCost = allUsersStats.reduce((sum, stats) => sum + stats.totalCost, 0);
-    const totalTokens = allUsersStats.reduce((sum, stats) => sum + stats.totalTokens, 0);
-    const totalCalls = allUsersStats.reduce((sum, stats) => sum + stats.totalCalls, 0);
+    const totalCost = allUsersStats.reduce(
+      (sum, stats) => sum + stats.totalCost,
+      0
+    );
+    const totalTokens = allUsersStats.reduce(
+      (sum, stats) => sum + stats.totalTokens,
+      0
+    );
+    const totalCalls = allUsersStats.reduce(
+      (sum, stats) => sum + stats.totalCalls,
+      0
+    );
 
     // Identify outliers
-    const outliers = allUsersStats.filter(stats => stats.isOutlier);
-    
+    const outliers = allUsersStats.filter((stats) => stats.isOutlier);
+
     // Get top users by cost
     const topUsersByCost = allUsersStats.slice(0, 10);
-    
+
     // Get top users by tokens
     const topUsersByTokens = [...allUsersStats]
       .sort((a, b) => b.totalTokens - a.totalTokens)
@@ -90,53 +97,51 @@ export async function GET(request: NextRequest) {
     const summary = {
       overview: {
         totalUsers,
+        totalRecipes,
         totalCost,
         totalTokens,
         totalCalls,
         averageCostPerUser: totalUsers > 0 ? totalCost / totalUsers : 0,
         averageTokensPerUser: totalUsers > 0 ? totalTokens / totalUsers : 0,
-        averageCallsPerUser: totalUsers > 0 ? totalCalls / totalUsers : 0
+        averageCallsPerUser: totalUsers > 0 ? totalCalls / totalUsers : 0,
       },
       outliers: {
         count: outliers.length,
-        users: outliers.map(stats => ({
+        users: outliers.map((stats) => ({
           userId: stats.userId,
           totalCost: stats.totalCost,
           totalTokens: stats.totalTokens,
           totalCalls: stats.totalCalls,
-          rank: stats.rank
-        }))
+          rank: stats.rank,
+        })),
       },
       topUsers: {
-        byCost: topUsersByCost.map(stats => ({
+        byCost: topUsersByCost.map((stats) => ({
           userId: stats.userId,
           totalCost: stats.totalCost,
           totalTokens: stats.totalTokens,
           totalCalls: stats.totalCalls,
-          rank: stats.rank
+          rank: stats.rank,
         })),
         byTokens: topUsersByTokens.map((stats, index) => ({
           userId: stats.userId,
           totalCost: stats.totalCost,
           totalTokens: stats.totalTokens,
           totalCalls: stats.totalCalls,
-          rank: index + 1
-        }))
+          rank: index + 1,
+        })),
       },
       timeRange: timeRangeData,
       dateRange: {
-        start: query.startDate || 'all',
-        end: query.endDate || 'all'
-      }
+        start: query.startDate || "all",
+        end: query.endDate || "all",
+      },
     };
 
-    console.log(`🟢 [AdminUsageStats] Fetched stats for ${totalUsers} users, ${outliers.length} outliers detected`);
-
     return NextResponse.json({
-      type: 'summary',
-      data: summary
+      type: "summary",
+      data: summary,
     });
-
   } catch (error) {
     console.error("🔴 [AdminUsageStats] API error:", error);
 
@@ -149,10 +154,11 @@ export async function GET(request: NextRequest) {
 
 // Export interface for frontend usage
 export interface AdminUsageStatsResponse {
-  type: 'summary' | 'user';
+  type: "summary" | "user";
   data: {
     overview?: {
       totalUsers: number;
+      totalRecipes: number;
       totalCost: number;
       totalTokens: number;
       totalCalls: number;

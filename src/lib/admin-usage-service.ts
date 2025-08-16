@@ -30,6 +30,24 @@ interface ApiUsageRow {
 
 export class AdminUsageService {
   
+  public async getTotalRecipeCount(): Promise<number> {
+    try {
+      const { count, error } = await supabaseAdmin
+        .from('recipes')
+        .select('*', { count: 'exact', head: true });
+
+      if (error) {
+        console.error('🔴 [AdminUsage] Error fetching recipe count:', error);
+        return 0;
+      }
+
+      return count || 0;
+    } catch (error) {
+      console.error('🔴 [AdminUsage] Error in getTotalRecipeCount:', error);
+      return 0;
+    }
+  }
+
   public async getAllUsersUsageStats(
     startDate?: string,
     endDate?: string

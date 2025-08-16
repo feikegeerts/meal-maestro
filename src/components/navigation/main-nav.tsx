@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { ChefHat, BookOpen, Menu, LogOut, User } from "lucide-react";
+import { ChefHat, BookOpen, Menu, LogOut, User, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useUserCosts } from "@/lib/hooks/use-user-costs";
@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const navigationItems = [
+const baseNavigationItems = [
   {
     name: "Recipes",
     href: "/recipes",
@@ -40,10 +40,18 @@ const navigationItems = [
   },
 ];
 
+const adminNavigationItem = {
+  name: "Admin",
+  href: "/admin",
+  icon: Shield,
+};
+
 export function MainNav() {
   const pathname = usePathname();
   const { user, profile, signOut } = useAuth();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminCheckLoading, setAdminCheckLoading] = useState(true);
   const { data: costData, loading: costLoading } = useUserCosts();
 
   const handleSignOut = async () => {
@@ -63,10 +71,47 @@ export function MainNav() {
     }
   };
 
+  // Check if user is admin
+  useEffect(() => {
+    async function checkAdminStatus() {
+      if (!user) {
+        setIsAdmin(false);
+        setAdminCheckLoading(false);
+        return;
+      }
+
+      try {
+        // Try to access admin endpoint to check permissions
+        const response = await fetch('/api/admin/usage-stats?startDate=2024-01-01&endDate=2024-01-01');
+        
+        if (response.status === 403) {
+          setIsAdmin(false);
+        } else if (response.ok) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      } finally {
+        setAdminCheckLoading(false);
+      }
+    }
+
+    checkAdminStatus();
+  }, [user]);
+
   // Close mobile sheet when route changes
   useEffect(() => {
     setSheetOpen(false);
   }, [pathname]);
+
+  // Dynamic navigation items based on admin status
+  const navigationItems = [
+    ...baseNavigationItems,
+    ...(isAdmin ? [adminNavigationItem] : [])
+  ];
 
   if (!user) {
     return null;

@@ -90,7 +90,8 @@ An AI-powered recipe management system. The system provides natural language rec
 
 - [x] Fix unit tests
 - [x] Mobile nav click doesn't close sheet
-- [ ] should i use GPT5-mini ?
+- [x] should i use GPT5-mini ?
+- [ ] the avatar doesn;t have a hover state so it's not clear it's a clickable item.
 - [ ] Add admin role to user table
 - [ ] Allow admin to see a dashboard with cost statistics
 - [ ] About page
