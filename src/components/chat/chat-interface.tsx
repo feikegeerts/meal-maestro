@@ -6,12 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ChatMessage } from "./chat-message";
-import { Send, Loader2, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
+import {
+  Send,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  MessageSquare,
+} from "lucide-react";
 import { Recipe } from "@/types/recipe";
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations, useLocale } from "next-intl";
 
 interface ChatMessage {
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp?: string;
 }
@@ -49,17 +55,22 @@ interface ChatInterfaceProps {
   isDesktopSidebar?: boolean;
 }
 
-export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormState, isDesktopSidebar = false }: ChatInterfaceProps) {
-  const t = useTranslations('chat');
+export function ChatInterface({
+  selectedRecipe,
+  onRecipeGenerated,
+  currentFormState,
+  isDesktopSidebar = false,
+}: ChatInterfaceProps) {
+  const t = useTranslations("chat");
   const locale = useLocale();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      role: 'assistant',
-      content: t('welcomeMessage'),
-      timestamp: new Date().toISOString()
-    }
+      role: "assistant",
+      content: t("welcomeMessage"),
+      timestamp: new Date().toISOString(),
+    },
   ]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(isDesktopSidebar ? true : false);
@@ -68,7 +79,7 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
   // Auto-scroll to bottom when new messages arrive - disabled on desktop
   useEffect(() => {
     if (!isDesktopSidebar && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isDesktopSidebar]);
 
@@ -76,16 +87,19 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
     if (!inputMessage.trim() || isLoading) return;
 
     const userMessage = inputMessage.trim();
-    setInputMessage('');
+    setInputMessage("");
     setError(null);
     setIsLoading(true);
 
     // Add user message to chat
-    const newMessages = [...messages, {
-      role: 'user' as const,
-      content: userMessage,
-      timestamp: new Date().toISOString()
-    }];
+    const newMessages = [
+      ...messages,
+      {
+        role: "user" as const,
+        content: userMessage,
+        timestamp: new Date().toISOString(),
+      },
+    ];
     setMessages(newMessages);
 
     try {
@@ -102,21 +116,21 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
               category: selectedRecipe.category,
               season: selectedRecipe.season,
               tags: selectedRecipe.tags,
-              ingredients: selectedRecipe.ingredients.map(ing => 
-                `${ing.amount || ''} ${ing.unit || ''} ${ing.name}`.trim()
+              ingredients: selectedRecipe.ingredients.map((ing) =>
+                `${ing.amount || ""} ${ing.unit || ""} ${ing.name}`.trim()
               ),
-              description: selectedRecipe.description
-            }
-          })
-        }
+              description: selectedRecipe.description,
+            },
+          }),
+        },
       };
 
-      const response = await fetch('/api/recipes/chat', {
-        method: 'POST',
+      const response = await fetch("/api/recipes/chat", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify(requestBody),
       });
 
@@ -131,23 +145,29 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
       setMessages(data.conversation_history);
 
       // Check if AI updated the form
-      if (data.function_call && data.function_call.function === 'update_recipe_form' && onRecipeGenerated) {
-        const result = data.function_call.result as { formUpdate?: unknown; success?: boolean };
+      if (
+        data.function_call &&
+        data.function_call.function === "update_recipe_form" &&
+        onRecipeGenerated
+      ) {
+        const result = data.function_call.result as {
+          formUpdate?: unknown;
+          success?: boolean;
+        };
         if (result?.formUpdate) {
           onRecipeGenerated(result.formUpdate);
         }
       }
-
     } catch (err) {
-      console.error('Chat error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to send message');
+      console.error("Chat error:", err);
+      setError(err instanceof Error ? err.message : "Failed to send message");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
@@ -155,14 +175,20 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
 
   return (
     <Card className="w-full shadow-lg">
-      <CardHeader 
-        className={`${!isDesktopSidebar ? 'cursor-pointer' : ''} pb-3`}
+      <CardHeader
+        className={`${!isDesktopSidebar ? "cursor-pointer" : ""} pb-3`}
         onClick={() => !isDesktopSidebar && setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center justify-between">
-          <CardTitle className={`flex items-center gap-2 ${isDesktopSidebar ? 'text-base' : 'text-lg'}`}>
-            <MessageSquare className={`${isDesktopSidebar ? 'h-4 w-4' : 'h-5 w-5'}`} />
-            {t('assistantTitle')}
+          <CardTitle
+            className={`flex items-center gap-2 ${
+              isDesktopSidebar ? "text-base" : "text-lg"
+            }`}
+          >
+            <MessageSquare
+              className={`${isDesktopSidebar ? "h-4 w-4" : "h-5 w-5"}`}
+            />
+            {t("assistantTitle")}
           </CardTitle>
           {!isDesktopSidebar && (
             <Button variant="ghost" size="sm">
@@ -181,11 +207,13 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
           <Separator />
           <CardContent className="p-0">
             {/* Chat Messages */}
-            <div className={`overflow-y-auto p-4 space-y-4 ${
-              isDesktopSidebar 
-                ? 'max-h-[calc(100vh-300px)] lg:max-h-[calc(100vh-250px)]' 
-                : 'max-h-96'
-            }`}>
+            <div
+              className={`overflow-y-auto p-4 space-y-4 ${
+                isDesktopSidebar
+                  ? "max-h-[calc(100vh-300px)] lg:max-h-[calc(100vh-250px)]"
+                  : "max-h-96"
+              }`}
+            >
               {messages.map((message, index) => (
                 <ChatMessage
                   key={index}
@@ -197,7 +225,7 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
               {isLoading && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">{t('thinking')}</span>
+                  <span className="text-sm">{t("thinking")}</span>
                 </div>
               )}
               <div ref={messagesEndRef} />
@@ -212,17 +240,17 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
                   {error}
                 </div>
               )}
-              
+
               <div className="flex gap-2">
                 <Input
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={handleKeyPress}
-                  placeholder={t('inputPlaceholder')}
+                  placeholder={t("inputPlaceholder")}
                   disabled={isLoading}
                   className="flex-1"
                 />
-                <Button 
+                <Button
                   onClick={sendMessage}
                   disabled={!inputMessage.trim() || isLoading}
                   size="sm"
@@ -234,12 +262,6 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
                   )}
                 </Button>
               </div>
-
-              {selectedRecipe && (
-                <div className="text-xs text-muted-foreground mt-2 p-2 bg-muted/50 rounded">
-                  {t('currentlyViewing')}: <span className="font-medium">{selectedRecipe.title}</span>
-                </div>
-              )}
             </div>
           </CardContent>
         </>
