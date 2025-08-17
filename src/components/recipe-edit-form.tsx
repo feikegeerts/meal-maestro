@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
   Recipe,
   RecipeInput,
@@ -317,6 +317,7 @@ export function RecipeEditForm({
   const tSeasons = useTranslations('seasons');
   const tTags = useTranslations('tags');
   
+  
   const generateIngredientId = () => `ingredient-${Date.now()}-${Math.random()}`;
 
   const [formData, setFormData] = useState<RecipeInput>({
@@ -338,9 +339,10 @@ export function RecipeEditForm({
   });
   const [errors, setErrors] = useState<string[]>([]);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  
 
-  // Check for changes and update global state
-  useEffect(() => {
+  // Debounced function to update global state
+  const updateGlobalState = useCallback(() => {
     const hasFormChanges =
       formData.title !== recipe.title ||
       JSON.stringify(formData.ingredients) !==
@@ -351,7 +353,6 @@ export function RecipeEditForm({
       JSON.stringify(formData.tags) !== JSON.stringify(recipe.tags) ||
       formData.season !== recipe.season;
 
-
     // Update global state for auto-save
     currentFormState = {
       formData,
@@ -360,12 +361,40 @@ export function RecipeEditForm({
     };
   }, [formData, recipe, onSave]);
 
+  // Debounced global state update - only update after user stops typing
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      updateGlobalState();
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(debounceTimer);
+  }, [updateGlobalState]);
+
   // Clear global state when component unmounts
   useEffect(() => {
     return () => {
       currentFormState = null;
     };
   }, []);
+
+  // Memoized current form state for chat interface to prevent unnecessary re-renders
+  const memoizedFormState = useMemo(() => ({
+    title: formData.title,
+    ingredients: formData.ingredients,
+    servings: formData.servings,
+    description: formData.description,
+    category: formData.category,
+    tags: formData.tags,
+    season: formData.season,
+  }), [
+    formData.title,
+    formData.servings, 
+    formData.description,
+    formData.category,
+    formData.season,
+    formData.ingredients,
+    formData.tags
+  ]);
 
   // Define the expected structure of AI recipe data
   interface AIRecipeData {
@@ -426,7 +455,7 @@ export function RecipeEditForm({
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     const validation = validateRecipeInput(formData);
     if (!validation.valid) {
       setErrors(validation.errors);
@@ -455,23 +484,23 @@ export function RecipeEditForm({
       // Error handling - don't close sheet so user can see errors
       console.error("Save failed:", error);
     }
-  };
+  }, [formData, onSave, standalone]);
 
-  const handleIngredientsChange = (ingredients: RecipeIngredient[]) => {
+  const handleIngredientsChange = useCallback((ingredients: RecipeIngredient[]) => {
     setFormData((prev) => ({ ...prev, ingredients }));
-  };
+  }, []);
 
-  const toggleTag = (tag: string) => {
+  const toggleTag = useCallback((tag: string) => {
     setFormData((prev) => ({
       ...prev,
       tags: prev.tags.includes(tag)
         ? prev.tags.filter((t) => t !== tag)
         : [...prev.tags, tag],
     }));
-  };
+  }, []);
 
-  // Form sections component
-  const FormSections = () => (
+  // Form sections component - memoized to prevent remounting
+  const FormSections = useMemo(() => (
     <>
       {errors.length > 0 && (
         <Card>
@@ -587,6 +616,7 @@ export function RecipeEditForm({
         <CardContent>
           <h3 className="text-lg font-semibold mb-3">{t('ingredients')}</h3>
           <StructuredIngredientInput
+            key="ingredients-input"
             ingredients={formData.ingredients}
             onChange={handleIngredientsChange}
             disabled={loading}
@@ -688,7 +718,27 @@ export function RecipeEditForm({
         )}
       </div>
     </>
-  );
+  ), [
+    errors,
+    formData.title,
+    formData.category,
+    formData.season,
+    formData.servings,
+    formData.ingredients,
+    formData.description,
+    formData.tags,
+    loading,
+    handleIngredientsChange,
+    toggleTag,
+    handleSave,
+    standalone,
+    onCancel,
+    recipe.id,
+    t,
+    tCategories,
+    tSeasons,
+    tTags
+  ]);
 
   // Single column layout (original layout)
   if (layoutMode === "single-column") {
@@ -700,12 +750,12 @@ export function RecipeEditForm({
             <ChatInterface
               selectedRecipe={recipe}
               onRecipeGenerated={handleAIRecipeUpdate}
-              currentFormState={formData}
+              currentFormState={memoizedFormState}
             />
           </div>
         )}
         
-        <FormSections />
+        {FormSections}
 
         {/* Hidden close button for programmatic closing - only in sheet mode */}
         {!standalone && (
@@ -725,7 +775,7 @@ export function RecipeEditForm({
             <ChatInterface
               selectedRecipe={recipe}
               onRecipeGenerated={handleAIRecipeUpdate}
-              currentFormState={formData}
+              currentFormState={memoizedFormState}
               isDesktopSidebar={true}
             />
           </div>
@@ -734,7 +784,7 @@ export function RecipeEditForm({
 
       {/* Right Column - Form (Desktop: 7/12, Mobile: full width) */}
       <div className={`space-y-4 sm:space-y-6 ${includeChat ? 'lg:col-span-7' : 'lg:col-span-12'}`}>
-        <FormSections />
+        {FormSections}
 
         {/* Hidden close button for programmatic closing - only in sheet mode */}
         {!standalone && (

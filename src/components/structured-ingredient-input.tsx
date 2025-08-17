@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { RecipeIngredient, COOKING_UNITS } from "@/types/recipe";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ interface StructuredIngredientInputProps {
   disabled?: boolean;
 }
 
-export function StructuredIngredientInput({
+function StructuredIngredientInputComponent({
   ingredients,
   onChange,
   disabled = false,
@@ -31,6 +31,7 @@ export function StructuredIngredientInput({
   const [showUnitDropdown, setShowUnitDropdown] = useState<{
     [key: string]: boolean;
   }>({});
+  
 
   const generateId = () => `ingredient-${Date.now()}-${Math.random()}`;
 
@@ -309,3 +310,24 @@ export function StructuredIngredientInput({
     </div>
   );
 }
+
+export const StructuredIngredientInput = memo(StructuredIngredientInputComponent, (prevProps, nextProps) => {
+  // Custom comparison function for React.memo
+  const ingredientsEqual = 
+    prevProps.ingredients.length === nextProps.ingredients.length &&
+    prevProps.ingredients.every((prev, index) => {
+      const next = nextProps.ingredients[index];
+      return prev.id === next.id &&
+             prev.name === next.name &&
+             prev.amount === next.amount &&
+             prev.unit === next.unit &&
+             prev.notes === next.notes;
+    });
+  
+  const propsEqual = ingredientsEqual && 
+                    prevProps.disabled === nextProps.disabled &&
+                    prevProps.onChange === nextProps.onChange;
+  
+  
+  return propsEqual;
+});
