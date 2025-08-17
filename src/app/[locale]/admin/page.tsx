@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/app/i18n/routing";
 import { useAuth } from "@/lib/auth-context";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageLoading } from "@/components/ui/page-loading";
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { AdminUsageStatsResponse } from "@/app/api/admin/usage-stats/route";
 import { AdminChartsSection } from "@/components/admin/admin-charts-section";
+import { useTranslations } from 'next-intl';
 
 interface DashboardStats {
   totalUsers: number;
@@ -53,6 +54,7 @@ export default function AdminDashboard() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [adminLoading, setAdminLoading] = useState(true);
+  const t = useTranslations('admin');
 
   const fetchOverviewStats = async () => {
     try {
@@ -201,12 +203,12 @@ export default function AdminDashboard() {
       <PageWrapper>
         <div className="container mx-auto px-4 pt-4 pb-8">
           <div className="max-w-7xl mx-auto space-y-6">
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold">{t('title')}</h1>
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center space-x-2 text-destructive">
                   <AlertTriangle className="h-5 w-5" />
-                  <span>Error loading dashboard: {error}</span>
+                  <span>{t('errorLoading')}: {error}</span>
                 </div>
                 <Button 
                   onClick={fetchOverviewStats} 
@@ -214,7 +216,7 @@ export default function AdminDashboard() {
                   variant="outline"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Retry
+                  {t('retry')}
                 </Button>
               </CardContent>
             </Card>
@@ -235,16 +237,16 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Overview of system usage and costs for current month
+            {t('overview')}
           </p>
         </div>
         <div className="flex items-center space-x-2">
           {lastUpdated && (
             <div className="flex items-center space-x-1 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>
+              <span>{t('lastUpdated')}: {lastUpdated.toLocaleTimeString()}</span>
             </div>
           )}
           <Button 
@@ -254,7 +256,7 @@ export default function AdminDashboard() {
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('refresh')}
           </Button>
         </div>
       </div>
@@ -263,65 +265,65 @@ export default function AdminDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalUsers')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalUsers}</div>
             <p className="text-xs text-muted-foreground">
-              Active users this month
+              {t('activeUsersMonth')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Recipes</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalRecipes')}</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalRecipes}</div>
             <p className="text-xs text-muted-foreground">
-              Recipes in database
+              {t('recipesInDatabase')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalCost')}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCost(stats.totalCost)}</div>
             <p className="text-xs text-muted-foreground">
-              {formatCost(stats.averageCostPerUser)} per user
+              {formatCost(stats.averageCostPerUser)} {t('perUser')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Tokens</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalTokens')}</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatNumber(stats.totalTokens)}</div>
             <p className="text-xs text-muted-foreground">
-              {formatNumber(stats.averageTokensPerUser)} per user
+              {formatNumber(stats.averageTokensPerUser)} {t('perUser')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">API Calls</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('apiCalls')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatNumber(stats.totalCalls)}</div>
             <p className="text-xs text-muted-foreground">
-              {Math.round(stats.averageCallsPerUser)} per user
+              {Math.round(stats.averageCallsPerUser)} {t('perUser')}
             </p>
           </CardContent>
         </Card>
@@ -335,9 +337,9 @@ export default function AdminDashboard() {
         {/* Top Users by Cost */}
         <Card>
           <CardHeader>
-            <CardTitle>Top Users by Cost</CardTitle>
+            <CardTitle>{t('topUsersByCost')}</CardTitle>
             <CardDescription>
-              Users with highest spending this month
+              {t('highestSpendingUsers')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -353,13 +355,13 @@ export default function AdminDashboard() {
                   <div className="text-right">
                     <div className="text-sm font-semibold">{formatCost(user.totalCost)}</div>
                     <div className="text-xs text-muted-foreground">
-                      {formatNumber(user.totalTokens)} tokens
+                      {formatNumber(user.totalTokens)} {t('tokens')}
                     </div>
                   </div>
                 </div>
               ))}
               {topUsersByCost.length === 0 && (
-                <p className="text-sm text-muted-foreground">No usage data available</p>
+                <p className="text-sm text-muted-foreground">{t('noUsageData')}</p>
               )}
             </div>
           </CardContent>
@@ -368,9 +370,9 @@ export default function AdminDashboard() {
         {/* Outliers */}
         <Card>
           <CardHeader>
-            <CardTitle>Usage Outliers</CardTitle>
+            <CardTitle>{t('usageOutliers')}</CardTitle>
             <CardDescription>
-              Users with unusually high usage (2x+ average)
+              {t('unusuallyHighUsage')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -384,13 +386,13 @@ export default function AdminDashboard() {
                   <div className="text-right">
                     <div className="text-sm font-semibold">{formatCost(user.totalCost)}</div>
                     <div className="text-xs text-muted-foreground">
-                      {formatNumber(user.totalTokens)} tokens
+                      {formatNumber(user.totalTokens)} {t('tokens')}
                     </div>
                   </div>
                 </div>
               ))}
               {outliers.length === 0 && (
-                <p className="text-sm text-muted-foreground">No outliers detected</p>
+                <p className="text-sm text-muted-foreground">{t('noOutliers')}</p>
               )}
             </div>
           </CardContent>

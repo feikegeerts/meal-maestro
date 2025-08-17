@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Mail, Loader2, Check } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface MagicLinkFormProps {
   className?: string
@@ -17,6 +18,7 @@ export function MagicLinkForm({ className }: MagicLinkFormProps) {
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rateLimited, setRateLimited] = useState(false)
+  const t = useTranslations('auth')
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -104,7 +106,7 @@ export function MagicLinkForm({ className }: MagicLinkFormProps) {
           <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             type="email"
-            placeholder="Enter your email address"
+            placeholder={t('emailPlaceholder')}
             value={email}
             onChange={(e) => {
               setEmail(e.target.value)
@@ -136,7 +138,7 @@ export function MagicLinkForm({ className }: MagicLinkFormProps) {
         ) : (
           <>
             <Mail className="mr-2 h-4 w-4" />
-            Send Magic Link
+{t('sendMagicLink')}
           </>
         )}
       </Button>

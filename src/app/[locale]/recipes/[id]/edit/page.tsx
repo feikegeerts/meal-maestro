@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "@/app/i18n/routing";
+import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useRecipes } from "@/contexts/recipe-context";
 import { PageLoading } from "@/components/ui/page-loading";
@@ -11,6 +12,7 @@ import { Recipe, RecipeInput } from "@/types/recipe";
 import { RecipeEditForm } from "@/components/recipe-edit-form";
 import { ArrowLeft } from "lucide-react";
 import { setRedirectUrl } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
 
 export default function EditRecipePage() {
   const { id } = useParams();
@@ -21,6 +23,7 @@ export default function EditRecipePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saveLoading, setSaveLoading] = useState(false);
+  const t = useTranslations('recipes');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -33,7 +36,7 @@ export default function EditRecipePage() {
   useEffect(() => {
     const loadRecipe = async () => {
       if (!id || typeof id !== "string") {
-        setError("Invalid recipe ID");
+        setError(t('invalidRecipeId'));
         setLoading(false);
         return;
       }
@@ -54,9 +57,9 @@ export default function EditRecipePage() {
         const response = await fetch(`/api/recipes/${id}`);
         if (!response.ok) {
           if (response.status === 404) {
-            setError("Recipe not found");
+            setError(t('recipeNotFound'));
           } else {
-            setError("Failed to load recipe");
+            setError(t('failedToLoad'));
           }
           setLoading(false);
           return;
@@ -66,7 +69,7 @@ export default function EditRecipePage() {
         setRecipe(data.recipe);
       } catch (error) {
         console.error("Error loading recipe:", error);
-        setError("Failed to load recipe");
+        setError(t('failedToLoad'));
       } finally {
         setLoading(false);
       }
@@ -75,7 +78,7 @@ export default function EditRecipePage() {
     if (user) {
       loadRecipe();
     }
-  }, [id, user, getRecipeById]);
+  }, [id, user, getRecipeById, t]);
 
   const handleSave = async (recipeData: Partial<RecipeInput>) => {
     if (!recipe) return;
@@ -143,11 +146,11 @@ export default function EditRecipePage() {
       <PageWrapper>
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto text-center">
-            <h1 className="text-2xl font-bold text-destructive mb-4">Error</h1>
+            <h1 className="text-2xl font-bold text-destructive mb-4">{t('error')}</h1>
             <p className="text-muted-foreground mb-6">{error}</p>
             <Button onClick={() => router.push("/recipes")} variant="outline">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Recipes
+              {t('backToRecipes')}
             </Button>
           </div>
         </div>
@@ -173,15 +176,15 @@ export default function EditRecipePage() {
                 disabled={saveLoading}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Recipe
+                {t('backToRecipe')}
               </Button>
               <div className="h-6 w-px bg-border" />
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                  Edit Recipe
+                  {t('editRecipe')}
                 </h1>
                 <p className="text-muted-foreground mt-1">
-                  Update &quot;{recipe.title}&quot;
+                  {t('updateRecipe', { title: recipe.title })}
                 </p>
               </div>
             </div>

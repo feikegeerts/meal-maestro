@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { Loader2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 const GoogleIcon = () => (
   <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style={{ display: 'block' }}>
@@ -23,6 +24,7 @@ export function GoogleLoginButton({ className }: GoogleLoginButtonProps) {
   const { signInWithGoogle } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations('auth')
 
   const handleSignIn = async () => {
     setIsLoading(true)
@@ -138,7 +140,7 @@ export function GoogleLoginButton({ className }: GoogleLoginButtonProps) {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 verticalAlign: 'top',
-              }}>Signing in...</span>
+              }}>{t('signingIn') || 'Signing in...'}</span>
             </>
           ) : (
             <>
@@ -158,7 +160,7 @@ export function GoogleLoginButton({ className }: GoogleLoginButtonProps) {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 verticalAlign: 'top',
-              }}>Sign in with Google</span>
+              }}>{t('signInWithGoogle')}</span>
             </>
           )}
         </div>

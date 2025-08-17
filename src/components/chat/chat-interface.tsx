@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { ChatMessage } from "./chat-message";
 import { Send, Loader2, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 import { Recipe } from "@/types/recipe";
+import { useTranslations } from 'next-intl';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -49,10 +50,11 @@ interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormState, isDesktopSidebar = false }: ChatInterfaceProps) {
+  const t = useTranslations('chat');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: 'Hello! I\'m Meal Maestro, your AI recipe form assistant. I can help you create and edit recipes by filling out recipe forms. What recipe would you like to work on today?',
+      content: t('welcomeMessage'),
       timestamp: new Date().toISOString()
     }
   ]);
@@ -158,7 +160,7 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
         <div className="flex items-center justify-between">
           <CardTitle className={`flex items-center gap-2 ${isDesktopSidebar ? 'text-base' : 'text-lg'}`}>
             <MessageSquare className={`${isDesktopSidebar ? 'h-4 w-4' : 'h-5 w-5'}`} />
-            AI Recipe Assistant
+            {t('assistantTitle')}
           </CardTitle>
           {!isDesktopSidebar && (
             <Button variant="ghost" size="sm">
@@ -193,7 +195,7 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
               {isLoading && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">AI is thinking...</span>
+                  <span className="text-sm">{t('thinking')}</span>
                 </div>
               )}
               <div ref={messagesEndRef} />
@@ -214,7 +216,7 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={handleKeyPress}
-                  placeholder="Type your message... (e.g., 'add a recipe for spaghetti bolognese')"
+                  placeholder={t('inputPlaceholder')}
                   disabled={isLoading}
                   className="flex-1"
                 />
@@ -233,7 +235,7 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
 
               {selectedRecipe && (
                 <div className="text-xs text-muted-foreground mt-2 p-2 bg-muted/50 rounded">
-                  Currently viewing: <span className="font-medium">{selectedRecipe.title}</span>
+                  {t('currentlyViewing')}: <span className="font-medium">{selectedRecipe.title}</span>
                 </div>
               )}
             </div>

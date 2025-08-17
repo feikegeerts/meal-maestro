@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/app/i18n/routing";
 import { useAuth } from "@/lib/auth-context";
 import { useRecipes } from "@/contexts/recipe-context";
 import { PageLoading } from "@/components/ui/page-loading";
@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 import { recipeService } from "@/lib/recipe-service";
 import { RecipesResponse } from "@/types/recipe";
 import { RecipeDataTable } from "@/components/recipes/recipe-data-table";
-import { recipeColumns } from "@/components/recipes/recipe-columns";
+import { useRecipeColumns } from "@/components/recipes/recipe-columns";
 import { Plus, RefreshCw } from "lucide-react";
 import { setRedirectUrl } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
 
 export default function RecipesPage() {
   const router = useRouter();
@@ -22,6 +23,8 @@ export default function RecipesPage() {
   const [recipesLoading, setRecipesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasLoadedRecipes, setHasLoadedRecipes] = useState(false);
+  const t = useTranslations('recipes');
+  const columns = useRecipeColumns();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -45,7 +48,7 @@ export default function RecipesPage() {
       setHasLoadedRecipes(true);
     } catch (err) {
       console.error("Error loading recipes:", err);
-      setError(err instanceof Error ? err.message : "Failed to load recipes");
+      setError(err instanceof Error ? err.message : t('loadError') || "Failed to load recipes");
     } finally {
       setRecipesLoading(false);
     }
@@ -68,10 +71,10 @@ export default function RecipesPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                Your Recipes
+                {t('title')}
               </h1>
               <p className="text-muted-foreground mt-1 sm:mt-2">
-                Manage and search through your recipe collection
+                {t('description')}
               </p>
             </div>
             <div className="flex gap-2 mt-4 sm:mt-0">
@@ -87,14 +90,14 @@ export default function RecipesPage() {
                 <RefreshCw
                   className={`h-4 w-4 ${recipesLoading ? "animate-spin" : ""}`}
                 />
-                Refresh
+                {t('refresh')}
               </Button>
               <Button 
                 className="flex items-center gap-2"
                 onClick={handleAddRecipe}
               >
                 <Plus className="h-4 w-4" />
-                Add Recipe
+                {t('addRecipe')}
               </Button>
             </div>
           </div>
@@ -108,7 +111,7 @@ export default function RecipesPage() {
                 onClick={loadRecipes}
                 className="mt-2 text-destructive hover:text-destructive/80 p-0 h-auto"
               >
-                Try again
+{t('tryAgain')}
               </Button>
             </div>
           )}
@@ -119,23 +122,22 @@ export default function RecipesPage() {
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">🍽️</div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">
-                  No recipes yet
+                  {t('noRecipes')}
                 </h3>
                 <p className="text-muted-foreground mb-6">
-                  Start building your recipe collection! Add your first recipe
-                  to get started.
+                  {t('noRecipesDescription')}
                 </p>
                 <Button 
                   className="flex items-center gap-2 mx-auto"
                   onClick={handleAddRecipe}
                 >
                   <Plus className="h-4 w-4" />
-                  Add Your First Recipe
+                  {t('addFirstRecipe')}
                 </Button>
               </div>
             ) : (
               <RecipeDataTable
-                columns={recipeColumns}
+                columns={columns}
                 data={contextRecipes}
                 loading={recipesLoading}
               />

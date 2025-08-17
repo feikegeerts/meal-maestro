@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "@/app/i18n/routing";
+import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useRecipes } from "@/contexts/recipe-context";
 import { PageLoading } from "@/components/ui/page-loading";
@@ -11,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Recipe, formatIngredientDisplay } from "@/types/recipe";
+import { Recipe, formatIngredientDisplay, RecipeCategory, RecipeSeason, RecipeTag } from "@/types/recipe";
 import { ServingSizeSelector } from "@/components/serving-size-selector";
 import {
   ArrowLeft,
@@ -25,6 +26,9 @@ import {
   ChefHat,
 } from "lucide-react";
 import { setRedirectUrl, processInstructions } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
+import { useRecipeTranslations } from '@/messages';
+
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
@@ -36,6 +40,8 @@ export default function RecipeDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const t = useTranslations('recipes');
+  const { translateCategory, translateSeason, translateTag } = useRecipeTranslations();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -48,7 +54,7 @@ export default function RecipeDetailPage() {
   useEffect(() => {
     const loadRecipe = async () => {
       if (!id || typeof id !== "string") {
-        setError("Invalid recipe ID");
+        setError(t('invalidRecipeId'));
         setLoading(false);
         return;
       }
@@ -70,9 +76,9 @@ export default function RecipeDetailPage() {
         const response = await fetch(`/api/recipes/${id}`);
         if (!response.ok) {
           if (response.status === 404) {
-            setError("Recipe not found");
+            setError(t('recipeNotFound'));
           } else {
-            setError("Failed to load recipe");
+            setError(t('failedToLoad'));
           }
           setLoading(false);
           return;
@@ -83,7 +89,7 @@ export default function RecipeDetailPage() {
         setDisplayRecipe(data.recipe);
       } catch (error) {
         console.error("Error loading recipe:", error);
-        setError("Failed to load recipe");
+        setError(t('failedToLoad'));
       } finally {
         setLoading(false);
       }
@@ -92,7 +98,7 @@ export default function RecipeDetailPage() {
     if (user) {
       loadRecipe();
     }
-  }, [id, user, getRecipeById]);
+  }, [id, user, getRecipeById, t]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Never";
@@ -152,7 +158,7 @@ export default function RecipeDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!recipe || !confirm("Are you sure you want to delete this recipe?")) {
+    if (!recipe || !confirm(t('confirmDelete'))) {
       return;
     }
 
@@ -163,7 +169,7 @@ export default function RecipeDetailPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete recipe");
+        throw new Error(t('failedToDelete'));
       }
 
       router.push("/recipes");
@@ -183,11 +189,11 @@ export default function RecipeDetailPage() {
       <PageWrapper>
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto text-center">
-            <h1 className="text-2xl font-bold text-destructive mb-4">Error</h1>
+            <h1 className="text-2xl font-bold text-destructive mb-4">{t('error')}</h1>
             <p className="text-muted-foreground mb-6">{error}</p>
             <Button onClick={() => router.push("/recipes")} variant="outline">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Recipes
+              {t('backToRecipes')}
             </Button>
           </div>
         </div>
@@ -233,7 +239,7 @@ export default function RecipeDetailPage() {
                 className="flex items-center self-start"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+                {t('back')}
               </Button>
 
               <div className="flex items-center justify-between sm:justify-end sm:flex-wrap gap-2">
@@ -246,12 +252,12 @@ export default function RecipeDetailPage() {
                   {actionLoading === "mark-eaten" ? (
                     <>
                       <span className="animate-spin mr-2">⏳</span>
-                      Marking...
+                      {t('marking')}
                     </>
                   ) : (
                     <>
                       <Utensils className="mr-2 h-4 w-4" />
-                      Mark as Eaten
+                      {t('markAsEatenDetail')}
                     </>
                   )}
                 </Button>
@@ -263,7 +269,7 @@ export default function RecipeDetailPage() {
                   onClick={handleEdit}
                 >
                   <Edit className="mr-2 h-4 w-4" />
-                  Edit
+                  {t('editDetail')}
                 </Button>
 
                 <Button
@@ -275,12 +281,12 @@ export default function RecipeDetailPage() {
                   {actionLoading === "delete" ? (
                     <>
                       <span className="animate-spin mr-2">⏳</span>
-                      Deleting...
+                      {t('deleting')}
                     </>
                   ) : (
                     <>
                       <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
+                      {t('deleteDetail')}
                     </>
                   )}
                 </Button>
@@ -296,12 +302,12 @@ export default function RecipeDetailPage() {
                     <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                       <div className="flex items-center">
                         <ChefHat className="mr-1 h-4 w-4" />
-                        <span className="capitalize">{recipe.category}</span>
+                        <span className="capitalize">{translateCategory(recipe.category as RecipeCategory)}</span>
                       </div>
                       {recipe.season && (
                         <div className="flex items-center">
                           <Calendar className="mr-1 h-4 w-4" />
-                          <span className="capitalize">{recipe.season}</span>
+                          <span className="capitalize">{translateSeason(recipe.season as RecipeSeason)}</span>
                         </div>
                       )}
                     </div>
@@ -314,7 +320,7 @@ export default function RecipeDetailPage() {
                     {recipe.tags.map((tag) => (
                       <Badge key={tag} variant="secondary" className="text-xs">
                         <Tag className="mr-1 h-3 w-3" />
-                        {tag}
+                        {translateTag(tag as RecipeTag)}
                       </Badge>
                     ))}
                   </div>
@@ -337,7 +343,7 @@ export default function RecipeDetailPage() {
 
                 {/* Ingredients */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-3">Ingredients</h3>
+                  <h3 className="text-lg font-semibold mb-3">{t('ingredients')}</h3>
                   <ul className="space-y-2">
                     {(displayRecipe || recipe)?.ingredients.map((ingredient, index) => (
                       <li key={index} className="flex items-start">
@@ -352,7 +358,7 @@ export default function RecipeDetailPage() {
 
                 {/* Instructions */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-3">Instructions</h3>
+                  <h3 className="text-lg font-semibold mb-3">{t('instructions')}</h3>
                   <div className="prose prose-sm max-w-none">
                     {(() => {
                       const processed = processInstructions(recipe.description);
@@ -384,11 +390,11 @@ export default function RecipeDetailPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center">
                     <CalendarDays className="mr-1 h-4 w-4" />
-                    <span>Created: {formatDate(recipe.created_at)}</span>
+                    <span>{t('createdDetail')}: {formatDate(recipe.created_at) || t('never')}</span>
                   </div>
                   <div className="flex items-center sm:justify-end">
                     <Clock className="mr-1 h-4 w-4" />
-                    <span>Last eaten: {formatDate(recipe.last_eaten)}</span>
+                    <span>{t('lastEatenDetail')}: {formatDate(recipe.last_eaten) || t('never')}</span>
                   </div>
                 </div>
               </CardContent>

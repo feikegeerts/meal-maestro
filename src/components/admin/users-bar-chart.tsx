@@ -9,6 +9,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { TimePeriod } from "./chart-controls";
+import { useTranslations } from 'next-intl';
 
 interface TimeRangeData {
   date: string;
@@ -24,14 +25,24 @@ interface UsersBarChartProps {
   loading?: boolean;
 }
 
-const chartConfig = {
-  uniqueUsers: {
-    label: "Active Users",
-    color: "hsl(217 91% 60%)",
-  },
-} as const;
-
 export function UsersBarChart({ data, timePeriod, loading }: UsersBarChartProps) {
+  const t = useTranslations('admin');
+  
+  const getTranslatedPeriod = (period: TimePeriod): string => {
+    switch (period) {
+      case 'day': return t('daily');
+      case 'week': return t('weekly');
+      case 'month': return t('monthly');
+      default: return period;
+    }
+  };
+  
+  const chartConfig = {
+    uniqueUsers: {
+      label: t('uniqueUsersChart'),
+      color: "hsl(217 91% 60%)",
+    },
+  } as const;
   const chartData = useMemo(() => {
     return data.map((item) => {
       let displayDate: string;
@@ -45,10 +56,11 @@ export function UsersBarChart({ data, timePeriod, loading }: UsersBarChartProps)
           break;
         case 'week':
           // For weeks, show "Week of MMM DD"
-          displayDate = `Week of ${new Date(item.date).toLocaleDateString('en-US', { 
+          const weekDate = new Date(item.date).toLocaleDateString('en-US', { 
             month: 'short', 
             day: 'numeric' 
-          })}`;
+          });
+          displayDate = t('weekOf', { date: weekDate });
           break;
         case 'month':
           // For months, show "MMM YYYY"
@@ -67,15 +79,15 @@ export function UsersBarChart({ data, timePeriod, loading }: UsersBarChartProps)
         displayDate,
       };
     });
-  }, [data, timePeriod]);
+  }, [data, timePeriod, t]);
 
   if (loading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Active Users Over Time</CardTitle>
+          <CardTitle>{t('userActivityOverTime')}</CardTitle>
           <CardDescription>
-            User activity by {timePeriod}
+            {t('uniqueUsersBy', { period: getTranslatedPeriod(timePeriod) })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -89,14 +101,14 @@ export function UsersBarChart({ data, timePeriod, loading }: UsersBarChartProps)
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Active Users Over Time</CardTitle>
+          <CardTitle>{t('userActivityOverTime')}</CardTitle>
           <CardDescription>
-            User activity by {timePeriod}
+            {t('uniqueUsersBy', { period: getTranslatedPeriod(timePeriod) })}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-            No user activity data available for the selected period
+            {t('noUserData')}
           </div>
         </CardContent>
       </Card>
@@ -106,9 +118,9 @@ export function UsersBarChart({ data, timePeriod, loading }: UsersBarChartProps)
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Active Users Over Time</CardTitle>
+        <CardTitle>{t('userActivityOverTime')}</CardTitle>
         <CardDescription>
-          User activity by {timePeriod}
+          {t('uniqueUsersBy', { period: getTranslatedPeriod(timePeriod) })}
         </CardDescription>
       </CardHeader>
       <CardContent>

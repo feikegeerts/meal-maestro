@@ -30,8 +30,8 @@ describe("MagicLinkForm", () => {
     it("should render the form with email input and submit button", () => {
       render(<MagicLinkForm />, { wrapper });
 
-      expect(screen.getByPlaceholderText("Enter your email address")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /send magic link/i })).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("emailPlaceholder")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /sendMagicLink/i })).toBeInTheDocument();
     });
 
     it("should render with custom className", () => {
@@ -52,7 +52,7 @@ describe("MagicLinkForm", () => {
     it("should disable submit button when email is empty", () => {
       render(<MagicLinkForm />, { wrapper });
       
-      const submitButton = screen.getByRole("button", { name: /send magic link/i });
+      const submitButton = screen.getByRole("button", { name: /sendMagicLink/i });
       expect(submitButton).toBeDisabled();
     });
 
@@ -60,8 +60,8 @@ describe("MagicLinkForm", () => {
       const user = userEvent.setup();
       render(<MagicLinkForm />, { wrapper });
       
-      const emailInput = screen.getByPlaceholderText("Enter your email address");
-      const submitButton = screen.getByRole("button", { name: /send magic link/i });
+      const emailInput = screen.getByPlaceholderText("emailPlaceholder");
+      const submitButton = screen.getByRole("button", { name: /sendMagicLink/i });
 
       await user.type(emailInput, "invalid-email");
       expect(submitButton).toBeDisabled();
@@ -71,8 +71,8 @@ describe("MagicLinkForm", () => {
       const user = userEvent.setup();
       render(<MagicLinkForm />, { wrapper });
       
-      const emailInput = screen.getByPlaceholderText("Enter your email address");
-      const submitButton = screen.getByRole("button", { name: /send magic link/i });
+      const emailInput = screen.getByPlaceholderText("emailPlaceholder");
+      const submitButton = screen.getByRole("button", { name: /sendMagicLink/i });
 
       await user.type(emailInput, "test@example.com");
       expect(submitButton).not.toBeDisabled();
@@ -82,11 +82,11 @@ describe("MagicLinkForm", () => {
       const user = userEvent.setup();
       render(<MagicLinkForm />, { wrapper });
       
-      const emailInput = screen.getByPlaceholderText("Enter your email address");
+      const emailInput = screen.getByPlaceholderText("emailPlaceholder");
       
       // Type invalid email - button should be disabled
       await user.type(emailInput, "invalid-email");
-      const submitButton = screen.getByRole("button", { name: /send magic link/i });
+      const submitButton = screen.getByRole("button", { name: /sendMagicLink/i });
       expect(submitButton).toBeDisabled();
       
       // Clear and type valid email - button should be enabled
@@ -98,7 +98,7 @@ describe("MagicLinkForm", () => {
     it("should show error message when email is empty on form submission", async () => {
       render(<MagicLinkForm />, { wrapper });
       
-      const form = screen.getByRole("button", { name: /send magic link/i }).closest("form");
+      const form = screen.getByRole("button", { name: /sendMagicLink/i }).closest("form");
       
       await act(async () => {
         fireEvent.submit(form!);
@@ -113,7 +113,7 @@ describe("MagicLinkForm", () => {
       const user = userEvent.setup();
       render(<MagicLinkForm />, { wrapper });
       
-      const emailInput = screen.getByPlaceholderText("Enter your email address");
+      const emailInput = screen.getByPlaceholderText("emailPlaceholder");
       const form = emailInput.closest("form");
       
       // Trigger empty email error by submitting empty form
@@ -140,8 +140,8 @@ describe("MagicLinkForm", () => {
       const user = userEvent.setup();
       render(<MagicLinkForm />, { wrapper });
       
-      const emailInput = screen.getByPlaceholderText("Enter your email address");
-      const submitButton = screen.getByRole("button", { name: /send magic link/i });
+      const emailInput = screen.getByPlaceholderText("emailPlaceholder");
+      const submitButton = screen.getByRole("button", { name: /sendMagicLink/i });
 
       await user.type(emailInput, "test@example.com");
       
@@ -151,8 +151,8 @@ describe("MagicLinkForm", () => {
     it("should have correct form structure and elements", () => {
       render(<MagicLinkForm />, { wrapper });
       
-      expect(screen.getByPlaceholderText("Enter your email address")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /send magic link/i })).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("emailPlaceholder")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /sendMagicLink/i })).toBeInTheDocument();
       expect(screen.getByText(/we'll send you a secure link/i)).toBeInTheDocument();
     });
   });
@@ -162,8 +162,8 @@ describe("MagicLinkForm", () => {
     it("should show submit button is enabled with valid email", () => {
       render(<MagicLinkForm />, { wrapper });
       
-      const emailInput = screen.getByPlaceholderText("Enter your email address");
-      const submitButton = screen.getByRole("button", { name: /send magic link/i });
+      const emailInput = screen.getByPlaceholderText("emailPlaceholder");
+      const submitButton = screen.getByRole("button", { name: /sendMagicLink/i });
 
       fireEvent.change(emailInput, { target: { value: "test@example.com" } });
       
@@ -173,8 +173,8 @@ describe("MagicLinkForm", () => {
     it("should show submit button is disabled with invalid email", () => {
       render(<MagicLinkForm />, { wrapper });
       
-      const emailInput = screen.getByPlaceholderText("Enter your email address");
-      const submitButton = screen.getByRole("button", { name: /send magic link/i });
+      const emailInput = screen.getByPlaceholderText("emailPlaceholder");
+      const submitButton = screen.getByRole("button", { name: /sendMagicLink/i });
 
       fireEvent.change(emailInput, { target: { value: "invalid-email" } });
       
@@ -185,7 +185,7 @@ describe("MagicLinkForm", () => {
       const user = userEvent.setup();
       render(<MagicLinkForm />, { wrapper });
       
-      const emailInput = screen.getByPlaceholderText("Enter your email address");
+      const emailInput = screen.getByPlaceholderText("emailPlaceholder");
       const form = emailInput.closest("form");
       
       // Trigger error by submitting empty form
@@ -206,8 +206,8 @@ describe("MagicLinkForm", () => {
     it("should have proper ARIA labels and attributes", () => {
       render(<MagicLinkForm />, { wrapper });
 
-      const emailInput = screen.getByPlaceholderText("Enter your email address");
-      const submitButton = screen.getByRole("button", { name: /send magic link/i });
+      const emailInput = screen.getByPlaceholderText("emailPlaceholder");
+      const submitButton = screen.getByRole("button", { name: /sendMagicLink/i });
 
       expect(emailInput).toHaveAttribute("type", "email");
       expect(emailInput).toHaveAttribute("autoComplete", "email");
@@ -217,7 +217,7 @@ describe("MagicLinkForm", () => {
     it("should show error messages with proper styling", () => {
       render(<MagicLinkForm />, { wrapper });
       
-      const emailInput = screen.getByPlaceholderText("Enter your email address");
+      const emailInput = screen.getByPlaceholderText("emailPlaceholder");
       const form = emailInput.closest("form");
       
       // Trigger error by submitting empty form
@@ -237,8 +237,8 @@ describe("MagicLinkForm", () => {
       render(<MagicLinkForm />, { wrapper });
       
       // Check for form elements
-      expect(screen.getByPlaceholderText("Enter your email address")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /send magic link/i })).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("emailPlaceholder")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /sendMagicLink/i })).toBeInTheDocument();
       
       // Check for descriptive text
       expect(screen.getByText(/we'll send you a secure link/i)).toBeInTheDocument();

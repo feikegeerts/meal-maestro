@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { RefreshCw } from "lucide-react";
+import { useTranslations } from 'next-intl';
 
 export type TimePeriod = 'day' | 'week' | 'month';
 
@@ -28,22 +29,24 @@ export function ChartControls({
   onTimePeriodChange,
   onRefresh
 }: ChartControlsProps) {
+  const t = useTranslations('admin');
+  
   const timePeriodOptions: { value: TimePeriod; label: string }[] = [
-    { value: 'day', label: 'Daily' },
-    { value: 'week', label: 'Weekly' },
-    { value: 'month', label: 'Monthly' }
+    { value: 'day', label: t('daily') },
+    { value: 'week', label: t('weekly') },
+    { value: 'month', label: t('monthly') }
   ];
 
   return (
     <Card>
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg">Chart Settings</CardTitle>
+        <CardTitle className="text-lg">{t('chartSettings')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
           {/* Date Range */}
           <div className="flex items-center gap-2">
-            <Label htmlFor="chart-startDate" className="text-sm whitespace-nowrap">From:</Label>
+            <Label htmlFor="chart-startDate" className="text-sm whitespace-nowrap">{t('from')}:</Label>
             <Input
               id="chart-startDate"
               type="date"
@@ -51,7 +54,7 @@ export function ChartControls({
               onChange={(e) => onDateRangeChange(e.target.value, endDate)}
               className="w-auto"
             />
-            <Label htmlFor="chart-endDate" className="text-sm whitespace-nowrap">To:</Label>
+            <Label htmlFor="chart-endDate" className="text-sm whitespace-nowrap">{t('to')}:</Label>
             <Input
               id="chart-endDate"
               type="date"
@@ -63,7 +66,7 @@ export function ChartControls({
 
           {/* Time Period Selector */}
           <div className="flex items-center gap-2">
-            <Label className="text-sm whitespace-nowrap">Period:</Label>
+            <Label className="text-sm whitespace-nowrap">{t('period')}:</Label>
             <div className="flex gap-1">
               {timePeriodOptions.map((option) => (
                 <Badge
@@ -87,7 +90,7 @@ export function ChartControls({
             className="whitespace-nowrap"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('refreshChart')}
           </Button>
         </div>
       </CardContent>

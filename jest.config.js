@@ -21,6 +21,19 @@ const config = {
     "<rootDir>/src/__tests__/test-utils.tsx",
     "<rootDir>/src/__tests__/msw-setup.js",
   ],
+  // Module name mapping for path aliases
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^next-intl$": "<rootDir>/src/__mocks__/next-intl.ts",
+    "^next-intl/routing$": "<rootDir>/src/__mocks__/routing.ts",
+    "^next-intl/navigation$": "<rootDir>/src/__mocks__/routing.ts",
+    "^@/app/i18n/routing$": "<rootDir>/src/__mocks__/routing.ts",
+    "^@/messages$": "<rootDir>/src/__mocks__/messages.ts",
+  },
+  // Transform ESM modules
+  transformIgnorePatterns: [
+    "node_modules/(?!(next-intl|use-intl)/)"
+  ],
   // CI-specific optimizations
   maxWorkers: process.env.CI ? 1 : "50%",
   workerIdleMemoryLimit: process.env.CI ? "512MB" : undefined,

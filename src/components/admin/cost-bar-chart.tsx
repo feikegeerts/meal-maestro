@@ -9,6 +9,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { TimePeriod } from "./chart-controls";
+import { useTranslations } from 'next-intl';
 
 interface TimeRangeData {
   date: string;
@@ -24,14 +25,24 @@ interface CostBarChartProps {
   loading?: boolean;
 }
 
-const chartConfig = {
-  totalCostFormatted: {
-    label: "Total Cost",
-    color: "hsl(142 76% 36%)",
-  },
-} as const;
-
 export function CostBarChart({ data, timePeriod, loading }: CostBarChartProps) {
+  const t = useTranslations('admin');
+  
+  const getTranslatedPeriod = (period: TimePeriod): string => {
+    switch (period) {
+      case 'day': return t('daily');
+      case 'week': return t('weekly');
+      case 'month': return t('monthly');
+      default: return period;
+    }
+  };
+  
+  const chartConfig = {
+    totalCostFormatted: {
+      label: t('totalCostChart'),
+      color: "hsl(142 76% 36%)",
+    },
+  } as const;
   const chartData = useMemo(() => {
     return data.map((item) => {
       let displayDate: string;
@@ -45,10 +56,11 @@ export function CostBarChart({ data, timePeriod, loading }: CostBarChartProps) {
           break;
         case 'week':
           // For weeks, show "Week of MMM DD"
-          displayDate = `Week of ${new Date(item.date).toLocaleDateString('en-US', { 
+          const weekDate = new Date(item.date).toLocaleDateString('en-US', { 
             month: 'short', 
             day: 'numeric' 
-          })}`;
+          });
+          displayDate = t('weekOf', { date: weekDate });
           break;
         case 'month':
           // For months, show "MMM YYYY"
@@ -68,15 +80,15 @@ export function CostBarChart({ data, timePeriod, loading }: CostBarChartProps) {
         totalCostFormatted: parseFloat(item.totalCost.toFixed(4)),
       };
     });
-  }, [data, timePeriod]);
+  }, [data, timePeriod, t]);
 
   if (loading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Cost Over Time</CardTitle>
+          <CardTitle>{t('costOverTime')}</CardTitle>
           <CardDescription>
-            API costs by {timePeriod}
+            {t('apiCostsBy', { period: getTranslatedPeriod(timePeriod) })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -90,14 +102,14 @@ export function CostBarChart({ data, timePeriod, loading }: CostBarChartProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Cost Over Time</CardTitle>
+          <CardTitle>{t('costOverTime')}</CardTitle>
           <CardDescription>
-            API costs by {timePeriod}
+            {t('apiCostsBy', { period: getTranslatedPeriod(timePeriod) })}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-            No cost data available for the selected period
+            {t('noCostData')}
           </div>
         </CardContent>
       </Card>
@@ -107,9 +119,9 @@ export function CostBarChart({ data, timePeriod, loading }: CostBarChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Cost Over Time</CardTitle>
+        <CardTitle>{t('costOverTime')}</CardTitle>
         <CardDescription>
-          API costs by {timePeriod}
+          {t('apiCostsBy', { period: getTranslatedPeriod(timePeriod) })}
         </CardDescription>
       </CardHeader>
       <CardContent>

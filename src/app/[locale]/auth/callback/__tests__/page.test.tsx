@@ -1,14 +1,14 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/app/i18n/routing";
 import AuthCallback from "../page";
 
-// Mock Next.js router
-jest.mock("next/navigation", () => ({
+// Mock i18n router
+jest.mock("@/app/i18n/routing", () => ({
   useRouter: jest.fn(),
 }));
 
 // Mock Supabase client
-jest.mock("../../../../lib/supabase", () => ({
+jest.mock("@/lib/supabase", () => ({
   supabase: {
     auth: {
       onAuthStateChange: jest.fn((callback) => {

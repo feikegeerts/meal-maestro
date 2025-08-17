@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Recipe } from "@/types/recipe";
+import { Recipe, RecipeCategory, RecipeSeason } from "@/types/recipe";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,9 +21,16 @@ import {
   Utensils,
   Trash2,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/app/i18n/routing";
+import { useTranslations } from 'next-intl';
+import { useRecipeTranslations } from '@/messages';
 
-export const recipeColumns: ColumnDef<Recipe>[] = [
+export function useRecipeColumns(): ColumnDef<Recipe>[] {
+  const t = useTranslations('recipeTable');
+  const tA11y = useTranslations('accessibility');
+  const { translateCategory, translateSeason } = useRecipeTranslations();
+
+  return [
   {
     id: "select",
     header: ({ table }) => (
@@ -33,7 +40,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
           (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label={tA11y('selectAll')}
       />
     ),
     cell: ({ row }) => (
@@ -41,7 +48,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={tA11y('selectRow')}
         />
       </div>
     ),
@@ -57,7 +64,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-auto p-0 font-semibold"
         >
-          Recipe Title
+          {t('title')}
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -80,7 +87,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-auto p-0 font-semibold"
         >
-          Category
+          {t('category')}
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -89,7 +96,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
       const category = row.getValue("category") as string;
       return (
         <Badge variant="secondary" className="capitalize">
-          {category}
+          {translateCategory(category as RecipeCategory)}
         </Badge>
       );
     },
@@ -106,7 +113,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-auto p-0 font-semibold"
         >
-          Season
+          {t('season')}
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -116,7 +123,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
       if (!season) return <span className="text-muted-foreground">-</span>;
       return (
         <Badge variant="outline" className="capitalize">
-          {season}
+          {translateSeason(season as RecipeSeason)}
         </Badge>
       );
     },
@@ -126,7 +133,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
   },
   {
     accessorKey: "tags",
-    header: "Tags",
+    header: t('tags'),
     cell: ({ row }) => {
       const tags = row.getValue("tags") as string[];
       if (!tags || tags.length === 0) {
@@ -162,7 +169,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-auto p-0 font-semibold"
         >
-          Last Eaten
+          {t('lastEaten')}
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -170,7 +177,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
     cell: ({ row }) => {
       const lastEaten = row.getValue("last_eaten") as string | undefined;
       if (!lastEaten) {
-        return <span className="text-muted-foreground">Never</span>;
+        return <span className="text-muted-foreground">{t('never')}</span>;
       }
       return (
         <div className="text-sm">
@@ -197,7 +204,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-auto p-0 font-semibold"
         >
-          Created
+          {t('created')}
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -213,7 +220,7 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
   },
   {
     id: "actions",
-    header: "Actions",
+    header: t('actions'),
     cell: ({ row }) => {
       const recipe = row.original;
 
@@ -230,31 +237,31 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
             <DropdownMenuItem
               onClick={() => navigator.clipboard.writeText(recipe.id)}
             >
-              Copy recipe ID
+              {t('copyId')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href={`/recipes/${recipe.id}`}>
                 <Eye className="mr-2 h-4 w-4" />
-                View details
+                {t('viewDetails')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Edit className="mr-2 h-4 w-4" />
-              Edit recipe
+              {t('editRecipe')}
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Utensils className="mr-2 h-4 w-4" />
-              Mark as eaten
+              {t('markAsEaten')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive">
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete recipe
+              {t('deleteRecipe')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -263,4 +270,5 @@ export const recipeColumns: ColumnDef<Recipe>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-];
+  ];
+}

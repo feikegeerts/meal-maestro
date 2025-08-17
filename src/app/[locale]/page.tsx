@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "@/app/i18n/routing";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { GoogleLoginButton } from "@/components/auth/google-login-button";
 import { MagicLinkForm } from "@/components/auth/magic-link-form";
@@ -11,12 +12,15 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { User, LogOut, ChefHat } from "lucide-react";
 import Image from "next/image";
 import { getRedirectUrl, clearRedirectUrl } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
 
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, profile, loading, signOut } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
+  const t = useTranslations('home');
+  const tAuth = useTranslations('auth');
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -40,19 +44,19 @@ function HomeContent() {
       let errorMessage = '';
       switch (error) {
         case 'invalid_link':
-          errorMessage = 'The magic link is invalid or has expired. Please request a new one.';
+          errorMessage = tAuth('invalidLink');
           break;
         case 'auth_cancelled':
-          errorMessage = 'Authentication was cancelled.';
+          errorMessage = tAuth('authCancelled');
           break;
         case 'timeout':
-          errorMessage = 'Authentication timed out. Please try again.';
+          errorMessage = tAuth('authTimeout');
           break;
         case 'auth_error':
-          errorMessage = 'An authentication error occurred. Please try again.';
+          errorMessage = tAuth('authError');
           break;
         default:
-          errorMessage = 'An unexpected error occurred during authentication.';
+          errorMessage = tAuth('unexpectedError');
       }
       setAuthError(errorMessage);
       
@@ -62,7 +66,7 @@ function HomeContent() {
         setAuthError(null);
       }, 5000);
     }
-  }, [user, loading, router, searchParams]);
+  }, [user, loading, router, searchParams, tAuth]);
 
   if (loading) {
     return <PageLoading />;
@@ -78,14 +82,13 @@ function HomeContent() {
               <ChefHat className="h-12 w-12 md:h-16 md:w-16 text-primary" />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
-              Meal Maestro
+              {t('title')}
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-2">
-              AI-Powered Recipe Management
+              {t('subtitle')}
             </p>
             <p className="text-sm md:text-base text-muted-foreground">
-              Organize, discover, and manage your recipes with natural language
-              conversations
+              {t('description')}
             </p>
           </div>
 
@@ -120,8 +123,7 @@ function HomeContent() {
 
                 <div className="space-y-4">
                   <p className="text-muted-foreground">
-                    You&apos;re successfully signed in and ready to start
-                    managing your recipes!
+                    {t('signedInMessage')}
                   </p>
 
                   <div className="flex justify-center">
@@ -132,7 +134,7 @@ function HomeContent() {
                       className="h-12 md:h-10"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
+                      {t('signOut')}
                     </Button>
                   </div>
                 </div>
@@ -142,10 +144,10 @@ function HomeContent() {
               <div className="text-center space-y-6">
                 <div>
                   <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-2">
-                    Get Started
+                    {t('getStarted')}
                   </h2>
                   <p className="text-muted-foreground text-sm md:text-base">
-                    Sign in to start organizing your recipes with AI-powered management
+                    {t('signInDescription')}
                   </p>
                 </div>
 
@@ -164,7 +166,7 @@ function HomeContent() {
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
                       <span className="bg-card px-2 text-muted-foreground">
-                        Or
+                        {tAuth('or') || 'Or'}
                       </span>
                     </div>
                   </div>
@@ -174,9 +176,7 @@ function HomeContent() {
 
                 <div className="text-xs text-muted-foreground leading-relaxed">
                   <p>
-                    By signing in, you agree to our terms of service and privacy
-                    policy. Your recipes will be securely stored and only
-                    accessible to you.
+                    {t('termsText')}
                   </p>
                 </div>
               </div>

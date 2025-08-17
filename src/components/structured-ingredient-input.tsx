@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, X } from "lucide-react";
+import { useTranslations } from 'next-intl';
 
 interface StructuredIngredientInputProps {
   ingredients: RecipeIngredient[];
@@ -25,6 +26,8 @@ export function StructuredIngredientInput({
   onChange,
   disabled = false,
 }: StructuredIngredientInputProps) {
+  const t = useTranslations('ingredientInput');
+  const tUnits = useTranslations('units');
   const [showUnitDropdown, setShowUnitDropdown] = useState<{
     [key: string]: boolean;
   }>({});
@@ -98,7 +101,7 @@ export function StructuredIngredientInput({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">
-                      Amount
+                      {t('amountHeader')}
                     </Label>
                     <Input
                       type="number"
@@ -115,7 +118,7 @@ export function StructuredIngredientInput({
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">
-                      Unit
+                      {t('unitHeader')}
                     </Label>
                     <Select
                       value={ingredient.unit || "none"}
@@ -125,13 +128,13 @@ export function StructuredIngredientInput({
                       disabled={disabled}
                     >
                       <SelectTrigger className="text-xs">
-                        <SelectValue placeholder="Unit" />
+                        <SelectValue placeholder={t('unitPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">-</SelectItem>
                         {COOKING_UNITS.map((unit) => (
                           <SelectItem key={unit} value={unit}>
-                            {unit}
+                            {tUnits(unit)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -142,10 +145,10 @@ export function StructuredIngredientInput({
                 {/* Ingredient Name */}
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">
-                    Ingredient
+                    {t('ingredientHeader')}
                   </Label>
                   <Input
-                    placeholder="Ingredient name"
+                    placeholder={t('ingredientNamePlaceholder')}
                     value={ingredient.name}
                     onChange={(e) =>
                       updateIngredient(ingredient.id, { name: e.target.value })
@@ -157,10 +160,10 @@ export function StructuredIngredientInput({
                 {/* Notes */}
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">
-                    Notes (optional)
+                    {t('notesHeader')}
                   </Label>
                   <Input
-                    placeholder="Notes"
+                    placeholder={t('notesPlaceholder')}
                     value={ingredient.notes || ""}
                     onChange={(e) =>
                       updateIngredient(ingredient.id, { notes: e.target.value })
@@ -203,13 +206,13 @@ export function StructuredIngredientInput({
                     disabled={disabled}
                   >
                     <SelectTrigger className="text-xs">
-                      <SelectValue placeholder="Unit" />
+                      <SelectValue placeholder={t('unitPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">-</SelectItem>
                       {COOKING_UNITS.map((unit) => (
                         <SelectItem key={unit} value={unit}>
-                          {unit}
+                          {tUnits(unit)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -219,7 +222,7 @@ export function StructuredIngredientInput({
                 {/* Name */}
                 <div className="col-span-5">
                   <Input
-                    placeholder="Ingredient name"
+                    placeholder={t('ingredientNamePlaceholder')}
                     value={ingredient.name}
                     onChange={(e) =>
                       updateIngredient(ingredient.id, { name: e.target.value })
@@ -232,7 +235,7 @@ export function StructuredIngredientInput({
                 {/* Notes */}
                 <div className="col-span-2">
                   <Input
-                    placeholder="Notes"
+                    placeholder={t('notesPlaceholder')}
                     value={ingredient.notes || ""}
                     onChange={(e) =>
                       updateIngredient(ingredient.id, { notes: e.target.value })
@@ -275,10 +278,10 @@ export function StructuredIngredientInput({
       <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground border-t pt-2">
         <span className="w-6"></span>
         <div className="flex-1 grid grid-cols-12 gap-2">
-          <div className="col-span-2 text-center">Amount</div>
-          <div className="col-span-2 text-center">Unit</div>
-          <div className="col-span-5 text-center">Ingredient</div>
-          <div className="col-span-2 text-center">Notes</div>
+          <div className="col-span-2 text-center">{t('amountHeader')}</div>
+          <div className="col-span-2 text-center">{t('unitHeader')}</div>
+          <div className="col-span-5 text-center">{t('ingredientHeader')}</div>
+          <div className="col-span-2 text-center">{t('notesHeader')}</div>
           <div className="col-span-1"></div>
         </div>
       </div>

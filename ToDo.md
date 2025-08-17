@@ -88,19 +88,18 @@ An AI-powered recipe management system. The system provides natural language rec
 
 ### Phase 5: Post-MVP Enhancements
 
-- [x] Fix unit tests
-- [x] Mobile nav click doesn't close sheet
-- [x] should i use GPT5-mini ?
+- [ ] datum notatie
+- [ ] every key press in the ingredient edit is blurring the input field making it impossible to properly type or edit
+- [ ] The unit list in the ingredient dropdown is too large needs to be optimized
+- [ ] Header met back button is niet heel mooi, misschien beter breadcrumb op tweede lijn
 - [ ] the avatar doesn;t have a hover state so it's not clear it's a clickable item.
-- [ ] Add admin role to user table
-- [ ] Allow admin to see a dashboard with cost statistics
 - [ ] About page
 - [ ] add cookie consent message to login?
 - [ ] use typescript types everywhere instead of hardcoded lists of tags categories and seasons.
 - [x] login using magic link from supabase
+- [ ] custom smtp server for magic link emails
 - [ ] **5.7** Add ability for the AI to fetch a website and process it as a recipe
-- [x] **5.8** Implement edit functionality in the detail view for the user to edit the description or tags, or category and so on.
-- [ ] **5.9** Implement languages Dutch and English
+- [x] **5.9** Implement languages Dutch and English
 - [ ] **5.11** Implement caching strategies
 - [ ] **5.12** Add buy me a coffee functionality
 - [ ] **5.13** Improve deployment pipeline with automatic testing and version bumping

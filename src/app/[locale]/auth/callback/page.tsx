@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/app/i18n/routing'
 import { supabase } from '@/lib/supabase'
 import { PageLoading } from '@/components/ui/page-loading'
 import { PageWrapper } from '@/components/ui/page-wrapper'

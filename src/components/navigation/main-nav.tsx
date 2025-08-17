@@ -1,13 +1,14 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from "@/app/i18n/routing";
 import { useState, useEffect } from "react";
 import { ChefHat, BookOpen, Menu, LogOut, User, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useUserCosts } from "@/lib/hooks/use-user-costs";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { cn } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -32,20 +33,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const baseNavigationItems = [
-  {
-    name: "Recipes",
-    href: "/recipes",
-    icon: BookOpen,
-  },
-];
-
-const adminNavigationItem = {
-  name: "Admin",
-  href: "/admin",
-  icon: Shield,
-};
-
 export function MainNav() {
   const pathname = usePathname();
   const { user, profile, signOut } = useAuth();
@@ -53,6 +40,23 @@ export function MainNav() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [, setAdminCheckLoading] = useState(true);
   const { data: costData, loading: costLoading } = useUserCosts();
+  const t = useTranslations('navigation');
+  const tAdmin = useTranslations('admin');
+  const tA11y = useTranslations('accessibility');
+
+  const baseNavigationItems = [
+    {
+      name: t('recipes'),
+      href: "/recipes",
+      icon: BookOpen,
+    },
+  ];
+
+  const adminNavigationItem = {
+    name: t('admin'),
+    href: "/admin",
+    icon: Shield,
+  };
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -156,6 +160,9 @@ export function MainNav() {
               </NavigationMenuList>
             </NavigationMenu>
 
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
             {/* User Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -191,10 +198,10 @@ export function MainNav() {
                     ) : (
                       <div className="space-y-1">
                         <p className="text-xs leading-none text-muted-foreground">
-                          Total costs: {formatCost(costData?.totalCost || 0)}
+                          {tAdmin('totalCosts')}: {formatCost(costData?.totalCost || 0)}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
-                          API calls: {costData?.totalCalls || 0}
+                          {tAdmin('totalCalls')}: {costData?.totalCalls || 0}
                         </p>
                       </div>
                     )}
@@ -203,7 +210,7 @@ export function MainNav() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>{t('logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -211,6 +218,9 @@ export function MainNav() {
 
           {/* Mobile Navigation */}
           <div className="md:hidden flex items-center space-x-2">
+            {/* Mobile Language Switcher */}
+            <LanguageSwitcher />
+            
             {/* Mobile User Avatar */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -246,10 +256,10 @@ export function MainNav() {
                     ) : (
                       <div className="space-y-1">
                         <p className="text-xs leading-none text-muted-foreground">
-                          Total costs: {formatCost(costData?.totalCost || 0)}
+                          {tAdmin('totalCosts')}: {formatCost(costData?.totalCost || 0)}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
-                          API calls: {costData?.totalCalls || 0}
+                          {tAdmin('totalCalls')}: {costData?.totalCalls || 0}
                         </p>
                       </div>
                     )}
@@ -258,7 +268,7 @@ export function MainNav() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>{t('logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -266,7 +276,7 @@ export function MainNav() {
             {/* Mobile Menu Sheet */}
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Toggle menu">
+                <Button variant="ghost" size="icon" aria-label={tA11y('toggleMenu')}>
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
@@ -274,7 +284,7 @@ export function MainNav() {
                 <SheetHeader>
                   <SheetTitle className="flex items-center space-x-2">
                     <ChefHat className="h-6 w-6 text-primary" />
-                    <span>Navigation</span>
+                    <span>{t('navigation')}</span>
                   </SheetTitle>
                 </SheetHeader>
                 <div className="mt-6 space-y-2">

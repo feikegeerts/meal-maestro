@@ -30,6 +30,7 @@ import { SheetClose } from "@/components/ui/sheet";
 import { Search } from "lucide-react";
 import { StructuredIngredientInput } from "@/components/structured-ingredient-input";
 import { ChatInterface } from "@/components/chat/chat-interface";
+import { useTranslations } from 'next-intl';
 
 interface RecipeEditFormProps {
   recipe: Recipe;
@@ -204,12 +205,16 @@ interface TagSelectorProps {
   selectedTags: string[];
   onTagToggle: (tag: string) => void;
   disabled?: boolean;
+  tTags: (key: string) => string;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
 function TagSelector({
   selectedTags,
   onTagToggle,
   disabled = false,
+  tTags,
+  t,
 }: TagSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -229,7 +234,7 @@ function TagSelector({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Search tags..."
+            placeholder={t('searchTags')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -243,10 +248,10 @@ function TagSelector({
           disabled={disabled}
         >
           <SelectTrigger>
-            <SelectValue placeholder="All categories" />
+            <SelectValue placeholder={t('allCategories')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="all">{t('allCategories')}</SelectItem>
             {Object.keys(tagCategories).map((category) => (
               <SelectItem
                 key={category}
@@ -275,7 +280,7 @@ function TagSelector({
                 htmlFor={tag}
                 className="text-sm font-normal cursor-pointer flex-1"
               >
-                {tag}
+                {tTags(tag)}
               </Label>
             </div>
           ))}
@@ -283,13 +288,16 @@ function TagSelector({
 
         {filteredTags.length === 0 && (
           <div className="text-center text-muted-foreground py-4">
-            No tags found matching &quot;{searchQuery}&quot;
+            {t('noTagsFound', { query: searchQuery })}
           </div>
         )}
       </div>
 
       <div className="text-xs text-muted-foreground">
-        {selectedTags.length} tag{selectedTags.length !== 1 ? "s" : ""} selected
+        {selectedTags.length === 1 
+          ? t('tagsSelected', { count: selectedTags.length })
+          : t('tagsSelectedPlural', { count: selectedTags.length })
+        }
       </div>
     </div>
   );
@@ -304,6 +312,11 @@ export function RecipeEditForm({
   onCancel,
   layoutMode = "single-column",
 }: RecipeEditFormProps) {
+  const t = useTranslations('recipeForm');
+  const tCategories = useTranslations('categories');
+  const tSeasons = useTranslations('seasons');
+  const tTags = useTranslations('tags');
+  
   const generateIngredientId = () => `ingredient-${Date.now()}-${Math.random()}`;
 
   const [formData, setFormData] = useState<RecipeInput>({
@@ -475,23 +488,23 @@ export function RecipeEditForm({
       {/* Basic Information */}
       <Card data-form-start>
         <CardContent className="space-y-3 sm:space-y-4">
-          <h3 className="text-lg font-semibold mb-3">Basic Information</h3>
+          <h3 className="text-lg font-semibold mb-3">{t('basicInformation')}</h3>
           <div className="space-y-2">
-            <Label htmlFor="title">Recipe Title</Label>
+            <Label htmlFor="title">{t('title')}</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, title: e.target.value }))
               }
-              placeholder="Enter recipe title"
+              placeholder={t('titlePlaceholder')}
               disabled={loading}
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">{t('category')}</Label>
               <Select
                 value={formData.category}
                 onValueChange={(value) =>
@@ -500,7 +513,7 @@ export function RecipeEditForm({
                 disabled={loading}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={t('selectCategory')} />
                 </SelectTrigger>
                 <SelectContent>
                   {RECIPE_CATEGORIES.map((category) => (
@@ -509,7 +522,7 @@ export function RecipeEditForm({
                       value={category}
                       className="capitalize"
                     >
-                      {category}
+                      {tCategories(category)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -517,7 +530,7 @@ export function RecipeEditForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="season">Season</Label>
+              <Label htmlFor="season">{t('season')}</Label>
               <Select
                 value={formData.season}
                 onValueChange={(value) =>
@@ -526,7 +539,7 @@ export function RecipeEditForm({
                 disabled={loading}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select season (optional)" />
+                  <SelectValue placeholder={t('selectSeason')} />
                 </SelectTrigger>
                 <SelectContent>
                   {RECIPE_SEASONS.map((season) => (
@@ -535,7 +548,7 @@ export function RecipeEditForm({
                       value={season}
                       className="capitalize"
                     >
-                      {season}
+                      {tSeasons(season)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -545,7 +558,7 @@ export function RecipeEditForm({
 
           {/* Serving Size */}
           <div className="space-y-2">
-            <Label htmlFor="servings">Servings</Label>
+            <Label htmlFor="servings">{t('servings')}</Label>
             <div className="flex items-center gap-2">
               <Input
                 id="servings"
@@ -572,7 +585,7 @@ export function RecipeEditForm({
       {/* Ingredients */}
       <Card>
         <CardContent>
-          <h3 className="text-lg font-semibold mb-3">Ingredients</h3>
+          <h3 className="text-lg font-semibold mb-3">{t('ingredients')}</h3>
           <StructuredIngredientInput
             ingredients={formData.ingredients}
             onChange={handleIngredientsChange}
@@ -584,15 +597,15 @@ export function RecipeEditForm({
       {/* Instructions */}
       <Card>
         <CardContent>
-          <h3 className="text-lg font-semibold mb-3">Instructions</h3>
+          <h3 className="text-lg font-semibold mb-3">{t('instructions')}</h3>
           <div className="space-y-2">
-            <Label htmlFor="description">Step-by-Step Cooking Instructions</Label>
+            <Label htmlFor="description">{t('stepByStepInstructions')}</Label>
             <div className="text-sm text-muted-foreground mb-2">
-              Enter detailed cooking instructions. You can format them as:
+              {t('instructionsHint')}
               <ul className="list-disc list-inside mt-1 space-y-1">
-                <li>Numbered steps (1. Heat oil, 2. Add onions...)</li>
-                <li>Separate lines for each step</li>
-                <li>Or as a paragraph - we&apos;ll format it automatically</li>
+                <li>{t('numberedList')}</li>
+                <li>{t('bulletPoints')}</li>
+                <li>{t('paragraphs')}</li>
               </ul>
             </div>
             <Textarea
@@ -604,7 +617,7 @@ export function RecipeEditForm({
                   description: e.target.value,
                 }))
               }
-              placeholder="1. Heat oil in a large skillet over medium-high heat.&#10;2. Add rice and stir-fry for 3-4 minutes until heated through.&#10;3. Push rice to one side and scramble eggs on the other side.&#10;4. Mix eggs with rice and add vegetables.&#10;5. Season with soy sauce and serve hot."
+              placeholder={t('descriptionPlaceholder')}
               className="min-h-[120px]"
               disabled={loading}
             />
@@ -636,6 +649,8 @@ export function RecipeEditForm({
             selectedTags={formData.tags}
             onTagToggle={toggleTag}
             disabled={loading}
+            tTags={tTags}
+            t={t}
           />
         </CardContent>
       </Card>
@@ -650,10 +665,10 @@ export function RecipeEditForm({
               className="flex-1"
               onClick={onCancel}
             >
-              Cancel
+              {t('cancel')}
             </Button>
             <Button onClick={handleSave} disabled={loading} className="flex-1">
-              {loading ? "Saving..." : recipe.id ? "Save Changes" : "Create Recipe"}
+              {loading ? t('saving') : recipe.id ? t('saveChanges') : t('createRecipe')}
             </Button>
           </>
         ) : (
@@ -663,11 +678,11 @@ export function RecipeEditForm({
             </SheetClose>
             <SheetClose asChild>
               <Button variant="outline" disabled={loading} className="flex-1">
-                Cancel
+                {t('cancel')}
               </Button>
             </SheetClose>
             <Button onClick={handleSave} disabled={loading} className="flex-1">
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? t('saving') : t('saveChanges')}
             </Button>
           </>
         )}

@@ -14,7 +14,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Recipe } from "@/types/recipe";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/app/i18n/routing";
 
 import {
   Table,
@@ -56,6 +56,7 @@ import {
 import { useRecipes } from "@/contexts/recipe-context";
 import { recipeService } from "@/lib/recipe-service";
 import { toast } from "sonner";
+import { useTranslations } from 'next-intl';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -70,6 +71,23 @@ export function RecipeDataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const router = useRouter();
   const { removeRecipes, markRecipesAsEaten } = useRecipes();
+  const t = useTranslations('toast');
+  const tTable = useTranslations('recipeTable');
+  const tCategories = useTranslations('categories');
+  const tSeasons = useTranslations('seasons');
+  
+  const getColumnDisplayName = (columnId: string): string => {
+    switch (columnId) {
+      case 'title': return tTable('title');
+      case 'category': return tTable('category');
+      case 'season': return tTable('season');
+      case 'tags': return tTable('tags');
+      case 'last_eaten': return tTable('lastEaten');
+      case 'created_at': return tTable('created');
+      case 'actions': return tTable('actions');
+      default: return columnId;
+    }
+  };
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -171,7 +189,10 @@ export function RecipeDataTable<TData, TValue>({
     if (selectedIds.length === 0) return;
 
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete ${selectedIds.length} recipe${selectedIds.length > 1 ? 's' : ''}? This action cannot be undone.`
+      tTable('confirmDelete', { 
+        count: selectedIds.length, 
+        plural: selectedIds.length > 1 ? 's' : '' 
+      })
     );
 
     if (!confirmDelete) return;
@@ -181,10 +202,13 @@ export function RecipeDataTable<TData, TValue>({
       const result = await recipeService.deleteRecipes(selectedIds);
       removeRecipes(result.deletedIds);
       setRowSelection({});
-      toast.success(`Successfully deleted ${result.deletedCount} recipe${result.deletedCount > 1 ? 's' : ''}`);
+      const message = result.deletedCount === 1 
+        ? t('recipeDeleted', { count: result.deletedCount })
+        : t('recipesDeleted', { count: result.deletedCount });
+      toast.success(message);
     } catch (error) {
       console.error('Error deleting recipes:', error);
-      toast.error('Failed to delete recipes. Please try again.');
+      toast.error(t('deleteRecipeError'));
     } finally {
       setBulkOperationLoading(false);
     }
@@ -201,10 +225,13 @@ export function RecipeDataTable<TData, TValue>({
       const result = await recipeService.markRecipesAsEaten(selectedIds);
       markRecipesAsEaten(result.updatedIds);
       setRowSelection({});
-      toast.success(`Marked ${result.updatedCount} recipe${result.updatedCount > 1 ? 's' : ''} as eaten`);
+      const message = result.updatedCount === 1
+        ? t('recipeMarkedEaten', { count: result.updatedCount })
+        : t('recipesMarkedEaten', { count: result.updatedCount });
+      toast.success(message);
     } catch (error) {
       console.error('Error marking recipes as eaten:', error);
-      toast.error('Failed to mark recipes as eaten. Please try again.');
+      toast.error(t('markEatenError'));
     } finally {
       setBulkOperationLoading(false);
     }
@@ -224,7 +251,7 @@ export function RecipeDataTable<TData, TValue>({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search recipes..."
+            placeholder={tTable('searchPlaceholder')}
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             className="pl-10"
@@ -250,17 +277,17 @@ export function RecipeDataTable<TData, TValue>({
             }}
           >
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Category" />
+              <SelectValue placeholder={tTable('categoryPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="all">{tTable('allCategories')}</SelectItem>
               {RECIPE_CATEGORIES.map((category) => (
                 <SelectItem
                   key={category}
                   value={category}
                   className="capitalize"
                 >
-                  {category}
+                  {tCategories(category)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -283,13 +310,13 @@ export function RecipeDataTable<TData, TValue>({
             }}
           >
             <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Season" />
+              <SelectValue placeholder={tTable('seasonPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Seasons</SelectItem>
+              <SelectItem value="all">{tTable('allSeasons')}</SelectItem>
               {RECIPE_SEASONS.map((season) => (
                 <SelectItem key={season} value={season} className="capitalize">
-                  {season}
+                  {tSeasons(season)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -299,7 +326,7 @@ export function RecipeDataTable<TData, TValue>({
           {hasFilters && (
             <Button variant="ghost" onClick={clearFilters} className="h-10 px-3">
               <X className="mr-2 h-4 w-4" />
-              Clear
+              {tTable('clear')}
             </Button>
           )}
 
@@ -308,7 +335,7 @@ export function RecipeDataTable<TData, TValue>({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-10 w-10 p-0">
                 <Settings className="h-4 w-4" />
-                <span className="sr-only">View options</span>
+                <span className="sr-only">{tTable('viewOptions')}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -325,7 +352,7 @@ export function RecipeDataTable<TData, TValue>({
                         column.toggleVisibility(!!value)
                       }
                     >
-                      {column.id}
+                      {getColumnDisplayName(column.id)}
                     </DropdownMenuCheckboxItem>
                   );
                 })}
@@ -338,8 +365,10 @@ export function RecipeDataTable<TData, TValue>({
       {selectedRowCount > 0 && (
         <div className="flex items-center gap-2">
           <Badge variant="secondary">
-            {selectedRowCount} of {table.getFilteredRowModel().rows.length}{" "}
-            row(s) selected
+            {tTable('rowsSelected', { 
+              count: selectedRowCount, 
+              total: table.getFilteredRowModel().rows.length 
+            })}
           </Badge>
           <Button 
             variant="destructive" 
@@ -352,7 +381,7 @@ export function RecipeDataTable<TData, TValue>({
             ) : (
               <Trash2 className="mr-2 h-4 w-4" />
             )}
-            Delete Selected
+            {tTable('deleteSelected')}
           </Button>
           <Button 
             variant="outline" 
@@ -365,7 +394,7 @@ export function RecipeDataTable<TData, TValue>({
             ) : (
               <Utensils className="mr-2 h-4 w-4" />
             )}
-            Mark as Eaten
+            {tTable('markAsEatenBulk')}
           </Button>
         </div>
       )}
@@ -440,7 +469,7 @@ export function RecipeDataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No recipes found.
+                  {tTable('noRecipesFound')}
                 </TableCell>
               </TableRow>
             )}
@@ -453,14 +482,16 @@ export function RecipeDataTable<TData, TValue>({
         <div className="flex-1 text-sm text-muted-foreground">
           {selectedRowCount > 0 && (
             <span>
-              {selectedRowCount} of {table.getFilteredRowModel().rows.length}{" "}
-              row(s) selected.
+              {tTable('rowsSelected', { 
+                count: selectedRowCount, 
+                total: table.getFilteredRowModel().rows.length 
+              })}
             </span>
           )}
         </div>
         <div className="flex items-center space-x-6 lg:space-x-8">
           <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
+            <p className="text-sm font-medium">{tTable('rowsPerPage')}</p>
             <Select
               value={`${table.getState().pagination.pageSize}`}
               onValueChange={(value) => {
@@ -482,8 +513,10 @@ export function RecipeDataTable<TData, TValue>({
             </Select>
           </div>
           <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
+            {tTable('page', { 
+              current: table.getState().pagination.pageIndex + 1, 
+              total: table.getPageCount() 
+            })}
           </div>
           <div className="flex items-center space-x-2">
             <Button
@@ -492,7 +525,7 @@ export function RecipeDataTable<TData, TValue>({
               onClick={() => table.setPageIndex(0)}
               disabled={!table.getCanPreviousPage()}
             >
-              <span className="sr-only">Go to first page</span>
+              <span className="sr-only">{tTable('goToFirstPage')}</span>
               <ChevronFirst className="h-4 w-4" />
             </Button>
             <Button
@@ -501,7 +534,7 @@ export function RecipeDataTable<TData, TValue>({
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              <span className="sr-only">Go to previous page</span>
+              <span className="sr-only">{tTable('goToPreviousPage')}</span>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button
@@ -510,7 +543,7 @@ export function RecipeDataTable<TData, TValue>({
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              <span className="sr-only">Go to next page</span>
+              <span className="sr-only">{tTable('goToNextPage')}</span>
               <ChevronRight className="h-4 w-4" />
             </Button>
             <Button
@@ -519,7 +552,7 @@ export function RecipeDataTable<TData, TValue>({
               onClick={() => table.setPageIndex(table.getPageCount() - 1)}
               disabled={!table.getCanNextPage()}
             >
-              <span className="sr-only">Go to last page</span>
+              <span className="sr-only">{tTable('goToLastPage')}</span>
               <ChevronLast className="h-4 w-4" />
             </Button>
           </div>

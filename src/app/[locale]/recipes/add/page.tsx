@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/app/i18n/routing";
 import { useAuth } from "@/lib/auth-context";
 import { useRecipes } from "@/contexts/recipe-context";
 import { PageLoading } from "@/components/ui/page-loading";
@@ -12,6 +12,7 @@ import { RecipeEditForm } from "@/components/recipe-edit-form";
 import { recipeService } from "@/lib/recipe-service";
 import { ArrowLeft } from "lucide-react";
 import { setRedirectUrl } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
 
 const generateIngredientId = () => `ingredient-${Date.now()}-${Math.random()}`;
 
@@ -41,6 +42,7 @@ export default function AddRecipePage() {
   const { user, loading: authLoading } = useAuth();
   const { addRecipe } = useRecipes();
   const [loading, setLoading] = useState(false);
+  const t = useTranslations('recipes');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -104,15 +106,15 @@ export default function AddRecipePage() {
               disabled={loading}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Recipes
+              {t('backToRecipes')}
             </Button>
             <div className="h-6 w-px bg-border" />
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                Add New Recipe
+                {t('addNewRecipe')}
               </h1>
               <p className="text-muted-foreground mt-1">
-                Create a new recipe for your collection
+                {t('createNewRecipe')}
               </p>
             </div>
           </div>
