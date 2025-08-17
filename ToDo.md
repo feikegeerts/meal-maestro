@@ -88,14 +88,14 @@ An AI-powered recipe management system. The system provides natural language rec
 
 ### Phase 5: Post-MVP Enhancements
 
-- [ ] datum notatie localization
+- [x] datum notatie localization
 - [ ] optimize translations
 - [ ] categorieen aanpassen naar die AH.nl ook gebruikt.
+- [ ] ah.nl layouts overnemen zowel desktop als mobile voor recepten weergeven en toevoegen
 - [x] every key press in the ingredient edit is blurring the input field making it impossible to properly type or edit
 - [ ] The unit list in the ingredient dropdown is too large needs to be optimized
 - [ ] Header met back button is niet heel mooi, misschien beter breadcrumb op tweede lijn
-- [ ] the avatar doesn;t have a hover state so it's not clear it's a clickable item.
-- [ ] About page
+- [x] the avatar doesn;t have a hover state so it's not clear it's a clickable item.
 - [ ] add cookie consent message to login?
 - [ ] use typescript types everywhere instead of hardcoded lists of tags categories and seasons.
 - [x] login using magic link from supabase
@@ -104,7 +104,8 @@ An AI-powered recipe management system. The system provides natural language rec
 - [x] **5.9** Implement languages Dutch and English
 - [ ] **5.11** Implement caching strategies
 - [ ] **5.12** Add buy me a coffee functionality
-- [ ] **5.13** Improve deployment pipeline with automatic testing and version bumping
+- [ ] **5.13** Improve deployment pipeline with automatic version bumping
+- [ ] About page with version and release notes
 
 ### Phase 6: Voice Integration
 

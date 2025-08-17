@@ -24,11 +24,13 @@ import {
 import { Link } from "@/app/i18n/routing";
 import { useTranslations } from 'next-intl';
 import { useRecipeTranslations } from '@/messages';
+import { useLocalizedDateFormatter } from '@/lib/date-utils';
 
 export function useRecipeColumns(): ColumnDef<Recipe>[] {
   const t = useTranslations('recipeTable');
   const tA11y = useTranslations('accessibility');
   const { translateCategory, translateSeason } = useRecipeTranslations();
+  const { formatDateWithFallback } = useLocalizedDateFormatter();
 
   return [
   {
@@ -181,7 +183,7 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
       }
       return (
         <div className="text-sm">
-          {new Date(lastEaten).toLocaleDateString()}
+          {formatDateWithFallback(lastEaten)}
         </div>
       );
     },
@@ -213,7 +215,7 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
       const createdAt = row.getValue("created_at") as string;
       return (
         <div className="text-sm text-muted-foreground">
-          {new Date(createdAt).toLocaleDateString()}
+          {formatDateWithFallback(createdAt)}
         </div>
       );
     },

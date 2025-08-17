@@ -9,7 +9,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { TimePeriod } from "./chart-controls";
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { SupportedLocale } from '@/lib/date-utils';
 
 interface TimeRangeData {
   date: string;
@@ -27,6 +28,7 @@ interface CostBarChartProps {
 
 export function CostBarChart({ data, timePeriod, loading }: CostBarChartProps) {
   const t = useTranslations('admin');
+  const locale = useLocale() as SupportedLocale;
   
   const getTranslatedPeriod = (period: TimePeriod): string => {
     switch (period) {
@@ -47,16 +49,18 @@ export function CostBarChart({ data, timePeriod, loading }: CostBarChartProps) {
     return data.map((item) => {
       let displayDate: string;
       
+      const localeCode = locale === 'nl' ? 'nl-NL' : 'en-US';
+      
       switch (timePeriod) {
         case 'day':
-          displayDate = new Date(item.date).toLocaleDateString('en-US', { 
+          displayDate = new Date(item.date).toLocaleDateString(localeCode, { 
             month: 'short', 
             day: 'numeric' 
           });
           break;
         case 'week':
           // For weeks, show "Week of MMM DD"
-          const weekDate = new Date(item.date).toLocaleDateString('en-US', { 
+          const weekDate = new Date(item.date).toLocaleDateString(localeCode, { 
             month: 'short', 
             day: 'numeric' 
           });
@@ -65,7 +69,7 @@ export function CostBarChart({ data, timePeriod, loading }: CostBarChartProps) {
         case 'month':
           // For months, show "MMM YYYY"
           const [year, month] = item.date.split('-');
-          displayDate = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('en-US', { 
+          displayDate = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString(localeCode, { 
             month: 'short', 
             year: 'numeric' 
           });

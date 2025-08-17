@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Recipe, formatIngredientDisplay, RecipeCategory, RecipeSeason, RecipeTag } from "@/types/recipe";
+import { useLocalizedDateFormatter } from "@/lib/date-utils";
 import { ServingSizeSelector } from "@/components/serving-size-selector";
 import {
   ArrowLeft,
@@ -36,6 +37,7 @@ export default function RecipeDetailPage() {
   const { user, loading: authLoading } = useAuth();
   const { getRecipeById, updateRecipe: updateRecipeInContext } = useRecipes();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const { formatDateWithFallback } = useLocalizedDateFormatter();
   const [displayRecipe, setDisplayRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,14 +102,6 @@ export default function RecipeDetailPage() {
     }
   }, [id, user, getRecipeById, t]);
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "Never";
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return "Unknown";
-    }
-  };
 
   const updateRecipe = async (
     updateData: Partial<import("@/types/recipe").RecipeInput>
@@ -390,11 +384,11 @@ export default function RecipeDetailPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center">
                     <CalendarDays className="mr-1 h-4 w-4" />
-                    <span>{t('createdDetail')}: {formatDate(recipe.created_at) || t('never')}</span>
+                    <span>{t('createdDetail')}: {formatDateWithFallback(recipe.created_at, t('never'))}</span>
                   </div>
                   <div className="flex items-center sm:justify-end">
                     <Clock className="mr-1 h-4 w-4" />
-                    <span>{t('lastEatenDetail')}: {formatDate(recipe.last_eaten) || t('never')}</span>
+                    <span>{t('lastEatenDetail')}: {formatDateWithFallback(recipe.last_eaten, t('never'))}</span>
                   </div>
                 </div>
               </CardContent>

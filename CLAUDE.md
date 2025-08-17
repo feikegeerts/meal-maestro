@@ -50,7 +50,7 @@
 
 ## Development Guidelines
 
-- Let the user always test with pnpm dev
+- Let the user always test with pnpm dev manually - never run pnpm dev automatically
 - Do not add comments when the code is self explanatory
 - Use shadcn components when possible to avoid custom components
 
