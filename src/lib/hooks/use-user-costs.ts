@@ -31,7 +31,9 @@ export function useUserCosts(): UseUserCostsReturn {
     setError(null);
 
     try {
-      const response = await fetch('/api/user/usage-cost');
+      const response = await fetch('/api/user/usage-cost', {
+        credentials: 'include'
+      });
       
       if (!response.ok) {
         throw new Error(`Failed to fetch costs: ${response.status}`);

@@ -90,7 +90,7 @@ An AI-powered recipe management system. The system provides natural language rec
 
 - [ ] datum notatie localization
 - [ ] optimize translations
-- [ ] every key press in the ingredient edit is blurring the input field making it impossible to properly type or edit
+- [x] every key press in the ingredient edit is blurring the input field making it impossible to properly type or edit
 - [ ] The unit list in the ingredient dropdown is too large needs to be optimized
 - [ ] Header met back button is niet heel mooi, misschien beter breadcrumb op tweede lijn
 - [ ] the avatar doesn;t have a hover state so it's not clear it's a clickable item.
