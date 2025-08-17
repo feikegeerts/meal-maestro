@@ -1,14 +1,13 @@
 "use client";
 
-import { Link, usePathname } from "@/app/i18n/routing";
+import { Link, usePathname, useRouter } from "@/app/i18n/routing";
 import { useState, useEffect } from "react";
-import { ChefHat, BookOpen, Menu, LogOut, User, Shield } from "lucide-react";
+import { ChefHat, BookOpen, Menu, LogOut, User, Shield, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useUserCosts } from "@/lib/hooks/use-user-costs";
-import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { cn } from "@/lib/utils";
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -29,12 +28,22 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+const languages = [
+  { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+];
+
 export function MainNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const locale = useLocale();
   const { user, profile, signOut } = useAuth();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -63,6 +72,10 @@ export function MainNav() {
     if (error) {
       console.error("Error signing out:", error);
     }
+  };
+
+  const handleLanguageChange = (newLocale: string) => {
+    router.push(pathname, { locale: newLocale });
   };
 
   const formatCost = (cost: number): string => {
@@ -142,15 +155,12 @@ export function MainNav() {
               </NavigationMenuList>
             </NavigationMenu>
 
-            {/* Language Switcher */}
-            <LanguageSwitcher />
-
             {/* User Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="relative h-8 w-8 rounded-full"
+                  className="relative h-8 w-8 rounded-full hover:bg-accent hover:ring-2 hover:ring-ring hover:ring-offset-2 focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all cursor-pointer"
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage
@@ -163,22 +173,35 @@ export function MainNav() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuContent className="w-56 sm:w-64 max-w-[calc(100vw-2rem)]" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {profile?.display_name || "User"}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage
+                          src={profile?.avatar_url || undefined}
+                          alt={profile?.display_name || user?.email || "User"}
+                        />
+                        <AvatarFallback>
+                          <User className="h-5 w-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {profile?.display_name || "User"}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
                     {costLoading ? (
-                      <div className="space-y-1">
+                      <div className="space-y-1 pl-12">
                         <div className="h-3 w-20 animate-pulse bg-muted rounded"></div>
                         <div className="h-3 w-16 animate-pulse bg-muted rounded"></div>
                       </div>
                     ) : (
-                      <div className="space-y-1">
+                      <div className="space-y-1 pl-12">
                         <p className="text-xs leading-none text-muted-foreground">
                           {tAdmin('totalCosts')}: {formatCost(costData?.totalCost || 0)}
                         </p>
@@ -189,6 +212,37 @@ export function MainNav() {
                     )}
                   </div>
                 </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                {/* Language Selection Submenu */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="flex items-center gap-3">
+                    <Globe className="h-4 w-4" />
+                    <span>{t('language')}</span>
+                    <span className="ml-2 text-sm">
+                      {languages.find(lang => lang.code === locale)?.flag}
+                    </span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    {languages.map((language) => (
+                      <DropdownMenuItem
+                        key={language.code}
+                        onClick={() => handleLanguageChange(language.code)}
+                        className={cn(
+                          "flex items-center gap-3",
+                          locale === language.code && "bg-accent text-accent-foreground"
+                        )}
+                      >
+                        <span className="text-sm">{language.flag}</span>
+                        <span className="text-sm">{language.name}</span>
+                        {locale === language.code && (
+                          <div className="ml-auto h-2 w-2 bg-primary rounded-full" />
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -199,16 +253,13 @@ export function MainNav() {
           </div>
 
           {/* Mobile Navigation */}
-          <div className="md:hidden flex items-center space-x-2">
-            {/* Mobile Language Switcher */}
-            <LanguageSwitcher />
-            
-            {/* Mobile User Avatar */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+          <div className="md:hidden flex items-center space-x-2">            
+            {/* Mobile User Avatar - Sheet */}
+            <Sheet>
+              <SheetTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="relative h-8 w-8 rounded-full"
+                  className="relative h-8 w-8 rounded-full hover:bg-accent hover:ring-2 hover:ring-ring hover:ring-offset-2 focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all cursor-pointer"
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage
@@ -220,23 +271,46 @@ export function MainNav() {
                     </AvatarFallback>
                   </Avatar>
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {profile?.display_name || "User"}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[280px]">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center space-x-2">
+                    <User className="h-5 w-5" />
+                    <span>{t('navigation')}</span>
+                  </SheetTitle>
+                </SheetHeader>
+                
+                <div className="mt-6 space-y-6">
+                  {/* User Info Section */}
+                  <div className="flex flex-col space-y-3">
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage
+                          src={profile?.avatar_url || undefined}
+                          alt={profile?.display_name || user?.email || "User"}
+                        />
+                        <AvatarFallback>
+                          <User className="h-6 w-6" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {profile?.display_name || "User"}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Usage Stats */}
                     {costLoading ? (
-                      <div className="space-y-1">
+                      <div className="space-y-2 pl-15">
+                        <div className="h-3 w-24 animate-pulse bg-muted rounded"></div>
                         <div className="h-3 w-20 animate-pulse bg-muted rounded"></div>
-                        <div className="h-3 w-16 animate-pulse bg-muted rounded"></div>
                       </div>
                     ) : (
-                      <div className="space-y-1">
+                      <div className="space-y-1 pl-15">
                         <p className="text-xs leading-none text-muted-foreground">
                           {tAdmin('totalCosts')}: {formatCost(costData?.totalCost || 0)}
                         </p>
@@ -246,14 +320,45 @@ export function MainNav() {
                       </div>
                     )}
                   </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>{t('logout')}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+                  {/* Language Selection */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <Globe className="h-4 w-4" />
+                      {t('language')}
+                    </h3>
+                    <div className="space-y-2">
+                      {languages.map((language) => (
+                        <Button
+                          key={language.code}
+                          variant={locale === language.code ? "secondary" : "ghost"}
+                          onClick={() => handleLanguageChange(language.code)}
+                          className="w-full justify-start gap-3"
+                        >
+                          <span className="text-sm">{language.flag}</span>
+                          <span className="text-sm">{language.name}</span>
+                          {locale === language.code && (
+                            <div className="ml-auto h-2 w-2 bg-primary rounded-full" />
+                          )}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Logout Button */}
+                  <div className="pt-4 border-t">
+                    <Button
+                      variant="ghost"
+                      onClick={handleSignOut}
+                      className="w-full justify-start gap-3"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>{t('logout')}</span>
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
 
             {/* Mobile Menu Sheet */}
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

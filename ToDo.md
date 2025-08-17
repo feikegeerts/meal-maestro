@@ -90,6 +90,7 @@ An AI-powered recipe management system. The system provides natural language rec
 
 - [ ] datum notatie localization
 - [ ] optimize translations
+- [ ] categorieen aanpassen naar die AH.nl ook gebruikt.
 - [x] every key press in the ingredient edit is blurring the input field making it impossible to properly type or edit
 - [ ] The unit list in the ingredient dropdown is too large needs to be optimized
 - [ ] Header met back button is niet heel mooi, misschien beter breadcrumb op tweede lijn

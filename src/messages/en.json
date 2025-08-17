@@ -8,7 +8,8 @@
     "admin": "Admin",
     "logout": "Log out",
     "menu": "Menu",
-    "navigation": "Navigation"
+    "navigation": "Navigation",
+    "language": "Language"
   },
   "home": {
     "title": "Meal Maestro",
