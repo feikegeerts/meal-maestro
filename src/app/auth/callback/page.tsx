@@ -1,10 +1,12 @@
 'use client'
 
+import '@/app/[locale]/globals.css'
 import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { PageLoading } from '@/components/ui/page-loading'
-import { PageWrapper } from '@/components/ui/page-wrapper'
+import { routing } from '@/app/i18n/routing'
+import { getRedirectUrl, clearRedirectUrl } from '@/lib/utils'
 
 export default function AuthCallback() {
   const router = useRouter()
@@ -19,13 +21,22 @@ export default function AuthCallback() {
           
           if (event === 'SIGNED_IN' && session) {
             hasHandledAuth.current = true
-            router.push('/')
+            
+            // Check for stored redirect URL first
+            const redirectUrl = getRedirectUrl()
+            if (redirectUrl) {
+              clearRedirectUrl()
+              router.push(redirectUrl)
+            } else {
+              // Default redirect to recipes page on successful login
+              router.push(`/${routing.defaultLocale}/recipes`)
+            }
           } else if (event === 'SIGNED_OUT') {
             hasHandledAuth.current = true
-            router.push('/?error=auth_cancelled')
+            router.push(`/${routing.defaultLocale}?error=auth_cancelled`)
           } else if (event === 'INITIAL_SESSION' && !session) {
             hasHandledAuth.current = true
-            router.push('/?error=invalid_link')
+            router.push(`/${routing.defaultLocale}?error=invalid_link`)
           }
         }
       )
@@ -44,10 +55,19 @@ export default function AuthCallback() {
         supabase.auth.getSession().then(({ data: { session } }) => {
           if (session && !hasHandledAuth.current) {
             hasHandledAuth.current = true
-            router.push('/')
+            
+            // Check for stored redirect URL first
+            const redirectUrl = getRedirectUrl()
+            if (redirectUrl) {
+              clearRedirectUrl()
+              router.push(redirectUrl)
+            } else {
+              // Default redirect to recipes page on successful login
+              router.push(`/${routing.defaultLocale}/recipes`)
+            }
           } else if (!hasHandledAuth.current) {
             hasHandledAuth.current = true
-            router.push('/?error=timeout')
+            router.push(`/${routing.defaultLocale}?error=timeout`)
           }
         })
       }
@@ -60,8 +80,8 @@ export default function AuthCallback() {
   }, [router])
 
   return (
-    <PageWrapper>
+    <div className="font-sans">
       <PageLoading text="Completing authentication..." />
-    </PageWrapper>
+    </div>
   )
 }

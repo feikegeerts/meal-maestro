@@ -75,36 +75,18 @@ export function MainNav() {
     }
   };
 
-  // Check if user is admin
+  // Check if user is admin based on profile role
   useEffect(() => {
-    async function checkAdminStatus() {
-      if (!user) {
-        setIsAdmin(false);
-        setAdminCheckLoading(false);
-        return;
-      }
-
-      try {
-        // Try to access admin endpoint to check permissions
-        const response = await fetch('/api/admin/usage-stats?startDate=2024-01-01&endDate=2024-01-01');
-        
-        if (response.status === 403) {
-          setIsAdmin(false);
-        } else if (response.ok) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-        setIsAdmin(false);
-      } finally {
-        setAdminCheckLoading(false);
-      }
+    if (!user || !profile) {
+      setIsAdmin(false);
+      setAdminCheckLoading(false);
+      return;
     }
 
-    checkAdminStatus();
-  }, [user]);
+    // Check admin status from user profile role
+    setIsAdmin(profile.role === 'admin');
+    setAdminCheckLoading(false);
+  }, [user, profile]);
 
   // Close mobile sheet when route changes
   useEffect(() => {

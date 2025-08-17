@@ -11,7 +11,6 @@ import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { User, LogOut, ChefHat } from "lucide-react";
 import Image from "next/image";
-import { getRedirectUrl, clearRedirectUrl } from "@/lib/utils";
 import { useTranslations } from 'next-intl';
 
 function HomeContent() {
@@ -29,15 +28,9 @@ function HomeContent() {
     }
   };
 
-  useEffect(() => {
-    if (user && !loading) {
-      const redirectUrl = getRedirectUrl();
-      if (redirectUrl) {
-        clearRedirectUrl();
-        router.push(redirectUrl);
-      }
-    }
+  // Note: Auth callback now handles redirects, so no redirect logic needed here
 
+  useEffect(() => {
     // Handle authentication errors from callback
     const error = searchParams.get('error');
     if (error && !user) {
@@ -66,7 +59,7 @@ function HomeContent() {
         setAuthError(null);
       }, 5000);
     }
-  }, [user, loading, router, searchParams, tAuth]);
+  }, [user, router, searchParams, tAuth]);
 
   if (loading) {
     return <PageLoading />;

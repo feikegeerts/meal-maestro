@@ -4,9 +4,18 @@ import userEvent from "@testing-library/user-event";
 import { MagicLinkForm } from "../magic-link-form";
 import { AuthProvider } from "../../../lib/auth-context";
 import { server } from "../../../__mocks__/server";
+import { toast } from 'sonner';
 
 // Import the mocked supabase to unmock specific methods
 jest.mock("../../../lib/supabase");
+
+// Mock Sonner toast
+jest.mock('sonner', () => ({
+  toast: {
+    error: jest.fn(),
+    success: jest.fn(),
+  },
+}));
 
 // Use real AuthProvider to enable HTTP requests to MSW
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -95,7 +104,7 @@ describe("MagicLinkForm", () => {
       expect(submitButton).not.toBeDisabled();
     });
 
-    it("should show error message when email is empty on form submission", async () => {
+    it("should show toast error when email is empty on form submission", async () => {
       render(<MagicLinkForm />, { wrapper });
       
       const form = screen.getByRole("button", { name: /sendMagicLink/i }).closest("form");
@@ -105,31 +114,26 @@ describe("MagicLinkForm", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText("Email is required")).toBeInTheDocument();
+        expect(toast.error).toHaveBeenCalledWith("emailRequired");
       });
     });
 
-    it("should clear error when user starts typing after an error", async () => {
+    it("should show toast error for invalid email on form submission", async () => {
       const user = userEvent.setup();
       render(<MagicLinkForm />, { wrapper });
       
       const emailInput = screen.getByPlaceholderText("emailPlaceholder");
       const form = emailInput.closest("form");
       
-      // Trigger empty email error by submitting empty form
+      // Type invalid email and submit
+      await user.type(emailInput, "invalid-email");
+      
       await act(async () => {
         fireEvent.submit(form!);
       });
-      
-      await waitFor(() => {
-        expect(screen.getByText("Email is required")).toBeInTheDocument();
-      });
-
-      // Start typing - error should clear
-      await user.type(emailInput, "t");
 
       await waitFor(() => {
-        expect(screen.queryByText("Email is required")).not.toBeInTheDocument();
+        expect(toast.error).toHaveBeenCalledWith("invalidEmail");
       });
     });
   });
@@ -153,7 +157,7 @@ describe("MagicLinkForm", () => {
       
       expect(screen.getByPlaceholderText("emailPlaceholder")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /sendMagicLink/i })).toBeInTheDocument();
-      expect(screen.getByText(/we'll send you a secure link/i)).toBeInTheDocument();
+      expect(screen.getByText("magicLinkInfo")).toBeInTheDocument();
     });
   });
 
@@ -180,26 +184,6 @@ describe("MagicLinkForm", () => {
       
       expect(submitButton).toBeDisabled();
     });
-
-    it("should clear error when user starts typing", async () => {
-      const user = userEvent.setup();
-      render(<MagicLinkForm />, { wrapper });
-      
-      const emailInput = screen.getByPlaceholderText("emailPlaceholder");
-      const form = emailInput.closest("form");
-      
-      // Trigger error by submitting empty form
-      act(() => {
-        fireEvent.submit(form!);
-      });
-      
-      expect(screen.getByText("Email is required")).toBeInTheDocument();
-
-      // Start typing - error should clear
-      await user.type(emailInput, "t");
-
-      expect(screen.queryByText("Email is required")).not.toBeInTheDocument();
-    });
   });
 
   describe("Accessibility", () => {
@@ -214,7 +198,7 @@ describe("MagicLinkForm", () => {
       expect(submitButton).toHaveAttribute("type", "submit");
     });
 
-    it("should show error messages with proper styling", () => {
+    it("should call toast error for validation errors", () => {
       render(<MagicLinkForm />, { wrapper });
       
       const emailInput = screen.getByPlaceholderText("emailPlaceholder");
@@ -225,10 +209,8 @@ describe("MagicLinkForm", () => {
         fireEvent.submit(form!);
       });
 
-      // Check for error message
-      const errorMessage = screen.getByText("Email is required");
-      expect(errorMessage).toBeInTheDocument();
-      expect(errorMessage).toHaveClass("text-destructive");
+      // Check for toast error call
+      expect(toast.error).toHaveBeenCalledWith("emailRequired");
     });
   });
 
@@ -241,8 +223,7 @@ describe("MagicLinkForm", () => {
       expect(screen.getByRole("button", { name: /sendMagicLink/i })).toBeInTheDocument();
       
       // Check for descriptive text
-      expect(screen.getByText(/we'll send you a secure link/i)).toBeInTheDocument();
-      expect(screen.getByText(/links expire after 1 hour/i)).toBeInTheDocument();
+      expect(screen.getByText("magicLinkInfo")).toBeInTheDocument();
       
       // Check for icons
       const mailIcons = document.querySelectorAll('.lucide-mail');

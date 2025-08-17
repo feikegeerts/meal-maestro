@@ -11,7 +11,7 @@ export interface UserProfile {
 }
 
 export const profileService = {
-  async getUserProfile(userId: string): Promise<UserProfile | null> {
+  async getUserProfile(userId: string, retryCount = 0): Promise<UserProfile | null> {
     try {
       const { data, error } = await supabase
         .from("user_profiles")
@@ -20,7 +20,20 @@ export const profileService = {
         .single();
 
       if (error) {
-        console.error("Error fetching user profile:", error);
+        // For newly created users, the profile might not exist yet
+        // This is expected when the database trigger hasn't completed
+        if (error.code === 'PGRST116') {
+          // No rows returned - retry up to 3 times for new users
+          if (retryCount < 3) {
+            console.debug(`User profile not found, retrying (${retryCount + 1}/3):`, userId);
+            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Progressive delay
+            return this.getUserProfile(userId, retryCount + 1);
+          } else {
+            console.debug("User profile not found after retries - likely a newly created user:", userId);
+          }
+        } else {
+          console.error("Error fetching user profile:", error);
+        }
         return null;
       }
 

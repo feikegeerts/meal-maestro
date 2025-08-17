@@ -145,7 +145,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
             );
             setProfile(userProfile);
           } catch (error) {
-            console.error("Error fetching initial user profile:", error);
+            // This is expected for newly created users as the profile trigger might not have completed yet
+            console.debug("Profile not found (might be newly created user):", error);
             setProfile(null);
           }
         }
@@ -190,7 +191,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
               );
               setProfile(userProfile);
             } catch (error) {
-              console.error("Error fetching user profile:", error);
+              // For newly created users, the profile might not exist yet due to trigger timing
+              // This is normal and expected behavior, not an error
+              console.debug("Profile not found (might be newly created user):", error);
               setProfile(null);
             }
           };

@@ -44,7 +44,7 @@ interface TopUser {
 
 
 export default function AdminDashboard() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [topUsersByCost, setTopUsersByCost] = useState<TopUser[]>([]);
@@ -95,39 +95,29 @@ export default function AdminDashboard() {
   };
 
 
-  // Check admin status
+  // Check admin status based on profile role
   useEffect(() => {
-    async function checkAdminStatus() {
-      if (!user || authLoading) {
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/admin/usage-stats?startDate=2024-01-01&endDate=2024-12-31');
-        
-        if (response.status === 403) {
-          setIsAdmin(false);
-          router.push('/recipes');
-          return;
-        }
-        
-        if (response.ok) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-          router.push('/recipes');
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-        setIsAdmin(false);
-        router.push('/recipes');
-      } finally {
-        setAdminLoading(false);
-      }
+    if (authLoading) {
+      return;
     }
 
-    checkAdminStatus();
-  }, [user, authLoading, router]);
+    if (!user || !profile) {
+      setIsAdmin(false);
+      setAdminLoading(false);
+      router.push('/recipes');
+      return;
+    }
+
+    // Check if user has admin role
+    if (profile.role === 'admin') {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+      router.push('/recipes');
+    }
+    
+    setAdminLoading(false);
+  }, [user, profile, authLoading, router]);
 
   // Fetch overview stats once admin status is confirmed
   useEffect(() => {

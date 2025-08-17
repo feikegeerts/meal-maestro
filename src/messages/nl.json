@@ -35,7 +35,17 @@
     "invalidLink": "De magische link is ongeldig of verlopen. Vraag een nieuwe aan.",
     "unexpectedError": "Er is een onverwachte fout opgetreden tijdens authenticatie.",
     "or": "Of",
-    "signingIn": "Inloggen..."
+    "signingIn": "Inloggen...",
+    "emailRequired": "E-mail is verplicht",
+    "sendingMagicLink": "Magische Link Versturen...",
+    "emailSent": "E-mail Verzonden!",
+    "emailSentDescription": "Controleer je e-mail en klik op de link om in te loggen of je account aan te maken. De link verloopt na 1 uur.",
+    "sendAnotherEmail": "Stuur Nog Een E-mail",
+    "magicLinkInfo": "We sturen je een veilige link om in te loggen of een account aan te maken zonder wachtwoord. Links verlopen na 1 uur.",
+    "tooManyRequests": "Te veel verzoeken. Wacht 60 seconden voordat je het opnieuw probeert.",
+    "rateLimitMessage": "Limiet bereikt. Wacht 60 seconden voordat je het opnieuw probeert.",
+    "pleaseWaitBeforeRetrying": "Wacht voordat je nog een magische link aanvraagt",
+    "failedToSendMagicLink": "Magische link versturen mislukt"
   },
   "recipes": {
     "title": "Jouw Recepten",
