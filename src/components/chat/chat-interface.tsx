@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { ChatMessage } from "./chat-message";
 import { Send, Loader2, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 import { Recipe } from "@/types/recipe";
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -51,6 +51,7 @@ interface ChatInterfaceProps {
 
 export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormState, isDesktopSidebar = false }: ChatInterfaceProps) {
   const t = useTranslations('chat');
+  const locale = useLocale();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
@@ -90,6 +91,7 @@ export function ChatInterface({ selectedRecipe, onRecipeGenerated, currentFormSt
     try {
       const requestBody = {
         message: userMessage,
+        locale: locale,
         conversation_history: messages,
         context: {
           ...(currentFormState && { current_form_state: currentFormState }),

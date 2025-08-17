@@ -327,7 +327,11 @@
     "thinking": "AI denkt na...",
     "inputPlaceholder": "Typ je bericht... (bijv. 'voeg een recept toe voor spaghetti bolognese')",
     "currentlyViewing": "Momenteel bekijkt",
-    "welcomeMessage": "Hallo! Ik ben Meal Maestro, jouw AI recept formulier assistent. Ik kan je helpen met het maken en bewerken van recepten door formulieren in te vullen. Aan welk recept wil je vandaag werken?"
+    "welcomeMessage": "Hallo! Ik ben Meal Maestro, jouw AI recept formulier assistent. Ik kan je helpen met het maken en bewerken van recepten door formulieren in te vullen. Aan welk recept wil je vandaag werken?",
+    "recipeCreatedWithTitle": "Perfect! Ik heb een compleet recept gemaakt voor \"{title}\" met gedetailleerde kookinstructies. Je kunt alle details in het formulier hierboven bekijken en aanpassingen maken voordat je opslaat.",
+    "recipeFormUpdated": "Geweldig! Ik heb het receptformulier bijgewerkt met je gevraagde wijzigingen. Bekijk de details hierboven en sla op wanneer je klaar bent.",
+    "requestProcessed": "Ik heb je verzoek succesvol verwerkt. Controleer het formulier hierboven voor de updates.",
+    "processingError": "Het spijt me, maar ik ondervond een probleem bij het verwerken van je verzoek."
   },
   "servingSelector": {
     "recipeServes": "Recept is voor",

@@ -39,6 +39,7 @@ interface FormUpdate {
 interface ChatRequest {
   message: string;
   conversation_history?: ChatMessage[];
+  locale?: string;
   context?: {
     current_form_state?: FormUpdate;
     selected_recipe?: {
@@ -118,7 +119,15 @@ export async function POST(request: NextRequest) {
 
   try {
     const body: ChatRequest = await request.json();
-    const { message, conversation_history = [], context } = body;
+    const { message, conversation_history = [], context, locale } = body;
+
+    // Detect user language from request body, headers, or URL
+    const acceptLanguage = request.headers.get('accept-language') || '';
+    const isNl = locale === 'nl' || acceptLanguage.includes('nl') || request.url.includes('/nl/');
+    const userLocale = isNl ? 'nl' : 'en';
+
+    // Load translations for the detected locale
+    const translations = (await import(`@/messages/${userLocale}.json`)).default;
     
 
     if (!message || message.trim().length === 0) {
@@ -128,9 +137,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build conversation messages
-    const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-      { role: "system", content: SYSTEM_PROMPT },
+    // Build conversation messages with language instruction
+    const languageInstruction = userLocale === 'nl' 
+      ? '\n\nCRITICAL INSTRUCTION: Always respond in Dutch (Nederlands). Use Dutch terminology for cooking terms, measurements, and all text. Never respond in English when the user locale is Dutch.'
+      : '\n\nCRITICAL INSTRUCTION: Always respond in English.';
+    
+    const chatMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+      { role: "system", content: SYSTEM_PROMPT + languageInstruction },
     ];
 
     // Add form state context if provided
@@ -153,7 +166,7 @@ export async function POST(request: NextRequest) {
       
       if (formContextParts.length > 0) {
         const contextMessage = `Current form state: ${formContextParts.join('; ')}`;
-        messages.push({ role: "system", content: contextMessage });
+        chatMessages.push({ role: "system", content: contextMessage });
       }
     }
 
@@ -161,24 +174,24 @@ export async function POST(request: NextRequest) {
     if (context?.selected_recipe) {
       const recipe = context.selected_recipe;
       const contextMessage = `The user is currently looking at the recipe: "${recipe.title}" (${recipe.category})`;
-      messages.push({ role: "system", content: contextMessage });
+      chatMessages.push({ role: "system", content: contextMessage });
     }
 
     // Add conversation history
     conversation_history.forEach((msg) => {
-      messages.push({
+      chatMessages.push({
         role: msg.role as "user" | "assistant" | "system",
         content: msg.content,
       });
     });
 
     // Add current user message
-    messages.push({ role: "user", content: message });
+    chatMessages.push({ role: "user", content: message });
 
     
     // Create completion with optional function calling and usage tracking
     const { completion, usage } = await createChatCompletion(
-      messages,
+      chatMessages,
       [recipeFormFunction]
     );
 
@@ -229,26 +242,29 @@ export async function POST(request: NextRequest) {
       if (functionResult.function === 'update_recipe_form') {
         const formUpdate = functionResult.result?.formUpdate as FormUpdate;
         if (formUpdate?.title) {
-          responseContent = `Perfect! I've created a complete recipe for "${formUpdate.title}" with detailed cooking instructions. You can review all the details in the form above and make any adjustments before saving.`;
+          responseContent = translations.chat.recipeCreatedWithTitle.replace('{title}', formUpdate.title);
         } else {
-          responseContent = `Great! I've updated the recipe form with your requested changes. Please review the details above and save when ready.`;
+          responseContent = translations.chat.recipeFormUpdated;
         }
       } else {
-        responseContent = `I've successfully processed your request. Please check the form above for the updates.`;
+        responseContent = translations.chat.requestProcessed;
       }
     } else if (!responseContent) {
-      responseContent = "I apologize, but I encountered an issue processing your request.";
+      responseContent = translations.chat.processingError;
     }
+
+    // Ensure responseContent is never null
+    const finalResponseContent = responseContent || translations.chat.processingError;
 
     // Build updated conversation history
     updatedHistory.push({ role: "user", content: message });
     updatedHistory.push({
       role: "assistant",
-      content: responseContent,
+      content: finalResponseContent,
     });
 
     const response = {
-      response: responseContent,
+      response: finalResponseContent,
       conversation_history: updatedHistory,
       function_call: functionResult,
     };
