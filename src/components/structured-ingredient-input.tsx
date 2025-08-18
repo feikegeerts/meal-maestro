@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, memo } from "react";
-import { RecipeIngredient, COOKING_UNITS, normalizeIngredientUnit } from "@/types/recipe";
+import {
+  RecipeIngredient,
+  COOKING_UNITS,
+  normalizeIngredientUnit,
+} from "@/types/recipe";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, X } from "lucide-react";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 
 interface StructuredIngredientInputProps {
   ingredients: RecipeIngredient[];
@@ -26,12 +30,11 @@ function StructuredIngredientInputComponent({
   onChange,
   disabled = false,
 }: StructuredIngredientInputProps) {
-  const t = useTranslations('ingredientInput');
-  const tUnits = useTranslations('units');
+  const t = useTranslations("ingredientInput");
+  const tUnits = useTranslations("units");
   const [showUnitDropdown, setShowUnitDropdown] = useState<{
     [key: string]: boolean;
   }>({});
-  
 
   const generateId = () => `ingredient-${Date.now()}-${Math.random()}`;
 
@@ -61,15 +64,18 @@ function StructuredIngredientInputComponent({
   const handleAmountChange = (id: string, value: string) => {
     const numValue = value === "" ? null : parseFloat(value);
     if (value === "" || (!isNaN(numValue!) && numValue! > 0)) {
-      const currentIngredient = ingredients.find(ing => ing.id === id);
-      
+      const currentIngredient = ingredients.find((ing) => ing.id === id);
+
       // Apply smart conversion if there's a unit and new amount
       if (numValue && currentIngredient?.unit) {
-        const smartResult = normalizeIngredientUnit(numValue, currentIngredient.unit);
+        const smartResult = normalizeIngredientUnit(
+          numValue,
+          currentIngredient.unit
+        );
         if (smartResult) {
-          updateIngredient(id, { 
-            amount: smartResult.amount, 
-            unit: smartResult.unit 
+          updateIngredient(id, {
+            amount: smartResult.amount,
+            unit: smartResult.unit,
           });
         } else {
           updateIngredient(id, { amount: numValue });
@@ -81,16 +87,19 @@ function StructuredIngredientInputComponent({
   };
 
   const handleUnitSelect = (id: string, unit: string) => {
-    const currentIngredient = ingredients.find(ing => ing.id === id);
+    const currentIngredient = ingredients.find((ing) => ing.id === id);
     const newUnit = unit === "none" ? null : unit;
-    
+
     // Apply smart conversion if there's an amount and new unit
     if (currentIngredient?.amount && newUnit) {
-      const smartResult = normalizeIngredientUnit(currentIngredient.amount, newUnit);
+      const smartResult = normalizeIngredientUnit(
+        currentIngredient.amount,
+        newUnit
+      );
       if (smartResult) {
-        updateIngredient(id, { 
-          amount: smartResult.amount, 
-          unit: smartResult.unit 
+        updateIngredient(id, {
+          amount: smartResult.amount,
+          unit: smartResult.unit,
         });
       } else {
         updateIngredient(id, { unit: newUnit });
@@ -98,7 +107,7 @@ function StructuredIngredientInputComponent({
     } else {
       updateIngredient(id, { unit: newUnit });
     }
-    
+
     setShowUnitDropdown({ ...showUnitDropdown, [id]: false });
   };
 
@@ -134,11 +143,11 @@ function StructuredIngredientInputComponent({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">
-                      {t('amountHeader')}
+                      {t("amountHeader")}
                     </Label>
                     <Input
                       type="number"
-                      step="0.01"
+                      step="25"
                       min="0"
                       placeholder="0"
                       value={ingredient.amount || ""}
@@ -151,7 +160,7 @@ function StructuredIngredientInputComponent({
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">
-                      {t('unitHeader')}
+                      {t("unitHeader")}
                     </Label>
                     <Select
                       value={ingredient.unit || "none"}
@@ -161,7 +170,7 @@ function StructuredIngredientInputComponent({
                       disabled={disabled}
                     >
                       <SelectTrigger className="text-xs">
-                        <SelectValue placeholder={t('unitPlaceholder')} />
+                        <SelectValue placeholder={t("unitPlaceholder")} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">-</SelectItem>
@@ -178,10 +187,10 @@ function StructuredIngredientInputComponent({
                 {/* Ingredient Name */}
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">
-                    {t('ingredientHeader')}
+                    {t("ingredientHeader")}
                   </Label>
                   <Input
-                    placeholder={t('ingredientNamePlaceholder')}
+                    placeholder={t("ingredientNamePlaceholder")}
                     value={ingredient.name}
                     onChange={(e) =>
                       updateIngredient(ingredient.id, { name: e.target.value })
@@ -193,10 +202,10 @@ function StructuredIngredientInputComponent({
                 {/* Notes */}
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">
-                    {t('notesHeader')}
+                    {t("notesHeader")}
                   </Label>
                   <Input
-                    placeholder={t('notesPlaceholder')}
+                    placeholder={t("notesPlaceholder")}
                     value={ingredient.notes || ""}
                     onChange={(e) =>
                       updateIngredient(ingredient.id, { notes: e.target.value })
@@ -217,7 +226,7 @@ function StructuredIngredientInputComponent({
                 <div className="col-span-2">
                   <Input
                     type="number"
-                    step="0.01"
+                    step="25"
                     min="0"
                     placeholder="0"
                     value={ingredient.amount || ""}
@@ -239,7 +248,7 @@ function StructuredIngredientInputComponent({
                     disabled={disabled}
                   >
                     <SelectTrigger className="text-xs">
-                      <SelectValue placeholder={t('unitPlaceholder')} />
+                      <SelectValue placeholder={t("unitPlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">-</SelectItem>
@@ -255,7 +264,7 @@ function StructuredIngredientInputComponent({
                 {/* Name */}
                 <div className="col-span-5">
                   <Input
-                    placeholder={t('ingredientNamePlaceholder')}
+                    placeholder={t("ingredientNamePlaceholder")}
                     value={ingredient.name}
                     onChange={(e) =>
                       updateIngredient(ingredient.id, { name: e.target.value })
@@ -268,7 +277,7 @@ function StructuredIngredientInputComponent({
                 {/* Notes */}
                 <div className="col-span-2">
                   <Input
-                    placeholder={t('notesPlaceholder')}
+                    placeholder={t("notesPlaceholder")}
                     value={ingredient.notes || ""}
                     onChange={(e) =>
                       updateIngredient(ingredient.id, { notes: e.target.value })
@@ -311,10 +320,10 @@ function StructuredIngredientInputComponent({
       <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground border-t pt-2">
         <span className="w-6"></span>
         <div className="flex-1 grid grid-cols-12 gap-2">
-          <div className="col-span-2 text-center">{t('amountHeader')}</div>
-          <div className="col-span-2 text-center">{t('unitHeader')}</div>
-          <div className="col-span-5 text-center">{t('ingredientHeader')}</div>
-          <div className="col-span-2 text-center">{t('notesHeader')}</div>
+          <div className="col-span-2 text-center">{t("amountHeader")}</div>
+          <div className="col-span-2 text-center">{t("unitHeader")}</div>
+          <div className="col-span-5 text-center">{t("ingredientHeader")}</div>
+          <div className="col-span-2 text-center">{t("notesHeader")}</div>
           <div className="col-span-1"></div>
         </div>
       </div>
@@ -343,23 +352,28 @@ function StructuredIngredientInputComponent({
   );
 }
 
-export const StructuredIngredientInput = memo(StructuredIngredientInputComponent, (prevProps, nextProps) => {
-  // Custom comparison function for React.memo
-  const ingredientsEqual = 
-    prevProps.ingredients.length === nextProps.ingredients.length &&
-    prevProps.ingredients.every((prev, index) => {
-      const next = nextProps.ingredients[index];
-      return prev.id === next.id &&
-             prev.name === next.name &&
-             prev.amount === next.amount &&
-             prev.unit === next.unit &&
-             prev.notes === next.notes;
-    });
-  
-  const propsEqual = ingredientsEqual && 
-                    prevProps.disabled === nextProps.disabled &&
-                    prevProps.onChange === nextProps.onChange;
-  
-  
-  return propsEqual;
-});
+export const StructuredIngredientInput = memo(
+  StructuredIngredientInputComponent,
+  (prevProps, nextProps) => {
+    // Custom comparison function for React.memo
+    const ingredientsEqual =
+      prevProps.ingredients.length === nextProps.ingredients.length &&
+      prevProps.ingredients.every((prev, index) => {
+        const next = nextProps.ingredients[index];
+        return (
+          prev.id === next.id &&
+          prev.name === next.name &&
+          prev.amount === next.amount &&
+          prev.unit === next.unit &&
+          prev.notes === next.notes
+        );
+      });
+
+    const propsEqual =
+      ingredientsEqual &&
+      prevProps.disabled === nextProps.disabled &&
+      prevProps.onChange === nextProps.onChange;
+
+    return propsEqual;
+  }
+);
