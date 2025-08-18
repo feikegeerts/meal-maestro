@@ -18,6 +18,8 @@ import {
   isValidCharacteristicType,
   COOKING_UNITS 
 } from '@/types/recipe';
+import { RecipeScraper } from '@/lib/recipe-scraper';
+import { UrlDetector } from '@/lib/url-detector';
 
 // OpenAI function definition for recipe form assistance
 export const recipeFormFunction: OpenAI.Chat.Completions.ChatCompletionTool = {
@@ -127,6 +129,26 @@ export const recipeFormFunction: OpenAI.Chat.Completions.ChatCompletionTool = {
     }
   }
 };
+
+// OpenAI function definition for URL recipe extraction
+export const extractRecipeFromUrlFunction: OpenAI.Chat.Completions.ChatCompletionTool = {
+  type: 'function',
+  function: {
+    name: 'extract_recipe_from_url',
+    description: 'Extract recipe data from a provided URL and populate the recipe form. Use this when the user provides a URL to a recipe website.',
+    parameters: {
+      type: 'object',
+      properties: {
+        url: { 
+          type: 'string', 
+          description: 'The URL to extract recipe data from. Must be a valid HTTP/HTTPS URL.' 
+        }
+      },
+      required: ['url']
+    }
+  }
+};
+
 
 // Simple function handler for form updates only
 export async function updateRecipeForm(args: Record<string, unknown>): Promise<{ formUpdate: unknown; success: boolean }> {
@@ -282,6 +304,132 @@ export async function updateRecipeForm(args: Record<string, unknown>): Promise<{
   }
 }
 
+// Function handler for URL recipe extraction
+export async function extractRecipeFromUrl(args: Record<string, unknown>): Promise<{ 
+  formUpdate: unknown; 
+  success: boolean; 
+  error?: string; 
+  suggestions?: string[]; 
+  source?: string;
+}> {
+  const { url } = args as { url?: string };
+
+  if (!url || typeof url !== 'string') {
+    throw new Error('URL is required and must be a string');
+  }
+
+  try {
+    // Validate URL format first
+    const trimmedUrl = url.trim();
+    if (!UrlDetector.isValidUrl(trimmedUrl)) {
+      return {
+        formUpdate: null,
+        success: false,
+        error: 'Invalid URL format'
+      };
+    }
+
+    // Normalize URL to remove tracking parameters
+    const normalizedUrl = UrlDetector.normalizeUrl(trimmedUrl);
+    
+    // Call the scraper directly (no HTTP request needed)
+    const scrapeResult = await RecipeScraper.scrapeRecipe(normalizedUrl);
+
+    if (!scrapeResult.success) {
+      // Check if we have partial data (like URL title) even on failure
+      if (scrapeResult.data?.title) {
+        const formUpdate = {
+          title: scrapeResult.data.title,
+          url: scrapeResult.data.url
+        };
+        
+        return {
+          formUpdate,
+          success: false, // Still failed to scrape full recipe
+          error: scrapeResult.error || 'Failed to extract recipe from URL',
+          suggestions: scrapeResult.suggestions,
+          source: scrapeResult.source
+        };
+      }
+      
+      return {
+        formUpdate: null,
+        success: false,
+        error: scrapeResult.error || 'Failed to extract recipe from URL',
+        suggestions: scrapeResult.suggestions,
+        source: scrapeResult.source
+      };
+    }
+
+    const scrapedData = scrapeResult.data;
+    
+    if (!scrapedData) {
+      return {
+        formUpdate: null,
+        success: false,
+        error: 'No recipe data extracted from URL'
+      };
+    }
+    
+    // Convert scraped data to recipe form format
+    const formUpdate = {
+      title: scrapedData.title,
+      description: scrapedData.description,
+      servings: scrapedData.servings || 4,
+      category: scrapedData.category,
+      cuisine: scrapedData.cuisine,
+      // Convert ingredients from strings to structured format
+      ingredients: scrapedData.ingredients ? scrapedData.ingredients.map((ingredient: string, index: number) => {
+        // Simple parsing - try to extract amount, unit, and name
+        const match = ingredient.trim().match(/^(\d+(?:\.\d+)?(?:\/\d+)?)\s*([a-zA-Z]+)?\s+(.+)$/);
+        
+        if (match) {
+          const [, amountStr, unit, name] = match;
+          let amount: number | null = null;
+          
+          // Parse fraction or decimal
+          if (amountStr.includes('/')) {
+            const [numerator, denominator] = amountStr.split('/');
+            amount = parseFloat(numerator) / parseFloat(denominator);
+          } else {
+            amount = parseFloat(amountStr);
+          }
+          
+          return {
+            id: `ingredient-scraped-${Date.now()}-${index}`,
+            name: name.trim(),
+            amount: isNaN(amount) ? null : amount,
+            unit: unit && unit.length > 0 ? unit.toLowerCase() : null,
+            notes: ''
+          };
+        }
+        
+        // If no pattern matches, treat entire string as ingredient name
+        return {
+          id: `ingredient-scraped-${Date.now()}-${index}`,
+          name: ingredient.trim(),
+          amount: null,
+          unit: null,
+          notes: ''
+        };
+      }) : []
+    };
+
+    return {
+      formUpdate,
+      success: true
+    };
+  } catch (error) {
+    console.error('Error in extractRecipeFromUrl:', error);
+    return {
+      formUpdate: null,
+      success: false,
+      error: `Failed to extract recipe from URL: ${error instanceof Error ? error.message : 'Unknown error'}`
+    };
+  }
+}
+
+
 // Helper function to format function results for OpenAI
 export function formatFunctionResult(functionName: string, result: unknown): string {
   if (functionName === 'update_recipe_form') {
@@ -291,6 +439,15 @@ export function formatFunctionResult(functionName: string, result: unknown): str
       result: formResult
     });
   }
+  
+  if (functionName === 'extract_recipe_from_url') {
+    const urlResult = result as { formUpdate: unknown; success: boolean; error?: string };
+    return JSON.stringify({
+      function: 'extract_recipe_from_url',
+      result: urlResult
+    });
+  }
+
   
   return JSON.stringify({ function: functionName, result });
 }

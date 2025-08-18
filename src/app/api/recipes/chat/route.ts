@@ -5,6 +5,8 @@ import { usageTrackingService } from "@/lib/usage-tracking-service";
 import {
   updateRecipeForm,
   recipeFormFunction,
+  extractRecipeFromUrl,
+  extractRecipeFromUrlFunction,
 } from "@/lib/recipe-functions";
 import { 
   RECIPE_CATEGORIES, 
@@ -65,20 +67,26 @@ const SYSTEM_PROMPT = `You are Meal Maestro, an AI-powered recipe form assistant
 YOUR PRIMARY FUNCTION:
 - Help users populate recipe form fields through conversation
 - Use the update_recipe_form function to fill form fields based on user requests
+- Use the extract_recipe_from_url function when users provide recipe URLs
 - Provide cooking advice and recipe suggestions
 
 IMPORTANT GUIDELINES:
 1. Be helpful and conversational about cooking and recipes
 2. When users want to CREATE or MODIFY recipes, use update_recipe_form function to populate form fields
-3. CRITICAL: When creating a new recipe, make ONE comprehensive function call with ALL required fields (title, ingredients, description, category, servings) rather than multiple partial calls
-4. You can ONLY populate form fields - users must click "Save" to actually save recipes
-5. Always provide clear, helpful responses about recipes and cooking
-6. Ask clarifying questions when needed for better recipe details
-7. When creating recipes, include realistic serving sizes (usually 2-8 servings)
-8. Structure ingredients properly with amounts, units, and names. ALWAYS provide appropriate units for ingredients
-9. CRITICAL: Write DETAILED, STEP-BY-STEP cooking instructions in the description field. Include prep times, cooking temperatures, specific techniques, and clear sequential steps. Make instructions comprehensive and easy to follow.
-10. You are aware of the current form state - use this context in your responses
-11. Remember: You are a form assistant - you help fill forms, users save recipes themselves
+3. When users provide URLs to recipe websites, use extract_recipe_from_url function to automatically extract and populate recipe data
+4. When users paste recipe text (ingredients, instructions, etc.), analyze and extract the data using update_recipe_form to populate the form
+5. CRITICAL: ALWAYS be proactive about form filling. Fill what you can infer or know, make reasonable assumptions, and create complete recipes that users can then edit
+6. CRITICAL: When creating a new recipe, make ONE comprehensive function call with ALL required fields (title, ingredients, description, category, servings) rather than multiple partial calls
+7. CRITICAL: Minimize back-and-forth interactions. Aim to create a complete, usable recipe in the first interaction that users can then customize
+8. When you have limited information (like just a recipe title), use your culinary knowledge to create a realistic, complete recipe - don't ask questions first
+9. You can ONLY populate form fields - users must click "Save" to actually save recipes
+10. Always provide clear, helpful responses about recipes and cooking
+11. When creating recipes, include realistic serving sizes (usually 2-8 servings)
+12. Structure ingredients properly with amounts, units, and names. ALWAYS provide appropriate units for ingredients
+13. CRITICAL: Write DETAILED, STEP-BY-STEP cooking instructions in the description field. Include prep times, cooking temperatures, specific techniques, and clear sequential steps. Make instructions comprehensive and easy to follow.
+14. You are aware of the current form state - use this context in your responses
+15. Remember: You are a form assistant - you help fill forms, users save recipes themselves
+16. PROACTIVE APPROACH: If URL scraping fails but you get a recipe title, immediately create a complete recipe based on that title using your knowledge
 
 VALID CATEGORIZED TAGS (CHOOSE ONLY FROM THESE):
 
@@ -210,7 +218,7 @@ export async function POST(request: NextRequest) {
     // Create completion with optional function calling and usage tracking
     const { completion, usage } = await createChatCompletion(
       chatMessages,
-      [recipeFormFunction]
+      [recipeFormFunction, extractRecipeFromUrlFunction]
     );
 
     // Log usage for cost tracking and outlier detection
@@ -249,6 +257,24 @@ export async function POST(request: NextRequest) {
             error: error instanceof Error ? error.message : "Unknown error",
           };
         }
+      } else if (toolCall.type === "function" && toolCall.function.name === "extract_recipe_from_url") {
+        
+        try {
+          const result = await extractRecipeFromUrl(
+            JSON.parse(toolCall.function.arguments)
+          );
+          
+          functionResult = {
+            function: toolCall.function.name,
+            result,
+          };
+        } catch (error) {
+          console.error("🔴 [Chat] URL extraction error:", error);
+          functionResult = {
+            function: toolCall.function.name,
+            error: error instanceof Error ? error.message : "Unknown error",
+          };
+        }
       }
     }
 
@@ -263,6 +289,86 @@ export async function POST(request: NextRequest) {
           responseContent = translations.chat.recipeCreatedWithTitle.replace('{title}', formUpdate.title);
         } else {
           responseContent = translations.chat.recipeFormUpdated;
+        }
+      } else if (functionResult.function === 'extract_recipe_from_url') {
+        const urlResult = functionResult.result as { 
+          formUpdate: FormUpdate; 
+          success: boolean; 
+          error?: string; 
+          suggestions?: string[];
+          source?: string;
+        };
+        
+        if (urlResult.success && urlResult.formUpdate?.title) {
+          responseContent = userLocale === 'nl' 
+            ? `Recept "${urlResult.formUpdate.title}" is succesvol opgehaald van de URL! Ik heb de gegevens ingevuld in het formulier.`
+            : `Recipe "${urlResult.formUpdate.title}" has been successfully extracted from the URL! I've populated the form with the data.`;
+        } else if (urlResult.success) {
+          responseContent = userLocale === 'nl'
+            ? 'Recept gegevens zijn succesvol opgehaald van de URL en ingevuld in het formulier!'
+            : 'Recipe data has been successfully extracted from the URL and populated in the form!';
+        } else {
+          // Smart error recovery: if we have a title, generate a recipe with AI
+          if (urlResult.formUpdate?.title) {
+            try {
+              // Create a follow-up prompt for AI to generate recipe based on extracted title
+              const aiRecipePrompt = userLocale === 'nl'
+                ? `Ik kon de website niet scrapen, maar heb de titel "${urlResult.formUpdate.title}" uit de URL gehaald. Maak nu een compleet recept gebaseerd op deze titel met realistische ingrediënten, gedetailleerde bereidingswijze, porties, en juiste categorie. Gebruik je culinaire kennis om een bruikbaar recept te maken dat de gebruiker kan aanpassen.`
+                : `I couldn't scrape the website, but extracted the title "${urlResult.formUpdate.title}" from the URL. Now create a complete recipe based on this title with realistic ingredients, detailed instructions, servings, and appropriate category. Use your culinary knowledge to make a usable recipe that the user can customize.`;
+              
+              // Add the follow-up message to conversation
+              const followUpMessages = [...chatMessages, {
+                role: "user" as const,
+                content: aiRecipePrompt
+              }];
+              
+              // Generate new completion for recipe creation
+              const { completion: recipeCompletion } = await createChatCompletion(
+                followUpMessages,
+                [recipeFormFunction, extractRecipeFromUrlFunction]
+              );
+              
+              // Handle the recipe generation function call
+              if (recipeCompletion.choices[0].message.tool_calls) {
+                const recipeTool = recipeCompletion.choices[0].message.tool_calls[0];
+                if (recipeTool.type === "function" && recipeTool.function.name === "update_recipe_form") {
+                  const recipeResult = await updateRecipeForm(
+                    JSON.parse(recipeTool.function.arguments)
+                  );
+                  
+                  // Update function result for response
+                  functionResult = {
+                    function: recipeTool.function.name,
+                    result: recipeResult,
+                  };
+                  
+                  // Set success response
+                  responseContent = userLocale === 'nl'
+                    ? `Ik kon de website niet scrapen, maar heb een compleet recept voor "${urlResult.formUpdate.title}" gemaakt gebaseerd op de titel uit de URL. Je kunt het nu aanpassen naar wens!`
+                    : `I couldn't scrape the website, but created a complete recipe for "${urlResult.formUpdate.title}" based on the title from the URL. You can now customize it as needed!`;
+                } else {
+                  throw new Error('AI did not generate recipe as expected');
+                }
+              } else {
+                throw new Error('AI did not make function call for recipe generation');
+              }
+            } catch (error) {
+              console.error('🔴 [Chat] Smart error recovery failed:', error);
+              // Fallback to simple response with extracted title
+              responseContent = userLocale === 'nl'
+                ? `Ik kon de website niet scrapen, maar heb de titel "${urlResult.formUpdate.title}" uit de URL gehaald en ingevuld. Je kunt nu handmatig ingrediënten en bereidingswijze toevoegen.`
+                : `I couldn't scrape the website, but extracted the title "${urlResult.formUpdate.title}" from the URL and filled it in. You can now manually add ingredients and instructions.`;
+            }
+          } else {
+            // Fallback for when we couldn't extract anything useful
+            const baseError = urlResult.source === 'blocked' 
+              ? (userLocale === 'nl' ? 'Website blokkeert toegang' : 'Website blocks access')
+              : (userLocale === 'nl' ? 'Kon geen recept vinden op de website' : 'Could not find recipe on website');
+              
+            responseContent = userLocale === 'nl'
+              ? `${baseError}. Probeer de recept tekst handmatig te kopiëren en in de chat te plakken, dan kan ik je helpen met het verwerken.`
+              : `${baseError}. Try copying the recipe text manually and pasting it in the chat, then I can help you process it.`;
+          }
         }
       } else {
         responseContent = translations.chat.requestProcessed;

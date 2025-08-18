@@ -333,9 +333,9 @@
     "inputPlaceholder": "Typ je bericht... (bijv. 'voeg een recept toe voor spaghetti bolognese')",
     "currentlyViewing": "Momenteel bekijkt",
     "welcomeMessage": "Hey! Ik ben Meal Maestro, je AI recept assistant. Ik kan je helpen recepten maken en bewerken door forms in te vullen. Aan welk recept wil je vandaag werken?",
-    "recipeCreatedWithTitle": "Perfect! Ik heb een compleet recept gemaakt voor \"{title}\" met gedetailleerde instructies. Je kunt alle details in het form hierboven bekijken en aanpassingen maken voordat je opslaat.",
-    "recipeFormUpdated": "Geweldig! Ik heb het recept form geupdate met je wijzigingen. Bekijk de details hierboven en sla op wanneer je klaar bent.",
-    "requestProcessed": "Ik heb je verzoek verwerkt. Check het form hierboven voor de updates.",
+    "recipeCreatedWithTitle": "Perfect! Ik heb een compleet recept gemaakt voor \"{title}\" met gedetailleerde instructies. Je kunt alle details in het form bekijken en aanpassingen maken voordat je opslaat.",
+    "recipeFormUpdated": "Geweldig! Ik heb het recept form geupdate met je wijzigingen. Bekijk de details en sla op wanneer je klaar bent.",
+    "requestProcessed": "Ik heb je verzoek verwerkt. Check het form voor de updates.",
     "processingError": "Sorry, maar ik had een probleem bij het verwerken van je verzoek."
   },
   "servingSelector": {

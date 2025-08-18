@@ -333,9 +333,9 @@
     "inputPlaceholder": "Type your message... (e.g., 'add a recipe for spaghetti bolognese')",
     "currentlyViewing": "Currently viewing",
     "welcomeMessage": "Hello! I'm Meal Maestro, your AI recipe form assistant. I can help you create and edit recipes by filling out recipe forms. What recipe would you like to work on today?",
-    "recipeCreatedWithTitle": "Perfect! I've created a complete recipe for \"{title}\" with detailed cooking instructions. You can review all the details in the form above and make any adjustments before saving.",
-    "recipeFormUpdated": "Great! I've updated the recipe form with your requested changes. Please review the details above and save when ready.",
-    "requestProcessed": "I've successfully processed your request. Please check the form above for the updates.",
+    "recipeCreatedWithTitle": "Perfect! I've created a complete recipe for \"{title}\" with detailed cooking instructions. You can review all the details in the form and make any adjustments before saving.",
+    "recipeFormUpdated": "Great! I've updated the recipe form with your requested changes. Please review the details and save when ready.",
+    "requestProcessed": "I've successfully processed your request. Please check the form for the updates.",
     "processingError": "I apologize, but I encountered an issue processing your request."
   },
   "servingSelector": {
