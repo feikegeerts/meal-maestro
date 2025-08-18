@@ -489,10 +489,24 @@ export class RecipeScraper {
     });
   }
 
+  private static isValidDomain(hostname: string, targetDomain: string): boolean {
+    // Exact match
+    if (hostname === targetDomain) {
+      return true;
+    }
+    
+    // Check if it's a valid subdomain (ends with .targetDomain)
+    if (hostname.endsWith('.' + targetDomain)) {
+      return true;
+    }
+    
+    return false;
+  }
+
   private static getSuggestionsForDomain(url: string): string[] {
     const domain = new URL(url).hostname.toLowerCase();
     
-    if (domain.includes('ah.nl')) {
+    if (this.isValidDomain(domain, 'ah.nl')) {
       return [
         'Try BBC Good Food for similar recipes',
         'Search Recipe Tin Eats for Dutch-inspired dishes',
@@ -501,7 +515,7 @@ export class RecipeScraper {
       ];
     }
     
-    if (domain.includes('marmiton.org')) {
+    if (this.isValidDomain(domain, 'marmiton.org')) {
       return [
         'Try BBC Good Food for French recipes',
         'Search Serious Eats for detailed French cooking techniques',
@@ -509,7 +523,7 @@ export class RecipeScraper {
       ];
     }
     
-    if (domain.includes('chefkoch.de')) {
+    if (this.isValidDomain(domain, 'chefkoch.de')) {
       return [
         'Try Food Network for German-style recipes',
         'Search Simply Recipes for hearty European dishes',
