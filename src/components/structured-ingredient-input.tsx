@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, memo } from "react";
-import { RecipeIngredient, COOKING_UNITS } from "@/types/recipe";
+import { RecipeIngredient, COOKING_UNITS, normalizeIngredientUnit } from "@/types/recipe";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,12 +61,44 @@ function StructuredIngredientInputComponent({
   const handleAmountChange = (id: string, value: string) => {
     const numValue = value === "" ? null : parseFloat(value);
     if (value === "" || (!isNaN(numValue!) && numValue! > 0)) {
-      updateIngredient(id, { amount: numValue });
+      const currentIngredient = ingredients.find(ing => ing.id === id);
+      
+      // Apply smart conversion if there's a unit and new amount
+      if (numValue && currentIngredient?.unit) {
+        const smartResult = normalizeIngredientUnit(numValue, currentIngredient.unit);
+        if (smartResult) {
+          updateIngredient(id, { 
+            amount: smartResult.amount, 
+            unit: smartResult.unit 
+          });
+        } else {
+          updateIngredient(id, { amount: numValue });
+        }
+      } else {
+        updateIngredient(id, { amount: numValue });
+      }
     }
   };
 
   const handleUnitSelect = (id: string, unit: string) => {
-    updateIngredient(id, { unit: unit === "none" ? null : unit });
+    const currentIngredient = ingredients.find(ing => ing.id === id);
+    const newUnit = unit === "none" ? null : unit;
+    
+    // Apply smart conversion if there's an amount and new unit
+    if (currentIngredient?.amount && newUnit) {
+      const smartResult = normalizeIngredientUnit(currentIngredient.amount, newUnit);
+      if (smartResult) {
+        updateIngredient(id, { 
+          amount: smartResult.amount, 
+          unit: smartResult.unit 
+        });
+      } else {
+        updateIngredient(id, { unit: newUnit });
+      }
+    } else {
+      updateIngredient(id, { unit: newUnit });
+    }
+    
     setShowUnitDropdown({ ...showUnitDropdown, [id]: false });
   };
 

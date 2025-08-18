@@ -100,13 +100,18 @@ UNITS FOR INGREDIENTS:
 ALWAYS provide appropriate units for ingredients. Available units: ${COOKING_UNITS.join(', ')}
 
 UNIT SELECTION GUIDELINES:
-- Liquids: cups, tablespoons, teaspoons, ml, l
-- Dry ingredients (flour, sugar, rice): cups, tablespoons, teaspoons, g, kg
-- Individual items: pieces, whole, large/medium/small
-- Garlic: cloves
-- Herbs/spices: teaspoons, tablespoons (or "to taste" with no amount/unit)
-- Meat/fish: grams, kg, pounds, ounces (prefer weight over pieces as that's how they're sold)
-- Cheese: cups (grated), ounces, g
+- Liquids: ml (auto-converts to l when ≥1000ml)
+- Dry ingredients (flour, sugar, rice): g (auto-converts to kg when ≥1000g)
+- Individual items: no unit needed (e.g., "3 eggs", "2 onions")
+- Herbs/spices: tsp, tbsp (or "to taste" with no amount/unit)
+- Meat/fish: g (auto-converts to kg when ≥1000g)
+- Cheese: g (auto-converts to kg when ≥1000g)
+
+SMART CONVERSIONS:
+- 1000g automatically becomes 1 kg
+- 1500g automatically becomes 1.5 kg  
+- 1000ml automatically becomes 1 l
+- 1500ml automatically becomes 1.5 l
 
 DESCRIPTION FIELD REQUIREMENTS:
 - Must be detailed cooking instructions, not just a brief description

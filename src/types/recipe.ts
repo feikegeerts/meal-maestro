@@ -313,6 +313,59 @@ export function validateRecipeInput(input: RecipeInput): { valid: boolean; error
   return { valid: errors.length === 0, errors };
 }
 
+// Smart unit conversion utilities
+interface SmartUnitResult {
+  amount: number;
+  unit: string;
+}
+
+export function smartWeightConversion(amount: number, unit: string): SmartUnitResult {
+  if (unit === 'g' && amount >= 1000) {
+    return {
+      amount: amount / 1000,
+      unit: 'kg'
+    };
+  }
+  if (unit === 'kg' && amount < 1) {
+    return {
+      amount: amount * 1000,
+      unit: 'g'
+    };
+  }
+  return { amount, unit };
+}
+
+export function smartVolumeConversion(amount: number, unit: string): SmartUnitResult {
+  if (unit === 'ml' && amount >= 1000) {
+    return {
+      amount: amount / 1000,
+      unit: 'l'
+    };
+  }
+  if (unit === 'l' && amount < 1) {
+    return {
+      amount: amount * 1000,
+      unit: 'ml'
+    };
+  }
+  return { amount, unit };
+}
+
+export function normalizeIngredientUnit(amount: number | null, unit: string | null): SmartUnitResult | null {
+  if (amount === null || unit === null) return null;
+  
+  // Apply smart conversions based on unit type
+  if (unit === 'g' || unit === 'kg') {
+    return smartWeightConversion(amount, unit);
+  }
+  if (unit === 'ml' || unit === 'l') {
+    return smartVolumeConversion(amount, unit);
+  }
+  
+  // Return as-is for non-convertible units
+  return { amount, unit };
+}
+
 // Utility functions for ingredient scaling
 function formatFraction(num: number): string {
   const tolerance = 1e-6;
@@ -341,29 +394,13 @@ function pluralizeUnit(unit: string | null, amount: number): string | null {
   if (!unit) return null;
   
   const singularToPlural: Record<string, string> = {
-    'cup': 'cups',
-    'tablespoon': 'tablespoons',
     'tbsp': 'tbsp',
-    'teaspoon': 'teaspoons',
     'tsp': 'tsp',
-    'pound': 'pounds',
-    'lb': 'lbs',
-    'ounce': 'ounces',
-    'oz': 'oz',
-    'gram': 'grams',
     'g': 'g',
-    'kilogram': 'kilograms',
     'kg': 'kg',
-    'liter': 'liters',
-    'l': 'l',
-    'milliliter': 'milliliters',
     'ml': 'ml',
-    'piece': 'pieces',
-    'slice': 'slices',
-    'clove': 'cloves',
-    'can': 'cans',
-    'package': 'packages',
-    'bag': 'bags'
+    'l': 'l',
+    'piece': 'pieces'
   };
   
   if (amount === 1) {
@@ -382,11 +419,16 @@ export function scaleIngredient(ingredient: RecipeIngredient, ratio: number): Re
   }
   
   const scaledAmount = ingredient.amount * ratio;
-  const scaledUnit = pluralizeUnit(ingredient.unit, scaledAmount);
+  
+  // Apply smart unit conversion to scaled amount
+  const smartResult = normalizeIngredientUnit(scaledAmount, ingredient.unit);
+  const finalAmount = smartResult ? smartResult.amount : scaledAmount;
+  const finalUnit = smartResult ? smartResult.unit : ingredient.unit;
+  const scaledUnit = pluralizeUnit(finalUnit, finalAmount);
   
   return {
     ...ingredient,
-    amount: scaledAmount,
+    amount: finalAmount,
     unit: scaledUnit
   };
 }
@@ -416,31 +458,22 @@ export function formatIngredientDisplay(ingredient: RecipeIngredient): string {
     return `${ingredient.name}${notes}`;
   }
   
-  const amount = formatFraction(ingredient.amount);
-  const unit = ingredient.unit ? ` ${ingredient.unit}` : '';
+  // Apply smart unit conversion
+  const smartResult = normalizeIngredientUnit(ingredient.amount, ingredient.unit);
+  const amount = smartResult ? formatFraction(smartResult.amount) : formatFraction(ingredient.amount);
+  const unit = smartResult ? ` ${smartResult.unit}` : ingredient.unit ? ` ${ingredient.unit}` : '';
   const notes = ingredient.notes ? ` (${ingredient.notes})` : '';
   
   return `${amount}${unit} ${ingredient.name}${notes}`;
 }
 
-// Common cooking units for dropdown
+// Smart cooking units for dropdown (6 total)
 export const COOKING_UNITS = [
-  'cup', 'cups',
-  'tablespoon', 'tablespoons', 'tbsp',
-  'teaspoon', 'teaspoons', 'tsp',
-  'pound', 'pounds', 'lb', 'lbs',
-  'ounce', 'ounces', 'oz',
-  'gram', 'grams', 'g',
-  'kilogram', 'kilograms', 'kg',
-  'liter', 'liters', 'l',
-  'milliliter', 'milliliters', 'ml',
-  'piece', 'pieces',
-  'slice', 'slices',
-  'clove', 'cloves',
-  'can', 'cans',
-  'package', 'packages',
-  'bag', 'bags',
-  'large', 'medium', 'small',
-  'whole', 'half'
+  'g',
+  'kg',
+  'ml',
+  'l',
+  'tbsp',
+  'tsp'
 ];
 
