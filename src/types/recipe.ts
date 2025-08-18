@@ -1,11 +1,13 @@
 export enum RecipeCategory {
   BREAKFAST = 'breakfast',
+  BRUNCH = 'brunch',
   LUNCH = 'lunch',
-  DINNER = 'dinner',
-  DESSERT = 'dessert',
-  SNACK = 'snack',
   APPETIZER = 'appetizer',
-  BEVERAGE = 'beverage'
+  MAIN_COURSE = 'main-course',
+  SIDE_DISH = 'side-dish',
+  DESSERT = 'dessert',
+  PASTRY = 'pastry',
+  SNACK = 'snack'
 }
 
 export enum RecipeSeason {
@@ -89,7 +91,6 @@ export enum RecipeTag {
   DATE_NIGHT = 'date-night',
   POTLUCK = 'potluck',
   PICNIC = 'picnic',
-  BRUNCH = 'brunch',
   ENTERTAINING = 'entertaining',
   BUDGET_FRIENDLY = 'budget-friendly',
   LEFTOVER_FRIENDLY = 'leftover-friendly',

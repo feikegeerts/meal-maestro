@@ -123,12 +123,14 @@
   },
   "categories": {
     "breakfast": "Ontbijt",
+    "brunch": "Brunch",
     "lunch": "Lunch",
-    "dinner": "Diner",
-    "dessert": "Dessert",
-    "snack": "Tussendoortje",
     "appetizer": "Voorgerecht",
-    "beverage": "Drank"
+    "main-course": "Hoofdgerecht",
+    "side-dish": "Bijgerecht",
+    "dessert": "Nagerecht",
+    "pastry": "Gebak",
+    "snack": "Borrelhapje"
   },
   "seasons": {
     "spring": "Lente",
@@ -201,7 +203,6 @@
     "date-night": "Date night",
     "potluck": "Potluck",
     "picnic": "Picknick",
-    "brunch": "Brunch",
     "entertaining": "Entertainment",
     "budget-friendly": "Budgetvriendelijk",
     "leftover-friendly": "Restjes vriendelijk",

@@ -167,7 +167,6 @@ const tagCategories = {
       RecipeTag.DATE_NIGHT,
       RecipeTag.POTLUCK,
       RecipeTag.PICNIC,
-      RecipeTag.BRUNCH,
       RecipeTag.ENTERTAINING,
       RecipeTag.BUDGET_FRIENDLY,
       RecipeTag.LEFTOVER_FRIENDLY,

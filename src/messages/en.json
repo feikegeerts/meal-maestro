@@ -123,12 +123,14 @@
   },
   "categories": {
     "breakfast": "Breakfast",
+    "brunch": "Brunch",
     "lunch": "Lunch",
-    "dinner": "Dinner",
-    "dessert": "Dessert",
-    "snack": "Snack",
     "appetizer": "Appetizer",
-    "beverage": "Beverage"
+    "main-course": "Main Course",
+    "side-dish": "Side Dish",
+    "dessert": "Dessert",
+    "pastry": "Pastry",
+    "snack": "Snack"
   },
   "seasons": {
     "spring": "Spring",
@@ -201,7 +203,6 @@
     "date-night": "Date night",
     "potluck": "Potluck",
     "picnic": "Picnic",
-    "brunch": "Brunch",
     "entertaining": "Entertaining",
     "budget-friendly": "Budget-friendly",
     "leftover-friendly": "Leftover-friendly",

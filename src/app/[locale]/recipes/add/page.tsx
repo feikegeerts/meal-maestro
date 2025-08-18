@@ -28,7 +28,7 @@ const defaultRecipe: Recipe = {
   }],
   servings: 4,
   description: "",
-  category: RecipeCategory.DINNER,
+  category: RecipeCategory.MAIN_COURSE,
   tags: [],
   season: RecipeSeason.YEAR_ROUND,
   last_eaten: undefined,

@@ -89,7 +89,7 @@ An AI-powered recipe management system. The system provides natural language rec
 ### Phase 5: Post-MVP Enhancements
 
 - [x] datum notatie localization
-- [ ] optimize translations
+- [x] optimize translations
 - [ ] categorieen aanpassen naar die AH.nl ook gebruikt.
 - [ ] ah.nl layouts overnemen zowel desktop als mobile voor recepten weergeven en toevoegen
 - [x] every key press in the ingredient edit is blurring the input field making it impossible to properly type or edit
@@ -97,7 +97,7 @@ An AI-powered recipe management system. The system provides natural language rec
 - [ ] Header met back button is niet heel mooi, misschien beter breadcrumb op tweede lijn
 - [x] the avatar doesn;t have a hover state so it's not clear it's a clickable item.
 - [x] add cookie consent message to login?
-- [ ] use typescript types everywhere instead of hardcoded lists of tags categories and seasons.
+- [x] use typescript types everywhere instead of hardcoded lists of tags categories and seasons.
 - [x] login using magic link from supabase
 - [ ] custom smtp server for magic link emails
 - [ ] **5.7** Add ability for the AI to fetch a website and process it as a recipe
@@ -106,19 +106,11 @@ An AI-powered recipe management system. The system provides natural language rec
 - [ ] **5.12** Add buy me a coffee functionality
 - [ ] **5.13** Improve deployment pipeline with automatic version bumping
 - [ ] About page with version and release notes
+- [ ] Google app for google login customize with meal meastro logo and text, might require approval from google
+
+### Phase 5.5 URL fetching and processing.
 
 ### Phase 6: Voice Integration
-
-- [ ] **6.1** Browser compatibility testing for Web Speech API
-- [ ] **6.2** OpenAI Whisper fallback implementation
-- [ ] **6.3** Audio quality optimization and noise handling
-- [ ] **6.4** Set up speech-to-text integration
-- [ ] **6.5** Set up text-to-speech integration
-- [ ] **6.6** Implement voice interaction UI
-  - [ ] Microphone permission handling
-  - [ ] Visual feedback for recording state
-  - [ ] Audio playback controls
-  - [ ] Voice/text mode toggle
 
 ### Phase 7: Advanced Features
 
