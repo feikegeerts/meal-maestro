@@ -299,14 +299,49 @@ export async function POST(request: NextRequest) {
           source?: string;
         };
         
-        if (urlResult.success && urlResult.formUpdate?.title) {
-          responseContent = userLocale === 'nl' 
-            ? `Recept "${urlResult.formUpdate.title}" is succesvol opgehaald van de URL! Ik heb de gegevens ingevuld in het formulier.`
-            : `Recipe "${urlResult.formUpdate.title}" has been successfully extracted from the URL! I've populated the form with the data.`;
-        } else if (urlResult.success) {
-          responseContent = userLocale === 'nl'
-            ? 'Recept gegevens zijn succesvol opgehaald van de URL en ingevuld in het formulier!'
-            : 'Recipe data has been successfully extracted from the URL and populated in the form!';
+        if (urlResult.success && urlResult.formUpdate) {
+          // Pass scraped data through AI for cleaning and structuring
+          const scrapedData = urlResult.formUpdate as { title?: string; description?: string; ingredients?: string[]; servings?: number; category?: string };
+          
+          const aiProcessingPrompt = userLocale === 'nl'
+            ? `Verwerk deze ruwe recept gegevens van een website tot een goed gestructureerd recept:\n\nTitel: ${scrapedData.title || 'Niet gevonden'}\nInstructies: ${scrapedData.description || 'Niet gevonden'}\nIngrediënten: ${scrapedData.ingredients?.join(', ') || 'Niet gevonden'}\nPorties: ${scrapedData.servings || 'Niet gevonden'}\n\nMaak hiervan een compleet recept met stap-voor-stap instructies.`
+            : `Process this raw recipe data from a website into a well-structured recipe:\n\nTitle: ${scrapedData.title || 'Not found'}\nInstructions: ${scrapedData.description || 'Not found'}\nIngredients: ${scrapedData.ingredients?.join(', ') || 'Not found'}\nServings: ${scrapedData.servings || 'Not found'}\n\nMake this into a complete recipe with step-by-step instructions.`;
+          
+          // Add the AI processing message to conversation  
+          const processingMessages = [...chatMessages, {
+            role: "user" as const,
+            content: aiProcessingPrompt
+          }];
+          
+          // Generate new completion for recipe processing
+          const { completion: processingCompletion } = await createChatCompletion(
+            processingMessages,
+            [recipeFormFunction, extractRecipeFromUrlFunction]
+          );
+          
+          // Handle the recipe processing function call
+          if (processingCompletion.choices[0].message.tool_calls) {
+            const processingTool = processingCompletion.choices[0].message.tool_calls[0];
+            if (processingTool.type === "function" && processingTool.function.name === "update_recipe_form") {
+              const processingResult = await updateRecipeForm(
+                JSON.parse(processingTool.function.arguments)
+              );
+              
+              functionResult = {
+                function: processingTool.function.name,
+                result: processingResult,
+              };
+              
+              responseContent = userLocale === 'nl'
+                ? `Recept "${scrapedData.title}" is succesvol opgehaald van de URL en verwerkt! Ik heb de gegevens opgeschoond en ingevuld in het formulier.`
+                : `Recipe "${scrapedData.title}" has been successfully extracted from the URL and processed! I've cleaned up the data and populated the form.`;
+            }
+          } else {
+            // Fallback if AI doesn't make function call
+            responseContent = processingCompletion.choices[0].message.content || (userLocale === 'nl' 
+              ? 'Recept data is opgehaald maar er was een probleem met de verwerking.'
+              : 'Recipe data was extracted but there was an issue with processing.');
+          }
         } else {
           // Smart error recovery: if we have a title, generate a recipe with AI
           if (urlResult.formUpdate?.title) {

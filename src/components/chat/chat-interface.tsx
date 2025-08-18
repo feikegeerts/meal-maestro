@@ -150,18 +150,25 @@ export function ChatInterface({
       // Update messages with full conversation history from response
       setMessages(data.conversation_history);
 
-      // Check if AI updated the form
-      if (
-        data.function_call &&
-        data.function_call.function === "update_recipe_form" &&
-        onRecipeGenerated
-      ) {
-        const result = data.function_call.result as {
-          formUpdate?: unknown;
-          success?: boolean;
-        };
-        if (result?.formUpdate) {
-          onRecipeGenerated(result.formUpdate);
+      // Check if AI updated the form (either through direct update or URL extraction)
+      if (data.function_call && onRecipeGenerated) {
+        if (data.function_call.function === "update_recipe_form") {
+          const result = data.function_call.result as {
+            formUpdate?: unknown;
+            success?: boolean;
+          };
+          if (result?.formUpdate) {
+            onRecipeGenerated(result.formUpdate);
+          }
+        } else if (data.function_call.function === "extract_recipe_from_url") {
+          const result = data.function_call.result as {
+            formUpdate?: unknown;
+            success?: boolean;
+            error?: string;
+          };
+          if (result?.formUpdate) {
+            onRecipeGenerated(result.formUpdate);
+          }
         }
       }
     } catch (err) {

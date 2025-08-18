@@ -44,13 +44,13 @@ export const recipeFormFunction: OpenAI.Chat.Completions.ChatCompletionTool = {
               unit: { 
                 type: 'string', 
                 enum: COOKING_UNITS,
-                description: 'Unit of measurement - REQUIRED for most ingredients. Choose appropriate unit: cups/tablespoons/teaspoons for liquids and dry goods, pieces/whole/cloves for individual items, oz/lb/g for weight. Only use null for "to taste" items.' 
+                description: 'Unit of measurement - REQUIRED for most ingredients. Choose appropriate unit: tbsp/tsp for liquids and dry goods, cloves for individual items, g/kg for weight. Only use null for "to taste" items.' 
               },
               notes: { type: 'string', description: 'Additional notes (optional)' }
             },
             required: ['name']
           },
-          description: 'List of structured ingredients with proper amounts and units. IMPORTANT: Always provide appropriate units for ingredients (cups, tablespoons, pieces, cloves, etc.). Only omit units for "to taste" items.'
+          description: 'List of structured ingredients with proper amounts and units. IMPORTANT: Always provide appropriate units for ingredients (tbsp, tsp, cloves, g, etc.). Only omit units for "to taste" items.'
         },
         servings: {
           type: 'number',

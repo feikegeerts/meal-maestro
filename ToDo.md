@@ -12,6 +12,7 @@
 - [x] login using magic link from supabase
 - [x] **5.9** Implement languages Dutch and English
 - [x] The ai should as much as possible prefil the form even when asking more questions. Currently the AI either fills in the form and gives a generic response, or asks questions. We want to make number of chat interactions as low as possible and currently it's impossible to get a recipe after 1 chat because the AI always asks follow ups.
+- [ ] Recipes/chat/route.ts bevat nog translations die niet in de json staan, moet worden gefixed.
 - [ ] Header met back button is niet heel mooi, misschien beter breadcrumb op tweede lijn
 - [ ] ah.nl layouts overnemen zowel desktop als mobile voor recepten weergeven en toevoegen
 - [ ] structed ingredient table layout is beetje gek met de headers onderaan
