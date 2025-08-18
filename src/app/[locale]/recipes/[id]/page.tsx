@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Recipe, formatIngredientDisplay, RecipeCategory, RecipeSeason } from "@/types/recipe";
+import { Recipe, RecipeCategory, RecipeSeason, formatIngredientDisplayWithTranslation } from "@/types/recipe";
 import { useLocalizedDateFormatter } from "@/lib/date-utils";
 import { ServingSizeSelector } from "@/components/serving-size-selector";
 import {
@@ -43,6 +43,7 @@ export default function RecipeDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const t = useTranslations('recipes');
+  const tUnits = useTranslations('units');
   const { translateCategory, translateSeason, translateTag } = useRecipeTranslations();
 
   useEffect(() => {
@@ -376,7 +377,7 @@ export default function RecipeDetailPage() {
                     {(displayRecipe || recipe)?.ingredients.map((ingredient, index) => (
                       <li key={index} className="flex items-start">
                         <span className="inline-block w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0" />
-                        <span>{formatIngredientDisplay(ingredient)}</span>
+                        <span>{formatIngredientDisplayWithTranslation(ingredient, tUnits)}</span>
                       </li>
                     ))}
                   </ul>

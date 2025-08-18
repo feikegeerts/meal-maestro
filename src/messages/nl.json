@@ -360,8 +360,8 @@
     "l": "l",
     "tbsp": "el",
     "tsp": "tl",
-    "piece": "stuk",
-    "pieces": "stuks"
+    "clove": "teen",
+    "cloves": "teentjes"
   },
   "accessibility": {
     "switchLanguage": "Taal switchen",

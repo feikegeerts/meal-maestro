@@ -31,8 +31,16 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { SheetClose } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { StructuredIngredientInput } from "@/components/structured-ingredient-input";
 import { ChatInterface } from "@/components/chat/chat-interface";
+import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 interface RecipeEditFormProps {
@@ -126,169 +134,288 @@ function CategorizedTagSelector({
     onFormDataChange({ [fieldName]: newArray });
   };
 
+  // Helper function to get all selected tags
+  const getSelectedTags = () => {
+    const selectedTags: Array<{ value: string; label: string; type: string }> = [];
+    
+    // Cuisine
+    if (formData.cuisine) {
+      selectedTags.push({
+        value: formData.cuisine,
+        label: tCuisines(formData.cuisine),
+        type: 'cuisine'
+      });
+    }
+    
+    // Diet types
+    (formData.diet_types || []).forEach(tag => {
+      selectedTags.push({
+        value: tag,
+        label: tDietTypes(tag),
+        type: 'diet_types'
+      });
+    });
+    
+    // Cooking methods
+    (formData.cooking_methods || []).forEach(tag => {
+      selectedTags.push({
+        value: tag,
+        label: tCookingMethods(tag),
+        type: 'cooking_methods'
+      });
+    });
+    
+    // Dish types
+    (formData.dish_types || []).forEach(tag => {
+      selectedTags.push({
+        value: tag,
+        label: tDishTypes(tag),
+        type: 'dish_types'
+      });
+    });
+    
+    // Proteins
+    (formData.proteins || []).forEach(tag => {
+      selectedTags.push({
+        value: tag,
+        label: tProteinTypes(tag),
+        type: 'proteins'
+      });
+    });
+    
+    // Occasions
+    (formData.occasions || []).forEach(tag => {
+      selectedTags.push({
+        value: tag,
+        label: tOccasionTypes(tag),
+        type: 'occasions'
+      });
+    });
+    
+    // Characteristics
+    (formData.characteristics || []).forEach(tag => {
+      selectedTags.push({
+        value: tag,
+        label: tCharacteristicTypes(tag),
+        type: 'characteristics'
+      });
+    });
+    
+    return selectedTags;
+  };
+
+  const removeTag = (tagValue: string, tagType: string) => {
+    if (tagType === 'cuisine') {
+      handleCuisineChange(tagValue);
+    } else {
+      handleArrayTagToggle(tagType as keyof Pick<RecipeInput, 'diet_types' | 'cooking_methods' | 'dish_types' | 'proteins' | 'occasions' | 'characteristics'>, tagValue);
+    }
+  };
+
+  const selectedTags = getSelectedTags();
+
   return (
-    <div className="space-y-6">
-      {/* Cuisine (Single Selection) */}
-      <div>
-        <Label className="text-sm font-medium mb-2 block">{tHeaders("cuisine")}</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {CUISINE_TYPES.map((cuisine) => (
-            <div key={cuisine} className="flex items-center space-x-2">
-              <Checkbox
-                id={`cuisine-${cuisine}`}
-                checked={formData.cuisine === cuisine}
-                onCheckedChange={() => handleCuisineChange(cuisine)}
-                disabled={disabled}
-              />
-              <Label
-                htmlFor={`cuisine-${cuisine}`}
-                className="text-sm font-normal cursor-pointer flex-1"
-              >
-                {tCuisines(cuisine)}
-              </Label>
+    <Accordion type="single" collapsible className="w-full">
+      <AccordionItem value="tags" className="border-0">
+        <AccordionTrigger className="px-6 py-4 hover:no-underline" disabled={disabled}>
+          <div className="flex flex-col items-start gap-3 flex-1">
+            <h3 className="text-lg font-semibold">Tags</h3>
+            {selectedTags.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {selectedTags.map((tag, index) => (
+                  <Badge
+                    key={`${tag.type}-${tag.value}-${index}`}
+                    variant="secondary"
+                    className="flex items-center gap-1 pr-1 text-xs"
+                  >
+                    <span>{tag.label}</span>
+                    <span
+                      className="h-auto w-auto p-0.5 cursor-pointer hover:bg-accent/50 rounded-sm transition-colors flex items-center justify-center"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!disabled) {
+                          removeTag(tag.value, tag.type);
+                        }
+                      }}
+                      aria-label="Remove tag"
+                      role="button"
+                    >
+                      <X className="h-2.5 w-2.5" />
+                    </span>
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <span className="text-xs text-muted-foreground">No tags selected</span>
+            )}
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="px-6 pb-4">
+          <div className="space-y-6">
+            {/* Cuisine (Single Selection) */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">{tHeaders("cuisine")}</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {CUISINE_TYPES.map((cuisine) => (
+                  <div key={cuisine} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`cuisine-${cuisine}`}
+                      checked={formData.cuisine === cuisine}
+                      onCheckedChange={() => handleCuisineChange(cuisine)}
+                      disabled={disabled}
+                    />
+                    <Label
+                      htmlFor={`cuisine-${cuisine}`}
+                      className="text-sm font-normal cursor-pointer flex-1"
+                    >
+                      {tCuisines(cuisine)}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Diet Types */}
-      <div>
-        <Label className="text-sm font-medium mb-2 block">{tHeaders("dietTypes")}</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {DIET_TYPES.map((dietType) => (
-            <div key={dietType} className="flex items-center space-x-2">
-              <Checkbox
-                id={`diet-${dietType}`}
-                checked={(formData.diet_types || []).includes(dietType)}
-                onCheckedChange={() => handleArrayTagToggle('diet_types', dietType)}
-                disabled={disabled}
-              />
-              <Label
-                htmlFor={`diet-${dietType}`}
-                className="text-sm font-normal cursor-pointer flex-1"
-              >
-                {tDietTypes(dietType)}
-              </Label>
+            {/* Diet Types */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">{tHeaders("dietTypes")}</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {DIET_TYPES.map((dietType) => (
+                  <div key={dietType} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`diet-${dietType}`}
+                      checked={(formData.diet_types || []).includes(dietType)}
+                      onCheckedChange={() => handleArrayTagToggle('diet_types', dietType)}
+                      disabled={disabled}
+                    />
+                    <Label
+                      htmlFor={`diet-${dietType}`}
+                      className="text-sm font-normal cursor-pointer flex-1"
+                    >
+                      {tDietTypes(dietType)}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Cooking Methods */}
-      <div>
-        <Label className="text-sm font-medium mb-2 block">{tHeaders("cookingMethods")}</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {COOKING_METHOD_TYPES.map((method) => (
-            <div key={method} className="flex items-center space-x-2">
-              <Checkbox
-                id={`cooking-${method}`}
-                checked={(formData.cooking_methods || []).includes(method)}
-                onCheckedChange={() => handleArrayTagToggle('cooking_methods', method)}
-                disabled={disabled}
-              />
-              <Label
-                htmlFor={`cooking-${method}`}
-                className="text-sm font-normal cursor-pointer flex-1"
-              >
-                {tCookingMethods(method)}
-              </Label>
+            {/* Cooking Methods */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">{tHeaders("cookingMethods")}</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {COOKING_METHOD_TYPES.map((method) => (
+                  <div key={method} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`cooking-${method}`}
+                      checked={(formData.cooking_methods || []).includes(method)}
+                      onCheckedChange={() => handleArrayTagToggle('cooking_methods', method)}
+                      disabled={disabled}
+                    />
+                    <Label
+                      htmlFor={`cooking-${method}`}
+                      className="text-sm font-normal cursor-pointer flex-1"
+                    >
+                      {tCookingMethods(method)}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Dish Types */}
-      <div>
-        <Label className="text-sm font-medium mb-2 block">{tHeaders("dishTypes")}</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {DISH_TYPES.map((dishType) => (
-            <div key={dishType} className="flex items-center space-x-2">
-              <Checkbox
-                id={`dish-${dishType}`}
-                checked={(formData.dish_types || []).includes(dishType)}
-                onCheckedChange={() => handleArrayTagToggle('dish_types', dishType)}
-                disabled={disabled}
-              />
-              <Label
-                htmlFor={`dish-${dishType}`}
-                className="text-sm font-normal cursor-pointer flex-1"
-              >
-                {tDishTypes(dishType)}
-              </Label>
+            {/* Dish Types */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">{tHeaders("dishTypes")}</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {DISH_TYPES.map((dishType) => (
+                  <div key={dishType} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`dish-${dishType}`}
+                      checked={(formData.dish_types || []).includes(dishType)}
+                      onCheckedChange={() => handleArrayTagToggle('dish_types', dishType)}
+                      disabled={disabled}
+                    />
+                    <Label
+                      htmlFor={`dish-${dishType}`}
+                      className="text-sm font-normal cursor-pointer flex-1"
+                    >
+                      {tDishTypes(dishType)}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Protein Types */}
-      <div>
-        <Label className="text-sm font-medium mb-2 block">{tHeaders("proteinTypes")}</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {PROTEIN_TYPES.map((protein) => (
-            <div key={protein} className="flex items-center space-x-2">
-              <Checkbox
-                id={`protein-${protein}`}
-                checked={(formData.proteins || []).includes(protein)}
-                onCheckedChange={() => handleArrayTagToggle('proteins', protein)}
-                disabled={disabled}
-              />
-              <Label
-                htmlFor={`protein-${protein}`}
-                className="text-sm font-normal cursor-pointer flex-1"
-              >
-                {tProteinTypes(protein)}
-              </Label>
+            {/* Protein Types */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">{tHeaders("proteinTypes")}</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {PROTEIN_TYPES.map((protein) => (
+                  <div key={protein} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`protein-${protein}`}
+                      checked={(formData.proteins || []).includes(protein)}
+                      onCheckedChange={() => handleArrayTagToggle('proteins', protein)}
+                      disabled={disabled}
+                    />
+                    <Label
+                      htmlFor={`protein-${protein}`}
+                      className="text-sm font-normal cursor-pointer flex-1"
+                    >
+                      {tProteinTypes(protein)}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Occasions */}
-      <div>
-        <Label className="text-sm font-medium mb-2 block">{tHeaders("occasionTypes")}</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {OCCASION_TYPES.map((occasion) => (
-            <div key={occasion} className="flex items-center space-x-2">
-              <Checkbox
-                id={`occasion-${occasion}`}
-                checked={(formData.occasions || []).includes(occasion)}
-                onCheckedChange={() => handleArrayTagToggle('occasions', occasion)}
-                disabled={disabled}
-              />
-              <Label
-                htmlFor={`occasion-${occasion}`}
-                className="text-sm font-normal cursor-pointer flex-1"
-              >
-                {tOccasionTypes(occasion)}
-              </Label>
+            {/* Occasions */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">{tHeaders("occasionTypes")}</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {OCCASION_TYPES.map((occasion) => (
+                  <div key={occasion} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`occasion-${occasion}`}
+                      checked={(formData.occasions || []).includes(occasion)}
+                      onCheckedChange={() => handleArrayTagToggle('occasions', occasion)}
+                      disabled={disabled}
+                    />
+                    <Label
+                      htmlFor={`occasion-${occasion}`}
+                      className="text-sm font-normal cursor-pointer flex-1"
+                    >
+                      {tOccasionTypes(occasion)}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Characteristics */}
-      <div>
-        <Label className="text-sm font-medium mb-2 block">{tHeaders("characteristicTypes")}</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {CHARACTERISTIC_TYPES.map((characteristic) => (
-            <div key={characteristic} className="flex items-center space-x-2">
-              <Checkbox
-                id={`char-${characteristic}`}
-                checked={(formData.characteristics || []).includes(characteristic)}
-                onCheckedChange={() => handleArrayTagToggle('characteristics', characteristic)}
-                disabled={disabled}
-              />
-              <Label
-                htmlFor={`char-${characteristic}`}
-                className="text-sm font-normal cursor-pointer flex-1"
-              >
-                {tCharacteristicTypes(characteristic)}
-              </Label>
+            {/* Characteristics */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">{tHeaders("characteristicTypes")}</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {CHARACTERISTIC_TYPES.map((characteristic) => (
+                  <div key={characteristic} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`char-${characteristic}`}
+                      checked={(formData.characteristics || []).includes(characteristic)}
+                      onCheckedChange={() => handleArrayTagToggle('characteristics', characteristic)}
+                      disabled={disabled}
+                    />
+                    <Label
+                      htmlFor={`char-${characteristic}`}
+                      className="text-sm font-normal cursor-pointer flex-1"
+                    >
+                      {tCharacteristicTypes(characteristic)}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
-    </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 }
 
@@ -705,10 +832,7 @@ export function RecipeEditForm({
 
         {/* Tags */}
         <Card>
-          <CardContent className="space-y-3 sm:space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Tags</h3>
-            </div>
+          <CardContent className="p-0">
             <CategorizedTagSelector
               formData={formData}
               onFormDataChange={handleFormDataChange}

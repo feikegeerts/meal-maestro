@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   Recipe,
   scaleRecipe,
-  formatIngredientDisplay,
+  formatIngredientDisplayWithTranslation,
 } from "@/types/recipe";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,7 @@ export function ServingSizeSelector({
   disabled = false,
 }: ServingSizeSelectorProps) {
   const t = useTranslations('servingSelector');
+  const tUnits = useTranslations('units');
   const [currentServings, setCurrentServings] = useState(recipe.servings);
 
   const scaledRecipe = scaleRecipe(recipe, currentServings);
@@ -141,7 +142,7 @@ export function ServingSizeSelector({
                       <li key={index} className="text-sm flex items-start">
                         <span className="inline-block w-1.5 h-1.5 bg-muted-foreground rounded-full mt-2 mr-2 flex-shrink-0" />
                         <span className="opacity-60">
-                          {formatIngredientDisplay(ingredient)}
+                          {formatIngredientDisplayWithTranslation(ingredient, tUnits)}
                         </span>
                       </li>
                     ))}
@@ -158,7 +159,7 @@ export function ServingSizeSelector({
                       <li key={index} className="text-sm flex items-start">
                         <span className="inline-block w-1.5 h-1.5 bg-primary rounded-full mt-2 mr-2 flex-shrink-0" />
                         <span className="font-medium">
-                          {formatIngredientDisplay(ingredient)}
+                          {formatIngredientDisplayWithTranslation(ingredient, tUnits)}
                         </span>
                       </li>
                     ))}

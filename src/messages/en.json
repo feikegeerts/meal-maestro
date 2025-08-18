@@ -360,8 +360,8 @@
     "l": "l",
     "tbsp": "tbsp",
     "tsp": "tsp",
-    "piece": "piece",
-    "pieces": "pieces"
+    "clove": "clove",
+    "cloves": "cloves"
   },
   "accessibility": {
     "switchLanguage": "Switch language",

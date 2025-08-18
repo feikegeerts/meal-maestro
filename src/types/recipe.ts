@@ -367,7 +367,7 @@ export function normalizeIngredientUnit(amount: number | null, unit: string | nu
 }
 
 // Utility functions for ingredient scaling
-function formatFraction(num: number): string {
+export function formatFraction(num: number): string {
   const tolerance = 1e-6;
   const commonFractions: [number, string][] = [
     [1/4, '¼'], [1/3, '⅓'], [1/2, '½'], [2/3, '⅔'], [3/4, '¾'],
@@ -390,7 +390,7 @@ function formatFraction(num: number): string {
   return num.toFixed(2).replace(/\.?0+$/, '');
 }
 
-function pluralizeUnit(unit: string | null, amount: number): string | null {
+export function pluralizeUnit(unit: string | null, amount: number): string | null {
   if (!unit) return null;
   
   const singularToPlural: Record<string, string> = {
@@ -400,7 +400,7 @@ function pluralizeUnit(unit: string | null, amount: number): string | null {
     'kg': 'kg',
     'ml': 'ml',
     'l': 'l',
-    'piece': 'pieces'
+    'clove': 'cloves'
   };
   
   if (amount === 1) {
@@ -467,13 +467,44 @@ export function formatIngredientDisplay(ingredient: RecipeIngredient): string {
   return `${amount}${unit} ${ingredient.name}${notes}`;
 }
 
-// Smart cooking units for dropdown (6 total)
+export function formatIngredientDisplayWithTranslation(
+  ingredient: RecipeIngredient, 
+  translateUnit: (unit: string) => string
+): string {
+  if (ingredient.amount === null) {
+    const notes = ingredient.notes ? ` (${ingredient.notes})` : '';
+    return `${ingredient.name}${notes}`;
+  }
+  
+  // Handle NaN or invalid numbers
+  if (isNaN(ingredient.amount) || !isFinite(ingredient.amount)) {
+    const notes = ingredient.notes ? ` (${ingredient.notes})` : '';
+    return `${ingredient.name}${notes}`;
+  }
+  
+  // Apply smart unit conversion
+  const smartResult = normalizeIngredientUnit(ingredient.amount, ingredient.unit);
+  const finalAmount = smartResult ? smartResult.amount : ingredient.amount;
+  const finalUnit = smartResult ? smartResult.unit : ingredient.unit;
+  
+  // Apply pluralization before translation
+  const pluralizedUnit = pluralizeUnit(finalUnit, finalAmount);
+  
+  const amount = formatFraction(finalAmount);
+  const unit = pluralizedUnit ? ` ${translateUnit(pluralizedUnit) || pluralizedUnit}` : '';
+  const notes = ingredient.notes ? ` (${ingredient.notes})` : '';
+  
+  return `${amount}${unit} ${ingredient.name}${notes}`;
+}
+
+// Smart cooking units for dropdown (7 total)
 export const COOKING_UNITS = [
   'g',
   'kg',
   'ml',
   'l',
   'tbsp',
-  'tsp'
+  'tsp',
+  'clove'
 ];
 
