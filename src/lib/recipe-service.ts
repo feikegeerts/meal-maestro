@@ -61,7 +61,13 @@ export const recipeService = {
     if (params?.query) searchParams.set('query', params.query);
     if (params?.category) searchParams.set('category', params.category);
     if (params?.season) searchParams.set('season', params.season);
-    if (params?.tags?.length) searchParams.set('tags', params.tags.join(','));
+    if (params?.cuisine) searchParams.set('cuisine', params.cuisine);
+    if (params?.diet_types?.length) searchParams.set('diet_types', params.diet_types.join(','));
+    if (params?.cooking_methods?.length) searchParams.set('cooking_methods', params.cooking_methods.join(','));
+    if (params?.dish_types?.length) searchParams.set('dish_types', params.dish_types.join(','));
+    if (params?.proteins?.length) searchParams.set('proteins', params.proteins.join(','));
+    if (params?.occasions?.length) searchParams.set('occasions', params.occasions.join(','));
+    if (params?.characteristics?.length) searchParams.set('characteristics', params.characteristics.join(','));
     if (params?.limit) searchParams.set('limit', params.limit.toString());
 
     const url = `/api/recipes${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
@@ -105,8 +111,32 @@ export const recipeService = {
     return this.getUserRecipes({ season });
   },
 
-  async getRecipesByTags(tags: string[]): Promise<RecipesResponse> {
-    return this.getUserRecipes({ tags });
+  async getRecipesByCuisine(cuisine: string): Promise<RecipesResponse> {
+    return this.getUserRecipes({ cuisine });
+  },
+
+  async getRecipesByDietTypes(diet_types: string[]): Promise<RecipesResponse> {
+    return this.getUserRecipes({ diet_types });
+  },
+
+  async getRecipesByCookingMethods(cooking_methods: string[]): Promise<RecipesResponse> {
+    return this.getUserRecipes({ cooking_methods });
+  },
+
+  async getRecipesByDishTypes(dish_types: string[]): Promise<RecipesResponse> {
+    return this.getUserRecipes({ dish_types });
+  },
+
+  async getRecipesByProteins(proteins: string[]): Promise<RecipesResponse> {
+    return this.getUserRecipes({ proteins });
+  },
+
+  async getRecipesByOccasions(occasions: string[]): Promise<RecipesResponse> {
+    return this.getUserRecipes({ occasions });
+  },
+
+  async getRecipesByCharacteristics(characteristics: string[]): Promise<RecipesResponse> {
+    return this.getUserRecipes({ characteristics });
   },
 
   async getRecipe(id: string): Promise<Recipe> {

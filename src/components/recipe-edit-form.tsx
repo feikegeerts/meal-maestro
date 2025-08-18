@@ -6,10 +6,15 @@ import {
   RecipeInput,
   RecipeIngredient,
   RecipeSeason,
-  RecipeTag,
   RECIPE_CATEGORIES,
   RECIPE_SEASONS,
-  RECIPE_TAGS,
+  CUISINE_TYPES,
+  DIET_TYPES,
+  COOKING_METHOD_TYPES,
+  DISH_TYPES,
+  PROTEIN_TYPES,
+  OCCASION_TYPES,
+  CHARACTERISTIC_TYPES,
   validateRecipeInput,
 } from "@/types/recipe";
 import { Button } from "@/components/ui/button";
@@ -25,9 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { SheetClose } from "@/components/ui/sheet";
-import { Search } from "lucide-react";
 import { StructuredIngredientInput } from "@/components/structured-ingredient-input";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { useTranslations } from "next-intl";
@@ -69,7 +72,13 @@ export const triggerAutoSave = async (): Promise<boolean> => {
       servings: formData.servings,
       description: formData.description,
       category: formData.category,
-      tags: formData.tags,
+      cuisine: formData.cuisine,
+      diet_types: formData.diet_types,
+      cooking_methods: formData.cooking_methods,
+      dish_types: formData.dish_types,
+      proteins: formData.proteins,
+      occasions: formData.occasions,
+      characteristics: formData.characteristics,
       season: formData.season,
     };
 
@@ -81,235 +90,203 @@ export const triggerAutoSave = async (): Promise<boolean> => {
   }
 };
 
-const tagCategories = {
-  dietary: RECIPE_TAGS.filter((tag) =>
-    [
-      RecipeTag.VEGETARIAN,
-      RecipeTag.VEGAN,
-      RecipeTag.GLUTEN_FREE,
-      RecipeTag.DAIRY_FREE,
-      RecipeTag.NUT_FREE,
-      RecipeTag.KETO,
-      RecipeTag.PALEO,
-      RecipeTag.LOW_CARB,
-      RecipeTag.LOW_FAT,
-      RecipeTag.SUGAR_FREE,
-      RecipeTag.LOW_SODIUM,
-      RecipeTag.HIGH_PROTEIN,
-    ].includes(tag as RecipeTag)
-  ),
 
-  cuisine: RECIPE_TAGS.filter((tag) =>
-    [
-      RecipeTag.ITALIAN,
-      RecipeTag.MEXICAN,
-      RecipeTag.CHINESE,
-      RecipeTag.INDIAN,
-      RecipeTag.THAI,
-      RecipeTag.FRENCH,
-      RecipeTag.MEDITERRANEAN,
-      RecipeTag.AMERICAN,
-      RecipeTag.JAPANESE,
-      RecipeTag.KOREAN,
-      RecipeTag.GREEK,
-      RecipeTag.SPANISH,
-      RecipeTag.MIDDLE_EASTERN,
-      RecipeTag.CAJUN,
-      RecipeTag.SOUTHERN,
-    ].includes(tag as RecipeTag)
-  ),
-
-  cooking: RECIPE_TAGS.filter((tag) =>
-    [
-      RecipeTag.BAKING,
-      RecipeTag.GRILLING,
-      RecipeTag.FRYING,
-      RecipeTag.ROASTING,
-      RecipeTag.STEAMING,
-      RecipeTag.SLOW_COOKING,
-      RecipeTag.AIR_FRYER,
-      RecipeTag.INSTANT_POT,
-      RecipeTag.NO_COOK,
-      RecipeTag.ONE_POT,
-      RecipeTag.STIR_FRY,
-      RecipeTag.BRAISING,
-      RecipeTag.SMOKING,
-      RecipeTag.PRESSURE_COOKER,
-    ].includes(tag as RecipeTag)
-  ),
-
-  characteristics: RECIPE_TAGS.filter((tag) =>
-    [
-      RecipeTag.QUICK,
-      RecipeTag.EASY,
-      RecipeTag.HEALTHY,
-      RecipeTag.COMFORT_FOOD,
-      RecipeTag.SPICY,
-      RecipeTag.MILD,
-      RecipeTag.SWEET,
-      RecipeTag.SAVORY,
-      RecipeTag.CRISPY,
-      RecipeTag.CREAMY,
-      RecipeTag.FRESH,
-      RecipeTag.HEARTY,
-      RecipeTag.LIGHT,
-      RecipeTag.RICH,
-    ].includes(tag as RecipeTag)
-  ),
-
-  occasions: RECIPE_TAGS.filter((tag) =>
-    [
-      RecipeTag.PARTY,
-      RecipeTag.HOLIDAY,
-      RecipeTag.WEEKNIGHT,
-      RecipeTag.MEAL_PREP,
-      RecipeTag.KID_FRIENDLY,
-      RecipeTag.DATE_NIGHT,
-      RecipeTag.POTLUCK,
-      RecipeTag.PICNIC,
-      RecipeTag.ENTERTAINING,
-      RecipeTag.BUDGET_FRIENDLY,
-      RecipeTag.LEFTOVER_FRIENDLY,
-    ].includes(tag as RecipeTag)
-  ),
-
-  proteins: RECIPE_TAGS.filter((tag) =>
-    [
-      RecipeTag.CHICKEN,
-      RecipeTag.BEEF,
-      RecipeTag.PORK,
-      RecipeTag.FISH,
-      RecipeTag.SEAFOOD,
-      RecipeTag.TOFU,
-      RecipeTag.BEANS,
-      RecipeTag.EGGS,
-      RecipeTag.TURKEY,
-      RecipeTag.LAMB,
-      RecipeTag.DUCK,
-      RecipeTag.PLANT_BASED,
-    ].includes(tag as RecipeTag)
-  ),
-
-  dishes: RECIPE_TAGS.filter((tag) =>
-    [
-      RecipeTag.SOUP,
-      RecipeTag.SALAD,
-      RecipeTag.SANDWICH,
-      RecipeTag.PASTA,
-      RecipeTag.PIZZA,
-      RecipeTag.BREAD,
-      RecipeTag.COOKIES,
-      RecipeTag.CAKE,
-      RecipeTag.PIE,
-      RecipeTag.SMOOTHIE,
-      RecipeTag.COCKTAIL,
-      RecipeTag.SAUCE,
-      RecipeTag.DIP,
-      RecipeTag.MARINADE,
-      RecipeTag.DRESSING,
-    ].includes(tag as RecipeTag)
-  ),
-};
-
-// All tags in a flat array for searching
-const allTags = RECIPE_TAGS;
-
-interface TagSelectorProps {
-  selectedTags: string[];
-  onTagToggle: (tag: string) => void;
+interface CategorizedTagSelectorProps {
+  formData: RecipeInput;
+  onFormDataChange: (updates: Partial<RecipeInput>) => void;
   disabled?: boolean;
-  tTags: (key: string) => string;
-  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
-function TagSelector({
-  selectedTags,
-  onTagToggle,
+function CategorizedTagSelector({
+  formData,
+  onFormDataChange,
   disabled = false,
-  tTags,
-  t,
-}: TagSelectorProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+}: CategorizedTagSelectorProps) {
+  const tCuisines = useTranslations("cuisines");
+  const tDietTypes = useTranslations("dietTypes");
+  const tCookingMethods = useTranslations("cookingMethods");
+  const tDishTypes = useTranslations("dishTypes");
+  const tProteinTypes = useTranslations("proteinTypes");
+  const tOccasionTypes = useTranslations("occasionTypes");
+  const tCharacteristicTypes = useTranslations("characteristicTypes");
+  const tHeaders = useTranslations("tagCategoryHeaders");
 
-  const filteredTags = searchQuery
-    ? allTags.filter((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : selectedCategory === "all"
-    ? allTags
-    : tagCategories[selectedCategory as keyof typeof tagCategories] || [];
+  const handleCuisineChange = (cuisine: string) => {
+    onFormDataChange({ cuisine: cuisine === formData.cuisine ? undefined : cuisine });
+  };
+
+  const handleArrayTagToggle = (
+    fieldName: keyof Pick<RecipeInput, 'diet_types' | 'cooking_methods' | 'dish_types' | 'proteins' | 'occasions' | 'characteristics'>,
+    tag: string
+  ) => {
+    const currentArray = formData[fieldName] || [];
+    const newArray = currentArray.includes(tag)
+      ? currentArray.filter(t => t !== tag)
+      : [...currentArray, tag];
+    onFormDataChange({ [fieldName]: newArray });
+  };
 
   return (
-    <div className="space-y-4">
-      {/* Search and Category Filter */}
-      <div className="space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder={t("searchTags")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-            disabled={disabled}
-          />
-        </div>
-
-        <Select
-          value={selectedCategory}
-          onValueChange={setSelectedCategory}
-          disabled={disabled}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={t("allCategories")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("allCategories")}</SelectItem>
-            {Object.keys(tagCategories).map((category) => (
-              <SelectItem
-                key={category}
-                value={category}
-                className="capitalize"
-              >
-                {category}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Tags Grid */}
-      <div className="max-h-60 overflow-y-auto border rounded-md p-3">
+    <div className="space-y-6">
+      {/* Cuisine (Single Selection) */}
+      <div>
+        <Label className="text-sm font-medium mb-2 block">{tHeaders("cuisine")}</Label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {filteredTags.map((tag) => (
-            <div key={tag} className="flex items-center space-x-2">
+          {CUISINE_TYPES.map((cuisine) => (
+            <div key={cuisine} className="flex items-center space-x-2">
               <Checkbox
-                id={tag}
-                checked={selectedTags.includes(tag)}
-                onCheckedChange={() => onTagToggle(tag)}
+                id={`cuisine-${cuisine}`}
+                checked={formData.cuisine === cuisine}
+                onCheckedChange={() => handleCuisineChange(cuisine)}
                 disabled={disabled}
               />
               <Label
-                htmlFor={tag}
+                htmlFor={`cuisine-${cuisine}`}
                 className="text-sm font-normal cursor-pointer flex-1"
               >
-                {tTags(tag)}
+                {tCuisines(cuisine)}
               </Label>
             </div>
           ))}
         </div>
-
-        {filteredTags.length === 0 && (
-          <div className="text-center text-muted-foreground py-4">
-            {t("noTagsFound", { query: searchQuery })}
-          </div>
-        )}
       </div>
 
-      <div className="text-xs text-muted-foreground">
-        {selectedTags.length === 1
-          ? t("tagsSelected", { count: selectedTags.length })
-          : t("tagsSelectedPlural", { count: selectedTags.length })}
+      {/* Diet Types */}
+      <div>
+        <Label className="text-sm font-medium mb-2 block">{tHeaders("dietTypes")}</Label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {DIET_TYPES.map((dietType) => (
+            <div key={dietType} className="flex items-center space-x-2">
+              <Checkbox
+                id={`diet-${dietType}`}
+                checked={(formData.diet_types || []).includes(dietType)}
+                onCheckedChange={() => handleArrayTagToggle('diet_types', dietType)}
+                disabled={disabled}
+              />
+              <Label
+                htmlFor={`diet-${dietType}`}
+                className="text-sm font-normal cursor-pointer flex-1"
+              >
+                {tDietTypes(dietType)}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Cooking Methods */}
+      <div>
+        <Label className="text-sm font-medium mb-2 block">{tHeaders("cookingMethods")}</Label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {COOKING_METHOD_TYPES.map((method) => (
+            <div key={method} className="flex items-center space-x-2">
+              <Checkbox
+                id={`cooking-${method}`}
+                checked={(formData.cooking_methods || []).includes(method)}
+                onCheckedChange={() => handleArrayTagToggle('cooking_methods', method)}
+                disabled={disabled}
+              />
+              <Label
+                htmlFor={`cooking-${method}`}
+                className="text-sm font-normal cursor-pointer flex-1"
+              >
+                {tCookingMethods(method)}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Dish Types */}
+      <div>
+        <Label className="text-sm font-medium mb-2 block">{tHeaders("dishTypes")}</Label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {DISH_TYPES.map((dishType) => (
+            <div key={dishType} className="flex items-center space-x-2">
+              <Checkbox
+                id={`dish-${dishType}`}
+                checked={(formData.dish_types || []).includes(dishType)}
+                onCheckedChange={() => handleArrayTagToggle('dish_types', dishType)}
+                disabled={disabled}
+              />
+              <Label
+                htmlFor={`dish-${dishType}`}
+                className="text-sm font-normal cursor-pointer flex-1"
+              >
+                {tDishTypes(dishType)}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Protein Types */}
+      <div>
+        <Label className="text-sm font-medium mb-2 block">{tHeaders("proteinTypes")}</Label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {PROTEIN_TYPES.map((protein) => (
+            <div key={protein} className="flex items-center space-x-2">
+              <Checkbox
+                id={`protein-${protein}`}
+                checked={(formData.proteins || []).includes(protein)}
+                onCheckedChange={() => handleArrayTagToggle('proteins', protein)}
+                disabled={disabled}
+              />
+              <Label
+                htmlFor={`protein-${protein}`}
+                className="text-sm font-normal cursor-pointer flex-1"
+              >
+                {tProteinTypes(protein)}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Occasions */}
+      <div>
+        <Label className="text-sm font-medium mb-2 block">{tHeaders("occasionTypes")}</Label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {OCCASION_TYPES.map((occasion) => (
+            <div key={occasion} className="flex items-center space-x-2">
+              <Checkbox
+                id={`occasion-${occasion}`}
+                checked={(formData.occasions || []).includes(occasion)}
+                onCheckedChange={() => handleArrayTagToggle('occasions', occasion)}
+                disabled={disabled}
+              />
+              <Label
+                htmlFor={`occasion-${occasion}`}
+                className="text-sm font-normal cursor-pointer flex-1"
+              >
+                {tOccasionTypes(occasion)}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Characteristics */}
+      <div>
+        <Label className="text-sm font-medium mb-2 block">{tHeaders("characteristicTypes")}</Label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {CHARACTERISTIC_TYPES.map((characteristic) => (
+            <div key={characteristic} className="flex items-center space-x-2">
+              <Checkbox
+                id={`char-${characteristic}`}
+                checked={(formData.characteristics || []).includes(characteristic)}
+                onCheckedChange={() => handleArrayTagToggle('characteristics', characteristic)}
+                disabled={disabled}
+              />
+              <Label
+                htmlFor={`char-${characteristic}`}
+                className="text-sm font-normal cursor-pointer flex-1"
+              >
+                {tCharacteristicTypes(characteristic)}
+              </Label>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -327,7 +304,6 @@ export function RecipeEditForm({
   const t = useTranslations("recipeForm");
   const tCategories = useTranslations("categories");
   const tSeasons = useTranslations("seasons");
-  const tTags = useTranslations("tags");
 
   const generateIngredientId = () =>
     `ingredient-${Date.now()}-${Math.random()}`;
@@ -349,11 +325,18 @@ export function RecipeEditForm({
     servings: recipe.servings || 4,
     description: recipe.description,
     category: recipe.category,
-    tags: [...recipe.tags],
+    cuisine: recipe.cuisine,
+    diet_types: recipe.diet_types || [],
+    cooking_methods: recipe.cooking_methods || [],
+    dish_types: recipe.dish_types || [],
+    proteins: recipe.proteins || [],
+    occasions: recipe.occasions || [],
+    characteristics: recipe.characteristics || [],
     season: recipe.season || RecipeSeason.YEAR_ROUND,
   });
   const [errors, setErrors] = useState<string[]>([]);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Debounced function to update global state
   const updateGlobalState = useCallback(() => {
@@ -364,7 +347,13 @@ export function RecipeEditForm({
       formData.servings !== recipe.servings ||
       formData.description !== recipe.description ||
       formData.category !== recipe.category ||
-      JSON.stringify(formData.tags) !== JSON.stringify(recipe.tags) ||
+      formData.cuisine !== recipe.cuisine ||
+      JSON.stringify(formData.diet_types) !== JSON.stringify(recipe.diet_types) ||
+      JSON.stringify(formData.cooking_methods) !== JSON.stringify(recipe.cooking_methods) ||
+      JSON.stringify(formData.dish_types) !== JSON.stringify(recipe.dish_types) ||
+      JSON.stringify(formData.proteins) !== JSON.stringify(recipe.proteins) ||
+      JSON.stringify(formData.occasions) !== JSON.stringify(recipe.occasions) ||
+      JSON.stringify(formData.characteristics) !== JSON.stringify(recipe.characteristics) ||
       formData.season !== recipe.season;
 
     // Update global state for auto-save
@@ -399,7 +388,13 @@ export function RecipeEditForm({
       servings: formData.servings,
       description: formData.description,
       category: formData.category,
-      tags: formData.tags,
+      cuisine: formData.cuisine,
+      diet_types: formData.diet_types,
+      cooking_methods: formData.cooking_methods,
+      dish_types: formData.dish_types,
+      proteins: formData.proteins,
+      occasions: formData.occasions,
+      characteristics: formData.characteristics,
       season: formData.season,
     }),
     [
@@ -407,9 +402,15 @@ export function RecipeEditForm({
       formData.servings,
       formData.description,
       formData.category,
+      formData.cuisine,
+      formData.diet_types,
+      formData.cooking_methods,
+      formData.dish_types,
+      formData.proteins,
+      formData.occasions,
+      formData.characteristics,
       formData.season,
       formData.ingredients,
-      formData.tags,
     ]
   );
 
@@ -426,7 +427,13 @@ export function RecipeEditForm({
     }>;
     servings?: number;
     category?: string;
-    tags?: string[];
+    cuisine?: string;
+    diet_types?: string[];
+    cooking_methods?: string[];
+    dish_types?: string[];
+    proteins?: string[];
+    occasions?: string[];
+    characteristics?: string[];
     season?: string;
   }
 
@@ -441,7 +448,13 @@ export function RecipeEditForm({
         ...(recipeData.description && { description: recipeData.description }),
         ...(recipeData.servings && { servings: recipeData.servings }),
         ...(recipeData.category && { category: recipeData.category }),
-        ...(recipeData.tags && { tags: recipeData.tags }),
+        ...(recipeData.cuisine && { cuisine: recipeData.cuisine }),
+        ...(recipeData.diet_types && { diet_types: recipeData.diet_types }),
+        ...(recipeData.cooking_methods && { cooking_methods: recipeData.cooking_methods }),
+        ...(recipeData.dish_types && { dish_types: recipeData.dish_types }),
+        ...(recipeData.proteins && { proteins: recipeData.proteins }),
+        ...(recipeData.occasions && { occasions: recipeData.occasions }),
+        ...(recipeData.characteristics && { characteristics: recipeData.characteristics }),
         ...(recipeData.season && { season: recipeData.season }),
         ...(recipeData.ingredients &&
           recipeData.ingredients.length > 0 && {
@@ -490,7 +503,13 @@ export function RecipeEditForm({
       servings: formData.servings,
       description: formData.description,
       category: formData.category,
-      tags: formData.tags,
+      cuisine: formData.cuisine,
+      diet_types: formData.diet_types,
+      cooking_methods: formData.cooking_methods,
+      dish_types: formData.dish_types,
+      proteins: formData.proteins,
+      occasions: formData.occasions,
+      characteristics: formData.characteristics,
       season: formData.season,
     };
 
@@ -513,14 +532,23 @@ export function RecipeEditForm({
     []
   );
 
-  const toggleTag = useCallback((tag: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      tags: prev.tags.includes(tag)
-        ? prev.tags.filter((t) => t !== tag)
-        : [...prev.tags, tag],
-    }));
+  const handleFormDataChange = useCallback((updates: Partial<RecipeInput>) => {
+    setFormData((prev) => ({ ...prev, ...updates }));
   }, []);
+
+  // Auto-resize textarea function
+  const autoResizeTextarea = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+  }, []);
+
+  // Auto-resize textarea when description changes
+  useEffect(() => {
+    autoResizeTextarea();
+  }, [formData.description, autoResizeTextarea]);
 
   // Form sections component - memoized to prevent remounting
   const FormSections = useMemo(
@@ -656,16 +684,19 @@ export function RecipeEditForm({
             <h3 className="text-lg font-semibold mb-3">{t("instructions")}</h3>
             <div className="space-y-2">
               <Textarea
+                ref={textareaRef}
                 id="description"
                 value={formData.description}
-                onChange={(e) =>
+                onChange={(e) => {
                   setFormData((prev) => ({
                     ...prev,
                     description: e.target.value,
-                  }))
-                }
+                  }));
+                  // Trigger resize on input
+                  setTimeout(autoResizeTextarea, 0);
+                }}
                 placeholder={t("descriptionPlaceholder")}
-                className="min-h-[120px]"
+                className="min-h-[120px] resize-none overflow-hidden"
                 disabled={loading}
               />
             </div>
@@ -677,27 +708,11 @@ export function RecipeEditForm({
           <CardContent className="space-y-3 sm:space-y-4">
             <div>
               <h3 className="text-lg font-semibold mb-3">Tags</h3>
-              {formData.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {formData.tags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      className="text-xs cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
-                      onClick={() => toggleTag(tag)}
-                    >
-                      {tag} ×
-                    </Badge>
-                  ))}
-                </div>
-              )}
             </div>
-            <TagSelector
-              selectedTags={formData.tags}
-              onTagToggle={toggleTag}
+            <CategorizedTagSelector
+              formData={formData}
+              onFormDataChange={handleFormDataChange}
               disabled={loading}
-              tTags={tTags}
-              t={t}
             />
           </CardContent>
         </Card>
@@ -754,16 +769,10 @@ export function RecipeEditForm({
     ),
     [
       errors,
-      formData.title,
-      formData.category,
-      formData.season,
-      formData.servings,
-      formData.ingredients,
-      formData.description,
-      formData.tags,
+      formData,
       loading,
       handleIngredientsChange,
-      toggleTag,
+      handleFormDataChange,
       handleSave,
       standalone,
       onCancel,
@@ -771,7 +780,7 @@ export function RecipeEditForm({
       t,
       tCategories,
       tSeasons,
-      tTags,
+      autoResizeTextarea,
     ]
   );
 

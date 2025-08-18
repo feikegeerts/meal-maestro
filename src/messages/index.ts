@@ -1,10 +1,19 @@
 import { useTranslations } from 'next-intl';
-import { RecipeCategory, RecipeTag, RecipeSeason } from '@/types/recipe';
+import { 
+  RecipeCategory, 
+  RecipeSeason
+} from '@/types/recipe';
 
 export function useRecipeTranslations() {
   const tCategories = useTranslations('categories');
   const tSeasons = useTranslations('seasons');
-  const tTags = useTranslations('tags');
+  const tCuisines = useTranslations('cuisines');
+  const tDietTypes = useTranslations('dietTypes');
+  const tCookingMethods = useTranslations('cookingMethods');
+  const tDishTypes = useTranslations('dishTypes');
+  const tProteinTypes = useTranslations('proteinTypes');
+  const tOccasionTypes = useTranslations('occasionTypes');
+  const tCharacteristicTypes = useTranslations('characteristicTypes');
 
   const translateCategory = (category: RecipeCategory): string => {
     return tCategories(category);
@@ -14,8 +23,25 @@ export function useRecipeTranslations() {
     return tSeasons(season);
   };
 
-  const translateTag = (tag: RecipeTag): string => {
-    return tTags(tag);
+  const translateTag = (tagType: string, tag: string): string => {
+    switch (tagType) {
+      case 'cuisine':
+        return tCuisines(tag);
+      case 'dietType':
+        return tDietTypes(tag);
+      case 'cookingMethod':
+        return tCookingMethods(tag);
+      case 'dishType':
+        return tDishTypes(tag);
+      case 'protein':
+        return tProteinTypes(tag);
+      case 'occasion':
+        return tOccasionTypes(tag);
+      case 'characteristic':
+        return tCharacteristicTypes(tag);
+      default:
+        return tag;
+    }
   };
 
   const getAllTranslatedCategories = (): Array<{ value: RecipeCategory; label: string }> => {
@@ -32,19 +58,11 @@ export function useRecipeTranslations() {
     }));
   };
 
-  const getAllTranslatedTags = (): Array<{ value: RecipeTag; label: string }> => {
-    return Object.values(RecipeTag).map(tag => ({
-      value: tag,
-      label: translateTag(tag)
-    }));
-  };
-
   return {
     translateCategory,
     translateSeason,
     translateTag,
     getAllTranslatedCategories,
-    getAllTranslatedSeasons,
-    getAllTranslatedTags
+    getAllTranslatedSeasons
   };
 }

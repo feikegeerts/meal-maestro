@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Recipe, formatIngredientDisplay, RecipeCategory, RecipeSeason, RecipeTag } from "@/types/recipe";
+import { Recipe, formatIngredientDisplay, RecipeCategory, RecipeSeason } from "@/types/recipe";
 import { useLocalizedDateFormatter } from "@/lib/date-utils";
 import { ServingSizeSelector } from "@/components/serving-size-selector";
 import {
@@ -309,16 +309,50 @@ export default function RecipeDetailPage() {
                 </div>
 
                 {/* Tags */}
-                {recipe.tags && recipe.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {recipe.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs">
-                        <Tag className="mr-1 h-3 w-3" />
-                        {translateTag(tag as RecipeTag)}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {recipe.cuisine && (
+                    <Badge variant="secondary" className="text-xs">
+                      <Tag className="mr-1 h-3 w-3" />
+                      {translateTag('cuisine', recipe.cuisine)}
+                    </Badge>
+                  )}
+                  {recipe.diet_types?.map((dietType) => (
+                    <Badge key={dietType} variant="secondary" className="text-xs">
+                      <Tag className="mr-1 h-3 w-3" />
+                      {translateTag('dietType', dietType)}
+                    </Badge>
+                  ))}
+                  {recipe.cooking_methods?.map((method) => (
+                    <Badge key={method} variant="secondary" className="text-xs">
+                      <Tag className="mr-1 h-3 w-3" />
+                      {translateTag('cookingMethod', method)}
+                    </Badge>
+                  ))}
+                  {recipe.dish_types?.map((dishType) => (
+                    <Badge key={dishType} variant="secondary" className="text-xs">
+                      <Tag className="mr-1 h-3 w-3" />
+                      {translateTag('dishType', dishType)}
+                    </Badge>
+                  ))}
+                  {recipe.proteins?.map((protein) => (
+                    <Badge key={protein} variant="secondary" className="text-xs">
+                      <Tag className="mr-1 h-3 w-3" />
+                      {translateTag('protein', protein)}
+                    </Badge>
+                  ))}
+                  {recipe.occasions?.map((occasion) => (
+                    <Badge key={occasion} variant="secondary" className="text-xs">
+                      <Tag className="mr-1 h-3 w-3" />
+                      {translateTag('occasion', occasion)}
+                    </Badge>
+                  ))}
+                  {recipe.characteristics?.map((characteristic) => (
+                    <Badge key={characteristic} variant="secondary" className="text-xs">
+                      <Tag className="mr-1 h-3 w-3" />
+                      {translateTag('characteristic', characteristic)}
+                    </Badge>
+                  ))}
+                </div>
               </CardHeader>
 
               <CardContent className="space-y-6">

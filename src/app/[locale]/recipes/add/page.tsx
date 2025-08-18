@@ -29,7 +29,6 @@ const defaultRecipe: Recipe = {
   servings: 4,
   description: "",
   category: RecipeCategory.MAIN_COURSE,
-  tags: [],
   season: RecipeSeason.YEAR_ROUND,
   last_eaten: undefined,
   created_at: undefined,
@@ -62,7 +61,13 @@ export default function AddRecipePage() {
         servings: recipeData.servings!,
         description: recipeData.description!,
         category: recipeData.category!,
-        tags: recipeData.tags || [],
+        cuisine: recipeData.cuisine,
+        diet_types: recipeData.diet_types || [],
+        cooking_methods: recipeData.cooking_methods || [],
+        dish_types: recipeData.dish_types || [],
+        proteins: recipeData.proteins || [],
+        occasions: recipeData.occasions || [],
+        characteristics: recipeData.characteristics || [],
         season: recipeData.season,
       };
 

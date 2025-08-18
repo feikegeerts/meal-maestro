@@ -84,7 +84,7 @@ export function CostBarChart({ data, timePeriod, loading }: CostBarChartProps) {
         totalCostFormatted: parseFloat(item.totalCost.toFixed(4)),
       };
     });
-  }, [data, timePeriod, t]);
+  }, [data, timePeriod, t, locale]);
 
   if (loading) {
     return (

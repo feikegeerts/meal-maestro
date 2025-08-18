@@ -17,8 +17,21 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get('query') || undefined;
     const category = searchParams.get('category') || undefined;
     const season = searchParams.get('season') || undefined;
-    const tagsParam = searchParams.get('tags');
-    const tags = tagsParam ? tagsParam.split(',').map(t => t.trim()) : undefined;
+    const cuisineParam = searchParams.get('cuisine');
+    const dietTypesParam = searchParams.get('diet_types');
+    const cookingMethodsParam = searchParams.get('cooking_methods');
+    const dishTypesParam = searchParams.get('dish_types');
+    const proteinsParam = searchParams.get('proteins');
+    const occasionsParam = searchParams.get('occasions');
+    const characteristicsParam = searchParams.get('characteristics');
+    
+    const cuisine = cuisineParam || undefined;
+    const dietTypes = dietTypesParam ? dietTypesParam.split(',').map(t => t.trim()) : undefined;
+    const cookingMethods = cookingMethodsParam ? cookingMethodsParam.split(',').map(t => t.trim()) : undefined;
+    const dishTypes = dishTypesParam ? dishTypesParam.split(',').map(t => t.trim()) : undefined;
+    const proteins = proteinsParam ? proteinsParam.split(',').map(t => t.trim()) : undefined;
+    const occasions = occasionsParam ? occasionsParam.split(',').map(t => t.trim()) : undefined;
+    const characteristics = characteristicsParam ? characteristicsParam.split(',').map(t => t.trim()) : undefined;
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 50;
 
     let supabaseQuery = supabase
@@ -36,8 +49,32 @@ export async function GET(request: NextRequest) {
       supabaseQuery = supabaseQuery.eq('season', season);
     }
 
-    if (tags && tags.length > 0) {
-      supabaseQuery = supabaseQuery.overlaps('tags', tags);
+    if (cuisine) {
+      supabaseQuery = supabaseQuery.eq('cuisine', cuisine);
+    }
+
+    if (dietTypes && dietTypes.length > 0) {
+      supabaseQuery = supabaseQuery.overlaps('diet_types', dietTypes);
+    }
+
+    if (cookingMethods && cookingMethods.length > 0) {
+      supabaseQuery = supabaseQuery.overlaps('cooking_methods', cookingMethods);
+    }
+
+    if (dishTypes && dishTypes.length > 0) {
+      supabaseQuery = supabaseQuery.overlaps('dish_types', dishTypes);
+    }
+
+    if (proteins && proteins.length > 0) {
+      supabaseQuery = supabaseQuery.overlaps('proteins', proteins);
+    }
+
+    if (occasions && occasions.length > 0) {
+      supabaseQuery = supabaseQuery.overlaps('occasions', occasions);
+    }
+
+    if (characteristics && characteristics.length > 0) {
+      supabaseQuery = supabaseQuery.overlaps('characteristics', characteristics);
     }
 
     if (query) {
@@ -82,7 +119,21 @@ export async function POST(request: NextRequest) {
   
   try {
     const body = await request.json();
-    const { title, ingredients, servings, description, category, tags, season } = body;
+    const { 
+      title, 
+      ingredients, 
+      servings, 
+      description, 
+      category, 
+      cuisine,
+      diet_types,
+      cooking_methods,
+      dish_types,
+      proteins,
+      occasions,
+      characteristics,
+      season 
+    } = body;
 
     if (!title || !ingredients || !description || !category || !servings) {
       return NextResponse.json(
@@ -120,7 +171,13 @@ export async function POST(request: NextRequest) {
       servings: parseInt(servings),
       description,
       category,
-      tags: tags || [],
+      cuisine,
+      diet_types: diet_types || [],
+      cooking_methods: cooking_methods || [],
+      dish_types: dish_types || [],
+      proteins: proteins || [],
+      occasions: occasions || [],
+      characteristics: characteristics || [],
       season,
       user_id: user.id
     };

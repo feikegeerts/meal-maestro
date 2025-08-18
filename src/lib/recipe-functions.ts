@@ -1,5 +1,23 @@
 import { OpenAI } from 'openai';
-import { RecipeCategory, RecipeSeason, RecipeTag, isValidTag, COOKING_UNITS } from '@/types/recipe';
+import { 
+  RecipeCategory, 
+  RecipeSeason, 
+  CuisineType,
+  DietType,
+  CookingMethodType,
+  DishType,
+  ProteinType,
+  OccasionType,
+  CharacteristicType,
+  isValidCuisine,
+  isValidDietType,
+  isValidCookingMethod,
+  isValidDishType,
+  isValidProteinType,
+  isValidOccasionType,
+  isValidCharacteristicType,
+  COOKING_UNITS 
+} from '@/types/recipe';
 
 // OpenAI function definition for recipe form assistance
 export const recipeFormFunction: OpenAI.Chat.Completions.ChatCompletionTool = {
@@ -47,13 +65,58 @@ export const recipeFormFunction: OpenAI.Chat.Completions.ChatCompletionTool = {
           description: 'Recipe category',
           enum: Object.values(RecipeCategory)
         },
-        tags: {
+        cuisine: {
+          type: 'string',
+          enum: Object.values(CuisineType),
+          description: 'Optional cuisine type - single value describing the primary culinary tradition'
+        },
+        diet_types: {
           type: 'array',
           items: { 
             type: 'string',
-            enum: Object.values(RecipeTag)
+            enum: Object.values(DietType)
           },
-          description: 'Optional tags from predefined list'
+          description: 'Optional dietary requirements/restrictions - multiple values allowed'
+        },
+        cooking_methods: {
+          type: 'array',
+          items: { 
+            type: 'string',
+            enum: Object.values(CookingMethodType)
+          },
+          description: 'Optional cooking methods used - multiple values allowed'
+        },
+        dish_types: {
+          type: 'array',
+          items: { 
+            type: 'string',
+            enum: Object.values(DishType)
+          },
+          description: 'Optional dish/meal types - multiple values allowed'
+        },
+        proteins: {
+          type: 'array',
+          items: { 
+            type: 'string',
+            enum: Object.values(ProteinType)
+          },
+          description: 'Optional protein sources in the recipe - multiple values allowed'
+        },
+        occasions: {
+          type: 'array',
+          items: { 
+            type: 'string',
+            enum: Object.values(OccasionType)
+          },
+          description: 'Optional occasions suitable for this recipe - multiple values allowed'
+        },
+        characteristics: {
+          type: 'array',
+          items: { 
+            type: 'string',
+            enum: Object.values(CharacteristicType)
+          },
+          description: 'Optional recipe characteristics like easy, quick, budget, etc. - multiple values allowed'
         },
         season: {
           type: 'string',
@@ -67,7 +130,21 @@ export const recipeFormFunction: OpenAI.Chat.Completions.ChatCompletionTool = {
 
 // Simple function handler for form updates only
 export async function updateRecipeForm(args: Record<string, unknown>): Promise<{ formUpdate: unknown; success: boolean }> {
-  const { title, ingredients, servings, description, category, tags, season } = args as {
+  const { 
+    title, 
+    ingredients, 
+    servings, 
+    description, 
+    category, 
+    cuisine,
+    diet_types,
+    cooking_methods,
+    dish_types,
+    proteins,
+    occasions,
+    characteristics,
+    season 
+  } = args as {
     title?: string;
     ingredients?: Array<{
       name: string;
@@ -78,7 +155,13 @@ export async function updateRecipeForm(args: Record<string, unknown>): Promise<{
     servings?: number;
     description?: string;
     category?: string;
-    tags?: string[];
+    cuisine?: string;
+    diet_types?: string[];
+    cooking_methods?: string[];
+    dish_types?: string[];
+    proteins?: string[];
+    occasions?: string[];
+    characteristics?: string[];
     season?: string;
   };
 
@@ -112,14 +195,65 @@ export async function updateRecipeForm(args: Record<string, unknown>): Promise<{
       };
     });
 
-    // Validate tags if provided
-    let validTags = tags;
-    if (tags) {
-      const invalidTags = tags.filter(tag => !isValidTag(tag));
-      if (invalidTags.length > 0) {
-        console.warn(`Invalid tags filtered out: ${invalidTags.join(', ')}`);
+    // Validate categorized tags if provided
+    let validCuisine = cuisine;
+    if (cuisine && !isValidCuisine(cuisine)) {
+      console.warn(`Invalid cuisine filtered out: ${cuisine}`);
+      validCuisine = undefined;
+    }
+
+    let validDietTypes = diet_types;
+    if (diet_types) {
+      const invalidDietTypes = diet_types.filter(dietType => !isValidDietType(dietType));
+      if (invalidDietTypes.length > 0) {
+        console.warn(`Invalid diet types filtered out: ${invalidDietTypes.join(', ')}`);
       }
-      validTags = tags.filter(tag => isValidTag(tag));
+      validDietTypes = diet_types.filter(dietType => isValidDietType(dietType));
+    }
+
+    let validCookingMethods = cooking_methods;
+    if (cooking_methods) {
+      const invalidCookingMethods = cooking_methods.filter(method => !isValidCookingMethod(method));
+      if (invalidCookingMethods.length > 0) {
+        console.warn(`Invalid cooking methods filtered out: ${invalidCookingMethods.join(', ')}`);
+      }
+      validCookingMethods = cooking_methods.filter(method => isValidCookingMethod(method));
+    }
+
+    let validDishTypes = dish_types;
+    if (dish_types) {
+      const invalidDishTypes = dish_types.filter(dishType => !isValidDishType(dishType));
+      if (invalidDishTypes.length > 0) {
+        console.warn(`Invalid dish types filtered out: ${invalidDishTypes.join(', ')}`);
+      }
+      validDishTypes = dish_types.filter(dishType => isValidDishType(dishType));
+    }
+
+    let validProteins = proteins;
+    if (proteins) {
+      const invalidProteins = proteins.filter(protein => !isValidProteinType(protein));
+      if (invalidProteins.length > 0) {
+        console.warn(`Invalid proteins filtered out: ${invalidProteins.join(', ')}`);
+      }
+      validProteins = proteins.filter(protein => isValidProteinType(protein));
+    }
+
+    let validOccasions = occasions;
+    if (occasions) {
+      const invalidOccasions = occasions.filter(occasion => !isValidOccasionType(occasion));
+      if (invalidOccasions.length > 0) {
+        console.warn(`Invalid occasions filtered out: ${invalidOccasions.join(', ')}`);
+      }
+      validOccasions = occasions.filter(occasion => isValidOccasionType(occasion));
+    }
+
+    let validCharacteristics = characteristics;
+    if (characteristics) {
+      const invalidCharacteristics = characteristics.filter(characteristic => !isValidCharacteristicType(characteristic));
+      if (invalidCharacteristics.length > 0) {
+        console.warn(`Invalid characteristics filtered out: ${invalidCharacteristics.join(', ')}`);
+      }
+      validCharacteristics = characteristics.filter(characteristic => isValidCharacteristicType(characteristic));
     }
 
     const formUpdate = {
@@ -128,7 +262,13 @@ export async function updateRecipeForm(args: Record<string, unknown>): Promise<{
       servings,
       description,
       category,
-      tags: validTags,
+      cuisine: validCuisine,
+      diet_types: validDietTypes,
+      cooking_methods: validCookingMethods,
+      dish_types: validDishTypes,
+      proteins: validProteins,
+      occasions: validOccasions,
+      characteristics: validCharacteristics,
       season
     };
 

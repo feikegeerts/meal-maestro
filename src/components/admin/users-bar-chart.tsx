@@ -83,7 +83,7 @@ export function UsersBarChart({ data, timePeriod, loading }: UsersBarChartProps)
         displayDate,
       };
     });
-  }, [data, timePeriod, t]);
+  }, [data, timePeriod, t, locale]);
 
   if (loading) {
     return (

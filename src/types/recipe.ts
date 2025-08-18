@@ -18,118 +18,113 @@ export enum RecipeSeason {
   YEAR_ROUND = 'year-round'
 }
 
-export enum RecipeTag {
-  // Dietary Restrictions
+// Cuisine types (single value per recipe)
+export enum CuisineType {
+  DUTCH = 'dutch',
+  ITALIAN = 'italian',
+  ASIAN = 'asian',
+  CHINESE = 'chinese',
+  THAI = 'thai',
+  JAPANESE = 'japanese',
+  VIETNAMESE = 'vietnamese',
+  INDONESIAN = 'indonesian',
+  INDIAN = 'indian',
+  MEXICAN = 'mexican',
+  AMERICAN = 'american',
+  FRENCH = 'french',
+  GREEK = 'greek',
+  SPANISH = 'spanish',
+  TURKISH = 'turkish',
+  MOROCCAN = 'moroccan',
+  ARGENTINIAN = 'argentinian',
+  SOUTH_AMERICAN = 'south-american',
+  CENTRAL_AMERICAN = 'central-american',
+  MIDDLE_EASTERN = 'middle-eastern',
+  ENGLISH = 'english',
+  SURINAMESE = 'surinamese',
+  MEDITERRANEAN = 'mediterranean',
+  SCANDINAVIAN = 'scandinavian'
+}
+
+// Diet types (multiple values per recipe)
+export enum DietType {
   VEGETARIAN = 'vegetarian',
   VEGAN = 'vegan',
   GLUTEN_FREE = 'gluten-free',
-  DAIRY_FREE = 'dairy-free',
-  NUT_FREE = 'nut-free',
-  KETO = 'keto',
-  PALEO = 'paleo',
-  LOW_CARB = 'low-carb',
-  LOW_FAT = 'low-fat',
-  SUGAR_FREE = 'sugar-free',
-  LOW_SODIUM = 'low-sodium',
+  LACTOSE_FREE = 'lactose-free',
   HIGH_PROTEIN = 'high-protein',
-  
-  // Cuisine Types
-  ITALIAN = 'italian',
-  MEXICAN = 'mexican',
-  CHINESE = 'chinese',
-  INDIAN = 'indian',
-  THAI = 'thai',
-  FRENCH = 'french',
-  MEDITERRANEAN = 'mediterranean',
-  AMERICAN = 'american',
-  JAPANESE = 'japanese',
-  KOREAN = 'korean',
-  GREEK = 'greek',
-  SPANISH = 'spanish',
-  MIDDLE_EASTERN = 'middle-eastern',
-  CAJUN = 'cajun',
-  SOUTHERN = 'southern',
-  
-  // Cooking Methods
+  KETO = 'keto',
+  WITHOUT_MEAT = 'without-meat',
+  WITHOUT_MEAT_FISH = 'without-meat-fish'
+}
+
+// Cooking method types (multiple values per recipe)
+export enum CookingMethodType {
   BAKING = 'baking',
+  COOKING = 'cooking',
   GRILLING = 'grilling',
-  FRYING = 'frying',
-  ROASTING = 'roasting',
-  STEAMING = 'steaming',
-  SLOW_COOKING = 'slow-cooking',
+  BARBECUE = 'barbecue',
+  OVEN = 'oven',
   AIR_FRYER = 'air-fryer',
-  INSTANT_POT = 'instant-pot',
-  NO_COOK = 'no-cook',
-  ONE_POT = 'one-pot',
+  DEEP_FRYING = 'deep-frying',
   STIR_FRY = 'stir-fry',
-  BRAISING = 'braising',
-  SMOKING = 'smoking',
-  PRESSURE_COOKER = 'pressure-cooker',
-  
-  // Meal Characteristics
-  QUICK = 'quick',
-  EASY = 'easy',
-  HEALTHY = 'healthy',
-  COMFORT_FOOD = 'comfort-food',
-  SPICY = 'spicy',
-  MILD = 'mild',
-  SWEET = 'sweet',
-  SAVORY = 'savory',
-  CRISPY = 'crispy',
-  CREAMY = 'creamy',
-  FRESH = 'fresh',
-  HEARTY = 'hearty',
-  LIGHT = 'light',
-  RICH = 'rich',
-  
-  // Occasions
-  PARTY = 'party',
-  HOLIDAY = 'holiday',
-  WEEKNIGHT = 'weeknight',
-  MEAL_PREP = 'meal-prep',
-  KID_FRIENDLY = 'kid-friendly',
-  DATE_NIGHT = 'date-night',
-  POTLUCK = 'potluck',
-  PICNIC = 'picnic',
-  ENTERTAINING = 'entertaining',
-  BUDGET_FRIENDLY = 'budget-friendly',
-  LEFTOVER_FRIENDLY = 'leftover-friendly',
-  
-  // Protein Types
-  CHICKEN = 'chicken',
-  BEEF = 'beef',
-  PORK = 'pork',
-  FISH = 'fish',
-  SEAFOOD = 'seafood',
-  TOFU = 'tofu',
-  BEANS = 'beans',
-  EGGS = 'eggs',
-  TURKEY = 'turkey',
-  LAMB = 'lamb',
-  DUCK = 'duck',
-  PLANT_BASED = 'plant-based',
-  
-  // Additional Categories
+  STEWING = 'stewing',
+  STEAMING = 'steaming',
+  POACHING = 'poaching'
+}
+
+// Dish types (multiple values per recipe)
+export enum DishType {
   SOUP = 'soup',
   SALAD = 'salad',
-  SANDWICH = 'sandwich',
   PASTA = 'pasta',
-  PIZZA = 'pizza',
-  BREAD = 'bread',
-  COOKIES = 'cookies',
-  CAKE = 'cake',
-  PIE = 'pie',
-  SMOOTHIE = 'smoothie',
-  COCKTAIL = 'cocktail',
-  SAUCE = 'sauce',
-  DIP = 'dip',
-  MARINADE = 'marinade',
-  DRESSING = 'dressing'
+  RICE = 'rice',
+  BREAD_SANDWICHES = 'bread-sandwiches',
+  STAMPPOT = 'stamppot',
+  QUICHE = 'quiche',
+  WRAP = 'wrap',
+  SAUCE_DRESSING = 'sauce-dressing'
+}
+
+// Protein types (multiple values per recipe)
+export enum ProteinType {
+  MEAT = 'meat',
+  FISH = 'fish',
+  POULTRY = 'poultry',
+  SHELLFISH = 'shellfish',
+  MEAT_SUBSTITUTE = 'meat-substitute'
+}
+
+// Occasion types (multiple values per recipe)
+export enum OccasionType {
+  CHRISTMAS = 'christmas',
+  EASTER = 'easter',
+  NEW_YEAR = 'new-year',
+  BIRTHDAY = 'birthday',
+  MOTHERS_DAY = 'mothers-day',
+  PICNIC = 'picnic',
+  DRINKS = 'drinks',
+  PARTY_SNACK = 'party-snack'
+}
+
+// Characteristic types (multiple values per recipe)
+export enum CharacteristicType {
+  EASY = 'easy',
+  QUICK = 'quick',
+  BUDGET = 'budget',
+  HEALTHY = 'healthy',
+  LIGHT = 'light'
 }
 
 export const RECIPE_CATEGORIES = Object.values(RecipeCategory);
 export const RECIPE_SEASONS = Object.values(RecipeSeason);
-export const RECIPE_TAGS = Object.values(RecipeTag);
+export const CUISINE_TYPES = Object.values(CuisineType);
+export const DIET_TYPES = Object.values(DietType);
+export const COOKING_METHOD_TYPES = Object.values(CookingMethodType);
+export const DISH_TYPES = Object.values(DishType);
+export const PROTEIN_TYPES = Object.values(ProteinType);
+export const OCCASION_TYPES = Object.values(OccasionType);
+export const CHARACTERISTIC_TYPES = Object.values(CharacteristicType);
 
 export interface RecipeIngredient {
   id: string;
@@ -146,8 +141,14 @@ export interface Recipe {
   servings: number;
   description: string;
   category: RecipeCategory;
-  tags: RecipeTag[];
   season?: RecipeSeason;
+  cuisine?: CuisineType;
+  diet_types?: DietType[];
+  cooking_methods?: CookingMethodType[];
+  dish_types?: DishType[];
+  proteins?: ProteinType[];
+  occasions?: OccasionType[];
+  characteristics?: CharacteristicType[];
   last_eaten?: string;
   created_at?: string;
   updated_at?: string;
@@ -161,15 +162,27 @@ export interface RecipeInput {
   servings: number;
   description: string;
   category: string;
-  tags: string[];
   season?: string;
+  cuisine?: string;
+  diet_types?: string[];
+  cooking_methods?: string[];
+  dish_types?: string[];
+  proteins?: string[];
+  occasions?: string[];
+  characteristics?: string[];
   last_eaten?: string;
 }
 
 export interface RecipeSearchParams {
   query?: string;
   category?: string;
-  tags?: string[];
+  cuisine?: string;
+  diet_types?: string[];
+  cooking_methods?: string[];
+  dish_types?: string[];
+  proteins?: string[];
+  occasions?: string[];
+  characteristics?: string[];
   season?: string;
   limit?: number;
 }
@@ -187,8 +200,32 @@ export function isValidSeason(season: string): season is RecipeSeason {
   return RECIPE_SEASONS.includes(season as RecipeSeason);
 }
 
-export function isValidTag(tag: string): tag is RecipeTag {
-  return RECIPE_TAGS.includes(tag as RecipeTag);
+export function isValidCuisine(cuisine: string): cuisine is CuisineType {
+  return CUISINE_TYPES.includes(cuisine as CuisineType);
+}
+
+export function isValidDietType(dietType: string): dietType is DietType {
+  return DIET_TYPES.includes(dietType as DietType);
+}
+
+export function isValidCookingMethod(cookingMethod: string): cookingMethod is CookingMethodType {
+  return COOKING_METHOD_TYPES.includes(cookingMethod as CookingMethodType);
+}
+
+export function isValidDishType(dishType: string): dishType is DishType {
+  return DISH_TYPES.includes(dishType as DishType);
+}
+
+export function isValidProteinType(proteinType: string): proteinType is ProteinType {
+  return PROTEIN_TYPES.includes(proteinType as ProteinType);
+}
+
+export function isValidOccasionType(occasionType: string): occasionType is OccasionType {
+  return OCCASION_TYPES.includes(occasionType as OccasionType);
+}
+
+export function isValidCharacteristicType(characteristicType: string): characteristicType is CharacteristicType {
+  return CHARACTERISTIC_TYPES.includes(characteristicType as CharacteristicType);
 }
 
 export function validateRecipeInput(input: RecipeInput): { valid: boolean; errors: string[] } {
@@ -227,9 +264,50 @@ export function validateRecipeInput(input: RecipeInput): { valid: boolean; error
     errors.push(`Invalid season "${input.season}". Must be one of: ${RECIPE_SEASONS.join(', ')}`);
   }
   
-  const invalidTags = input.tags.filter(tag => !isValidTag(tag));
-  if (invalidTags.length > 0) {
-    errors.push(`Invalid tags: ${invalidTags.join(', ')}. Available tags: ${RECIPE_TAGS.join(', ')}`);
+  if (input.cuisine && !isValidCuisine(input.cuisine)) {
+    errors.push(`Invalid cuisine "${input.cuisine}". Must be one of: ${CUISINE_TYPES.join(', ')}`);
+  }
+  
+  if (input.diet_types) {
+    const invalidDietTypes = input.diet_types.filter(dietType => !isValidDietType(dietType));
+    if (invalidDietTypes.length > 0) {
+      errors.push(`Invalid diet types: ${invalidDietTypes.join(', ')}. Available diet types: ${DIET_TYPES.join(', ')}`);
+    }
+  }
+  
+  if (input.cooking_methods) {
+    const invalidCookingMethods = input.cooking_methods.filter(method => !isValidCookingMethod(method));
+    if (invalidCookingMethods.length > 0) {
+      errors.push(`Invalid cooking methods: ${invalidCookingMethods.join(', ')}. Available cooking methods: ${COOKING_METHOD_TYPES.join(', ')}`);
+    }
+  }
+  
+  if (input.dish_types) {
+    const invalidDishTypes = input.dish_types.filter(dishType => !isValidDishType(dishType));
+    if (invalidDishTypes.length > 0) {
+      errors.push(`Invalid dish types: ${invalidDishTypes.join(', ')}. Available dish types: ${DISH_TYPES.join(', ')}`);
+    }
+  }
+  
+  if (input.proteins) {
+    const invalidProteins = input.proteins.filter(protein => !isValidProteinType(protein));
+    if (invalidProteins.length > 0) {
+      errors.push(`Invalid proteins: ${invalidProteins.join(', ')}. Available proteins: ${PROTEIN_TYPES.join(', ')}`);
+    }
+  }
+  
+  if (input.occasions) {
+    const invalidOccasions = input.occasions.filter(occasion => !isValidOccasionType(occasion));
+    if (invalidOccasions.length > 0) {
+      errors.push(`Invalid occasions: ${invalidOccasions.join(', ')}. Available occasions: ${OCCASION_TYPES.join(', ')}`);
+    }
+  }
+  
+  if (input.characteristics) {
+    const invalidCharacteristics = input.characteristics.filter(characteristic => !isValidCharacteristicType(characteristic));
+    if (invalidCharacteristics.length > 0) {
+      errors.push(`Invalid characteristics: ${invalidCharacteristics.join(', ')}. Available characteristics: ${CHARACTERISTIC_TYPES.join(', ')}`);
+    }
   }
   
   return { valid: errors.length === 0, errors };

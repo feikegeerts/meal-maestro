@@ -9,7 +9,13 @@ import {
 import { 
   RECIPE_CATEGORIES, 
   RECIPE_SEASONS, 
-  RECIPE_TAGS,
+  CUISINE_TYPES,
+  DIET_TYPES,
+  COOKING_METHOD_TYPES,
+  DISH_TYPES,
+  PROTEIN_TYPES,
+  OCCASION_TYPES,
+  CHARACTERISTIC_TYPES,
   COOKING_UNITS 
 } from "@/types/recipe";
 import { OpenAI } from "openai";
@@ -74,8 +80,15 @@ IMPORTANT GUIDELINES:
 10. You are aware of the current form state - use this context in your responses
 11. Remember: You are a form assistant - you help fill forms, users save recipes themselves
 
-VALID TAGS (CHOOSE ONLY FROM THESE):
-${RECIPE_TAGS.join(', ')}
+VALID CATEGORIZED TAGS (CHOOSE ONLY FROM THESE):
+
+CUISINES (choose one): ${CUISINE_TYPES.join(', ')}
+DIET TYPES (multiple allowed): ${DIET_TYPES.join(', ')}
+COOKING METHODS (multiple allowed): ${COOKING_METHOD_TYPES.join(', ')}
+DISH TYPES (multiple allowed): ${DISH_TYPES.join(', ')}
+PROTEIN TYPES (multiple allowed): ${PROTEIN_TYPES.join(', ')}
+OCCASIONS (multiple allowed): ${OCCASION_TYPES.join(', ')}
+CHARACTERISTICS (multiple allowed): ${CHARACTERISTIC_TYPES.join(', ')}
 
 RECIPE CATEGORIES:
 Choose from: ${RECIPE_CATEGORIES.join(', ')}

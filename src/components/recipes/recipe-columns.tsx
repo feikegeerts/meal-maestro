@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Recipe, RecipeCategory, RecipeSeason } from "@/types/recipe";
+import { Recipe, RecipeCategory, RecipeSeason, CuisineType, DietType, CookingMethodType, DishType, ProteinType, OccasionType, CharacteristicType } from "@/types/recipe";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,7 +29,7 @@ import { useLocalizedDateFormatter } from '@/lib/date-utils';
 export function useRecipeColumns(): ColumnDef<Recipe>[] {
   const t = useTranslations('recipeTable');
   const tA11y = useTranslations('accessibility');
-  const { translateCategory, translateSeason } = useRecipeTranslations();
+  const { translateCategory, translateSeason, translateTag } = useRecipeTranslations();
   const { formatDateWithFallback } = useLocalizedDateFormatter();
 
   return [
@@ -137,29 +137,69 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
     accessorKey: "tags",
     header: t('tags'),
     cell: ({ row }) => {
-      const tags = row.getValue("tags") as string[];
-      if (!tags || tags.length === 0) {
+      const recipe = row.original as Recipe;
+      const allTags: string[] = [
+        ...(recipe.cuisine ? [recipe.cuisine] : []),
+        ...(recipe.diet_types || []),
+        ...(recipe.cooking_methods || []),
+        ...(recipe.dish_types || []),
+        ...(recipe.proteins || []),
+        ...(recipe.occasions || []),
+        ...(recipe.characteristics || [])
+      ];
+
+      if (allTags.length === 0) {
         return <span className="text-muted-foreground">-</span>;
       }
 
       return (
         <div className="flex flex-wrap gap-1 max-w-[200px]">
-          {tags.slice(0, 2).map((tag) => (
-            <Badge key={tag} variant="outline" className="text-xs">
-              {tag}
-            </Badge>
-          ))}
-          {tags.length > 2 && (
+          {allTags.slice(0, 2).map((tag) => {
+            // Determine tag category and translate accordingly
+            let translatedTag = tag;
+            
+            if (recipe.cuisine === tag) {
+              translatedTag = translateTag('cuisine', tag as CuisineType);
+            } else if (recipe.diet_types?.includes(tag as DietType)) {
+              translatedTag = translateTag('dietType', tag as DietType);
+            } else if (recipe.cooking_methods?.includes(tag as CookingMethodType)) {
+              translatedTag = translateTag('cookingMethod', tag as CookingMethodType);
+            } else if (recipe.dish_types?.includes(tag as DishType)) {
+              translatedTag = translateTag('dishType', tag as DishType);
+            } else if (recipe.proteins?.includes(tag as ProteinType)) {
+              translatedTag = translateTag('protein', tag as ProteinType);
+            } else if (recipe.occasions?.includes(tag as OccasionType)) {
+              translatedTag = translateTag('occasion', tag as OccasionType);
+            } else if (recipe.characteristics?.includes(tag as CharacteristicType)) {
+              translatedTag = translateTag('characteristic', tag as CharacteristicType);
+            }
+            
+            return (
+              <Badge key={tag} variant="outline" className="text-xs">
+                {translatedTag}
+              </Badge>
+            );
+          })}
+          {allTags.length > 2 && (
             <Badge variant="outline" className="text-xs">
-              +{tags.length - 2}
+              +{allTags.length - 2}
             </Badge>
           )}
         </div>
       );
     },
     filterFn: (row, id, value) => {
-      const tags = row.getValue(id) as string[];
-      return value.some((filterTag: string) => tags.includes(filterTag));
+      const recipe = row.original as Recipe;
+      const allTags: string[] = [
+        ...(recipe.cuisine ? [recipe.cuisine] : []),
+        ...(recipe.diet_types || []),
+        ...(recipe.cooking_methods || []),
+        ...(recipe.dish_types || []),
+        ...(recipe.proteins || []),
+        ...(recipe.occasions || []),
+        ...(recipe.characteristics || [])
+      ];
+      return value.some((filterTag: string) => allTags.includes(filterTag));
     },
   },
   {

@@ -71,7 +71,22 @@ export async function PUT(
   try {
     const { id: recipeId } = await params;
     const body = await request.json();
-    const { title, ingredients, servings, description, category, tags, season, last_eaten } = body;
+    const { 
+      title, 
+      ingredients, 
+      servings, 
+      description, 
+      category, 
+      cuisine,
+      diet_types,
+      cooking_methods,
+      dish_types,
+      proteins,
+      occasions,
+      characteristics,
+      season, 
+      last_eaten 
+    } = body;
 
     if (!recipeId) {
       return NextResponse.json(
@@ -86,7 +101,13 @@ export async function PUT(
       servings: number;
       description: string;
       category: string;
-      tags: string[];
+      cuisine: string;
+      diet_types: string[];
+      cooking_methods: string[];
+      dish_types: string[];
+      proteins: string[];
+      occasions: string[];
+      characteristics: string[];
       season: string;
       last_eaten: string;
     }> = {};
@@ -129,7 +150,13 @@ export async function PUT(
     }
     if (description !== undefined) updateData.description = description;
     if (category !== undefined) updateData.category = category;
-    if (tags !== undefined) updateData.tags = tags;
+    if (cuisine !== undefined) updateData.cuisine = cuisine;
+    if (diet_types !== undefined) updateData.diet_types = diet_types;
+    if (cooking_methods !== undefined) updateData.cooking_methods = cooking_methods;
+    if (dish_types !== undefined) updateData.dish_types = dish_types;
+    if (proteins !== undefined) updateData.proteins = proteins;
+    if (occasions !== undefined) updateData.occasions = occasions;
+    if (characteristics !== undefined) updateData.characteristics = characteristics;
     if (season !== undefined) updateData.season = season;
     if (last_eaten !== undefined) updateData.last_eaten = last_eaten;
 

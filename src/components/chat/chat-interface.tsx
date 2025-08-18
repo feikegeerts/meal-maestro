@@ -115,7 +115,13 @@ export function ChatInterface({
               title: selectedRecipe.title,
               category: selectedRecipe.category,
               season: selectedRecipe.season,
-              tags: selectedRecipe.tags,
+              cuisine: selectedRecipe.cuisine,
+              diet_types: selectedRecipe.diet_types,
+              cooking_methods: selectedRecipe.cooking_methods,
+              dish_types: selectedRecipe.dish_types,
+              proteins: selectedRecipe.proteins,
+              occasions: selectedRecipe.occasions,
+              characteristics: selectedRecipe.characteristics,
               ingredients: selectedRecipe.ingredients.map((ing) =>
                 `${ing.amount || ""} ${ing.unit || ""} ${ing.name}`.trim()
               ),

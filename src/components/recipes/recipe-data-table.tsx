@@ -140,9 +140,18 @@ export function RecipeDataTable<TData, TValue>({
       const season = row.getValue("season") as string;
       if (season?.toLowerCase().includes(searchValue)) return true;
 
-      // Search in tags
-      const tags = row.getValue("tags") as string[];
-      if (tags?.some((tag) => tag.toLowerCase().includes(searchValue)))
+      // Search in categorized tags
+      const recipe = row.original as Recipe;
+      const allTags = [
+        ...(recipe.cuisine ? [recipe.cuisine] : []),
+        ...(recipe.diet_types || []),
+        ...(recipe.cooking_methods || []),
+        ...(recipe.dish_types || []),
+        ...(recipe.proteins || []),
+        ...(recipe.occasions || []),
+        ...(recipe.characteristics || [])
+      ];
+      if (allTags?.some((tag) => tag.toLowerCase().includes(searchValue)))
         return true;
 
       // Search in description (if available in row data)
