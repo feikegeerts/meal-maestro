@@ -59,6 +59,7 @@
   - [ ] Add malicious content injection tests
   - [ ] Implement security regression test suite
 
+- [ ] Going to recipe detail and then going back to recipe list loads all recipes while we have viewed these 1sec ago, why do they need to be loaded again, aren't they still in the context?
 - [ ] Recipes/chat/route.ts bevat nog translations die niet in de json staan, moet worden gefixed.
 - [ ] Header met back button is niet heel mooi, misschien beter breadcrumb op tweede lijn
 - [ ] ah.nl layouts overnemen zowel desktop als mobile voor recepten weergeven en toevoegen

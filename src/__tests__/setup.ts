@@ -299,8 +299,62 @@ Object.defineProperty(global, "crypto", {
   },
 });
 
+// Mock Web APIs needed for fetch and WebStreams
+if (typeof global.MessagePort === 'undefined') {
+  global.MessagePort = class MessagePort {
+    onmessage: ((event: MessageEvent) => void) | null = null;
+    postMessage() {}
+    start() {}
+    close() {}
+  };
+}
+
+if (typeof global.MessageChannel === 'undefined') {
+  global.MessageChannel = class MessageChannel {
+    port1: MessagePort;
+    port2: MessagePort;
+    constructor() {
+      this.port1 = new MessagePort();
+      this.port2 = new MessagePort();
+    }
+  };
+}
+
+// Mock ReadableStream for streaming response tests
+if (typeof global.ReadableStream === 'undefined') {
+  global.ReadableStream = class ReadableStream {
+    constructor() {}
+    getReader() {
+      return {
+        read: jest.fn().mockResolvedValue({ done: true, value: undefined }),
+        releaseLock: jest.fn()
+      };
+    }
+  };
+}
+
+// Mock TextEncoder/TextDecoder if they don't exist
+if (typeof global.TextEncoder === 'undefined') {
+  global.TextEncoder = class TextEncoder {
+    encode(input: string) {
+      return new Uint8Array(input.split('').map(char => char.charCodeAt(0)));
+    }
+  };
+}
+
+if (typeof global.TextDecoder === 'undefined') {
+  global.TextDecoder = class TextDecoder {
+    decode(input?: Uint8Array) {
+      if (!input) return '';
+      return String.fromCharCode(...Array.from(input));
+    }
+  };
+}
+
 // Suppress JSDOM navigation errors globally
 const originalError = console.error;
+const originalLog = console.log;
+const originalWarn = console.warn;
 
 beforeAll(() => {
   // Mock console.error to filter out specific JSDOM navigation errors
@@ -331,15 +385,25 @@ beforeAll(() => {
       return;
     }
 
-    // Suppress React dev warnings during tests
+    // Suppress React dev warnings and test-specific errors
     if (typeof errorMessage === "string") {
       if (
         errorMessage.includes("Warning: ReactDOM.render is deprecated") ||
         errorMessage.includes(
           "An update to AuthProvider inside a test was not wrapped in act(...)"
         ) ||
-        errorMessage.includes("WebCrypto API is not supported")
+        errorMessage.includes("WebCrypto API is not supported") ||
+        errorMessage.includes("🔴 [Recipe Scraper] API error:") ||
+        errorMessage.includes("[MSW] Error: intercepted a request without a matching request handler")
       ) {
+        return;
+      }
+    }
+    
+    // Suppress MSW unhandled request errors from expected test scenarios
+    if (errorMessage && typeof errorMessage === "object" && "message" in errorMessage) {
+      const msg = (errorMessage as { message?: string }).message;
+      if (msg && msg.includes("intercepted a request without a matching request handler")) {
         return;
       }
     }
@@ -348,11 +412,45 @@ beforeAll(() => {
     originalError.call(console, ...args);
   };
 
+  // Mock console.log to suppress application logging during tests
+  console.log = (...args: unknown[]) => {
+    const message = args[0];
+    if (typeof message === "string") {
+      // Suppress Recipe Scraper logs
+      if (message.includes("🔍 [Recipe Scraper]") ||
+          message.includes("✅ [Recipe Scraper]") ||
+          message.includes("🟡 [Recipe Scraper]") ||
+          message.includes("🔴 [Recipe Scraper]")) {
+        return;
+      }
+      // Allow other logs through if needed for debugging
+      // originalLog.call(console, ...args);
+    }
+    // Suppress all console.log during tests for cleaner output
+  };
+
+  // Mock console.warn to suppress application warnings during tests
+  console.warn = (...args: unknown[]) => {
+    const message = args[0];
+    if (typeof message === "string") {
+      // Suppress specific warnings we expect in tests
+      if (message.includes("Rate limit check failed") ||
+          message.includes("🟡 [Recipe Scraper]")) {
+        return;
+      }
+      // Allow other warnings through if needed for debugging
+      // originalWarn.call(console, ...args);
+    }
+    // Suppress all console.warn during tests for cleaner output
+  };
+
   server.listen({ onUnhandledRequest: "error" });
 });
 
 afterAll(() => {
   console.error = originalError;
+  console.log = originalLog;
+  console.warn = originalWarn;
   server.close();
   // Clean up any remaining timers or async operations
   jest.clearAllTimers();

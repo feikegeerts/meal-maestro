@@ -782,6 +782,11 @@ export class RecipeScraper {
   }
 
   private static sanitizeErrorMessage(errorMessage: string): string {
+    // Preserve HTTP_403_BLOCKED marker for later processing
+    if (errorMessage.includes('HTTP_403_BLOCKED')) {
+      return errorMessage;
+    }
+
     // Remove sensitive information from error messages
     const sanitized = errorMessage
       // Remove IP addresses
