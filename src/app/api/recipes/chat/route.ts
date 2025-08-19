@@ -332,15 +332,11 @@ export async function POST(request: NextRequest) {
                 result: processingResult,
               };
               
-              responseContent = userLocale === 'nl'
-                ? `Recept "${scrapedData.title}" is succesvol opgehaald van de URL en verwerkt! Ik heb de gegevens opgeschoond en ingevuld in het formulier.`
-                : `Recipe "${scrapedData.title}" has been successfully extracted from the URL and processed! I've cleaned up the data and populated the form.`;
+              responseContent = translations.chat.recipeExtractedFromUrl.replace('{title}', scrapedData.title || '');
             }
           } else {
             // Fallback if AI doesn't make function call
-            responseContent = processingCompletion.choices[0].message.content || (userLocale === 'nl' 
-              ? 'Recept data is opgehaald maar er was een probleem met de verwerking.'
-              : 'Recipe data was extracted but there was an issue with processing.');
+            responseContent = processingCompletion.choices[0].message.content || translations.chat.extractionProcessingError;
           }
         } else {
           // Smart error recovery: if we have a title, generate a recipe with AI
@@ -378,9 +374,7 @@ export async function POST(request: NextRequest) {
                   };
                   
                   // Set success response
-                  responseContent = userLocale === 'nl'
-                    ? `Ik kon de website niet scrapen, maar heb een compleet recept voor "${urlResult.formUpdate.title}" gemaakt gebaseerd op de titel uit de URL. Je kunt het nu aanpassen naar wens!`
-                    : `I couldn't scrape the website, but created a complete recipe for "${urlResult.formUpdate.title}" based on the title from the URL. You can now customize it as needed!`;
+                  responseContent = translations.chat.recipeCreatedFromTitle.replace('{title}', urlResult.formUpdate.title || '');
                 } else {
                   throw new Error('AI did not generate recipe as expected');
                 }
@@ -390,19 +384,15 @@ export async function POST(request: NextRequest) {
             } catch (error) {
               console.error('🔴 [Chat] Smart error recovery failed:', error);
               // Fallback to simple response with extracted title
-              responseContent = userLocale === 'nl'
-                ? `Ik kon de website niet scrapen, maar heb de titel "${urlResult.formUpdate.title}" uit de URL gehaald en ingevuld. Je kunt nu handmatig ingrediënten en bereidingswijze toevoegen.`
-                : `I couldn't scrape the website, but extracted the title "${urlResult.formUpdate.title}" from the URL and filled it in. You can now manually add ingredients and instructions.`;
+              responseContent = translations.chat.titleExtractedOnly.replace('{title}', urlResult.formUpdate.title || '');
             }
           } else {
             // Fallback for when we couldn't extract anything useful
             const baseError = urlResult.source === 'blocked' 
-              ? (userLocale === 'nl' ? 'Website blokkeert toegang' : 'Website blocks access')
-              : (userLocale === 'nl' ? 'Kon geen recept vinden op de website' : 'Could not find recipe on website');
+              ? translations.chat.websiteBlocked
+              : translations.chat.noRecipeFound;
               
-            responseContent = userLocale === 'nl'
-              ? `${baseError}. Probeer de recept tekst handmatig te kopiëren en in de chat te plakken, dan kan ik je helpen met het verwerken.`
-              : `${baseError}. Try copying the recipe text manually and pasting it in the chat, then I can help you process it.`;
+            responseContent = `${baseError}. ${translations.chat.tryManualCopy}`;
           }
         }
       } else {

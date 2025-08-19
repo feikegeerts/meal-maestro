@@ -336,7 +336,14 @@
     "recipeCreatedWithTitle": "Perfect! Ik heb een compleet recept gemaakt voor \"{title}\" met gedetailleerde instructies. Je kunt alle details in het form bekijken en aanpassingen maken voordat je opslaat.",
     "recipeFormUpdated": "Geweldig! Ik heb het recept form geupdate met je wijzigingen. Bekijk de details en sla op wanneer je klaar bent.",
     "requestProcessed": "Ik heb je verzoek verwerkt. Check het form voor de updates.",
-    "processingError": "Sorry, maar ik had een probleem bij het verwerken van je verzoek."
+    "processingError": "Sorry, maar ik had een probleem bij het verwerken van je verzoek.",
+    "recipeExtractedFromUrl": "Recept \"{title}\" is succesvol opgehaald van de URL en verwerkt! Ik heb de gegevens opgeschoond en ingevuld in het formulier.",
+    "recipeCreatedFromTitle": "Ik kon de website niet scrapen, maar heb een compleet recept voor \"{title}\" gemaakt gebaseerd op de titel uit de URL. Je kunt het nu aanpassen naar wens!",
+    "titleExtractedOnly": "Ik kon de website niet scrapen, maar heb de titel \"{title}\" uit de URL gehaald en ingevuld. Je kunt nu handmatig ingrediënten en bereidingswijze toevoegen.",
+    "tryManualCopy": "Probeer de recept tekst handmatig te kopiëren en in de chat te plakken, dan kan ik je helpen met het verwerken.",
+    "extractionProcessingError": "Recept data is opgehaald maar er was een probleem met de verwerking.",
+    "websiteBlocked": "Website blokkeert toegang",
+    "noRecipeFound": "Kon geen recept vinden op de website"
   },
   "servingSelector": {
     "recipeServes": "Recept is voor",

@@ -431,6 +431,7 @@ export function RecipeEditForm({
   const t = useTranslations("recipeForm");
   const tCategories = useTranslations("categories");
   const tSeasons = useTranslations("seasons");
+  const tServing = useTranslations("servingSelector");
 
   const generateIngredientId = () =>
     `ingredient-${Date.now()}-${Math.random()}`;
@@ -786,7 +787,7 @@ export function RecipeEditForm({
                   disabled={loading}
                   className="w-20"
                 />
-                <span className="text-sm text-muted-foreground">people</span>
+                <span className="text-sm text-muted-foreground">{tServing('people')}</span>
               </div>
             </div>
           </CardContent>
