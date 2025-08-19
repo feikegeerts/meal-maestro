@@ -72,7 +72,7 @@ export default function RecipesPage() {
   }
 
   return (
-    <PageWrapper maxWidth="7xl">
+    <PageWrapper>
       <PageHeader
         title={t("title")}
         subtitle={t("description")}

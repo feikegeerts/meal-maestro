@@ -98,7 +98,7 @@ export default function AddRecipePage() {
   }
 
   return (
-    <PageWrapper maxWidth="7xl">
+    <PageWrapper>
       <PageHeader
         title={t('addNewRecipe')}
         subtitle={t('createNewRecipe')}

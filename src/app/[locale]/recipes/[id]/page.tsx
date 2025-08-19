@@ -370,7 +370,7 @@ export default function RecipeDetailPage() {
           {recipe && (
             <ServingSizeSelector
               recipe={recipe}
-              onServingChange={(newServings, scaledRecipe) => {
+              onServingChange={(_, scaledRecipe) => {
                 setDisplayRecipe(scaledRecipe);
               }}
               showPreview={false}
