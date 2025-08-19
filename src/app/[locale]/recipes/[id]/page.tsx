@@ -229,7 +229,7 @@ export default function RecipeDetailPage() {
   }
 
   return (
-    <PageWrapper maxWidth="7xl">
+    <PageWrapper>
       <PageHeader
         recipe={recipe}
         backButtonText={t("back")}

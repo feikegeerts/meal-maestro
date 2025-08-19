@@ -166,7 +166,7 @@ export default function EditRecipePage() {
   }
 
   return (
-    <PageWrapper maxWidth="7xl">
+    <PageWrapper>
       <PageHeader
         title={t("editRecipe")}
         subtitle={t("updateRecipe", { title: recipe.title })}
