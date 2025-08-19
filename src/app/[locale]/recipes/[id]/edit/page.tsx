@@ -8,11 +8,12 @@ import { useRecipes } from "@/contexts/recipe-context";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { Recipe, RecipeInput } from "@/types/recipe";
 import { RecipeEditForm } from "@/components/recipe-edit-form";
 import { ArrowLeft } from "lucide-react";
 import { setRedirectUrl } from "@/lib/utils";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 
 export default function EditRecipePage() {
   const { id } = useParams();
@@ -23,7 +24,7 @@ export default function EditRecipePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saveLoading, setSaveLoading] = useState(false);
-  const t = useTranslations('recipes');
+  const t = useTranslations("recipes");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -36,14 +37,14 @@ export default function EditRecipePage() {
   useEffect(() => {
     const loadRecipe = async () => {
       if (!id || typeof id !== "string") {
-        setError(t('invalidRecipeId'));
+        setError(t("invalidRecipeId"));
         setLoading(false);
         return;
       }
 
       try {
         setError(null);
-        
+
         const contextRecipe = getRecipeById(id);
         if (contextRecipe) {
           setRecipe(contextRecipe);
@@ -57,9 +58,9 @@ export default function EditRecipePage() {
         const response = await fetch(`/api/recipes/${id}`);
         if (!response.ok) {
           if (response.status === 404) {
-            setError(t('recipeNotFound'));
+            setError(t("recipeNotFound"));
           } else {
-            setError(t('failedToLoad'));
+            setError(t("failedToLoad"));
           }
           setLoading(false);
           return;
@@ -69,7 +70,7 @@ export default function EditRecipePage() {
         setRecipe(data.recipe);
       } catch (error) {
         console.error("Error loading recipe:", error);
-        setError(t('failedToLoad'));
+        setError(t("failedToLoad"));
       } finally {
         setLoading(false);
       }
@@ -87,7 +88,7 @@ export default function EditRecipePage() {
     try {
       const updatedRecipe = await updateRecipe(recipeData);
       setRecipe(updatedRecipe);
-      
+
       // Navigate back to recipe detail page using replace to avoid history issues
       router.replace(`/recipes/${recipe.id}`);
     } catch (error) {
@@ -125,7 +126,7 @@ export default function EditRecipePage() {
   const handleCancel = () => {
     // Use router.back() to go back in history instead of pushing new route
     // This prevents creating duplicate entries in browser history
-    if (typeof window !== 'undefined' && window.history.length > 1) {
+    if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
     } else {
       // Fallback if no history (direct navigation to edit page)
@@ -146,11 +147,13 @@ export default function EditRecipePage() {
       <PageWrapper>
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto text-center">
-            <h1 className="text-2xl font-bold text-destructive mb-4">{t('error')}</h1>
+            <h1 className="text-2xl font-bold text-destructive mb-4">
+              {t("error")}
+            </h1>
             <p className="text-muted-foreground mb-6">{error}</p>
             <Button onClick={() => router.push("/recipes")} variant="outline">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('backToRecipes')}
+              {t("backToRecipes")}
             </Button>
           </div>
         </div>
@@ -163,46 +166,27 @@ export default function EditRecipePage() {
   }
 
   return (
-    <PageWrapper>
-      <div className="container mx-auto px-4 pt-4 pb-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                onClick={handleCancel}
-                className="flex items-center"
-                disabled={saveLoading}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {t('backToRecipe')}
-              </Button>
-              <div className="h-6 w-px bg-border" />
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                  {t('editRecipe')}
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  {t('updateRecipe', { title: recipe.title })}
-                </p>
-              </div>
-            </div>
-          </div>
+    <PageWrapper maxWidth="7xl">
+      <PageHeader
+        title={t("editRecipe")}
+        subtitle={t("updateRecipe", { title: recipe.title })}
+        recipe={recipe}
+        backButtonText={t("backToRecipe")}
+        onBackClick={handleCancel}
+        className="mb-6"
+      />
 
-          {/* Form */}
-          <div className="bg-card rounded-lg shadow-lg">
-            <div className="p-6">
-              <RecipeEditForm
-                recipe={recipe}
-                onSave={handleSave}
-                loading={saveLoading}
-                includeChat={false}
-                standalone={true}
-                onCancel={handleCancel}
-              />
-            </div>
-          </div>
+      {/* Form */}
+      <div className="bg-card rounded-lg shadow-lg">
+        <div className="p-6">
+          <RecipeEditForm
+            recipe={recipe}
+            onSave={handleSave}
+            loading={saveLoading}
+            includeChat={false}
+            standalone={true}
+            onCancel={handleCancel}
+          />
         </div>
       </div>
     </PageWrapper>

@@ -9,7 +9,10 @@
     "logout": "Uitloggen",
     "menu": "Menu",
     "navigation": "Navigatie",
-    "language": "Taal"
+    "language": "Taal",
+    "home": "Home",
+    "back": "Terug",
+    "edit": "Bewerken"
   },
   "home": {
     "title": "Meal Maestro",

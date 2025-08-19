@@ -9,7 +9,10 @@
     "logout": "Log out",
     "menu": "Menu",
     "navigation": "Navigation",
-    "language": "Language"
+    "language": "Language",
+    "home": "Home",
+    "back": "Back",
+    "edit": "Edit"
   },
   "home": {
     "title": "Meal Maestro",
