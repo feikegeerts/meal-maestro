@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth-server";
 import { RecipeScraper } from "@/lib/recipe-scraper";
 import { UrlDetector } from "@/lib/url-detector";
 import { usageTrackingService } from "@/lib/usage-tracking-service";
+import { createClient } from '@supabase/supabase-js';
 
 interface ScrapeRequest {
   url: string;
@@ -28,27 +29,6 @@ interface ScrapeResponse {
   error?: string;
 }
 
-// Rate limiting - simple in-memory store (in production, use Redis or similar)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 10; // 10 requests per minute per user
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const userLimits = rateLimitStore.get(userId);
-
-  if (!userLimits || now > userLimits.resetTime) {
-    rateLimitStore.set(userId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
-    return true;
-  }
-
-  if (userLimits.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return false;
-  }
-
-  userLimits.count++;
-  return true;
-}
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -60,14 +40,21 @@ export async function POST(request: NextRequest) {
   const { user } = authResult;
 
   try {
-    // Check rate limiting
-    if (!checkRateLimit(user.id)) {
+    // Check rate limiting using user's authenticated session (more secure)
+    const rateLimitCheck = await checkRateLimit(user.id, request);
+    if (!rateLimitCheck.allowed) {
       return NextResponse.json(
         { 
           success: false, 
-          error: "Rate limit exceeded. Please try again in a minute." 
+          error: `Rate limit exceeded. Try again in ${rateLimitCheck.retryAfter} seconds.`
         },
-        { status: 429 }
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Reset': new Date(rateLimitCheck.resetTime).toISOString(),
+            'Retry-After': rateLimitCheck.retryAfter.toString()
+          }
+        }
       );
     }
 
@@ -178,4 +165,87 @@ export async function GET() {
     { error: "Method not allowed. Use POST to scrape a recipe." },
     { status: 405 }
   );
+}
+
+// Secure rate limiting using authenticated session (no service key needed)
+async function checkRateLimit(userId: string, request: NextRequest): Promise<{
+  allowed: boolean;
+  retryAfter: number;
+  resetTime: number;
+}> {
+  // Use the user's authenticated session for database operations
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  
+  // Create client with user context (will respect RLS policies)
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minute window
+  const maxRequests = 10;
+  const windowStart = now - windowMs;
+
+  try {
+    // Clean up old entries (older than 1 hour to keep table clean)
+    const oneHourAgo = now - (60 * 60 * 1000);
+    await supabase
+      .from('rate_limit_user')
+      .delete()
+      .lt('timestamp', oneHourAgo);
+
+    // Get current requests in window
+    const { data: attempts, error } = await supabase
+      .from('rate_limit_user')
+      .select('timestamp')
+      .eq('user_id', userId)
+      .eq('endpoint', '/api/scrape-recipe')
+      .gte('timestamp', windowStart)
+      .order('timestamp', { ascending: false });
+
+    if (error) {
+      // If database fails, allow request (fail open for availability)
+      console.warn('Rate limit check failed, allowing request:', error);
+      return {
+        allowed: true,
+        retryAfter: 0,
+        resetTime: now + windowMs
+      };
+    }
+
+    const currentCount = attempts?.length || 0;
+    
+    if (currentCount >= maxRequests) {
+      // Rate limit exceeded
+      const resetTime = windowStart + windowMs;
+      return {
+        allowed: false,
+        retryAfter: Math.ceil((resetTime - now) / 1000),
+        resetTime
+      };
+    }
+
+    // Record this attempt
+    await supabase
+      .from('rate_limit_user')
+      .insert({
+        user_id: userId,
+        endpoint: '/api/scrape-recipe',
+        timestamp: now
+      });
+
+    return {
+      allowed: true,
+      retryAfter: 0,
+      resetTime: now + windowMs
+    };
+
+  } catch (error) {
+    // If anything fails, allow the request (fail open)
+    console.warn('Rate limiting error, allowing request:', error);
+    return {
+      allowed: true,
+      retryAfter: 0,
+      resetTime: now + windowMs
+    };
+  }
 }

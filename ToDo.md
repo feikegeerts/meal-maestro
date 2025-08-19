@@ -12,7 +12,53 @@
 - [x] login using magic link from supabase
 - [x] **5.9** Implement languages Dutch and English
 - [x] The ai should as much as possible prefil the form even when asking more questions. Currently the AI either fills in the form and gives a generic response, or asks questions. We want to make number of chat interactions as low as possible and currently it's impossible to get a recipe after 1 chat because the AI always asks follow ups.
-- [ ] create security unit tests for the url scraperpnp
+
+### Phase 5.9: URL Scraper Security Hardening
+
+- [ ] **5.9.1** Fix SSRF vulnerabilities in URL validation
+
+  - [ ] Add IPv6 localhost protection (::1, ::ffff:127.0.0.1)
+  - [ ] Block cloud metadata endpoints (169.254.169.254, metadata.google.internal)
+  - [ ] Add protection against DNS rebinding attacks
+  - [ ] Block 172.16.0.0/12 private IP range
+  - [ ] Block link-local addresses (169.254.0.0/16)
+
+- [ ] **5.9.2** Enhance rate limiting security
+
+  - [ ] Replace in-memory rate limiting with Redis/database storage
+  - [ ] Add distributed rate limiting across server instances
+  - [ ] Implement IP-based rate limiting as backup
+  - [ ] Add progressive backoff for repeated violations
+
+- [ ] **5.9.3** Prevent resource exhaustion attacks
+
+  - [ ] Reduce maximum response size limit (consider 1MB instead of 5MB)
+  - [ ] Implement streaming response parsing to limit memory usage
+  - [ ] Add connection pooling limits
+  - [ ] Implement circuit breaker pattern for failing domains
+
+- [ ] **5.9.4** Secure JSON/HTML parsing
+
+  - [ ] Add JSON sanitization to prevent prototype pollution
+  - [ ] Implement ReDoS protection for regex patterns
+  - [ ] Sanitize all scraped text content to prevent XSS
+  - [ ] Add input validation for structured data fields
+
+- [ ] **5.9.5** Improve error handling security
+
+  - [ ] Remove detailed error messages that could leak network topology
+  - [ ] Implement generic error responses for security failures
+  - [ ] Add proper logging without exposing sensitive information
+  - [ ] Sanitize URLs in error messages
+
+- [ ] **5.9.6** Add comprehensive security testing
+
+  - [ ] Create unit tests for all SSRF attack vectors
+  - [ ] Add rate limiting bypass tests
+  - [ ] Test resource exhaustion scenarios
+  - [ ] Add malicious content injection tests
+  - [ ] Implement security regression test suite
+
 - [ ] Recipes/chat/route.ts bevat nog translations die niet in de json staan, moet worden gefixed.
 - [ ] Header met back button is niet heel mooi, misschien beter breadcrumb op tweede lijn
 - [ ] ah.nl layouts overnemen zowel desktop als mobile voor recepten weergeven en toevoegen
