@@ -34,10 +34,14 @@ export default function RecipesPage() {
     }
 
     // Load recipes when user is available and we haven't loaded them yet
-    if (user && !hasLoadedRecipes) {
+    // But skip loading if we already have recipes in context
+    if (user && !hasLoadedRecipes && contextRecipes.length === 0) {
       loadRecipes();
+    } else if (user && contextRecipes.length > 0) {
+      // If we already have recipes in context, mark as loaded
+      setHasLoadedRecipes(true);
     }
-  }, [user, loading, hasLoadedRecipes]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, loading, hasLoadedRecipes, contextRecipes.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadRecipes = async () => {
     try {
