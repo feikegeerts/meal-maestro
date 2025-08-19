@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Minus, Plus, Users, Calculator } from "lucide-react";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 
 interface ServingSizeSelectorProps {
   recipe: Recipe;
@@ -24,8 +24,8 @@ export function ServingSizeSelector({
   showPreview = true,
   disabled = false,
 }: ServingSizeSelectorProps) {
-  const t = useTranslations('servingSelector');
-  const tUnits = useTranslations('units');
+  const t = useTranslations("servingSelector");
+  const tUnits = useTranslations("units");
   const [currentServings, setCurrentServings] = useState(recipe.servings);
 
   const scaledRecipe = scaleRecipe(recipe, currentServings);
@@ -38,7 +38,6 @@ export function ServingSizeSelector({
     const newScaledRecipe = scaleRecipe(recipe, newServings);
     onServingChange?.(newServings, newScaledRecipe);
   };
-
 
   const incrementServing = () => {
     if (currentServings < 100) {
@@ -61,10 +60,11 @@ export function ServingSizeSelector({
   return (
     <div className="space-y-3">
       {/* Compact Serving Size Controls */}
-      <div className="flex items-center justify-between">
+      <div className="flex justify-center">
+        <div className="inline-flex items-center gap-3 bg-background rounded-full p-3 border shadow-sm">
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">{t('recipeServes')}:</span>
+          <span className="text-sm font-medium hidden xl:inline">{t("recipeServes")}:</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center border rounded-md">
@@ -92,7 +92,8 @@ export function ServingSizeSelector({
               <Plus className="h-3 w-3" />
             </Button>
           </div>
-          <span className="text-sm text-muted-foreground">{t('people')}</span>
+          <span className="text-sm text-muted-foreground">{t("people")}</span>
+        </div>
         </div>
       </div>
 
@@ -102,7 +103,8 @@ export function ServingSizeSelector({
           <div className="flex items-center gap-1">
             <Calculator className="h-3 w-3 text-muted-foreground" />
             <span>
-              {t('scalingBy')} <strong>{recipe.servings}</strong> → <strong>{currentServings}</strong> {t('people')}
+              {t("scalingBy")} <strong>{recipe.servings}</strong> →{" "}
+              <strong>{currentServings}</strong> {t("people")}
               {scalingRatio !== 1 && (
                 <span className="text-muted-foreground ml-1">
                   (×{scalingRatio.toFixed(2)})
@@ -135,14 +137,17 @@ export function ServingSizeSelector({
                 {/* Original Ingredients */}
                 <div>
                   <h4 className="font-medium text-sm text-muted-foreground mb-2">
-                    {t('originalServes')} ({recipe.servings} {t('people')})
+                    {t("originalServes")} ({recipe.servings} {t("people")})
                   </h4>
                   <ul className="space-y-1">
                     {recipe.ingredients.map((ingredient, index) => (
                       <li key={index} className="text-sm flex items-start">
                         <span className="inline-block w-1.5 h-1.5 bg-muted-foreground rounded-full mt-2 mr-2 flex-shrink-0" />
                         <span className="opacity-60">
-                          {formatIngredientDisplayWithTranslation(ingredient, tUnits)}
+                          {formatIngredientDisplayWithTranslation(
+                            ingredient,
+                            tUnits
+                          )}
                         </span>
                       </li>
                     ))}
@@ -152,14 +157,17 @@ export function ServingSizeSelector({
                 {/* Scaled Ingredients */}
                 <div>
                   <h4 className="font-medium text-sm text-primary mb-2">
-                    {t('scalingBy')} ({currentServings} {t('people')})
+                    {t("scalingBy")} ({currentServings} {t("people")})
                   </h4>
                   <ul className="space-y-1">
                     {scaledRecipe.ingredients.map((ingredient, index) => (
                       <li key={index} className="text-sm flex items-start">
                         <span className="inline-block w-1.5 h-1.5 bg-primary rounded-full mt-2 mr-2 flex-shrink-0" />
                         <span className="font-medium">
-                          {formatIngredientDisplayWithTranslation(ingredient, tUnits)}
+                          {formatIngredientDisplayWithTranslation(
+                            ingredient,
+                            tUnits
+                          )}
                         </span>
                       </li>
                     ))}

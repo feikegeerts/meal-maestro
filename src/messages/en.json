@@ -87,6 +87,7 @@
     "failedToDelete": "Failed to delete recipe",
     "ingredients": "Ingredients",
     "instructions": "Instructions",
+    "gettingStarted": "Getting Started",
     "createdDetail": "Created",
     "lastEatenDetail": "Last eaten"
   },

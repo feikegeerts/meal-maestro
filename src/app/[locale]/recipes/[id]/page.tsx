@@ -13,12 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Recipe,
-  RecipeCategory,
-  RecipeSeason,
-  formatIngredientDisplayWithTranslation,
-} from "@/types/recipe";
+import { Recipe, RecipeCategory, RecipeSeason } from "@/types/recipe";
 import { useLocalizedDateFormatter } from "@/lib/date-utils";
 import { ServingSizeSelector } from "@/components/serving-size-selector";
 import {
@@ -287,8 +282,8 @@ export default function RecipeDetailPage() {
         className="mb-4"
       />
 
-      {/* Recipe Card */}
-      <Card>
+      {/* Recipe Header Card */}
+      <Card className="mb-6">
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -363,76 +358,9 @@ export default function RecipeDetailPage() {
               </Badge>
             ))}
           </div>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          {/* Serving Size Selector */}
-          {recipe && (
-            <ServingSizeSelector
-              recipe={recipe}
-              onServingChange={(_, scaledRecipe) => {
-                setDisplayRecipe(scaledRecipe);
-              }}
-              showPreview={false}
-            />
-          )}
-
-          <Separator />
-
-          {/* Ingredients */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">{t("ingredients")}</h3>
-            <ul className="space-y-2">
-              {(displayRecipe || recipe)?.ingredients.map(
-                (ingredient, index) => (
-                  <li key={index} className="flex items-start">
-                    <span className="inline-block w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0" />
-                    <span>
-                      {formatIngredientDisplayWithTranslation(
-                        ingredient,
-                        tUnits
-                      )}
-                    </span>
-                  </li>
-                )
-              )}
-            </ul>
-          </div>
-
-          <Separator />
-
-          {/* Instructions */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">{t("instructions")}</h3>
-            <div className="prose prose-sm max-w-none">
-              {(() => {
-                const processed = processInstructions(recipe.description);
-
-                if (processed.isStepFormat && processed.steps.length > 1) {
-                  return (
-                    <ol className="space-y-3 list-decimal list-inside">
-                      {processed.steps.map((step, index) => (
-                        <li key={index} className="leading-relaxed pl-2">
-                          <span className="ml-1">{step}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  );
-                } else {
-                  return (
-                    <p className="whitespace-pre-wrap leading-relaxed">
-                      {processed.originalText}
-                    </p>
-                  );
-                }
-              })()}
-            </div>
-          </div>
-
-          <Separator />
 
           {/* Metadata */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-muted-foreground">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-muted-foreground mt-4 pt-4 border-t">
             <div className="flex items-center">
               <CalendarDays className="mr-1 h-4 w-4" />
               <span>
@@ -446,6 +374,114 @@ export default function RecipeDetailPage() {
                 {t("lastEatenDetail")}:{" "}
                 {formatDateWithFallback(recipe.last_eaten, t("never"))}
               </span>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Single Card Layout */}
+      <Card>
+        <CardContent className="px-5 py-0">
+          <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
+            {/* Left Column - Ingredients */}
+            <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5">
+              <h2 className="text-xl font-semibold mb-4">{t("ingredients")}</h2>
+
+              {/* Serving Size Selector */}
+              {recipe && (
+                <div className="mb-4">
+                  <ServingSizeSelector
+                    recipe={recipe}
+                    onServingChange={(_, scaledRecipe) => {
+                      setDisplayRecipe(scaledRecipe);
+                    }}
+                    showPreview={false}
+                  />
+                </div>
+              )}
+
+              {/* Ingredients List */}
+              <div className="space-y-1">
+                {(displayRecipe || recipe)?.ingredients.map(
+                  (ingredient, index) => {
+                    // Format amount and unit
+                    const amountText = ingredient.amount
+                      ? `${ingredient.amount}${
+                          ingredient.unit
+                            ? ` ${tUnits(ingredient.unit) || ingredient.unit}`
+                            : ""
+                        }`
+                      : ingredient.unit
+                      ? tUnits(ingredient.unit) || ingredient.unit
+                      : "";
+
+                    return (
+                      <div
+                        key={index}
+                        className="grid grid-cols-12 gap-3 items-start py-1"
+                      >
+                        <div className="col-span-4 text-right">
+                          <span className="font-semibold text-sm">
+                            {amountText}
+                          </span>
+                        </div>
+                        <div className="col-span-8">
+                          <span className="text-sm leading-relaxed">
+                            {ingredient.name}
+                            {ingredient.notes && (
+                              <span className="text-muted-foreground ml-1">
+                                ({ingredient.notes})
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+            </div>
+
+            {/* Right Column - Instructions */}
+            <div className="lg:col-span-5">
+              <h2 className="text-xl font-semibold mb-5 mt-5">
+                {t("gettingStarted")}
+              </h2>
+
+              {/* Instructions */}
+              <div className="prose prose-sm max-w-none mb-5">
+                {(() => {
+                  const processed = processInstructions(recipe.description);
+
+                  if (processed.isStepFormat && processed.steps.length > 1) {
+                    return (
+                      <div className="space-y-5">
+                        {processed.steps.map((step, index) => (
+                          <div key={index} className="flex items-center gap-4">
+                            <div className="flex-shrink-0 w-9 h-9 bg-white border-2 border-primary text-primary rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
+                              {index + 1}
+                            </div>
+                            <p className="leading-relaxed text-base">
+                              {step}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div className="flex items-center gap-4">
+                        <div className="flex-shrink-0 w-9 h-9 bg-white border-2 border-primary text-primary rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
+                          1
+                        </div>
+                        <p className="whitespace-pre-wrap leading-relaxed text-base">
+                          {processed.originalText}
+                        </p>
+                      </div>
+                    );
+                  }
+                })()}
+              </div>
             </div>
           </div>
         </CardContent>
