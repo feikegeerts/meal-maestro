@@ -112,7 +112,7 @@ Instructies: ${scrapedData.description || "Niet gevonden"}
 Ingrediënten: ${scrapedData.ingredients?.join(", ") || "Niet gevonden"}
 Porties: ${scrapedData.servings || "Niet gevonden"}
 
-Maak hiervan nu een compleet recept (via update_recipe_form functie) EN geef een vriendelijke tekstuele reactie over het recept - wat maakt het bijzonder, tips voor bereiding, of andere nuttige informatie.`;
+Maak hiervan nu een compleet recept (via update_recipe_form functie)`;
   }
 
   return `IMPORTANT: You must both make a function call AND provide a text response!
@@ -124,7 +124,7 @@ Instructions: ${scrapedData.description || "Not found"}
 Ingredients: ${scrapedData.ingredients?.join(", ") || "Not found"}
 Servings: ${scrapedData.servings || "Not found"}
 
-Now turn this into a complete recipe (using update_recipe_form function) AND provide a friendly text response about the recipe - what makes it special, cooking tips, or other helpful information.`;
+Now turn this into a complete recipe (using update_recipe_form function) `;
 };
 
 export const getRecipeRecoveryPrompt = (
