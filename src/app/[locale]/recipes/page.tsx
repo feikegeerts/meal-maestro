@@ -23,7 +23,6 @@ export default function RecipesPage() {
     useRecipes();
   const [recipesLoading, setRecipesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasLoadedRecipes, setHasLoadedRecipes] = useState(false);
   const t = useTranslations("recipes");
   const columns = useRecipeColumns();
 
@@ -34,15 +33,11 @@ export default function RecipesPage() {
       return;
     }
 
-    // Load recipes when user is available and we haven't loaded them yet
-    // But skip loading if we already have recipes in context
-    if (user && !hasLoadedRecipes && contextRecipes.length === 0) {
+    // Load recipes when user is available and context is empty
+    if (user && contextRecipes.length === 0) {
       loadRecipes();
-    } else if (user && contextRecipes.length > 0) {
-      // If we already have recipes in context, mark as loaded
-      setHasLoadedRecipes(true);
     }
-  }, [user, loading, hasLoadedRecipes, contextRecipes.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, loading, contextRecipes.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadRecipes = async () => {
     try {
@@ -50,7 +45,6 @@ export default function RecipesPage() {
       setError(null);
       const response: RecipesResponse = await recipeService.getUserRecipes();
       setRecipesInContext(response.recipes);
-      setHasLoadedRecipes(true);
     } catch (err) {
       console.error("Error loading recipes:", err);
       setError(
@@ -82,10 +76,7 @@ export default function RecipesPage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => {
-                setHasLoadedRecipes(false);
-                loadRecipes();
-              }}
+              onClick={loadRecipes}
               disabled={recipesLoading}
               className="flex items-center gap-2"
             >

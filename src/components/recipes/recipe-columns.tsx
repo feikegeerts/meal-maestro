@@ -25,12 +25,50 @@ import { Link } from "@/app/i18n/routing";
 import { useTranslations } from 'next-intl';
 import { useRecipeTranslations } from '@/messages';
 import { useLocalizedDateFormatter } from '@/lib/date-utils';
+import { useRecipes } from '@/contexts/recipe-context';
+import { useRouter } from '@/app/i18n/routing';
+import { recipeService } from '@/lib/recipe-service';
+import { toast } from 'sonner';
 
 export function useRecipeColumns(): ColumnDef<Recipe>[] {
   const t = useTranslations('recipeTable');
   const tA11y = useTranslations('accessibility');
+  const tToast = useTranslations('toast');
   const { translateCategory, translateSeason, translateTag } = useRecipeTranslations();
   const { formatDateWithFallback } = useLocalizedDateFormatter();
+  const { removeRecipe, updateRecipe } = useRecipes();
+  const router = useRouter();
+
+  const handleEditRecipe = (recipeId: string) => {
+    router.push(`/recipes/${recipeId}/edit`);
+  };
+
+  const handleMarkAsEaten = async (recipe: Recipe) => {
+    try {
+      const now = new Date().toISOString();
+      const updatedRecipe = await recipeService.updateRecipe(recipe.id, { last_eaten: now });
+      updateRecipe(recipe.id, updatedRecipe.recipe);
+      toast.success(tToast('recipeMarkedEaten', { count: 1 }));
+    } catch (error) {
+      console.error('Error marking recipe as eaten:', error);
+      toast.error(tToast('markEatenError'));
+    }
+  };
+
+  const handleDeleteRecipe = async (recipe: Recipe) => {
+    if (!window.confirm(t('confirmDelete', { count: 1, plural: '' }))) {
+      return;
+    }
+
+    try {
+      await recipeService.deleteRecipe(recipe.id);
+      removeRecipe(recipe.id);
+      toast.success(tToast('recipeDeleted', { count: 1 }));
+    } catch (error) {
+      console.error('Error deleting recipe:', error);
+      toast.error(tToast('deleteRecipeError'));
+    }
+  };
 
   return [
   {
@@ -292,16 +330,19 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
                 {t('viewDetails')}
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleEditRecipe(recipe.id)}>
               <Edit className="mr-2 h-4 w-4" />
               {t('editRecipe')}
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleMarkAsEaten(recipe)}>
               <Utensils className="mr-2 h-4 w-4" />
               {t('markAsEaten')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem 
+              className="text-destructive" 
+              onClick={() => handleDeleteRecipe(recipe)}
+            >
               <Trash2 className="mr-2 h-4 w-4" />
               {t('deleteRecipe')}
             </DropdownMenuItem>

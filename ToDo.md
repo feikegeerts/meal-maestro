@@ -1,5 +1,6 @@
 ### Phase 5: Post-MVP Enhancements
 
+- [ ] Chat interface should scroll down automatically
 - [ ] Recept toevoegen knop op de recipes/[id] page
 - [ ] The recipe list context is not updated when a recipe is deleted or added
 - [ ] competitor layouts overnemen zowel desktop als mobile voor recepten weergeven en toevoegen, recipes details has been done, edit recipe still to do
@@ -17,6 +18,7 @@
 
 - [ ] Speech to text integration
 - [ ] Images voor bij de recepten, welke opties zijn er?
+- [ ] Paste an image in the chat to be processed as a recipe
 - [ ] **7.1** Semantic search using vector embeddings
 - [ ] **7.6** Image upload and recipe photo management
 

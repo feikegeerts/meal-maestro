@@ -35,7 +35,7 @@ export default function RecipeDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { getRecipeById, updateRecipe: updateRecipeInContext } = useRecipes();
+  const { getRecipeById, updateRecipe: updateRecipeInContext, removeRecipe } = useRecipes();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const { formatDateWithFallback } = useLocalizedDateFormatter();
   const [displayRecipe, setDisplayRecipe] = useState<Recipe | null>(null);
@@ -167,6 +167,9 @@ export default function RecipeDetailPage() {
         throw new Error(t("failedToDelete"));
       }
 
+      // Update context to remove the deleted recipe
+      removeRecipe(recipe.id);
+      
       router.push("/recipes");
     } catch (error) {
       console.error("Error deleting recipe:", error);
