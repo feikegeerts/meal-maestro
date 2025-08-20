@@ -65,7 +65,8 @@ export const rateLimiter = new SimpleRateLimiter();
 // OpenAI API wrapper with usage tracking
 export async function createChatCompletion(
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-  tools?: OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"]
+  tools?: OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"],
+  toolChoice?: OpenAI.Chat.Completions.ChatCompletionCreateParams["tool_choice"]
 ): Promise<OpenAICompletionWithUsage> {
   // Check rate limit
   if (rateLimiter.isRateLimited()) {
@@ -78,7 +79,7 @@ export async function createChatCompletion(
       model: OPENAI_MODEL,
       messages,
       tools,
-      tool_choice: tools ? "auto" : undefined,
+      tool_choice: toolChoice || (tools ? "auto" : undefined),
       max_tokens: OPENAI_MAX_TOKENS,
       temperature: OPENAI_TEMPERATURE,
     });

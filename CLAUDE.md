@@ -2,8 +2,6 @@
 
 - @README.md for an overview of this project
 - @ToDo.md for a todo list of things that need to be done
-- @MIGRATION_SPEC.md for an overview of an old project on which this project is based
-- @old/src/lib for and overview of the services that were used in that old project
 
 ## Tech Stack
 
@@ -53,6 +51,38 @@
 - Let the user always test with pnpm dev manually - never run pnpm dev automatically
 - Do not add comments when the code is self explanatory
 - Use shadcn components when possible to avoid custom components
+
+## Senior-Level Architecture Guidelines
+
+### Service Layer Principles
+- **Single Responsibility**: Each service class should have one clear purpose
+- **Dependency Injection**: Services should accept dependencies in constructors
+- **Leverage Existing Services**: Always use existing service infrastructure (e.g., `openai-service.ts`) rather than duplicating logic
+- **Stateless Services**: Services should be stateless and reusable across contexts
+
+### API Route Design
+- **Thin Controllers**: API routes should be minimal (< 50 lines) and delegate to services
+- **HTTP Concerns Only**: Routes handle auth, validation, and response formatting - nothing else
+- **Error Boundaries**: Centralized error handling with proper HTTP status codes
+- **Service Orchestration**: Use a main service class to coordinate multiple operations
+
+### Code Organization Patterns
+- **Extract Configuration**: Move constants, prompts, and validation rules to separate config files
+- **Strategy Pattern**: Use strategy pattern for handling different function call types
+- **Builder Pattern**: Use builders for complex object construction (e.g., conversation messages)
+- **Formatter Pattern**: Separate response formatting logic into dedicated classes
+
+### Complexity Management
+- **Function Size Limit**: Keep functions under 30 lines when possible
+- **Nested Conditionals**: Extract complex conditional logic into private methods
+- **Magic Numbers**: Replace magic strings/numbers with named constants
+- **DRY Principle**: Extract repeated patterns into reusable utilities
+
+### TypeScript Best Practices
+- **Interface Segregation**: Create focused interfaces rather than large ones
+- **Type Guards**: Use type guards for runtime type checking
+- **Generic Constraints**: Use generic constraints for flexible yet type-safe code
+- **Composition over Inheritance**: Prefer composition patterns over class inheritance
 
 ## TypeScript Guidelines
 
