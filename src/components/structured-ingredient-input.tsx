@@ -305,13 +305,6 @@ function StructuredIngredientInputComponent({
               </div>
             </div>
 
-            {/* Helper text for "to taste" items */}
-            {ingredient.amount === null && ingredient.name && (
-              <div className="ml-0 sm:ml-8 text-xs text-muted-foreground">
-                No amount specified - will display as &quot;{ingredient.name} to
-                taste&quot;
-              </div>
-            )}
           </div>
         ))}
       </div>

@@ -79,12 +79,12 @@ export function ChatInterface({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive - disabled on desktop
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    if (!isDesktopSidebar && messagesEndRef.current) {
+    if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, isDesktopSidebar]);
+  }, [messages]);
 
   // Auto-resize textarea based on content
   const adjustTextareaHeight = () => {

@@ -2,10 +2,10 @@
 
 - [ ] Chat interface should scroll down automatically
 - [ ] Recept toevoegen knop op de recipes/[id] page
-- [ ] The recipe list context is not updated when a recipe is deleted or added
+- [x] The recipe list context is not updated when a recipe is deleted or added
 - [ ] competitor layouts overnemen zowel desktop als mobile voor recepten weergeven en toevoegen, recipes details has been done, edit recipe still to do
 - [ ] structed ingredient table layout is beetje gek met de headers onderaan
-- [ ] No amount specified - will display as "zout to taste" can be removed
+- [x] No amount specified - will display as "zout to taste" can be removed
 - [ ] custom smtp server for magic link emails
 - [ ] **5.11** Implement caching strategies
 - [ ] **5.12** Add buy me a coffee functionality

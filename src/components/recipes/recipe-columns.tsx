@@ -26,7 +26,6 @@ import { useTranslations } from 'next-intl';
 import { useRecipeTranslations } from '@/messages';
 import { useLocalizedDateFormatter } from '@/lib/date-utils';
 import { useRecipes } from '@/contexts/recipe-context';
-import { useRouter } from '@/app/i18n/routing';
 import { recipeService } from '@/lib/recipe-service';
 import { toast } from 'sonner';
 
@@ -37,11 +36,7 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
   const { translateCategory, translateSeason, translateTag } = useRecipeTranslations();
   const { formatDateWithFallback } = useLocalizedDateFormatter();
   const { removeRecipe, updateRecipe } = useRecipes();
-  const router = useRouter();
 
-  const handleEditRecipe = (recipeId: string) => {
-    router.push(`/recipes/${recipeId}/edit`);
-  };
 
   const handleMarkAsEaten = async (recipe: Recipe) => {
     try {
@@ -330,9 +325,11 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
                 {t('viewDetails')}
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleEditRecipe(recipe.id)}>
-              <Edit className="mr-2 h-4 w-4" />
-              {t('editRecipe')}
+            <DropdownMenuItem asChild>
+              <Link href={`/recipes/${recipe.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                {t('editRecipe')}
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleMarkAsEaten(recipe)}>
               <Utensils className="mr-2 h-4 w-4" />

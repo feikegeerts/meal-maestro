@@ -454,8 +454,10 @@ export function RecipeDataTable<TData, TValue>({
                     if (
                       target.closest('button') || 
                       target.closest('[role="checkbox"]') ||
-                      target.closest('.dropdown-menu') ||
-                      target.closest('[data-dropdown-trigger]')
+                      target.closest('[data-radix-popper-content-wrapper]') ||
+                      target.closest('[data-dropdown-trigger]') ||
+                      target.closest('[role="menuitem"]') ||
+                      target.closest('a[href]')
                     ) {
                       return;
                     }
