@@ -235,12 +235,13 @@ export async function POST(request: NextRequest) {
     );
 
     // Debug logging for initial AI response
+    const firstToolCall = completion.choices[0].message.tool_calls?.[0];
     console.log('🔍 [DEBUG] Initial AI Response:', {
       hasContent: !!completion.choices[0].message.content,
       contentLength: completion.choices[0].message.content?.length || 0,
       contentPreview: completion.choices[0].message.content?.substring(0, 100),
       hasToolCalls: !!completion.choices[0].message.tool_calls,
-      toolCallName: completion.choices[0].message.tool_calls?.[0]?.function.name
+      toolCallName: firstToolCall?.type === 'function' ? firstToolCall.function.name : undefined
     });
 
     // Log usage for cost tracking and outlier detection
