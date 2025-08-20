@@ -456,16 +456,30 @@ export default function RecipeDetailPage() {
                   if (processed.isStepFormat && processed.steps.length > 1) {
                     return (
                       <div className="space-y-5">
+                        {/* Numbered steps */}
                         {processed.steps.map((step, index) => (
                           <div key={index} className="flex items-center gap-4">
                             <div className="flex-shrink-0 w-9 h-9 bg-white border-2 border-primary text-primary rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
                               {index + 1}
                             </div>
-                            <p className="leading-relaxed text-base">
-                              {step}
-                            </p>
+                            <p className="leading-relaxed text-base">{step}</p>
                           </div>
                         ))}
+
+                        {/* Descriptive text (if any) */}
+                        {processed.descriptiveText &&
+                          processed.descriptiveText.length > 0 && (
+                            <div className="mt-6 space-y-3">
+                              {processed.descriptiveText.map((text, index) => (
+                                <p
+                                  key={`desc-${index}`}
+                                  className="leading-relaxed text-base pl-13"
+                                >
+                                  {text}
+                                </p>
+                              ))}
+                            </div>
+                          )}
                       </div>
                     );
                   } else {

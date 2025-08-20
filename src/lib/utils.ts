@@ -28,6 +28,7 @@ export interface ProcessedInstructions {
   isStepFormat: boolean;
   steps: string[];
   originalText: string;
+  descriptiveText?: string[];
 }
 
 export function processInstructions(description: string): ProcessedInstructions {
@@ -45,18 +46,35 @@ export function processInstructions(description: string): ProcessedInstructions 
   const hasExplicitNumbers = /^\d+\.\s/.test(trimmedDescription) || 
                             /\n\s*\d+\.\s/.test(trimmedDescription);
   
-  // If already numbered, split by lines and clean up
+  // If already numbered, separate numbered steps from descriptive text
   if (hasExplicitNumbers) {
-    const steps = trimmedDescription
+    const allLines = trimmedDescription
       .split('\n')
-      .filter(line => line.trim())
-      .map(step => step.replace(/^\s*\d+\.\s*/, '').trim())
-      .filter(step => step);
+      .map(line => line.trim())
+      .filter(line => line);
+    
+    const steps: string[] = [];
+    const descriptiveText: string[] = [];
+    
+    // Separate lines that start with numbers from those that don't
+    for (const line of allLines) {
+      if (/^\d+\.\s/.test(line)) {
+        // This is a numbered step - remove the number and add to steps
+        const cleanStep = line.replace(/^\d+\.\s*/, '').trim();
+        if (cleanStep) {
+          steps.push(cleanStep);
+        }
+      } else {
+        // This is descriptive text - add to descriptive text array
+        descriptiveText.push(line);
+      }
+    }
     
     return {
       isStepFormat: true,
       steps,
       originalText: description,
+      descriptiveText: descriptiveText.length > 0 ? descriptiveText : undefined,
     };
   }
 
