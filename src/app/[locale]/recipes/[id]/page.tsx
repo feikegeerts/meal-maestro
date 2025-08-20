@@ -26,6 +26,7 @@ import {
   CalendarDays,
   Tag,
   ChefHat,
+  Plus,
 } from "lucide-react";
 import { setRedirectUrl, processInstructions } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -178,6 +179,10 @@ export default function RecipeDetailPage() {
     }
   };
 
+  const handleAddRecipe = () => {
+    router.push("/recipes/add");
+  };
+
   if (authLoading || loading) {
     return <PageLoading />;
   }
@@ -233,6 +238,16 @@ export default function RecipeDetailPage() {
         backButtonText={t("back")}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              onClick={handleAddRecipe}
+              disabled={!!actionLoading}
+              variant="default"
+              size="sm"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {t("addRecipe")}
+            </Button>
+
             <Button
               onClick={handleMarkEaten}
               disabled={!!actionLoading}
