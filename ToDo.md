@@ -16,6 +16,7 @@
 - [ ] **5.13** Improve deployment pipeline with automatic version bumping
 - [ ] About page with version and release notes
 - [ ] Google app for google login customize with meal meastro logo and text, might require approval from google
+- [ ] Main page should have ai less promenent and focus more on the recipe management and easy of adding recipes.
 
 ### Phase 6: Advanced Features
 

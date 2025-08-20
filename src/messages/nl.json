@@ -343,6 +343,18 @@
     "recipeCreatedFromTitle": "Ik kon de website niet scrapen, maar heb een compleet recept voor \"{title}\" gemaakt gebaseerd op de titel uit de URL. Je kunt het nu aanpassen naar wens!",
     "titleExtractedOnly": "Ik kon de website niet scrapen, maar heb de titel \"{title}\" uit de URL gehaald en ingevuld. Je kunt nu handmatig ingrediënten en bereidingswijze toevoegen.",
     "tryManualCopy": "Probeer de recept tekst handmatig te kopiëren en in de chat te plakken, dan kan ik je helpen met het verwerken.",
+    "languageInstruction": "Reageer altijd in het Nederlands. Gebruik Nederlandse terminologie voor kooktermen, maten en alle tekst.",
+    "importantFunctionCall": "Je moet zowel een functie-aanroep maken als een tekstuele reactie geven!",
+    "websiteScrapedSuccess": "Ik heb de website succesvol gescraped! Hier zijn de ruwe gegevens die ik vond:",
+    "websiteScrapedData": {
+      "title": "Titel",
+      "instructions": "Instructies", 
+      "ingredients": "Ingrediënten",
+      "servings": "Porties",
+      "notFound": "Niet gevonden"
+    },
+    "createCompleteRecipe": "Maak hiervan nu een compleet recept (via update_recipe_form functie)",
+    "urlScrapeFailed": "Ik kon de website niet scrapen, maar heb de titel \"{title}\" uit de URL gehaald. Maak nu een compleet recept gebaseerd op deze titel met realistische ingrediënten, gedetailleerde bereidingswijze, porties, en juiste categorie. Gebruik je culinaire kennis om een bruikbaar recept te maken dat de gebruiker kan aanpassen.",
     "extractionProcessingError": "Recept data is opgehaald maar er was een probleem met de verwerking.",
     "websiteBlocked": "Website blokkeert toegang",
     "noRecipeFound": "Kon geen recept vinden op de website"

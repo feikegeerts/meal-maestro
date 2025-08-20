@@ -20,9 +20,36 @@ export interface URLExtractionResult {
 
 export class FunctionCallProcessor {
   private locale: string;
+  private messages: Record<string, unknown>;
   
   constructor(locale: string) {
     this.locale = locale;
+    this.messages = this.loadMessages(locale);
+  }
+  
+  private loadMessages(locale: string): Record<string, unknown> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require(`../messages/${locale}.json`) as Record<string, unknown>;
+    } catch {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require(`../messages/en.json`) as Record<string, unknown>;
+    }
+  }
+  
+  private t(key: string): string {
+    const keys = key.split('.');
+    let value: unknown = this.messages;
+    
+    for (const k of keys) {
+      if (value && typeof value === 'object' && value !== null && k in value) {
+        value = (value as Record<string, unknown>)[k];
+      } else {
+        return key;
+      }
+    }
+    
+    return typeof value === 'string' ? value : key;
   }
   
   static getAvailableFunctions(): OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"] {
@@ -135,7 +162,7 @@ export class FunctionCallProcessor {
       category?: string;
     };
     
-    const aiProcessingPrompt = getAIProcessingPrompt(this.locale, scrapedData);
+    const aiProcessingPrompt = getAIProcessingPrompt(this.t.bind(this), scrapedData);
     
     const processingMessages = [...chatMessages, {
       role: "user" as const,
@@ -185,7 +212,7 @@ export class FunctionCallProcessor {
     // Smart error recovery: if we have a title, generate a recipe with AI
     if (urlResult.formUpdate?.title) {
       try {
-        const aiRecipePrompt = getRecipeRecoveryPrompt(this.locale, urlResult.formUpdate.title);
+        const aiRecipePrompt = getRecipeRecoveryPrompt(this.t.bind(this), urlResult.formUpdate.title);
         
         const followUpMessages = [...chatMessages, {
           role: "user" as const,

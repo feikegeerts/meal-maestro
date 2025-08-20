@@ -38,9 +38,38 @@ export interface ChatContext {
 
 export class ConversationBuilder {
   private locale: string;
+  private messages: Record<string, unknown>;
   
   constructor(locale: string) {
     this.locale = locale;
+    this.messages = this.loadMessages(locale);
+  }
+  
+  private loadMessages(locale: string): Record<string, unknown> {
+    try {
+      // Load messages synchronously for the given locale
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require(`../messages/${locale}.json`) as Record<string, unknown>;
+    } catch {
+      // Fallback to English if locale not found
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require(`../messages/en.json`) as Record<string, unknown>;
+    }
+  }
+  
+  private t(key: string): string {
+    const keys = key.split('.');
+    let value: unknown = this.messages;
+    
+    for (const k of keys) {
+      if (value && typeof value === 'object' && value !== null && k in value) {
+        value = (value as Record<string, unknown>)[k];
+      } else {
+        return key; // Return key if translation not found
+      }
+    }
+    
+    return typeof value === 'string' ? value : key;
   }
   
   buildMessages(
@@ -51,12 +80,15 @@ export class ConversationBuilder {
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
     
     // Add system prompt with language instruction
-    const systemPrompt = SYSTEM_PROMPT + getLanguageInstruction(this.locale);
+    const systemPrompt = SYSTEM_PROMPT + getLanguageInstruction(this.t.bind(this));
     messages.push({ role: "system", content: systemPrompt });
     
     // Add form state context if provided
     if (context?.current_form_state) {
-      const formContextMessage = this.buildFormContextMessage(context.current_form_state);
+      // Skip defaults if this is the first message (no conversation history)
+      // This prevents AI bias from default values on initial recipe creation
+      const isInitialMessage = conversationHistory.length === 0;
+      const formContextMessage = this.buildFormContextMessage(context.current_form_state, isInitialMessage);
       if (formContextMessage) {
         messages.push({ role: "system", content: formContextMessage });
       }
@@ -82,18 +114,29 @@ export class ConversationBuilder {
     return messages;
   }
   
-  private buildFormContextMessage(formState: FormUpdate): string | null {
+  private buildFormContextMessage(formState: FormUpdate, skipDefaults: boolean = false): string | null {
     const formContextParts: string[] = [];
     
     if (formState.title) formContextParts.push(`Title: "${formState.title}"`);
-    if (formState.category) formContextParts.push(`Category: ${formState.category}`);
-    if (formState.servings) formContextParts.push(`Servings: ${formState.servings}`);
+    
+    // Skip default values on initial AI context to prevent bias
+    if (formState.category && (!skipDefaults || formState.category !== 'main-course')) {
+      formContextParts.push(`Category: ${formState.category}`);
+    }
+    
+    if (formState.servings && (!skipDefaults || formState.servings !== 4)) {
+      formContextParts.push(`Servings: ${formState.servings}`);
+    }
     
     if (formState.ingredients && formState.ingredients.length > 0) {
-      const ingredientList = formState.ingredients.map(ing => 
-        `${ing.amount || ''} ${ing.unit || ''} ${ing.name}`.trim()
-      ).join(', ');
-      formContextParts.push(`Ingredients: ${ingredientList}`);
+      // Skip empty default ingredient
+      const nonEmptyIngredients = formState.ingredients.filter(ing => ing.name?.trim());
+      if (nonEmptyIngredients.length > 0) {
+        const ingredientList = nonEmptyIngredients.map(ing => 
+          `${ing.amount || ''} ${ing.unit || ''} ${ing.name}`.trim()
+        ).join(', ');
+        formContextParts.push(`Ingredients: ${ingredientList}`);
+      }
     }
     
     if (formState.description) {
@@ -107,7 +150,9 @@ export class ConversationBuilder {
       formContextParts.push(`Tags: ${formState.tags.join(', ')}`);
     }
     
-    if (formState.season) formContextParts.push(`Season: ${formState.season}`);
+    if (formState.season && (!skipDefaults || formState.season !== 'year-round')) {
+      formContextParts.push(`Season: ${formState.season}`);
+    }
     
     return formContextParts.length > 0 
       ? `Current form state: ${formContextParts.join('; ')}`

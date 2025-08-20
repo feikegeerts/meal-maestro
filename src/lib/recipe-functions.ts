@@ -188,6 +188,14 @@ export async function updateRecipeForm(args: Record<string, unknown>): Promise<{
   };
 
   try {
+    // DEBUG: Log what AI is sending for problematic fields
+    console.log('🔍 AI Recipe Update Debug:', {
+      category: { value: category, type: typeof category },
+      season: { value: season, type: typeof season },
+      servings: { value: servings, type: typeof servings },
+      title: title // for context
+    });
+
     // Process ingredients - ensure they have all required fields
     const processedIngredients = ingredients?.filter(ing => ing.name?.trim()).map((ingredient, index) => {
       // Clean up amount - handle invalid values

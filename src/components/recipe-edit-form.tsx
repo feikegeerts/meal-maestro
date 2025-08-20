@@ -568,6 +568,12 @@ export function RecipeEditForm({
   // Handle AI-generated recipe updates
   const handleAIRecipeUpdate = (aiRecipeData: unknown) => {
     const recipeData = aiRecipeData as AIRecipeData;
+    console.log('🔍 Frontend AI Update Debug:', {
+      received: recipeData,
+      category: { value: recipeData?.category, type: typeof recipeData?.category },
+      season: { value: recipeData?.season, type: typeof recipeData?.season },
+      servings: { value: recipeData?.servings, type: typeof recipeData?.servings }
+    });
 
     if (recipeData) {
       const updatedFormData: RecipeInput = {
@@ -599,6 +605,13 @@ export function RecipeEditForm({
               })),
           }),
       };
+
+      console.log('🔍 Frontend Form Update Applied:', {
+        category: updatedFormData.category,
+        season: updatedFormData.season,
+        servings: updatedFormData.servings,
+        title: updatedFormData.title // for context
+      });
 
       setFormData(updatedFormData);
       setErrors([]);
