@@ -357,7 +357,9 @@
     "urlScrapeFailed": "I couldn't scrape the website, but extracted the title \"{title}\" from the URL. Now create a complete recipe based on this title with realistic ingredients, detailed instructions, servings, and appropriate category. Use your culinary knowledge to make a usable recipe that the user can customize.",
     "extractionProcessingError": "Recipe data was extracted but there was an issue with processing.",
     "websiteBlocked": "Website blocks access",
-    "noRecipeFound": "Could not find recipe on website"
+    "noRecipeFound": "Could not find recipe on website",
+    "mixedRequestFollowUp": "The user asked: \"{message}\". I have automatically extracted the recipe and filled the form - that's done! Now the user also wants to know: \"{additionalContent}\". Give a detailed and helpful response to their additional question. No more function calls.",
+    "standardFollowUp": "The user asked: \"{message}\". I have automatically filled the recipe form with all ingredients and instructions - it's completely ready! The form is now filled and the user can view it. Give an appropriate response to their original question. No more function calls."
   },
   "servingSelector": {
     "recipeServes": "Recipe serves",

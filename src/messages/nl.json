@@ -357,7 +357,9 @@
     "urlScrapeFailed": "Ik kon de website niet scrapen, maar heb de titel \"{title}\" uit de URL gehaald. Maak nu een compleet recept gebaseerd op deze titel met realistische ingrediënten, gedetailleerde bereidingswijze, porties, en juiste categorie. Gebruik je culinaire kennis om een bruikbaar recept te maken dat de gebruiker kan aanpassen.",
     "extractionProcessingError": "Recept data is opgehaald maar er was een probleem met de verwerking.",
     "websiteBlocked": "Website blokkeert toegang",
-    "noRecipeFound": "Kon geen recept vinden op de website"
+    "noRecipeFound": "Kon geen recept vinden op de website",
+    "mixedRequestFollowUp": "De gebruiker vroeg: \"{message}\". Ik heb zojuist automatisch het recept geëxtraheerd en het formulier ingevuld - dat is al klaar! Nu wil de gebruiker nog dit weten: \"{additionalContent}\". Geef een uitgebreid en behulpzaam antwoord op hun extra vraag. Geen functie-aanroepen meer.",
+    "standardFollowUp": "De gebruiker vroeg: \"{message}\". Ik heb zojuist automatisch het recept formulier ingevuld met alle ingrediënten en bereidingswijze - het is al compleet klaar! Het formulier is nu gevuld en de gebruiker kan het bekijken. Geef een gepaste reactie op hun oorspronkelijke vraag. Geen functie-aanroepen meer."
   },
   "servingSelector": {
     "recipeServes": "Recept is voor",
