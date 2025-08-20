@@ -27,7 +27,7 @@ export interface ScrapeResult {
 
 export class RecipeScraper {
   private static readonly USER_AGENT = 'MealMaestro-RecipeBot/1.0';
-  private static readonly TIMEOUT_MS = 10000;
+  private static readonly TIMEOUT_MS = 8000; // Reduce to 8s to allow time for AI processing
   private static readonly MAX_SIZE_BYTES = 1 * 1024 * 1024; // 1MB (reduced from 5MB for security)
   private static readonly dnsLookup = promisify(lookup);
   private static readonly MAX_REDIRECTS = 3;

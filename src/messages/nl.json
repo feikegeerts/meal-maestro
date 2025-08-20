@@ -12,7 +12,8 @@
     "language": "Taal",
     "home": "Home",
     "back": "Terug",
-    "edit": "Bewerken"
+    "edit": "Bewerken",
+    "addRecipe": "Recept Toevoegen"
   },
   "home": {
     "title": "Meal Maestro",
@@ -337,9 +338,6 @@
     "inputPlaceholder": "Typ je bericht... (bijv. 'voeg een recept toe voor spaghetti bolognese')",
     "currentlyViewing": "Momenteel bekijkt",
     "welcomeMessage": "Hey! Ik ben Meal Maestro, je AI recept assistant. Ik kan je helpen recepten maken en bewerken door forms in te vullen. Aan welk recept wil je vandaag werken?",
-    "recipeCreatedWithTitle": "Perfect! Ik heb een compleet recept gemaakt voor \"{title}\" met gedetailleerde instructies. Je kunt alle details in het form bekijken en aanpassingen maken voordat je opslaat.",
-    "recipeFormUpdated": "Geweldig! Ik heb het recept form geupdate met je wijzigingen. Bekijk de details en sla op wanneer je klaar bent.",
-    "requestProcessed": "Ik heb je verzoek verwerkt. Check het form voor de updates.",
     "processingError": "Sorry, maar ik had een probleem bij het verwerken van je verzoek.",
     "recipeExtractedFromUrl": "Recept \"{title}\" is succesvol opgehaald van de URL en verwerkt! Ik heb de gegevens opgeschoond en ingevuld in het formulier.",
     "recipeCreatedFromTitle": "Ik kon de website niet scrapen, maar heb een compleet recept voor \"{title}\" gemaakt gebaseerd op de titel uit de URL. Je kunt het nu aanpassen naar wens!",

@@ -75,8 +75,8 @@ export default function AddRecipePage() {
       // Add the new recipe to context
       addRecipe(newRecipe);
       
-      // Navigate back to recipes page
-      router.push("/recipes");
+      // Navigate to the newly created recipe's detail page
+      router.push(`/recipes/${newRecipe.id}`);
     } catch (error) {
       console.error("Failed to create recipe:", error);
       throw error;

@@ -246,7 +246,9 @@ export function validateRecipeInput(input: RecipeInput): { valid: boolean; error
       if (!ingredient.name || ingredient.name.trim().length === 0) {
         errors.push(`Ingredient ${index + 1} name is required`);
       }
-      if (ingredient.amount !== null && (isNaN(ingredient.amount) || ingredient.amount <= 0)) {
+      // Normalize amount: treat 0 as null for "to taste" scenarios
+      const normalizedAmount = ingredient.amount === 0 ? null : ingredient.amount;
+      if (normalizedAmount !== null && (isNaN(normalizedAmount) || normalizedAmount <= 0)) {
         errors.push(`Ingredient ${index + 1} amount must be a positive number or empty for "to taste"`);
       }
     });

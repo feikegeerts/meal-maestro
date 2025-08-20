@@ -157,7 +157,9 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      if (ingredient.amount !== null && (typeof ingredient.amount !== 'number' || ingredient.amount <= 0)) {
+      // Normalize amount: treat 0 as null for "to taste" scenarios
+      const normalizedAmount = ingredient.amount === 0 ? null : ingredient.amount;
+      if (normalizedAmount !== null && (typeof normalizedAmount !== 'number' || normalizedAmount <= 0)) {
         return NextResponse.json(
           { error: 'Ingredient amounts must be positive numbers or null' },
           { status: 400 }
@@ -165,9 +167,51 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Normalize ingredient amounts and units
+    const normalizedIngredients = ingredients.map(ingredient => {
+      let normalizedUnit = ingredient.unit;
+      
+      // Convert common non-standard units to standard ones or remove them
+      if (typeof normalizedUnit === 'string') {
+        switch (normalizedUnit.toLowerCase()) {
+          case 'el':
+          case 'eetlepel':
+            normalizedUnit = 'tbsp';
+            break;
+          case 'tl':
+          case 'theelepel':
+            normalizedUnit = 'tsp';
+            break;
+          case 'teen':
+          case 'teentje':
+          case 'teentjes':
+            normalizedUnit = 'clove'; // Convert Dutch garlic clove unit to English
+            break;
+          case 'stuk':
+          case 'stuks':
+          case 'units.stuk':
+          case 'pieces':
+            normalizedUnit = null; // Remove unit for countable items
+            break;
+          default:
+            // Keep valid units, set invalid ones to null
+            const validUnits = ['g', 'kg', 'ml', 'l', 'tbsp', 'tsp', 'clove'];
+            if (!validUnits.includes(normalizedUnit) && normalizedUnit !== 'naar smaak' && normalizedUnit !== 'to taste') {
+              normalizedUnit = null;
+            }
+        }
+      }
+      
+      return {
+        ...ingredient,
+        amount: ingredient.amount === 0 ? null : ingredient.amount,
+        unit: normalizedUnit
+      };
+    });
+
     const insertData = {
       title,
-      ingredients,
+      ingredients: normalizedIngredients,
       servings: parseInt(servings),
       description,
       category,

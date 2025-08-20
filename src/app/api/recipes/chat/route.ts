@@ -70,23 +70,31 @@ YOUR PRIMARY FUNCTION:
 - Use the extract_recipe_from_url function when users provide recipe URLs
 - Provide cooking advice and recipe suggestions
 
-IMPORTANT GUIDELINES:
-1. Be helpful and conversational about cooking and recipes
-2. When users want to CREATE or MODIFY recipes, use update_recipe_form function to populate form fields
-3. When users provide URLs to recipe websites, use extract_recipe_from_url function to automatically extract and populate recipe data
-4. When users paste recipe text (ingredients, instructions, etc.), analyze and extract the data using update_recipe_form to populate the form
-5. CRITICAL: ALWAYS be proactive about form filling. Fill what you can infer or know, make reasonable assumptions, and create complete recipes that users can then edit
-6. CRITICAL: When creating a new recipe, make ONE comprehensive function call with ALL required fields (title, ingredients, description, category, servings) rather than multiple partial calls
-7. CRITICAL: Minimize back-and-forth interactions. Aim to create a complete, usable recipe in the first interaction that users can then customize
-8. When you have limited information (like just a recipe title), use your culinary knowledge to create a realistic, complete recipe - don't ask questions first
-9. You can ONLY populate form fields - users must click "Save" to actually save recipes
-10. Always provide clear, helpful responses about recipes and cooking
-11. When creating recipes, include realistic serving sizes (usually 2-8 servings)
-12. Structure ingredients properly with amounts, units, and names. ALWAYS provide appropriate units for ingredients
-13. CRITICAL: Write DETAILED, STEP-BY-STEP cooking instructions in the description field. Include prep times, cooking temperatures, specific techniques, and clear sequential steps. Make instructions comprehensive and easy to follow.
-14. You are aware of the current form state - use this context in your responses
-15. Remember: You are a form assistant - you help fill forms, users save recipes themselves
-16. PROACTIVE APPROACH: If URL scraping fails but you get a recipe title, immediately create a complete recipe based on that title using your knowledge
+CRITICAL RESPONSE GUIDELINES:
+1. MANDATORY: ALWAYS provide helpful, conversational text responses alongside any function calls
+2. NEVER make function calls without also providing conversational text - this is absolutely required
+3. When making function calls (creating/updating recipes), you MUST ALSO provide detailed conversational text
+4. If a user asks multiple questions (e.g., "create a pasta recipe and what wine pairs with it"), address EVERY part in your text response
+5. Function calls are for data manipulation, text responses are for user communication - you need BOTH
+6. Never rely on system-generated template messages - always craft your own contextual response
+7. Be natural, helpful, and comprehensive in your text answers
+
+FORM INTERACTION GUIDELINES:
+8. When users want to CREATE or MODIFY recipes, use update_recipe_form function to populate form fields
+9. When users provide URLs to recipe websites, use extract_recipe_from_url function to automatically extract and populate recipe data
+10. When users paste recipe text (ingredients, instructions, etc.), analyze and extract the data using update_recipe_form to populate the form
+11. CRITICAL: ALWAYS be proactive about form filling. Fill what you can infer or know, make reasonable assumptions, and create complete recipes that users can then edit
+12. CRITICAL: When creating a new recipe, make ONE comprehensive function call with ALL required fields (title, ingredients, description, category, servings) rather than multiple partial calls
+13. CRITICAL: Minimize back-and-forth interactions. Aim to create a complete, usable recipe in the first interaction that users can then customize
+14. When you have limited information (like just a recipe title), use your culinary knowledge to create a realistic, complete recipe - don't ask questions first
+15. You can ONLY populate form fields - users must click "Save" to actually save recipes
+16. Always provide clear, helpful responses about recipes and cooking
+17. When creating recipes, include realistic serving sizes (usually 2-8 servings)
+18. Structure ingredients properly with amounts, units, and names. ALWAYS provide appropriate units for ingredients
+19. CRITICAL: Write DETAILED, STEP-BY-STEP cooking instructions in the description field. Include prep times, cooking temperatures, specific techniques, and clear sequential steps. Make instructions comprehensive and easy to follow.
+20. You are aware of the current form state - use this context in your responses
+21. Remember: You are a form assistant - you help fill forms, users save recipes themselves
+22. PROACTIVE APPROACH: If URL scraping fails but you get a recipe title, immediately create a complete recipe based on that title using your knowledge
 
 VALID CATEGORIZED TAGS (CHOOSE ONLY FROM THESE):
 
@@ -105,15 +113,20 @@ SEASONS:
 Choose from: ${RECIPE_SEASONS.join(', ')}
 
 UNITS FOR INGREDIENTS:
-ALWAYS provide appropriate units for ingredients. Available units: ${COOKING_UNITS.join(', ')}
+CRITICAL: ONLY use these exact units: ${COOKING_UNITS.join(', ')}
+NEVER use: stuk, el, tl, teen, units.stuk, pieces, or any other custom units.
 
 UNIT SELECTION GUIDELINES:
 - Liquids: ml (auto-converts to l when ≥1000ml)
-- Dry ingredients (flour, sugar, rice): g (auto-converts to kg when ≥1000g)
-- Individual items: no unit needed (e.g., "3 eggs", "2 onions")
-- Herbs/spices: tsp, tbsp (or "to taste" with no amount/unit)
+- Dry ingredients (flour, sugar, rice): g (auto-converts to kg when ≥1000g)  
+- Individual countable items: NO UNIT (e.g., "3" eggs, "2" onions, "1" quiche form, "2" cloves garlic)
+- Small amounts of herbs/spices: tsp, tbsp (or leave amount empty with "to taste" as notes)
 - Meat/fish: g (auto-converts to kg when ≥1000g)
 - Cheese: g (auto-converts to kg when ≥1000g)
+
+FORBIDDEN UNITS:
+Never use: stuk, el, tl, units.stuk, pieces, stuks, or other non-standard abbreviations
+Note: For garlic, use "clove" (not "teen") as the standard unit
 
 SMART CONVERSIONS:
 - 1000g automatically becomes 1 kg
@@ -221,6 +234,15 @@ export async function POST(request: NextRequest) {
       [recipeFormFunction, extractRecipeFromUrlFunction]
     );
 
+    // Debug logging for initial AI response
+    console.log('🔍 [DEBUG] Initial AI Response:', {
+      hasContent: !!completion.choices[0].message.content,
+      contentLength: completion.choices[0].message.content?.length || 0,
+      contentPreview: completion.choices[0].message.content?.substring(0, 100),
+      hasToolCalls: !!completion.choices[0].message.tool_calls,
+      toolCallName: completion.choices[0].message.tool_calls?.[0]?.function.name
+    });
+
     // Log usage for cost tracking and outlier detection
     const usageLog = await usageTrackingService.logUsage(
       user.id,
@@ -281,16 +303,9 @@ export async function POST(request: NextRequest) {
     // Generate appropriate response content
     let responseContent = completion.choices[0].message.content;
     
-    // If OpenAI didn't provide response text but made a successful function call, generate a helpful response
-    if (!responseContent && functionResult && !functionResult.error) {
-      if (functionResult.function === 'update_recipe_form') {
-        const formUpdate = functionResult.result?.formUpdate as FormUpdate;
-        if (formUpdate?.title) {
-          responseContent = translations.chat.recipeCreatedWithTitle.replace('{title}', formUpdate.title);
-        } else {
-          responseContent = translations.chat.recipeFormUpdated;
-        }
-      } else if (functionResult.function === 'extract_recipe_from_url') {
+    // Handle URL extraction results - process regardless of whether AI provided initial response
+    if (functionResult && !functionResult.error) {
+      if (functionResult.function === 'extract_recipe_from_url') {
         const urlResult = functionResult.result as { 
           formUpdate: FormUpdate; 
           success: boolean; 
@@ -303,9 +318,17 @@ export async function POST(request: NextRequest) {
           // Pass scraped data through AI for cleaning and structuring
           const scrapedData = urlResult.formUpdate as { title?: string; description?: string; ingredients?: string[]; servings?: number; category?: string };
           
+          console.log('🔍 [DEBUG] URL Extraction Success:', {
+            title: scrapedData.title,
+            hasDescription: !!scrapedData.description,
+            descriptionLength: scrapedData.description?.length || 0,
+            ingredientsCount: scrapedData.ingredients?.length || 0,
+            servings: scrapedData.servings
+          });
+          
           const aiProcessingPrompt = userLocale === 'nl'
-            ? `Verwerk deze ruwe recept gegevens van een website tot een goed gestructureerd recept:\n\nTitel: ${scrapedData.title || 'Niet gevonden'}\nInstructies: ${scrapedData.description || 'Niet gevonden'}\nIngrediënten: ${scrapedData.ingredients?.join(', ') || 'Niet gevonden'}\nPorties: ${scrapedData.servings || 'Niet gevonden'}\n\nMaak hiervan een compleet recept met stap-voor-stap instructies.`
-            : `Process this raw recipe data from a website into a well-structured recipe:\n\nTitle: ${scrapedData.title || 'Not found'}\nInstructions: ${scrapedData.description || 'Not found'}\nIngredients: ${scrapedData.ingredients?.join(', ') || 'Not found'}\nServings: ${scrapedData.servings || 'Not found'}\n\nMake this into a complete recipe with step-by-step instructions.`;
+            ? `BELANGRIJK: Je moet zowel een functie-aanroep maken als een tekstuele reactie geven!\n\nIk heb de website succesvol gescraped! Hier zijn de ruwe gegevens die ik vond:\n\nTitel: ${scrapedData.title || 'Niet gevonden'}\nInstructies: ${scrapedData.description || 'Niet gevonden'}\nIngrediënten: ${scrapedData.ingredients?.join(', ') || 'Niet gevonden'}\nPorties: ${scrapedData.servings || 'Niet gevonden'}\n\nMaak hiervan nu een compleet recept (via update_recipe_form functie) EN geef een vriendelijke tekstuele reactie over het recept - wat maakt het bijzonder, tips voor bereiding, of andere nuttige informatie.`
+            : `IMPORTANT: You must both make a function call AND provide a text response!\n\nI successfully scraped the website! Here's the raw data I found:\n\nTitle: ${scrapedData.title || 'Not found'}\nInstructions: ${scrapedData.description || 'Not found'}\nIngredients: ${scrapedData.ingredients?.join(', ') || 'Not found'}\nServings: ${scrapedData.servings || 'Not found'}\n\nNow turn this into a complete recipe (using update_recipe_form function) AND provide a friendly text response about the recipe - what makes it special, cooking tips, or other helpful information.`;
           
           // Add the AI processing message to conversation  
           const processingMessages = [...chatMessages, {
@@ -318,6 +341,15 @@ export async function POST(request: NextRequest) {
             processingMessages,
             [recipeFormFunction, extractRecipeFromUrlFunction]
           );
+          
+          // Debug logging for AI response
+          console.log('🔍 [DEBUG] URL Processing AI Response:', {
+            hasContent: !!processingCompletion.choices[0].message.content,
+            contentLength: processingCompletion.choices[0].message.content?.length || 0,
+            contentPreview: processingCompletion.choices[0].message.content?.substring(0, 100),
+            hasToolCalls: !!processingCompletion.choices[0].message.tool_calls,
+            toolCallsCount: processingCompletion.choices[0].message.tool_calls?.length || 0,
+          });
           
           // Handle the recipe processing function call
           if (processingCompletion.choices[0].message.tool_calls) {
@@ -332,7 +364,22 @@ export async function POST(request: NextRequest) {
                 result: processingResult,
               };
               
-              responseContent = translations.chat.recipeExtractedFromUrl.replace('{title}', scrapedData.title || '');
+              // Use AI's natural response - enhance existing response if we have one
+              const aiResponse = processingCompletion.choices[0].message.content;
+              console.log('🔍 [DEBUG] AI Response for URL processing:', {
+                response: aiResponse,
+                hasInitialResponse: !!responseContent,
+                usingFallback: !aiResponse && !responseContent
+              });
+              
+              // If we have both initial response and processing response, use the processing one (more detailed)
+              // If we only have initial response, keep it
+              // If we have neither, use fallback
+              if (aiResponse) {
+                responseContent = aiResponse;
+              } else if (!responseContent) {
+                responseContent = userLocale === 'nl' ? 'Recept succesvol verwerkt!' : 'Recipe processed successfully!';
+              }
             }
           } else {
             // Fallback if AI doesn't make function call
@@ -373,8 +420,8 @@ export async function POST(request: NextRequest) {
                     result: recipeResult,
                   };
                   
-                  // Set success response
-                  responseContent = translations.chat.recipeCreatedFromTitle.replace('{title}', urlResult.formUpdate.title || '');
+                  // Prefer AI's response, fallback to template only if needed
+                  responseContent = recipeCompletion.choices[0].message.content || translations.chat.recipeCreatedFromTitle.replace('{title}', urlResult.formUpdate.title || '');
                 } else {
                   throw new Error('AI did not generate recipe as expected');
                 }
@@ -395,8 +442,6 @@ export async function POST(request: NextRequest) {
             responseContent = `${baseError}. ${translations.chat.tryManualCopy}`;
           }
         }
-      } else {
-        responseContent = translations.chat.requestProcessed;
       }
     } else if (!responseContent) {
       responseContent = translations.chat.processingError;
