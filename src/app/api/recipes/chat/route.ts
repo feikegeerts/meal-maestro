@@ -234,15 +234,6 @@ export async function POST(request: NextRequest) {
       [recipeFormFunction, extractRecipeFromUrlFunction]
     );
 
-    // Debug logging for initial AI response
-    const firstToolCall = completion.choices[0].message.tool_calls?.[0];
-    console.log('🔍 [DEBUG] Initial AI Response:', {
-      hasContent: !!completion.choices[0].message.content,
-      contentLength: completion.choices[0].message.content?.length || 0,
-      contentPreview: completion.choices[0].message.content?.substring(0, 100),
-      hasToolCalls: !!completion.choices[0].message.tool_calls,
-      toolCallName: firstToolCall?.type === 'function' ? firstToolCall.function.name : undefined
-    });
 
     // Log usage for cost tracking and outlier detection
     const usageLog = await usageTrackingService.logUsage(
@@ -319,13 +310,6 @@ export async function POST(request: NextRequest) {
           // Pass scraped data through AI for cleaning and structuring
           const scrapedData = urlResult.formUpdate as { title?: string; description?: string; ingredients?: string[]; servings?: number; category?: string };
           
-          console.log('🔍 [DEBUG] URL Extraction Success:', {
-            title: scrapedData.title,
-            hasDescription: !!scrapedData.description,
-            descriptionLength: scrapedData.description?.length || 0,
-            ingredientsCount: scrapedData.ingredients?.length || 0,
-            servings: scrapedData.servings
-          });
           
           const aiProcessingPrompt = userLocale === 'nl'
             ? `BELANGRIJK: Je moet zowel een functie-aanroep maken als een tekstuele reactie geven!\n\nIk heb de website succesvol gescraped! Hier zijn de ruwe gegevens die ik vond:\n\nTitel: ${scrapedData.title || 'Niet gevonden'}\nInstructies: ${scrapedData.description || 'Niet gevonden'}\nIngrediënten: ${scrapedData.ingredients?.join(', ') || 'Niet gevonden'}\nPorties: ${scrapedData.servings || 'Niet gevonden'}\n\nMaak hiervan nu een compleet recept (via update_recipe_form functie) EN geef een vriendelijke tekstuele reactie over het recept - wat maakt het bijzonder, tips voor bereiding, of andere nuttige informatie.`
@@ -343,14 +327,6 @@ export async function POST(request: NextRequest) {
             [recipeFormFunction, extractRecipeFromUrlFunction]
           );
           
-          // Debug logging for AI response
-          console.log('🔍 [DEBUG] URL Processing AI Response:', {
-            hasContent: !!processingCompletion.choices[0].message.content,
-            contentLength: processingCompletion.choices[0].message.content?.length || 0,
-            contentPreview: processingCompletion.choices[0].message.content?.substring(0, 100),
-            hasToolCalls: !!processingCompletion.choices[0].message.tool_calls,
-            toolCallsCount: processingCompletion.choices[0].message.tool_calls?.length || 0,
-          });
           
           // Handle the recipe processing function call
           if (processingCompletion.choices[0].message.tool_calls) {
@@ -367,11 +343,6 @@ export async function POST(request: NextRequest) {
               
               // Use AI's natural response - enhance existing response if we have one
               const aiResponse = processingCompletion.choices[0].message.content;
-              console.log('🔍 [DEBUG] AI Response for URL processing:', {
-                response: aiResponse,
-                hasInitialResponse: !!responseContent,
-                usingFallback: !aiResponse && !responseContent
-              });
               
               // If we have both initial response and processing response, use the processing one (more detailed)
               // If we only have initial response, keep it
