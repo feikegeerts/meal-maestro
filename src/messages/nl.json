@@ -335,7 +335,7 @@
   "chat": {
     "assistantTitle": "AI Recept Assistant",
     "thinking": "AI is aan het denken...",
-    "inputPlaceholder": "Typ je bericht... (bijv. 'voeg een recept toe voor spaghetti bolognese')",
+    "inputPlaceholder": "Typ je bericht...",
     "currentlyViewing": "Momenteel bekijkt",
     "welcomeMessage": "Hey! Ik ben Meal Maestro, je AI recept assistant. Ik kan je helpen recepten maken en bewerken door forms in te vullen. Aan welk recept wil je vandaag werken?",
     "processingError": "Sorry, maar ik had een probleem bij het verwerken van je verzoek.",

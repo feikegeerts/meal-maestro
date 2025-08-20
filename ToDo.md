@@ -3,7 +3,7 @@
 - [x] Going to recipe detail and then going back to recipe list loads all recipes while we have viewed these 1sec ago, why do they need to be loaded again, aren't they still in the context?
 - [x] Recipes/chat/route.ts bevat nog translations die niet in de json staan, moet worden gefixed.
 - [x] Header met back button is niet heel mooi, misschien beter breadcrumb op tweede lijn
-- [ ] Supabase warnings
+- [x] Supabase warnings
 - [ ] The chat interface can use the user avatar if present and the timestamps are not always shown
 - [ ] The recipe chat service contains translations that woudl be better placed in en.json and nl.json
 - [ ] Recept toevoegen knop op de recipes/[id] page

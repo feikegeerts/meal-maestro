@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ChatMessage } from "./chat-message";
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Recipe } from "@/types/recipe";
 import { useTranslations, useLocale } from "next-intl";
+import { useAuth } from "@/lib/auth-context";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -63,6 +64,7 @@ export function ChatInterface({
 }: ChatInterfaceProps) {
   const t = useTranslations("chat");
   const locale = useLocale();
+  const { profile } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -75,6 +77,7 @@ export function ChatInterface({
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(isDesktopSidebar ? true : false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to bottom when new messages arrive - disabled on desktop
   useEffect(() => {
@@ -83,6 +86,20 @@ export function ChatInterface({
     }
   }, [messages, isDesktopSidebar]);
 
+  // Auto-resize textarea based on content
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
+
+  // Handle input change with auto-resize
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputMessage(e.target.value);
+    adjustTextareaHeight();
+  };
+
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -90,6 +107,11 @@ export function ChatInterface({
     setInputMessage("");
     setError(null);
     setIsLoading(true);
+    
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
 
     // Add user message to chat
     const newMessages = [
@@ -148,7 +170,12 @@ export function ChatInterface({
       const data: ChatResponse = await response.json();
 
       // Update messages with full conversation history from response
-      setMessages(data.conversation_history);
+      // Ensure all messages have timestamps
+      const messagesWithTimestamps = data.conversation_history.map((msg, index) => ({
+        ...msg,
+        timestamp: msg.timestamp || new Date().toISOString()
+      }));
+      setMessages(messagesWithTimestamps);
 
       // Check if AI updated the form (either through direct update or URL extraction)
       if (data.function_call && onRecipeGenerated) {
@@ -179,7 +206,7 @@ export function ChatInterface({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -187,7 +214,7 @@ export function ChatInterface({
   };
 
   return (
-    <Card className="w-full shadow-lg">
+    <Card className="w-full shadow-lg gap-2">
       <CardHeader
         className={`${!isDesktopSidebar ? "cursor-pointer" : ""} pb-3`}
         onClick={() => !isDesktopSidebar && setIsExpanded(!isExpanded)}
@@ -233,6 +260,8 @@ export function ChatInterface({
                   role={message.role}
                   content={message.content}
                   timestamp={message.timestamp}
+                  userProfile={message.role === "user" ? profile : undefined}
+                  locale={locale}
                 />
               ))}
               {isLoading && (
@@ -254,19 +283,22 @@ export function ChatInterface({
                 </div>
               )}
 
-              <div className="flex gap-2">
-                <Input
+              <div className="flex gap-2 items-end">
+                <Textarea
+                  ref={textareaRef}
                   value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
+                  onChange={handleInputChange}
                   onKeyDown={handleKeyPress}
                   placeholder={t("inputPlaceholder")}
                   disabled={isLoading}
-                  className="flex-1"
+                  className="flex-1 resize-none min-h-10 max-h-32 py-2"
+                  rows={1}
                 />
                 <Button
                   onClick={sendMessage}
                   disabled={!inputMessage.trim() || isLoading}
-                  size="sm"
+                  size="icon"
+                  className="h-10 w-10 flex-shrink-0"
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
