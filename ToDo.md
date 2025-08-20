@@ -3,7 +3,10 @@
 - [x] Going to recipe detail and then going back to recipe list loads all recipes while we have viewed these 1sec ago, why do they need to be loaded again, aren't they still in the context?
 - [x] Recipes/chat/route.ts bevat nog translations die niet in de json staan, moet worden gefixed.
 - [x] Header met back button is niet heel mooi, misschien beter breadcrumb op tweede lijn
+- [ ] Supabase warnings
+- [ ] The chat interface can use the user avatar if present and the timestamps are not always shown
 - [ ] The recipe chat service contains translations that woudl be better placed in en.json and nl.json
+- [ ] Recept toevoegen knop op de recipes/[id] page
 - [ ] The recipe list context is not updated when a recipe is deleted or added
 - [ ] competitor layouts overnemen zowel desktop als mobile voor recepten weergeven en toevoegen, recipes details has been done, edit recipe still to do
 - [ ] structed ingredient table layout is beetje gek met de headers onderaan
@@ -14,19 +17,19 @@
 - [ ] About page with version and release notes
 - [ ] Google app for google login customize with meal meastro logo and text, might require approval from google
 
-### Phase 6: Voice Integration
+### Phase 6: Advanced Features
 
-### Phase 7: Advanced Features
-
+- [ ] Speech to text integration
+- [ ] Images voor bij de recepten, welke opties zijn er?
 - [ ] **7.1** Semantic search using vector embeddings
 - [ ] **7.6** Image upload and recipe photo management
 
-### Phase 8: Analytics & Optimization
+### Phase 7: Analytics & Optimization
 
 - [ ] **9.1** Usage analytics and metrics
 - [ ] **9.2** Performance monitoring
 
-### Phase 9: Quality of life
+### Phase 8: Quality of life
 
 - [ ] refactor
 - [ ] write more tests

@@ -172,10 +172,13 @@ SET search_path = '';
 
 -- Add enum columns back to the table (CASCADE drop removed them)
 -- Note: Since CASCADE removed the columns, we need to add them back with proper enum types
+-- First check if columns exist and drop them if they do
 ALTER TABLE recipes 
-  ADD COLUMN category recipe_category NOT NULL DEFAULT 'dinner';
+  DROP COLUMN IF EXISTS category,
+  DROP COLUMN IF EXISTS season;
 
 ALTER TABLE recipes 
+  ADD COLUMN category recipe_category NOT NULL DEFAULT 'dinner',
   ADD COLUMN season recipe_season DEFAULT NULL;
 
 -- Add constraint for tags validation

@@ -67,6 +67,7 @@ CREATE OR REPLACE FUNCTION cleanup_rate_limit_entries()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 BEGIN
     -- Keep only last 24 hours of data
