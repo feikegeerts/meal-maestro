@@ -109,12 +109,6 @@ export function AdminChartsSection({ isAdmin }: AdminChartsSectionProps) {
         onRefresh={handleRefresh}
       />
 
-      {/* Model Usage Stats */}
-      <ModelUsageStats 
-        data={modelUsageData}
-        isLoading={loading}
-      />
-
       {/* Charts Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         <CostBarChart 
@@ -128,6 +122,12 @@ export function AdminChartsSection({ isAdmin }: AdminChartsSectionProps) {
           loading={loading} 
         />
       </div>
+
+      {/* Model Usage Stats */}
+      <ModelUsageStats 
+        data={modelUsageData}
+        isLoading={loading}
+      />
     </div>
   );
 }

@@ -87,6 +87,10 @@ export function ModelUsageStats({ data, isLoading }: ModelUsageStatsProps) {
     return `$${cost.toFixed(3)}`;
   };
 
+  const formatAvgCost = (cost: number) => {
+    return `$${cost.toFixed(6)}`;
+  };
+
   return (
     <Card className="col-span-full">
       <CardHeader>
@@ -138,6 +142,13 @@ export function ModelUsageStats({ data, isLoading }: ModelUsageStatsProps) {
                     </span>
                     <span className="font-semibold text-green-600">
                       {formatCost(modelData.totalCost)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">{t("avgCost")}:</span>
+                    <span className="font-medium">
+                      {formatAvgCost(modelData.totalCost / modelData.totalCalls)}
                     </span>
                   </div>
                 </div>

@@ -271,10 +271,8 @@
     "modelUsageBreakdown": "Model Usage Breakdown",
     "modelUsageDescription": "Usage statistics by AI model type",
     "noModelUsageData": "No model usage data available for the selected period",
-    "apiCalls": "API Calls",
-    "totalTokens": "Total Tokens",
     "avgTokens": "Avg Tokens",
-    "totalCost": "Total Cost",
+    "avgCost": "Avg Cost per Call",
     "usagePercentage": "of total usage",
     "customRange": "Custom range",
     "chartSettings": "Chart Settings",
@@ -356,7 +354,7 @@
     "websiteScrapedSuccess": "I successfully scraped the website! Here's the raw data I found:",
     "websiteScrapedData": {
       "title": "Title",
-      "instructions": "Instructions", 
+      "instructions": "Instructions",
       "ingredients": "Ingredients",
       "servings": "Servings",
       "notFound": "Not found"

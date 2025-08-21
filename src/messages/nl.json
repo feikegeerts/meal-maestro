@@ -271,10 +271,8 @@
     "modelUsageBreakdown": "Model Gebruiksoverzicht",
     "modelUsageDescription": "Gebruiksstatistieken per AI-model type",
     "noModelUsageData": "Geen model gebruiksgegevens beschikbaar voor de geselecteerde periode",
-    "apiCalls": "API-oproepen",
-    "totalTokens": "Totaal Tokens",
     "avgTokens": "Gem. Tokens",
-    "totalCost": "Totale Kosten",
+    "avgCost": "Gem. Kosten per Call",
     "usagePercentage": "van totaal gebruik",
     "customRange": "Aangepast bereik",
     "chartSettings": "Grafiek Instellingen",
@@ -356,7 +354,7 @@
     "websiteScrapedSuccess": "Ik heb de website succesvol gescraped! Hier zijn de ruwe gegevens die ik vond:",
     "websiteScrapedData": {
       "title": "Titel",
-      "instructions": "Instructies", 
+      "instructions": "Instructies",
       "ingredients": "Ingrediënten",
       "servings": "Porties",
       "notFound": "Niet gevonden"
