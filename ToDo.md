@@ -1,5 +1,6 @@
 ### Phase 5: Post-MVP Enhancements
 
+- [x] for the add recipe page, the whole page scrolls down on load, but i just want the chat window section to have auto scrolling behavior. that needs to be fixed
 - [ ] use pluralize for ingredients or singularize when needed. For example when the ingredients list 1 union, when increase the portion size and it suddenly lists 2, it should say 2 unions. Somehow we need to make the display logic smart without making changes to the data in the database. The vice versa should also happen. 2 unions and then reducing the servings size should go to 1 union. This is complex because in dutch it depends on which word, and pluralization is hard. What can we do to make this better?
 - [ ] competitor layouts overnemen zowel desktop als mobile voor recepten weergeven en toevoegen, recipes details has been done, edit recipe still to do
 - [ ] structed ingredient table layout is beetje gek met de headers onderaan
