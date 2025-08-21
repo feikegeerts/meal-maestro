@@ -149,6 +149,30 @@ export const extractRecipeFromUrlFunction: OpenAI.Chat.Completions.ChatCompletio
   }
 };
 
+export const extractRecipeFromImageFunction: OpenAI.Chat.Completions.ChatCompletionTool = {
+  type: 'function',
+  function: {
+    name: 'extract_recipe_from_image',
+    description: 'Extract recipe data from image(s) provided by the user and populate the recipe form. Use this when the user uploads images containing recipes, recipe cards, cookbooks, or food photos with visible text.',
+    parameters: {
+      type: 'object',
+      properties: {
+        analysis_focus: {
+          type: 'string',
+          enum: ['recipe_text', 'ingredients_list', 'cooking_steps', 'complete_recipe'],
+          description: 'What to focus on when analyzing the image: recipe_text for recipe cards/books, ingredients_list for ingredient photos, cooking_steps for step-by-step images, complete_recipe for comprehensive analysis'
+        },
+        confidence_threshold: {
+          type: 'string',
+          enum: ['low', 'medium', 'high'],
+          description: 'Confidence threshold for extraction - use low for unclear images, medium for typical photos, high for clear text'
+        }
+      },
+      required: ['analysis_focus']
+    }
+  }
+};
+
 
 // Simple function handler for form updates only
 export async function updateRecipeForm(args: Record<string, unknown>): Promise<{ formUpdate: unknown; success: boolean }> {
@@ -448,7 +472,47 @@ export function formatFunctionResult(functionName: string, result: unknown): str
       result: urlResult
     });
   }
+  
+  if (functionName === 'extract_recipe_from_image') {
+    const imageResult = result as { formUpdate: unknown; success: boolean; error?: string };
+    return JSON.stringify({
+      function: 'extract_recipe_from_image',
+      result: imageResult
+    });
+  }
 
   
   return JSON.stringify({ function: functionName, result });
+}
+
+// Extract recipe data from images using OpenAI Vision API
+export async function extractRecipeFromImage(
+  args: Record<string, unknown>
+): Promise<{ formUpdate: unknown; success: boolean; error?: string }> {
+  try {
+    const { analysis_focus = 'complete_recipe', confidence_threshold = 'medium' } = args;
+    
+    console.log('🖼️ [Recipe Functions] Extracting recipe from image with focus:', analysis_focus, 'confidence:', confidence_threshold);
+    
+    // Note: The actual image processing happens in the conversation builder
+    // where images are included in the OpenAI API call. This function mainly
+    // serves as a signal to the AI about what type of analysis to perform.
+    
+    // Since images are processed by OpenAI Vision in the main chat completion,
+    // we return a success indicator that tells the function processor
+    // to expect recipe data in the AI's response
+    return {
+      formUpdate: null, // Will be populated by AI response
+      success: true,
+      processing: true // Special flag indicating this is an image processing request
+    } as { formUpdate: unknown; success: boolean; error?: string };
+    
+  } catch (error) {
+    console.error('Error in extractRecipeFromImage:', error);
+    return {
+      formUpdate: null,
+      success: false,
+      error: `Failed to process image: ${error instanceof Error ? error.message : 'Unknown error'}`
+    };
+  }
 }

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ChatMessage } from "./chat-message";
+import { ImageUploadButton } from "./image-upload-button";
+import { ImagePreview } from "./image-preview";
 import {
   Send,
   Loader2,
@@ -21,6 +23,7 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp?: string;
+  imageUrl?: string;
 }
 
 interface FunctionCall {
@@ -76,6 +79,8 @@ export function ChatInterface({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(isDesktopSidebar ? true : false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -87,6 +92,17 @@ export function ChatInterface({
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
     }
+  }, [messages]);
+
+  // Cleanup object URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      messages.forEach(message => {
+        if (message.imageUrl && message.imageUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(message.imageUrl);
+        }
+      });
+    };
   }, [messages]);
 
   // Auto-resize textarea based on content
@@ -103,11 +119,80 @@ export function ChatInterface({
     adjustTextareaHeight();
   };
 
+  // Handle image selection from upload button
+  const handleImageSelect = useCallback((file: File) => {
+    setSelectedImage(file);
+  }, []);
+
+  // Handle image removal
+  const handleImageRemove = useCallback(() => {
+    setSelectedImage(null);
+  }, []);
+
+  // Convert file to base64 for API
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  // Handle drag and drop
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    const imageFile = files.find(file => file.type.startsWith('image/'));
+    
+    if (imageFile) {
+      if (imageFile.size > 5 * 1024 * 1024) {
+        setError('Image file must be smaller than 5MB');
+        return;
+      }
+      setSelectedImage(imageFile);
+    }
+  }, []);
+
+  // Handle paste events
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    const items = Array.from(e.clipboardData.items);
+    const imageItem = items.find(item => item.type.startsWith('image/'));
+    
+    if (imageItem) {
+      e.preventDefault();
+      const file = imageItem.getAsFile();
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          setError('Image file must be smaller than 5MB');
+          return;
+        }
+        setSelectedImage(file);
+      }
+    }
+  }, []);
+
   const sendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+    if ((!inputMessage.trim() && !selectedImage) || isLoading) return;
 
     const userMessage = inputMessage.trim();
+    const imageToProcess = selectedImage;
     setInputMessage("");
+    setSelectedImage(null);
     setError(null);
     setIsLoading(true);
     
@@ -116,22 +201,36 @@ export function ChatInterface({
       textareaRef.current.style.height = 'auto';
     }
 
+    // Create image URL for display if we have an image
+    let imageUrlForDisplay: string | undefined;
+    if (imageToProcess) {
+      imageUrlForDisplay = URL.createObjectURL(imageToProcess);
+    }
+
     // Add user message to chat
     const newMessages = [
       ...messages,
       {
         role: "user" as const,
-        content: userMessage,
+        content: userMessage, // This will be empty string if no text was provided
         timestamp: new Date().toISOString(),
+        imageUrl: imageUrlForDisplay,
       },
     ];
     setMessages(newMessages);
 
     try {
+      // Convert image to base64 if present
+      let imageData: string | undefined;
+      if (imageToProcess) {
+        imageData = await fileToBase64(imageToProcess);
+      }
+
       const requestBody = {
-        message: userMessage,
+        message: userMessage || (imageToProcess ? "" : ""),
         locale: locale,
         conversation_history: messages,
+        ...(imageData && { images: [imageData] }),
         context: {
           ...(currentFormState && { current_form_state: currentFormState }),
           ...(selectedRecipe && {
@@ -174,7 +273,7 @@ export function ChatInterface({
 
       // Update messages with full conversation history from response
       // Ensure all messages have timestamps
-      const messagesWithTimestamps = data.conversation_history.map((msg, index) => ({
+      const messagesWithTimestamps = data.conversation_history.map((msg) => ({
         ...msg,
         timestamp: msg.timestamp || new Date().toISOString()
       }));
@@ -265,6 +364,7 @@ export function ChatInterface({
                   timestamp={message.timestamp}
                   userProfile={message.role === "user" ? profile : undefined}
                   locale={locale}
+                  imageUrl={message.imageUrl}
                 />
               ))}
               {isLoading && (
@@ -279,27 +379,59 @@ export function ChatInterface({
             <Separator />
 
             {/* Input Area */}
-            <div className="p-4">
+            <div className="p-4" 
+                 onDragOver={handleDragOver}
+                 onDragLeave={handleDragLeave}
+                 onDrop={handleDrop}
+            >
               {error && (
                 <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded p-2 mb-3">
                   {error}
                 </div>
               )}
 
+              {/* Image Preview */}
+              {selectedImage && (
+                <div className="mb-3">
+                  <ImagePreview
+                    file={selectedImage}
+                    onRemove={handleImageRemove}
+                    className="max-w-sm"
+                  />
+                </div>
+              )}
+
+              {/* Drag and drop overlay */}
+              {isDragging && (
+                <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center z-10 mb-3">
+                  <div className="text-primary font-medium">
+                    Drop image here to analyze for recipes
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-2 items-end">
-                <Textarea
-                  ref={textareaRef}
-                  value={inputMessage}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyPress}
-                  placeholder={t("inputPlaceholder")}
+                <div className="flex-1">
+                  <Textarea
+                    ref={textareaRef}
+                    value={inputMessage}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyPress}
+                    onPaste={handlePaste}
+                    placeholder={selectedImage ? "Add a message about this image (optional)" : t("inputPlaceholder")}
+                    disabled={isLoading}
+                    className="resize-none min-h-10 max-h-32 py-2"
+                    rows={1}
+                  />
+                </div>
+                <ImageUploadButton
+                  onImageSelect={handleImageSelect}
                   disabled={isLoading}
-                  className="flex-1 resize-none min-h-10 max-h-32 py-2"
-                  rows={1}
+                  variant="icon"
                 />
                 <Button
                   onClick={sendMessage}
-                  disabled={!inputMessage.trim() || isLoading}
+                  disabled={(!inputMessage.trim() && !selectedImage) || isLoading}
                   size="icon"
                   className="h-10 w-10 flex-shrink-0"
                 >

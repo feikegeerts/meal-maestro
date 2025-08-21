@@ -60,7 +60,8 @@ export class FunctionCallProcessor {
     toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall,
     chatMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
     originalResponseContent?: string | null,
-    userMessage?: string
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _userMessage?: string
   ): Promise<{ functionResult: FunctionCallResult; responseContent: string | null }> {
     if (toolCall.type !== "function") {
       throw new Error("Invalid tool call type");
@@ -71,7 +72,7 @@ export class FunctionCallProcessor {
     
     switch (functionName) {
       case "update_recipe_form":
-        return this.handleRecipeFormUpdate(functionArgs, originalResponseContent, userMessage);
+        return this.handleRecipeFormUpdate(functionArgs, originalResponseContent);
         
       case "extract_recipe_from_url":
         return this.handleUrlExtraction(functionArgs, chatMessages);
@@ -83,8 +84,7 @@ export class FunctionCallProcessor {
   
   private async handleRecipeFormUpdate(
     args: unknown, 
-    originalResponseContent?: string | null,
-    userMessage?: string
+    originalResponseContent?: string | null
   ): Promise<{ functionResult: FunctionCallResult; responseContent: string | null }> {
     try {
       const result = await updateRecipeForm(args as Record<string, unknown>);

@@ -268,6 +268,14 @@
     "last7Days": "Last 7 days",
     "last30Days": "Last 30 days",
     "last90Days": "Last 90 days",
+    "modelUsageBreakdown": "Model Usage Breakdown",
+    "modelUsageDescription": "Usage statistics by AI model type",
+    "noModelUsageData": "No model usage data available for the selected period",
+    "apiCalls": "API Calls",
+    "totalTokens": "Total Tokens",
+    "avgTokens": "Avg Tokens",
+    "totalCost": "Total Cost",
+    "usagePercentage": "of total usage",
     "customRange": "Custom range",
     "chartSettings": "Chart Settings",
     "from": "From",
@@ -359,7 +367,11 @@
     "websiteBlocked": "Website blocks access",
     "noRecipeFound": "Could not find recipe on website",
     "mixedRequestFollowUp": "The user asked: \"{message}\". I have automatically extracted the recipe and filled the form - that's done! Now the user also wants to know: \"{additionalContent}\". Give a detailed and helpful response to their additional question. No more function calls.",
-    "standardFollowUp": "The user asked: \"{message}\". I have automatically filled the recipe form with all ingredients and instructions - it's completely ready! The form is now filled and the user can view it. Give an appropriate response to their original question. No more function calls."
+    "standardFollowUp": "The user asked: \"{message}\". I have automatically filled the recipe form with all ingredients and instructions - it's completely ready! The form is now filled and the user can view it. Give an appropriate response to their original question. No more function calls.",
+    "userImageRequest": "User request",
+    "takePhoto": "Take Photo",
+    "chooseFromGallery": "Choose from Gallery",
+    "uploadImage": "Upload Image"
   },
   "servingSelector": {
     "recipeServes": "Recipe serves",

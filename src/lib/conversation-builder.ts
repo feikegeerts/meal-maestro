@@ -75,7 +75,8 @@ export class ConversationBuilder {
   buildMessages(
     userMessage: string,
     conversationHistory: ChatMessage[] = [],
-    context?: ChatContext
+    context?: ChatContext,
+    images?: string[]
   ): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
     
@@ -108,8 +109,32 @@ export class ConversationBuilder {
       });
     });
     
-    // Add current user message
-    messages.push({ role: "user", content: userMessage });
+    // Add current user message with optional images
+    if (images && images.length > 0) {
+      // Create multimodal message with text and images
+      const content: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [];
+      
+      // Add text content if present
+      if (userMessage.trim()) {
+        content.push({ type: "text", text: userMessage });
+      }
+      
+      // Add images
+      images.forEach(imageData => {
+        content.push({
+          type: "image_url",
+          image_url: {
+            url: imageData,
+            detail: "auto" // Let OpenAI choose optimal detail level for cost efficiency
+          }
+        });
+      });
+      
+      messages.push({ role: "user", content });
+    } else {
+      // Text-only message
+      messages.push({ role: "user", content: userMessage });
+    }
     
     return messages;
   }

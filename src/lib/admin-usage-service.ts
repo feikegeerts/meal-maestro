@@ -306,6 +306,89 @@ export class AdminUsageService {
       dateRange: { start: "", end: "" }, // Will be filled by caller
     };
   }
+
+  public async getModelUsageStats(
+    startDate?: string,
+    endDate?: string
+  ): Promise<Array<{
+    model: string;
+    totalCalls: number;
+    totalTokens: number;
+    totalCost: number;
+    averageTokensPerCall: number;
+    percentageOfTotal: number;
+  }>> {
+    try {
+      let query = supabaseAdmin.from("api_usage").select("*");
+
+      if (startDate) {
+        query = query.gte("timestamp", startDate);
+      }
+      if (endDate) {
+        query = query.lte("timestamp", endDate);
+      }
+
+      const { data, error } = await query.order("timestamp", {
+        ascending: false,
+      });
+
+      if (error) {
+        console.error("🔴 [AdminUsage] Error fetching model usage stats:", error);
+        return [];
+      }
+
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      // Group by model and calculate statistics
+      const modelStats = new Map<string, {
+        totalCalls: number;
+        totalTokens: number;
+        totalCost: number;
+      }>();
+
+      let grandTotalCalls = 0;
+
+      data.forEach((entry: ApiUsageRow) => {
+        const model = entry.model || 'unknown';
+        const tokens = Number(entry.tokens_used || 0);
+        const cost = Number(entry.calculated_cost || 0);
+
+        if (!modelStats.has(model)) {
+          modelStats.set(model, {
+            totalCalls: 0,
+            totalTokens: 0,
+            totalCost: 0,
+          });
+        }
+
+        const stats = modelStats.get(model)!;
+        stats.totalCalls += 1;
+        stats.totalTokens += tokens;
+        stats.totalCost += cost;
+
+        grandTotalCalls += 1;
+      });
+
+      // Convert to array and calculate percentages
+      const result = Array.from(modelStats.entries())
+        .map(([model, stats]) => ({
+          model,
+          totalCalls: stats.totalCalls,
+          totalTokens: stats.totalTokens,
+          totalCost: stats.totalCost,
+          averageTokensPerCall: stats.totalCalls > 0 ? stats.totalTokens / stats.totalCalls : 0,
+          percentageOfTotal: grandTotalCalls > 0 ? (stats.totalCalls / grandTotalCalls) * 100 : 0,
+        }))
+        .sort((a, b) => b.totalCost - a.totalCost); // Sort by cost descending
+
+      return result;
+    } catch (error) {
+      console.error("🔴 [AdminUsage] Error in getModelUsageStats:", error);
+      return [];
+    }
+  }
 }
 
 export const adminUsageService = new AdminUsageService();

@@ -7,6 +7,7 @@ import { ChatResponseFormatter, ChatResponse } from "./chat-response-formatter";
 export interface ChatRequest {
   message: string;
   conversation_history?: ChatMessage[];
+  images?: string[]; // Base64 encoded images
   locale?: string;
   context?: ChatContext;
 }
@@ -88,17 +89,19 @@ export class RecipeChatService {
   }
   
   async processMessage(request: ChatRequest): Promise<ChatResponse> {
-    const { message, conversation_history = [], context } = request;
+    const { message, conversation_history = [], images, context } = request;
     
-    if (!message || message.trim().length === 0) {
-      throw new Error("Message is required");
+    // Require either a message or images
+    if ((!message || message.trim().length === 0) && (!images || images.length === 0)) {
+      throw new Error("Message or images are required");
     }
     
-    // Build conversation messages
+    // Build conversation messages with optional images
     const chatMessages = this.conversationBuilder.buildMessages(
       message,
       conversation_history,
-      context
+      context,
+      images
     );
     
     // Create completion with function calling and usage tracking

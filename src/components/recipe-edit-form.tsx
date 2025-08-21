@@ -906,6 +906,7 @@ export function RecipeEditForm({
       t,
       tCategories,
       tSeasons,
+      tServing,
       autoResizeTextarea,
     ]
   );

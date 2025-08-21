@@ -268,6 +268,14 @@
     "last7Days": "Laatste 7 dagen",
     "last30Days": "Laatste 30 dagen",
     "last90Days": "Laatste 90 dagen",
+    "modelUsageBreakdown": "Model Gebruiksoverzicht",
+    "modelUsageDescription": "Gebruiksstatistieken per AI-model type",
+    "noModelUsageData": "Geen model gebruiksgegevens beschikbaar voor de geselecteerde periode",
+    "apiCalls": "API-oproepen",
+    "totalTokens": "Totaal Tokens",
+    "avgTokens": "Gem. Tokens",
+    "totalCost": "Totale Kosten",
+    "usagePercentage": "van totaal gebruik",
     "customRange": "Aangepast bereik",
     "chartSettings": "Grafiek Instellingen",
     "from": "Van",
@@ -359,7 +367,11 @@
     "websiteBlocked": "Website blokkeert toegang",
     "noRecipeFound": "Kon geen recept vinden op de website",
     "mixedRequestFollowUp": "De gebruiker vroeg: \"{message}\". Ik heb zojuist automatisch het recept geëxtraheerd en het formulier ingevuld - dat is al klaar! Nu wil de gebruiker nog dit weten: \"{additionalContent}\". Geef een uitgebreid en behulpzaam antwoord op hun extra vraag. Geen functie-aanroepen meer.",
-    "standardFollowUp": "De gebruiker vroeg: \"{message}\". Ik heb zojuist automatisch het recept formulier ingevuld met alle ingrediënten en bereidingswijze - het is al compleet klaar! Het formulier is nu gevuld en de gebruiker kan het bekijken. Geef een gepaste reactie op hun oorspronkelijke vraag. Geen functie-aanroepen meer."
+    "standardFollowUp": "De gebruiker vroeg: \"{message}\". Ik heb zojuist automatisch het recept formulier ingevuld met alle ingrediënten en bereidingswijze - het is al compleet klaar! Het formulier is nu gevuld en de gebruiker kan het bekijken. Geef een gepaste reactie op hun oorspronkelijke vraag. Geen functie-aanroepen meer.",
+    "userImageRequest": "Gebruikersverzoek",
+    "takePhoto": "Foto Maken",
+    "chooseFromGallery": "Kies uit Galerij",
+    "uploadImage": "Afbeelding Uploaden"
   },
   "servingSelector": {
     "recipeServes": "Recept is voor",

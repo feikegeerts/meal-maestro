@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ChartControls, TimePeriod } from "./chart-controls";
 import { CostBarChart } from "./cost-bar-chart";
 import { UsersBarChart } from "./users-bar-chart";
+import { ModelUsageStats } from "./model-usage-stats";
 import { AdminUsageStatsResponse } from "@/app/api/admin/usage-stats/route";
 
 interface TimeRangeData {
@@ -20,6 +21,14 @@ interface AdminChartsSectionProps {
 
 export function AdminChartsSection({ isAdmin }: AdminChartsSectionProps) {
   const [chartData, setChartData] = useState<TimeRangeData[]>([]);
+  const [modelUsageData, setModelUsageData] = useState<Array<{
+    model: string;
+    totalCalls: number;
+    totalTokens: number;
+    totalCost: number;
+    averageTokensPerCall: number;
+    percentageOfTotal: number;
+  }>>([]);
   const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState(() => {
     const now = new Date();
@@ -55,10 +64,12 @@ export function AdminChartsSection({ isAdmin }: AdminChartsSectionProps) {
       
       if (data.type === 'summary') {
         setChartData(data.data.timeRange || []);
+        setModelUsageData(data.data.modelUsage || []);
       }
     } catch (err) {
       console.error('Error fetching chart data:', err);
       setChartData([]);
+      setModelUsageData([]);
     } finally {
       setLoading(false);
     }
@@ -96,6 +107,12 @@ export function AdminChartsSection({ isAdmin }: AdminChartsSectionProps) {
         onDateRangeChange={handleDateRangeChange}
         onTimePeriodChange={handleTimePeriodChange}
         onRefresh={handleRefresh}
+      />
+
+      {/* Model Usage Stats */}
+      <ModelUsageStats 
+        data={modelUsageData}
+        isLoading={loading}
       />
 
       {/* Charts Grid */}

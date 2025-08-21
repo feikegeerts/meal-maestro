@@ -10,6 +10,7 @@ interface ChatRequest {
     content: string;
     tool_call_id?: string;
   }>;
+  images?: string[]; // Base64 encoded images
   locale?: string;
   context?: {
     current_form_state?: {
@@ -50,13 +51,33 @@ export async function POST(request: NextRequest) {
 
   try {
     const body: ChatRequest = await request.json();
-    const { message, conversation_history = [], context, locale } = body;
+    const { message, conversation_history = [], images, context, locale } = body;
 
-    if (!message || message.trim().length === 0) {
+    if ((!message || message.trim().length === 0) && (!images || images.length === 0)) {
       return NextResponse.json(
-        { error: "Message is required" },
+        { error: "Message or image is required" },
         { status: 400 }
       );
+    }
+
+    // Validate images if present
+    if (images && images.length > 0) {
+      if (images.length > 5) {
+        return NextResponse.json(
+          { error: "Maximum 5 images allowed per message" },
+          { status: 400 }
+        );
+      }
+      
+      // Validate each image is properly base64 encoded
+      for (const image of images) {
+        if (!image.startsWith('data:image/')) {
+          return NextResponse.json(
+            { error: "Invalid image format. Images must be base64 encoded data URLs" },
+            { status: 400 }
+          );
+        }
+      }
     }
 
     // Detect user locale
@@ -67,6 +88,7 @@ export async function POST(request: NextRequest) {
     const result = await chatService.processMessage({
       message,
       conversation_history,
+      images,
       context,
       locale: userLocale
     });

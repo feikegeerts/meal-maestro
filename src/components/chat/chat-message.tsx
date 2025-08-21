@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Bot, User } from "lucide-react";
 import { UserProfile } from "@/lib/profile-service";
+import Image from "next/image";
 
 interface ChatMessageProps {
   role: 'user' | 'assistant';
@@ -11,9 +12,10 @@ interface ChatMessageProps {
   timestamp?: string;
   userProfile?: UserProfile | null;
   locale?: string;
+  imageUrl?: string;
 }
 
-export function ChatMessage({ role, content, timestamp, userProfile, locale }: ChatMessageProps) {
+export function ChatMessage({ role, content, timestamp, userProfile, locale, imageUrl }: ChatMessageProps) {
   const isUser = role === 'user';
   
   return (
@@ -40,7 +42,20 @@ export function ChatMessage({ role, content, timestamp, userProfile, locale }: C
             ? 'bg-primary text-primary-foreground' 
             : 'bg-muted'
         }`}>
-          <div className="whitespace-pre-wrap text-sm">{content}</div>
+          {imageUrl && (
+            <div className="mb-2">
+              <Image
+                src={imageUrl}
+                alt="Uploaded recipe image"
+                width={300}
+                height={200}
+                className="rounded-lg object-cover max-w-full h-auto"
+              />
+            </div>
+          )}
+          {content && (
+            <div className="whitespace-pre-wrap text-sm">{content}</div>
+          )}
           <div className={`text-xs mt-1 text-right ${
             isUser 
               ? 'text-primary-foreground/70' 

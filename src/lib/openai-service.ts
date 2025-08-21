@@ -14,7 +14,8 @@ export interface OpenAICompletionWithUsage {
 
 // OpenAI Configuration
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
-const OPENAI_MODEL = "gpt-4.1-mini";
+const OPENAI_TEXT_MODEL = "gpt-4.1-mini"; // For text-only conversations
+const OPENAI_VISION_MODEL = "gpt-4o"; // For conversations with images
 const OPENAI_MAX_TOKENS = parseInt("2000", 10);
 const OPENAI_TEMPERATURE = parseFloat("0.9");
 
@@ -62,7 +63,24 @@ class SimpleRateLimiter {
 
 export const rateLimiter = new SimpleRateLimiter();
 
-// OpenAI API wrapper with usage tracking
+// Helper function to detect if the current request contains images
+// Only checks the last user message to determine if vision model is needed
+function hasImagesInCurrentRequest(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]): boolean {
+  // Find the last user message (which would be the current request)
+  const lastUserMessage = [...messages].reverse().find(message => message.role === 'user');
+  
+  if (lastUserMessage && Array.isArray(lastUserMessage.content)) {
+    return lastUserMessage.content.some(content => 
+      typeof content === 'object' && 
+      content !== null && 
+      'type' in content && 
+      content.type === 'image_url'
+    );
+  }
+  return false;
+}
+
+// OpenAI API wrapper with usage tracking and automatic model selection
 export async function createChatCompletion(
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
   tools?: OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"],
@@ -74,9 +92,15 @@ export async function createChatCompletion(
   }
 
   try {
+    // Automatically select model based on current request content only
+    const useVisionModel = hasImagesInCurrentRequest(messages);
+    const selectedModel = useVisionModel ? OPENAI_VISION_MODEL : OPENAI_TEXT_MODEL;
+    
+    console.log(`🤖 [OpenAI Service] Using model: ${selectedModel} (current request has images: ${useVisionModel})`);
+    
     // Create a promise race with timeout
     const completionPromise = openai.chat.completions.create({
-      model: OPENAI_MODEL,
+      model: selectedModel,
       messages,
       tools,
       tool_choice: toolChoice || (tools ? "auto" : undefined),
@@ -95,7 +119,7 @@ export async function createChatCompletion(
 
     // Extract usage data from the response
     const usage: OpenAIUsageData = {
-      model: OPENAI_MODEL,
+      model: selectedModel,
       promptTokens: completion.usage?.prompt_tokens || 0,
       completionTokens: completion.usage?.completion_tokens || 0,
       totalTokens: completion.usage?.total_tokens || 0,
@@ -136,8 +160,8 @@ export function validateOpenAIConfig(): { valid: boolean; error?: string } {
     };
   }
 
-  if (!OPENAI_MODEL) {
-    return { valid: false, error: "Missing OPENAI_MODEL environment variable" };
+  if (!OPENAI_TEXT_MODEL || !OPENAI_VISION_MODEL) {
+    return { valid: false, error: "Missing OpenAI model configuration" };
   }
 
   return { valid: true };

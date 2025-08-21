@@ -68,6 +68,12 @@ export async function GET(request: NextRequest) {
           )
         : [];
 
+    // Get model usage breakdown
+    const modelUsageStats = await adminUsageService.getModelUsageStats(
+      query.startDate,
+      query.endDate
+    );
+
     // Calculate overall statistics
     const totalUsers = allUsersStats.length;
     const totalCost = allUsersStats.reduce(
@@ -132,6 +138,7 @@ export async function GET(request: NextRequest) {
         })),
       },
       timeRange: timeRangeData,
+      modelUsage: modelUsageStats,
       dateRange: {
         start: query.startDate || "all",
         end: query.endDate || "all",
@@ -198,6 +205,14 @@ export interface AdminUsageStatsResponse {
       totalTokens: number;
       totalCost: number;
       uniqueUsers: number;
+    }>;
+    modelUsage?: Array<{
+      model: string;
+      totalCalls: number;
+      totalTokens: number;
+      totalCost: number;
+      averageTokensPerCall: number;
+      percentageOfTotal: number;
     }>;
     dateRange?: {
       start: string;

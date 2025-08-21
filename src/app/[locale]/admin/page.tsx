@@ -352,9 +352,6 @@ export default function AdminDashboard() {
             </Card>
           </div>
 
-          {/* Charts Section */}
-          <AdminChartsSection isAdmin={isAdmin === true} />
-
           {/* Top Users and Outliers */}
           <div className="grid gap-6 md:grid-cols-2">
             {/* Top Users by Cost */}
@@ -438,6 +435,9 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Charts Section */}
+          <AdminChartsSection isAdmin={isAdmin === true} />
         </div>
       </div>
     </PageWrapper>
