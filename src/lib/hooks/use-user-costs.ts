@@ -21,7 +21,7 @@ export function useUserCosts(): UseUserCostsReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCosts = useCallback(async () => {
+  const fetchCosts = useCallback(async (retryCount = 0) => {
     if (!user) {
       setData(null);
       return;
@@ -36,6 +36,11 @@ export function useUserCosts(): UseUserCostsReturn {
       });
       
       if (!response.ok) {
+        // If unauthorized and first attempt, wait for auth flow to complete and retry once
+        if (response.status === 401 && retryCount === 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+          return fetchCosts(1); // Retry once
+        }
         throw new Error(`Failed to fetch costs: ${response.status}`);
       }
 
@@ -76,6 +81,6 @@ export function useUserCosts(): UseUserCostsReturn {
     data,
     loading,
     error,
-    refetch: fetchCosts
+    refetch: () => fetchCosts()
   };
 }

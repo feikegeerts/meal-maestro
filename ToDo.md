@@ -15,9 +15,7 @@
 
 ### Phase 6: Advanced Features
 
-- [ ] Speech to text integration
 - [ ] Images voor bij de recepten, welke opties zijn er?
-- [ ] Paste an image in the chat to be processed as a recipe
 - [ ] **7.1** Semantic search using vector embeddings
 - [ ] **7.6** Image upload and recipe photo management
 
