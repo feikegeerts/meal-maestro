@@ -46,7 +46,7 @@
 :root {
   --radius: 0.5rem;
   --background: oklch(0.98 0.005 240);
-  --background-gradient: linear-gradient(135deg, oklch(0.98 0.008 240) 0%, oklch(0.96 0.01 240) 100%);
+  --background-gradient: linear-gradient(135deg, oklch(0.94 0.01 240) 0%, oklch(0.96 0.03 145) 100%);
   --foreground: oklch(0.15 0.02 240);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.15 0.02 240);
@@ -81,7 +81,7 @@
 
 .dark {
   --background: oklch(0.08 0.01 240);
-  --background-gradient: linear-gradient(135deg, oklch(0.1 0.015 240) 0%, oklch(0.06 0.02 240) 100%);
+  --background-gradient: linear-gradient(135deg, oklch(0.05 0.015 240) 0%, oklch(0.08 0.025 145) 100%);
   --foreground: oklch(0.92 0.01 240);
   --card: oklch(0.12 0.015 240);
   --card-foreground: oklch(0.92 0.01 240);
@@ -119,9 +119,11 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply text-foreground antialiased;
+    background: var(--background-gradient);
     font-feature-settings: "rlig" 1, "calt" 1;
     line-height: 1.6;
+    min-height: 100vh;
   }
   
   /* Enhanced typography hierarchy */
@@ -238,6 +240,16 @@
     outline: 2px solid var(--ring);
     outline-offset: 2px;
     border-radius: 0.125rem;
+  }
+  
+  /* Main navigation contrast fix - target only nav with border-b */
+  nav.border-b {
+    background: oklch(0.98 0.002 240) !important;
+    backdrop-filter: blur(8px);
+  }
+  
+  .dark nav.border-b {
+    background: oklch(0.12 0.01 240) !important;
   }
   
   /* Modern spacing system */
