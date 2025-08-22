@@ -1,5 +1,7 @@
 import { OpenAI } from "openai";
 import { SYSTEM_PROMPT, getLanguageInstruction } from "./chat-prompts";
+import enMessages from "../messages/en.json";
+import nlMessages from "../messages/nl.json";
 
 export interface ChatMessage {
   role: "user" | "assistant" | "system" | "tool";
@@ -46,15 +48,12 @@ export class ConversationBuilder {
   }
   
   private loadMessages(locale: string): Record<string, unknown> {
-    try {
-      // Load messages synchronously for the given locale
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require(`../messages/${locale}.json`) as Record<string, unknown>;
-    } catch {
-      // Fallback to English if locale not found
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require(`../messages/en.json`) as Record<string, unknown>;
-    }
+    const messageMap: Record<string, Record<string, unknown>> = {
+      en: enMessages,
+      nl: nlMessages,
+    };
+    
+    return messageMap[locale] || messageMap.en;
   }
   
   private t(key: string): string {

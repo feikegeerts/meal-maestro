@@ -28,3 +28,4 @@
 
 - [ ] refactor
 - [ ] write more tests
+- [ ] add account deletion GDPR proof, cost and usage tracking should stay but recipes and user profile should be deleted
