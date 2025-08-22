@@ -343,7 +343,7 @@
     "thinking": "AI is aan het denken...",
     "inputPlaceholder": "Typ je bericht...",
     "currentlyViewing": "Momenteel bekijkt",
-    "welcomeMessage": "Hey! Ik ben Meal Maestro, je AI recept assistant. Ik kan je helpen recepten maken en bewerken door forms in te vullen. Aan welk recept wil je vandaag werken?",
+    "welcomeMessage": "Hey! Ik ben Meal Maestro, je AI receptenhulp. Ik kan recepten maken door samen met je te chatten, of je kunt een recepttekst plakken, een URL delen, of zelfs een foto uploaden die ik voor je kan analyseren. Aan welk recept wil je vandaag werken?",
     "processingError": "Sorry, maar ik had een probleem bij het verwerken van je verzoek.",
     "recipeExtractedFromUrl": "Recept \"{title}\" is succesvol opgehaald van de URL en verwerkt! Ik heb de gegevens opgeschoond en ingevuld in het formulier.",
     "recipeCreatedFromTitle": "Ik kon de website niet scrapen, maar heb een compleet recept voor \"{title}\" gemaakt gebaseerd op de titel uit de URL. Je kunt het nu aanpassen naar wens!",
