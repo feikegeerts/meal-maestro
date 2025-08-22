@@ -19,6 +19,10 @@ export const metadata: Metadata = {
   icons: {
     icon: "/chef-hat.svg",
   },
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "oklch(0.55 0.12 145)" },
+    { media: "(prefers-color-scheme: dark)", color: "oklch(0.65 0.12 145)" },
+  ],
 };
 
 export function generateStaticParams() {
