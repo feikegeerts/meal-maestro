@@ -45,3 +45,5 @@
 # Auth Notes
 
 - Google OAuth PKCE: Use client-side callback page (`/auth/callback/page.tsx`), not server-side route. Supabase handles PKCE with `detectSessionInUrl: true`.
+
+- let me manually test changes by running pnpm dev myself

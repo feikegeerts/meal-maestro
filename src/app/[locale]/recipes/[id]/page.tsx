@@ -236,170 +236,192 @@ export default function RecipeDetailPage() {
       <PageHeader
         recipe={recipe}
         backButtonText={t("back")}
-        actions={
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              onClick={handleAddRecipe}
-              disabled={!!actionLoading}
-              variant="default"
-              size="sm"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {t("addRecipe")}
-            </Button>
-
-            <Button
-              onClick={handleMarkEaten}
-              disabled={!!actionLoading}
-              variant="outline"
-              size="sm"
-            >
-              {actionLoading === "mark-eaten" ? (
-                <>
-                  <span className="animate-spin mr-2">⏳</span>
-                  {t("marking")}
-                </>
-              ) : (
-                <>
-                  <Utensils className="mr-2 h-4 w-4" />
-                  {t("markAsEatenDetail")}
-                </>
-              )}
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!!actionLoading}
-              onClick={handleEdit}
-            >
-              <Edit className="mr-2 h-4 w-4" />
-              {t("editDetail")}
-            </Button>
-
-            <Button
-              onClick={handleDelete}
-              disabled={!!actionLoading}
-              variant="destructive"
-              size="sm"
-            >
-              {actionLoading === "delete" ? (
-                <>
-                  <span className="animate-spin mr-2">⏳</span>
-                  {t("deleting")}
-                </>
-              ) : (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  {t("deleteDetail")}
-                </>
-              )}
-            </Button>
-          </div>
-        }
         className="mb-4"
+        actions={
+          <Button
+            onClick={handleAddRecipe}
+            disabled={!!actionLoading}
+            variant="outline"
+            size="default"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {t("addRecipe")}
+          </Button>
+        }
       />
 
-      {/* Recipe Header Card */}
-      <Card className="mb-6">
-        <CardHeader className="pb-4">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <CardTitle className="text-xl sm:text-2xl mb-1 sm:mb-2">
-                {recipe.title}
-              </CardTitle>
-              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                <div className="flex items-center">
-                  <ChefHat className="mr-1 h-4 w-4" />
-                  <span className="capitalize">
-                    {translateCategory(recipe.category as RecipeCategory)}
-                  </span>
-                </div>
-                {recipe.season && (
-                  <div className="flex items-center">
-                    <Calendar className="mr-1 h-4 w-4" />
-                    <span className="capitalize">
-                      {translateSeason(recipe.season as RecipeSeason)}
+      {/* Recipe Hero Section */}
+      <Card className="mb-8">
+        <CardContent className="p-4 md:px-8 md:py-6 lg:px-12 lg:py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-10">
+            {/* Content - Left side */}
+            <div className="order-2 lg:order-1 space-y-6 lg:col-span-2">
+              {/* Title & Category Section */}
+              <div>
+                <CardTitle className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 leading-tight">
+                  {recipe.title}
+                </CardTitle>
+                
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <ChefHat className="h-4 w-4" />
+                    <span className="text-sm capitalize">
+                      {translateCategory(recipe.category as RecipeCategory)}
                     </span>
                   </div>
-                )}
+                  {recipe.season && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      <span className="text-sm capitalize">
+                        {translateSeason(recipe.season as RecipeSeason)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 flex-wrap mt-6">
+                    <Button
+                      onClick={handleMarkEaten}
+                      disabled={!!actionLoading}
+                      variant="default"
+                      size="default"
+                    >
+                      {actionLoading === "mark-eaten" ? (
+                        <>
+                          <span className="animate-spin mr-2">⏳</span>
+                          {t("marking")}
+                        </>
+                      ) : (
+                        <>
+                          <Utensils className="mr-2 h-4 w-4" />
+                          {t("markAsEatenDetail")}
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="default"
+                      disabled={!!actionLoading}
+                      onClick={handleEdit}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      {t("editDetail")}
+                    </Button>
+
+
+                    <Button
+                      onClick={handleDelete}
+                      disabled={!!actionLoading}
+                      variant="ghost"
+                      size="default"
+                      className="text-destructive hover:text-destructive"
+                    >
+                      {actionLoading === "delete" ? (
+                        <>
+                          <span className="animate-spin mr-2">⏳</span>
+                          {t("deleting")}
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          {t("deleteDetail")}
+                        </>
+                      )}
+                    </Button>
+              </div>
+
+              {/* Tags */}
+              <div className="flex flex-wrap gap-2 mt-6">
+                    {recipe.cuisine && (
+                      <Badge variant="secondary" className="text-sm px-3 py-2">
+                        <Tag className="mr-1 h-3 w-3" />
+                        {translateTag("cuisine", recipe.cuisine)}
+                      </Badge>
+                    )}
+                    {recipe.diet_types?.map((dietType) => (
+                      <Badge key={dietType} variant="secondary" className="text-sm px-3 py-2">
+                        <Tag className="mr-1 h-3 w-3" />
+                        {translateTag("dietType", dietType)}
+                      </Badge>
+                    ))}
+                    {recipe.cooking_methods?.map((method) => (
+                      <Badge key={method} variant="secondary" className="text-sm px-3 py-2">
+                        <Tag className="mr-1 h-3 w-3" />
+                        {translateTag("cookingMethod", method)}
+                      </Badge>
+                    ))}
+                    {recipe.dish_types?.map((dishType) => (
+                      <Badge key={dishType} variant="secondary" className="text-sm px-3 py-2">
+                        <Tag className="mr-1 h-3 w-3" />
+                        {translateTag("dishType", dishType)}
+                      </Badge>
+                    ))}
+                    {recipe.proteins?.map((protein) => (
+                      <Badge key={protein} variant="secondary" className="text-sm px-3 py-2">
+                        <Tag className="mr-1 h-3 w-3" />
+                        {translateTag("protein", protein)}
+                      </Badge>
+                    ))}
+                    {recipe.occasions?.map((occasion) => (
+                      <Badge key={occasion} variant="secondary" className="text-sm px-3 py-2">
+                        <Tag className="mr-1 h-3 w-3" />
+                        {translateTag("occasion", occasion)}
+                      </Badge>
+                    ))}
+                    {recipe.characteristics?.map((characteristic) => (
+                      <Badge
+                        key={characteristic}
+                        variant="secondary"
+                        className="text-sm px-3 py-2"
+                      >
+                        <Tag className="mr-1 h-3 w-3" />
+                        {translateTag("characteristic", characteristic)}
+                      </Badge>
+                    ))}
+              </div>
+
+              {/* Metadata */}
+              <div className="grid grid-cols-1 gap-3 text-sm mt-8">
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">
+                        {t("createdDetail")}:
+                      </span>
+                      <span className="font-medium">
+                        {formatDateWithFallback(recipe.created_at, t("never"))}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">
+                        {t("lastEatenDetail")}:
+                      </span>
+                      <span className="font-medium">
+                        {formatDateWithFallback(recipe.last_eaten, t("never"))}
+                      </span>
+                    </div>
               </div>
             </div>
-          </div>
-
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            {recipe.cuisine && (
-              <Badge variant="secondary" className="text-xs">
-                <Tag className="mr-1 h-3 w-3" />
-                {translateTag("cuisine", recipe.cuisine)}
-              </Badge>
-            )}
-            {recipe.diet_types?.map((dietType) => (
-              <Badge key={dietType} variant="secondary" className="text-xs">
-                <Tag className="mr-1 h-3 w-3" />
-                {translateTag("dietType", dietType)}
-              </Badge>
-            ))}
-            {recipe.cooking_methods?.map((method) => (
-              <Badge key={method} variant="secondary" className="text-xs">
-                <Tag className="mr-1 h-3 w-3" />
-                {translateTag("cookingMethod", method)}
-              </Badge>
-            ))}
-            {recipe.dish_types?.map((dishType) => (
-              <Badge key={dishType} variant="secondary" className="text-xs">
-                <Tag className="mr-1 h-3 w-3" />
-                {translateTag("dishType", dishType)}
-              </Badge>
-            ))}
-            {recipe.proteins?.map((protein) => (
-              <Badge key={protein} variant="secondary" className="text-xs">
-                <Tag className="mr-1 h-3 w-3" />
-                {translateTag("protein", protein)}
-              </Badge>
-            ))}
-            {recipe.occasions?.map((occasion) => (
-              <Badge key={occasion} variant="secondary" className="text-xs">
-                <Tag className="mr-1 h-3 w-3" />
-                {translateTag("occasion", occasion)}
-              </Badge>
-            ))}
-            {recipe.characteristics?.map((characteristic) => (
-              <Badge
-                key={characteristic}
-                variant="secondary"
-                className="text-xs"
-              >
-                <Tag className="mr-1 h-3 w-3" />
-                {translateTag("characteristic", characteristic)}
-              </Badge>
-            ))}
-          </div>
-
-          {/* Metadata */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-muted-foreground mt-4 pt-4 border-t">
-            <div className="flex items-center">
-              <CalendarDays className="mr-1 h-4 w-4" />
-              <span>
-                {t("createdDetail")}:{" "}
-                {formatDateWithFallback(recipe.created_at, t("never"))}
-              </span>
-            </div>
-            <div className="flex items-center sm:justify-end">
-              <Clock className="mr-1 h-4 w-4" />
-              <span>
-                {t("lastEatenDetail")}:{" "}
-                {formatDateWithFallback(recipe.last_eaten, t("never"))}
-              </span>
+            
+            {/* Large Hero Image - Right side */}
+            <div className="order-1 lg:order-2 lg:col-span-3">
+              <img
+                src="https://images.unsplash.com/photo-1571175534150-72cd2b5a6039?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                alt={recipe.title}
+                className="w-full h-64 sm:h-80 lg:h-[600px] rounded-xl object-cover shadow-lg"
+                loading="lazy"
+              />
             </div>
           </div>
-        </CardHeader>
+        </CardContent>
       </Card>
 
       {/* Single Card Layout */}
       <Card>
-        <CardContent className="px-5 py-0">
+        <CardContent className="p-4 md:px-8 md:py-6 lg:px-12 lg:py-8">
           <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
             {/* Left Column - Ingredients */}
             <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5">

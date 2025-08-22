@@ -106,9 +106,19 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
     },
     cell: ({ row }) => {
       const title = row.getValue("title") as string;
+      const imageUrl = "https://images.unsplash.com/photo-1571175534150-72cd2b5a6039?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+      
       return (
-        <div className="font-medium max-w-[200px] truncate" title={title}>
-          {title}
+        <div className="flex items-center gap-3">
+          <img
+            src={imageUrl}
+            alt={title}
+            className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+            loading="lazy"
+          />
+          <div className="font-medium max-w-[200px] truncate" title={title}>
+            {title}
+          </div>
         </div>
       );
     },
