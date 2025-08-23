@@ -374,7 +374,7 @@ export function MainNav() {
                     <span>{t('navigation')}</span>
                   </SheetTitle>
                 </SheetHeader>
-                <div className="mt-6 space-y-2">
+                <div className="mt-6 space-y-3">
                   {navigationItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
@@ -384,14 +384,14 @@ export function MainNav() {
                         key={item.href}
                         href={item.href}
                         className={cn(
-                          "flex items-center space-x-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                          "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors w-full",
                           isActive
                             ? "bg-accent text-accent-foreground"
                             : "hover:bg-accent hover:text-accent-foreground"
                         )}
                       >
-                        <Icon className="h-4 w-4" />
-                        <span>{item.name}</span>
+                        <Icon className="h-5 w-5 flex-shrink-0" />
+                        <span className="flex-1">{item.name}</span>
                       </Link>
                     );
                   })}
