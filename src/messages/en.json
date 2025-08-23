@@ -15,6 +15,13 @@
     "edit": "Edit",
     "addRecipe": "Add Recipe"
   },
+  "theme": {
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggle": "Toggle theme"
+  },
   "home": {
     "title": "Meal Maestro",
     "subtitle": "AI-Powered Recipe Management",

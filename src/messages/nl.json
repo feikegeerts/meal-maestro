@@ -15,6 +15,13 @@
     "edit": "Bewerken",
     "addRecipe": "Recept Toevoegen"
   },
+  "theme": {
+    "theme": "Thema",
+    "light": "Licht",
+    "dark": "Donker",
+    "system": "Systeem",
+    "toggle": "Thema wisselen"
+  },
   "home": {
     "title": "Meal Maestro",
     "subtitle": "Recepten beheren met AI",

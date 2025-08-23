@@ -8,6 +8,7 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '../i18n/routing';
 import { setRequestLocale } from 'next-intl/server';
+import { ThemeProvider } from '@/components/theme-provider';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({locale}));
@@ -35,14 +36,21 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <NextIntlClientProvider messages={messages}>
-      <AuthProvider>
-        <RecipeProvider>
-          <MainNav />
-          {children}
-          <Toaster richColors position="top-right" />
-        </RecipeProvider>
-      </AuthProvider>
-    </NextIntlClientProvider>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <NextIntlClientProvider messages={messages}>
+        <AuthProvider>
+          <RecipeProvider>
+            <MainNav />
+            {children}
+            <Toaster richColors position="top-right" />
+          </RecipeProvider>
+        </AuthProvider>
+      </NextIntlClientProvider>
+    </ThemeProvider>
   );
 }

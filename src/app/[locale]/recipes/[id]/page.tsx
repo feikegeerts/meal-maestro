@@ -536,7 +536,7 @@ export default function RecipeDetailPage() {
                         {/* Numbered steps */}
                         {processed.steps.map((step, index) => (
                           <div key={index} className="flex items-center gap-4">
-                            <div className="flex-shrink-0 w-9 h-9 bg-white border-2 border-primary text-primary rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
+                            <div className="flex-shrink-0 w-9 h-9 bg-card border-2 border-primary text-primary rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
                               {index + 1}
                             </div>
                             <p className="leading-relaxed text-base">{step}</p>
@@ -562,7 +562,7 @@ export default function RecipeDetailPage() {
                   } else {
                     return (
                       <div className="flex items-center gap-4">
-                        <div className="flex-shrink-0 w-9 h-9 bg-white border-2 border-primary text-primary rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
+                        <div className="flex-shrink-0 w-9 h-9 bg-card border-2 border-primary text-primary rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
                           1
                         </div>
                         <p className="whitespace-pre-wrap leading-relaxed text-base">

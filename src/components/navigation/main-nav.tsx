@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeMenu } from "@/components/theme-menu";
 
 const languages = [
   { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
@@ -243,6 +244,9 @@ export function MainNav() {
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
                 
+                {/* Theme Selection Submenu */}
+                <ThemeMenu variant="dropdown" />
+                
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -344,6 +348,9 @@ export function MainNav() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Theme Selection */}
+                  <ThemeMenu variant="buttons" />
 
                   {/* Logout Button */}
                   <div className="pt-4 border-t">
