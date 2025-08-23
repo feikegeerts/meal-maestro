@@ -61,39 +61,38 @@ export function ServingSizeSelector({
     <div className="space-y-3">
       {/* Compact Serving Size Controls */}
       <div className="flex justify-center">
-        <div className="inline-flex items-center gap-3 bg-background rounded-full p-3 border shadow-sm">
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium hidden xl:inline">{t("recipeServes")}:</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center border rounded-md">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={decrementServing}
-              disabled={disabled || currentServings <= 1}
-              className="h-8 w-8 p-0 rounded-r-none border-r hover:bg-muted"
-            >
-              <Minus className="h-3 w-3" />
-            </Button>
-            <div className="px-3 py-1 text-sm font-medium min-w-[3rem] text-center">
-              {currentServings}
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={incrementServing}
-              disabled={disabled || currentServings >= 24}
-              className="h-8 w-8 p-0 rounded-l-none border-l hover:bg-muted"
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
+        <div className="inline-flex items-center gap-2 bg-background rounded-full py-2 px-3 border shadow-sm">
+          <div className="flex items-center gap-1.5">
+            <Users className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
-          <span className="text-sm text-muted-foreground">{t("people")}</span>
-        </div>
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center border rounded-md">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={decrementServing}
+                disabled={disabled || currentServings <= 1}
+                className="h-6 w-6 p-0 rounded-r-none border-r hover:bg-muted"
+              >
+                <Minus className="h-2.5 w-2.5" />
+              </Button>
+              <div className="px-2 py-0.5 text-xs font-medium min-w-[2.5rem] text-center">
+                {currentServings}
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={incrementServing}
+                disabled={disabled || currentServings >= 24}
+                className="h-6 w-6 p-0 rounded-l-none border-l hover:bg-muted"
+              >
+                <Plus className="h-2.5 w-2.5" />
+              </Button>
+            </div>
+            <span className="text-xs text-muted-foreground">{t("people")}</span>
+          </div>
         </div>
       </div>
 
