@@ -1,7 +1,5 @@
 ### Phase 5: Post-MVP Enhancements
 
-- [x] explain that the chat can be used for conversational recipe creation, extrating from pasted text, extracting from url, or extracting from image.
-- [ ] remove the card header hover effect which is probably triggerd by something in the global.css
 - [ ] implement shadcn darkmode
 - [ ] sorting of ingredients. I think it's weird that pepper and salt are sometimes in the middle of the ingredient list.
 - [ ] use pluralize for ingredients or singularize when needed. For example when the ingredients list 1 union, when increase the portion size and it suddenly lists 2, it should say 2 unions. Somehow we need to make the display logic smart without making changes to the data in the database. The vice versa should also happen. 2 unions and then reducing the servings size should go to 1 union. This is complex because in dutch it depends on which word, and pluralization is hard. What can we do to make this better?

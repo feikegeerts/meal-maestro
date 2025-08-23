@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { routing } from './i18n/routing';
 import { setRequestLocale } from 'next-intl/server';
@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   icons: {
     icon: "/chef-hat.svg",
   },
+};
+
+export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "oklch(0.55 0.12 145)" },
     { media: "(prefers-color-scheme: dark)", color: "oklch(0.65 0.12 145)" },
