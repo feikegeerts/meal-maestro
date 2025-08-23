@@ -13,9 +13,19 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Recipe, RecipeCategory, RecipeSeason } from "@/types/recipe";
 import { useLocalizedDateFormatter } from "@/lib/date-utils";
 import { ServingSizeSelector } from "@/components/serving-size-selector";
+import Image from 'next/image';
 import {
   ArrowLeft,
   Edit,
@@ -27,6 +37,7 @@ import {
   Tag,
   ChefHat,
   Plus,
+  Camera,
 } from "lucide-react";
 import { setRedirectUrl, processInstructions } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -407,13 +418,39 @@ export default function RecipeDetailPage() {
             </div>
             
             {/* Large Hero Image - Right side */}
-            <div className="order-1 lg:order-2 lg:col-span-3">
-              <img
-                src="https://images.unsplash.com/photo-1571175534150-72cd2b5a6039?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt={recipe.title}
-                className="w-full h-64 sm:h-80 lg:h-[600px] rounded-xl object-cover shadow-lg"
-                loading="lazy"
+            <div className="order-1 lg:order-2 lg:col-span-3 relative h-64 sm:h-80 lg:h-[600px] group">
+              <Image
+                src="/placeholder-image.webp"
+                alt={`Recipe: ${recipe.title}`}
+                fill
+                className="rounded-xl object-cover shadow-lg"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 50vw"
               />
+              
+              {/* Upload Photo Button Overlay */}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer">
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      className="bg-white/90 hover:bg-white text-gray-900 font-semibold shadow-lg"
+                    >
+                      <Camera className="mr-2 h-5 w-5" />
+                      Add Photo
+                    </Button>
+                  </div>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Photo uploads coming soon!</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Recipe photos are currently under development and will be available in a future update. Stay tuned!
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogAction>OK</AlertDialogAction>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </CardContent>
