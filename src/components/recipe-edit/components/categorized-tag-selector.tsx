@@ -69,7 +69,8 @@ export function CategorizedTagSelector({
   };
 
   const getSelectedTags = () => {
-    const selectedTags: Array<{ value: string; label: string; type: string }> = [];
+    const selectedTags: Array<{ value: string; label: string; type: string }> =
+      [];
 
     if (formData.cuisine) {
       selectedTags.push({
@@ -152,14 +153,22 @@ export function CategorizedTagSelector({
   const selectedTags = getSelectedTags();
 
   return (
-    <Accordion type="single" collapsible className="w-full">
+    <Accordion
+      type="single"
+      collapsible
+      className="w-full bg-card text-card-foreground rounded-xl border shadow-sm"
+    >
       <AccordionItem value="tags" className="border-0">
         <AccordionTrigger
-          className="px-6 py-6 hover:no-underline"
+          className={`px-6 pt-6 pb-6 hover:no-underline ${
+            selectedTags.length === 0
+              ? "data-[state=closed]:pb-12 data-[state=open]:pb-12"
+              : "data-[state=closed]:pb-8 data-[state=open]:pb-8"
+          }`}
           disabled={disabled}
         >
           <div className="flex items-center justify-between w-full">
-            <h3 className="text-lg pb-6 font-semibold">Tags</h3>
+            <h3 className="text-lg font-semibold">Tags</h3>
           </div>
         </AccordionTrigger>
 
@@ -256,7 +265,9 @@ export function CategorizedTagSelector({
                   <div key={method} className="flex items-center space-x-2">
                     <Checkbox
                       id={`cooking-${method}`}
-                      checked={(formData.cooking_methods || []).includes(method)}
+                      checked={(formData.cooking_methods || []).includes(
+                        method
+                      )}
                       onCheckedChange={() =>
                         handleArrayTagToggle("cooking_methods", method)
                       }

@@ -168,15 +168,11 @@ export function RecipeEditForm({
           loading={loading}
         />
 
-        <Card>
-          <CardContent className="p-0">
-            <CategorizedTagSelector
-              formData={formData}
-              onFormDataChange={handleFormDataChange}
-              disabled={loading}
-            />
-          </CardContent>
-        </Card>
+        <CategorizedTagSelector
+          formData={formData}
+          onFormDataChange={handleFormDataChange}
+          disabled={loading}
+        />
 
         <div className="flex gap-3 pt-4 border-t">
           {standalone ? (
@@ -284,15 +280,11 @@ export function RecipeEditForm({
           loading={loading}
         />
 
-        <Card>
-          <CardContent className="p-0">
-            <CategorizedTagSelector
-              formData={formData}
-              onFormDataChange={handleFormDataChange}
-              disabled={loading}
-            />
-          </CardContent>
-        </Card>
+        <CategorizedTagSelector
+          formData={formData}
+          onFormDataChange={handleFormDataChange}
+          disabled={loading}
+        />
       </>
     ),
     [formData, handleFormDataChange, loading]
