@@ -402,7 +402,8 @@
     "amountHeader": "Hoeveelheid",
     "unitHeader": "Eenheid",
     "ingredientHeader": "Ingrediënt",
-    "notesHeader": "Notities"
+    "notesHeader": "Notities",
+    "addIngredient": "Ingrediënt Toevoegen"
   },
   "units": {
     "g": "g",

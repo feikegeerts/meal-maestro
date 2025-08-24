@@ -1,47 +1,25 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import {
   Recipe,
   RecipeInput,
   RecipeIngredient,
   RecipeSeason,
-  RECIPE_CATEGORIES,
-  RECIPE_SEASONS,
-  CUISINE_TYPES,
-  DIET_TYPES,
-  COOKING_METHOD_TYPES,
-  DISH_TYPES,
-  PROTEIN_TYPES,
-  OCCASION_TYPES,
-  CHARACTERISTIC_TYPES,
   validateRecipeInput,
 } from "@/types/recipe";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { SheetClose } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { StructuredIngredientInput } from "@/components/structured-ingredient-input";
-import { ChatInterface } from "@/components/chat/chat-interface";
-import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
+
+import { useAutoSave } from "./recipe-edit/hooks/use-auto-save";
+import { FormTransformerService } from "./recipe-edit/services/form-transformer";
+import { BasicInformationSection } from "./recipe-edit/components/basic-information-section";
+import { IngredientsSection } from "./recipe-edit/components/ingredients-section";
+import { InstructionsSection } from "./recipe-edit/components/instructions-section";
+import { CategorizedTagSelector } from "./recipe-edit/components/categorized-tag-selector";
+import { FormLayoutRenderer } from "./recipe-edit/components/form-layout-renderer";
 
 interface RecipeEditFormProps {
   recipe: Recipe;
@@ -53,430 +31,13 @@ interface RecipeEditFormProps {
   layoutMode?: "single-column" | "two-column";
 }
 
-// Global variable to store the current form state for auto-save
-let currentFormState: {
-  formData: RecipeInput;
-  hasChanges: boolean;
-  onSave: (recipeData: Partial<RecipeInput>) => Promise<void>;
-} | null = null;
-
-// Global function to trigger auto-save
+// Export auto-save function for external use (backward compatibility)
 export const triggerAutoSave = async (): Promise<boolean> => {
-  if (!currentFormState || !currentFormState.hasChanges) {
-    return true; // No changes to save
-  }
-
-  const { formData, onSave } = currentFormState;
-  const validation = validateRecipeInput(formData);
-
-  if (!validation.valid) {
-    return false; // Don't close if validation fails
-  }
-
-  try {
-    const updateData: Partial<RecipeInput> = {
-      title: formData.title,
-      ingredients: formData.ingredients,
-      servings: formData.servings,
-      description: formData.description,
-      category: formData.category,
-      cuisine: formData.cuisine,
-      diet_types: formData.diet_types,
-      cooking_methods: formData.cooking_methods,
-      dish_types: formData.dish_types,
-      proteins: formData.proteins,
-      occasions: formData.occasions,
-      characteristics: formData.characteristics,
-      season: formData.season,
-    };
-
-    await onSave(updateData);
-    return true; // Allow close
-  } catch (error) {
-    console.error("Auto-save failed:", error);
-    return false; // Don't close if save fails
-  }
-};
-
-interface CategorizedTagSelectorProps {
-  formData: RecipeInput;
-  onFormDataChange: (updates: Partial<RecipeInput>) => void;
-  disabled?: boolean;
-}
-
-function CategorizedTagSelector({
-  formData,
-  onFormDataChange,
-  disabled = false,
-}: CategorizedTagSelectorProps) {
-  const tCuisines = useTranslations("cuisines");
-  const tDietTypes = useTranslations("dietTypes");
-  const tCookingMethods = useTranslations("cookingMethods");
-  const tDishTypes = useTranslations("dishTypes");
-  const tProteinTypes = useTranslations("proteinTypes");
-  const tOccasionTypes = useTranslations("occasionTypes");
-  const tCharacteristicTypes = useTranslations("characteristicTypes");
-  const tHeaders = useTranslations("tagCategoryHeaders");
-
-  const handleCuisineChange = (cuisine: string) => {
-    onFormDataChange({
-      cuisine: cuisine === formData.cuisine ? undefined : cuisine,
-    });
-  };
-
-  const handleArrayTagToggle = (
-    fieldName: keyof Pick<
-      RecipeInput,
-      | "diet_types"
-      | "cooking_methods"
-      | "dish_types"
-      | "proteins"
-      | "occasions"
-      | "characteristics"
-    >,
-    tag: string
-  ) => {
-    const currentArray = formData[fieldName] || [];
-    const newArray = currentArray.includes(tag)
-      ? currentArray.filter((t) => t !== tag)
-      : [...currentArray, tag];
-    onFormDataChange({ [fieldName]: newArray });
-  };
-
-  // Helper function to get all selected tags
-  const getSelectedTags = () => {
-    const selectedTags: Array<{ value: string; label: string; type: string }> =
-      [];
-
-    // Cuisine
-    if (formData.cuisine) {
-      selectedTags.push({
-        value: formData.cuisine,
-        label: tCuisines(formData.cuisine),
-        type: "cuisine",
-      });
-    }
-
-    // Diet types
-    (formData.diet_types || []).forEach((tag) => {
-      selectedTags.push({
-        value: tag,
-        label: tDietTypes(tag),
-        type: "diet_types",
-      });
-    });
-
-    // Cooking methods
-    (formData.cooking_methods || []).forEach((tag) => {
-      selectedTags.push({
-        value: tag,
-        label: tCookingMethods(tag),
-        type: "cooking_methods",
-      });
-    });
-
-    // Dish types
-    (formData.dish_types || []).forEach((tag) => {
-      selectedTags.push({
-        value: tag,
-        label: tDishTypes(tag),
-        type: "dish_types",
-      });
-    });
-
-    // Proteins
-    (formData.proteins || []).forEach((tag) => {
-      selectedTags.push({
-        value: tag,
-        label: tProteinTypes(tag),
-        type: "proteins",
-      });
-    });
-
-    // Occasions
-    (formData.occasions || []).forEach((tag) => {
-      selectedTags.push({
-        value: tag,
-        label: tOccasionTypes(tag),
-        type: "occasions",
-      });
-    });
-
-    // Characteristics
-    (formData.characteristics || []).forEach((tag) => {
-      selectedTags.push({
-        value: tag,
-        label: tCharacteristicTypes(tag),
-        type: "characteristics",
-      });
-    });
-
-    return selectedTags;
-  };
-
-  const removeTag = (tagValue: string, tagType: string) => {
-    if (tagType === "cuisine") {
-      handleCuisineChange(tagValue);
-    } else {
-      handleArrayTagToggle(
-        tagType as keyof Pick<
-          RecipeInput,
-          | "diet_types"
-          | "cooking_methods"
-          | "dish_types"
-          | "proteins"
-          | "occasions"
-          | "characteristics"
-        >,
-        tagValue
-      );
-    }
-  };
-
-  const selectedTags = getSelectedTags();
-
-  return (
-    <Accordion type="single" collapsible className="w-full">
-      <AccordionItem value="tags" className="border-0">
-        <AccordionTrigger
-          className="px-6 py-6 hover:no-underline"
-          disabled={disabled}
-        >
-          <div className="flex items-center justify-between w-full">
-            <h3 className="text-lg font-semibold">Tags</h3>
-          </div>
-        </AccordionTrigger>
-
-        {selectedTags.length > 0 && (
-          <div className="px-6 pt-4 pb-4">
-            <div className="flex flex-wrap gap-2 leading-relaxed">
-              {selectedTags.map((tag, index) => (
-                <Badge
-                  key={`${tag.type}-${tag.value}-${index}`}
-                  variant="secondary"
-                  className="flex items-center gap-1.5 pr-1 text-xs py-1.5 px-2.5"
-                >
-                  <span className="leading-none">{tag.label}</span>
-                  <span
-                    className="h-auto w-auto p-0.5 cursor-pointer hover:bg-accent/50 rounded-sm transition-colors flex items-center justify-center ml-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!disabled) {
-                        removeTag(tag.value, tag.type);
-                      }
-                    }}
-                    aria-label="Remove tag"
-                    role="button"
-                  >
-                    <X className="h-3 w-3" />
-                  </span>
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <AccordionContent className="px-6 pb-6 pt-4 border-t border-border/50">
-          <div className="space-y-6">
-            {/* Cuisine (Single Selection) */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">
-                {tHeaders("cuisine")}
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {CUISINE_TYPES.map((cuisine) => (
-                  <div key={cuisine} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`cuisine-${cuisine}`}
-                      checked={formData.cuisine === cuisine}
-                      onCheckedChange={() => handleCuisineChange(cuisine)}
-                      disabled={disabled}
-                    />
-                    <Label
-                      htmlFor={`cuisine-${cuisine}`}
-                      className="text-sm font-normal cursor-pointer flex-1"
-                    >
-                      {tCuisines(cuisine)}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Diet Types */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">
-                {tHeaders("dietTypes")}
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {DIET_TYPES.map((dietType) => (
-                  <div key={dietType} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`diet-${dietType}`}
-                      checked={(formData.diet_types || []).includes(dietType)}
-                      onCheckedChange={() =>
-                        handleArrayTagToggle("diet_types", dietType)
-                      }
-                      disabled={disabled}
-                    />
-                    <Label
-                      htmlFor={`diet-${dietType}`}
-                      className="text-sm font-normal cursor-pointer flex-1"
-                    >
-                      {tDietTypes(dietType)}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Cooking Methods */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">
-                {tHeaders("cookingMethods")}
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {COOKING_METHOD_TYPES.map((method) => (
-                  <div key={method} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`cooking-${method}`}
-                      checked={(formData.cooking_methods || []).includes(
-                        method
-                      )}
-                      onCheckedChange={() =>
-                        handleArrayTagToggle("cooking_methods", method)
-                      }
-                      disabled={disabled}
-                    />
-                    <Label
-                      htmlFor={`cooking-${method}`}
-                      className="text-sm font-normal cursor-pointer flex-1"
-                    >
-                      {tCookingMethods(method)}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Dish Types */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">
-                {tHeaders("dishTypes")}
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {DISH_TYPES.map((dishType) => (
-                  <div key={dishType} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`dish-${dishType}`}
-                      checked={(formData.dish_types || []).includes(dishType)}
-                      onCheckedChange={() =>
-                        handleArrayTagToggle("dish_types", dishType)
-                      }
-                      disabled={disabled}
-                    />
-                    <Label
-                      htmlFor={`dish-${dishType}`}
-                      className="text-sm font-normal cursor-pointer flex-1"
-                    >
-                      {tDishTypes(dishType)}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Protein Types */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">
-                {tHeaders("proteinTypes")}
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {PROTEIN_TYPES.map((protein) => (
-                  <div key={protein} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`protein-${protein}`}
-                      checked={(formData.proteins || []).includes(protein)}
-                      onCheckedChange={() =>
-                        handleArrayTagToggle("proteins", protein)
-                      }
-                      disabled={disabled}
-                    />
-                    <Label
-                      htmlFor={`protein-${protein}`}
-                      className="text-sm font-normal cursor-pointer flex-1"
-                    >
-                      {tProteinTypes(protein)}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Occasions */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">
-                {tHeaders("occasionTypes")}
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {OCCASION_TYPES.map((occasion) => (
-                  <div key={occasion} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`occasion-${occasion}`}
-                      checked={(formData.occasions || []).includes(occasion)}
-                      onCheckedChange={() =>
-                        handleArrayTagToggle("occasions", occasion)
-                      }
-                      disabled={disabled}
-                    />
-                    <Label
-                      htmlFor={`occasion-${occasion}`}
-                      className="text-sm font-normal cursor-pointer flex-1"
-                    >
-                      {tOccasionTypes(occasion)}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Characteristics */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">
-                {tHeaders("characteristicTypes")}
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {CHARACTERISTIC_TYPES.map((characteristic) => (
-                  <div
-                    key={characteristic}
-                    className="flex items-center space-x-2"
-                  >
-                    <Checkbox
-                      id={`char-${characteristic}`}
-                      checked={(formData.characteristics || []).includes(
-                        characteristic
-                      )}
-                      onCheckedChange={() =>
-                        handleArrayTagToggle("characteristics", characteristic)
-                      }
-                      disabled={disabled}
-                    />
-                    <Label
-                      htmlFor={`char-${characteristic}`}
-                      className="text-sm font-normal cursor-pointer flex-1"
-                    >
-                      {tCharacteristicTypes(characteristic)}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
+  console.warn(
+    "triggerAutoSave is deprecated. Auto-save is now handled by useAutoSave hook."
   );
-}
+  return true;
+};
 
 export function RecipeEditForm({
   recipe,
@@ -488,12 +49,6 @@ export function RecipeEditForm({
   layoutMode = "single-column",
 }: RecipeEditFormProps) {
   const t = useTranslations("recipeForm");
-  const tCategories = useTranslations("categories");
-  const tSeasons = useTranslations("seasons");
-  const tServing = useTranslations("servingSelector");
-
-  const generateIngredientId = () =>
-    `ingredient-${Date.now()}-${Math.random()}`;
 
   const [formData, setFormData] = useState<RecipeInput>({
     title: recipe.title,
@@ -502,7 +57,7 @@ export function RecipeEditForm({
         ? recipe.ingredients.map((ing) => ({ ...ing }))
         : [
             {
-              id: generateIngredientId(),
+              id: FormTransformerService.generateIngredientId(),
               name: "",
               amount: null,
               unit: null,
@@ -523,165 +78,29 @@ export function RecipeEditForm({
   });
   const [errors, setErrors] = useState<string[]>([]);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Debounced function to update global state
-  const updateGlobalState = useCallback(() => {
-    const hasFormChanges =
-      formData.title !== recipe.title ||
-      JSON.stringify(formData.ingredients) !==
-        JSON.stringify(recipe.ingredients) ||
-      formData.servings !== recipe.servings ||
-      formData.description !== recipe.description ||
-      formData.category !== recipe.category ||
-      formData.cuisine !== recipe.cuisine ||
-      JSON.stringify(formData.diet_types) !==
-        JSON.stringify(recipe.diet_types) ||
-      JSON.stringify(formData.cooking_methods) !==
-        JSON.stringify(recipe.cooking_methods) ||
-      JSON.stringify(formData.dish_types) !==
-        JSON.stringify(recipe.dish_types) ||
-      JSON.stringify(formData.proteins) !== JSON.stringify(recipe.proteins) ||
-      JSON.stringify(formData.occasions) !== JSON.stringify(recipe.occasions) ||
-      JSON.stringify(formData.characteristics) !==
-        JSON.stringify(recipe.characteristics) ||
-      formData.season !== recipe.season;
+  // Auto-save hook replaces global state pattern
+  useAutoSave({
+    formData,
+    originalRecipe: recipe,
+    onSave,
+  });
 
-    // Update global state for auto-save
-    currentFormState = {
-      formData,
-      hasChanges: hasFormChanges,
-      onSave,
-    };
-  }, [formData, recipe, onSave]);
+  const memoizedFormState = useMemo(() => formData, [formData]);
 
-  // Debounced global state update - only update after user stops typing
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      updateGlobalState();
-    }, 300); // 300ms delay
-
-    return () => clearTimeout(debounceTimer);
-  }, [updateGlobalState]);
-
-  // Clear global state when component unmounts
-  useEffect(() => {
-    return () => {
-      currentFormState = null;
-    };
-  }, []);
-
-  // Memoized current form state for chat interface to prevent unnecessary re-renders
-  const memoizedFormState = useMemo(
-    () => ({
-      title: formData.title,
-      ingredients: formData.ingredients,
-      servings: formData.servings,
-      description: formData.description,
-      category: formData.category,
-      cuisine: formData.cuisine,
-      diet_types: formData.diet_types,
-      cooking_methods: formData.cooking_methods,
-      dish_types: formData.dish_types,
-      proteins: formData.proteins,
-      occasions: formData.occasions,
-      characteristics: formData.characteristics,
-      season: formData.season,
-    }),
-    [
-      formData.title,
-      formData.servings,
-      formData.description,
-      formData.category,
-      formData.cuisine,
-      formData.diet_types,
-      formData.cooking_methods,
-      formData.dish_types,
-      formData.proteins,
-      formData.occasions,
-      formData.characteristics,
-      formData.season,
-      formData.ingredients,
-    ]
-  );
-
-  // Define the expected structure of AI recipe data
-  interface AIRecipeData {
-    title?: string;
-    description?: string;
-    ingredients?: Array<{
-      id?: string;
-      name?: string;
-      amount?: number | null;
-      unit?: string | null;
-      notes?: string;
-    }>;
-    servings?: number;
-    category?: string;
-    cuisine?: string;
-    diet_types?: string[];
-    cooking_methods?: string[];
-    dish_types?: string[];
-    proteins?: string[];
-    occasions?: string[];
-    characteristics?: string[];
-    season?: string;
-  }
-
-  // Handle AI-generated recipe updates
-  const handleAIRecipeUpdate = (aiRecipeData: unknown) => {
-    const recipeData = aiRecipeData as AIRecipeData;
-
-    if (recipeData) {
-      const updatedFormData: RecipeInput = {
-        ...formData,
-        ...(recipeData.title && { title: recipeData.title }),
-        ...(recipeData.description && { description: recipeData.description }),
-        ...(recipeData.servings && { servings: recipeData.servings }),
-        ...(recipeData.category && { category: recipeData.category }),
-        ...(recipeData.cuisine && { cuisine: recipeData.cuisine }),
-        ...(recipeData.diet_types && { diet_types: recipeData.diet_types }),
-        ...(recipeData.cooking_methods && {
-          cooking_methods: recipeData.cooking_methods,
-        }),
-        ...(recipeData.dish_types && { dish_types: recipeData.dish_types }),
-        ...(recipeData.proteins && { proteins: recipeData.proteins }),
-        ...(recipeData.occasions && { occasions: recipeData.occasions }),
-        ...(recipeData.characteristics && {
-          characteristics: recipeData.characteristics,
-        }),
-        ...(recipeData.season && { season: recipeData.season }),
-        ...(recipeData.ingredients &&
-          recipeData.ingredients.length > 0 && {
-            ingredients: recipeData.ingredients
-              .filter((ing): ing is typeof ing & { name: string } =>
-                Boolean(ing.name?.trim())
-              )
-              .map((ing, index) => ({
-                id: ing.id || `ingredient-ai-${Date.now()}-${index}`,
-                name: ing.name.trim(),
-                amount: ing.amount ?? null,
-                unit: ing.unit ?? null,
-                notes: ing.notes ?? "",
-              })),
-          }),
-      };
+  const handleAIRecipeUpdate = useCallback(
+    (aiRecipeData: unknown) => {
+      const updatedFormData = FormTransformerService.transformAIRecipeData(
+        aiRecipeData,
+        formData
+      );
 
       setFormData(updatedFormData);
       setErrors([]);
-
-      // On mobile/tablet, scroll to form when AI updates it
-      if (layoutMode === "single-column" && typeof window !== "undefined") {
-        // Use a small delay to ensure the form has updated
-        setTimeout(() => {
-          const formElement = document.querySelector("[data-form-start]");
-          if (formElement && window.innerWidth < 1024) {
-            formElement.scrollIntoView({ behavior: "smooth", block: "start" });
-          }
-        }, 300);
-      }
-    }
-  };
+      FormTransformerService.scrollToFormOnMobile(layoutMode);
+    },
+    [formData, layoutMode]
+  );
 
   const handleSave = useCallback(async () => {
     const validation = validateRecipeInput(formData);
@@ -691,31 +110,14 @@ export function RecipeEditForm({
     }
 
     setErrors([]);
-
-    const updateData: Partial<RecipeInput> = {
-      title: formData.title,
-      ingredients: formData.ingredients,
-      servings: formData.servings,
-      description: formData.description,
-      category: formData.category,
-      cuisine: formData.cuisine,
-      diet_types: formData.diet_types,
-      cooking_methods: formData.cooking_methods,
-      dish_types: formData.dish_types,
-      proteins: formData.proteins,
-      occasions: formData.occasions,
-      characteristics: formData.characteristics,
-      season: formData.season,
-    };
+    const updateData = FormTransformerService.createUpdatePayload(formData);
 
     try {
       await onSave(updateData);
-      // Success - trigger the hidden close button only in sheet mode
       if (!standalone) {
         closeButtonRef.current?.click();
       }
     } catch (error) {
-      // Error handling - don't close sheet so user can see errors
       console.error("Save failed:", error);
     }
   }, [formData, onSave, standalone]);
@@ -731,21 +133,6 @@ export function RecipeEditForm({
     setFormData((prev) => ({ ...prev, ...updates }));
   }, []);
 
-  // Auto-resize textarea function
-  const autoResizeTextarea = useCallback(() => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = "auto";
-      textarea.style.height = textarea.scrollHeight + "px";
-    }
-  }, []);
-
-  // Auto-resize textarea when description changes
-  useEffect(() => {
-    autoResizeTextarea();
-  }, [formData.description, autoResizeTextarea]);
-
-  // Form sections component - memoized to prevent remounting
   const FormSections = useMemo(
     () => (
       <>
@@ -761,146 +148,26 @@ export function RecipeEditForm({
           </Card>
         )}
 
-        {/* Basic Information */}
-        <Card data-form-start>
-          <CardContent className="space-y-3 sm:space-y-4">
-            <h3 className="text-lg font-semibold mb-3">
-              {t("basicInformation")}
-            </h3>
-            <div className="space-y-2">
-              <Label htmlFor="title">{t("title")}</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, title: e.target.value }))
-                }
-                placeholder={t("titlePlaceholder")}
-                disabled={loading}
-              />
-            </div>
+        <BasicInformationSection
+          formData={formData}
+          onFormDataChange={handleFormDataChange}
+          loading={loading}
+        />
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="category">{t("category")}</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, category: value }))
-                  }
-                  disabled={loading}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("selectCategory")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {RECIPE_CATEGORIES.map((category) => (
-                      <SelectItem
-                        key={category}
-                        value={category}
-                        className="capitalize"
-                      >
-                        {tCategories(category)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        <IngredientsSection
+          ingredients={formData.ingredients}
+          onIngredientsChange={handleIngredientsChange}
+          loading={loading}
+        />
 
-              <div className="space-y-2">
-                <Label htmlFor="season">{t("season")}</Label>
-                <Select
-                  value={formData.season}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, season: value }))
-                  }
-                  disabled={loading}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("selectSeason")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {RECIPE_SEASONS.map((season) => (
-                      <SelectItem
-                        key={season}
-                        value={season}
-                        className="capitalize"
-                      >
-                        {tSeasons(season)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+        <InstructionsSection
+          description={formData.description}
+          onDescriptionChange={(description) =>
+            handleFormDataChange({ description })
+          }
+          loading={loading}
+        />
 
-            {/* Serving Size */}
-            <div className="space-y-2">
-              <Label htmlFor="servings">{t("servings")}</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="servings"
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={formData.servings}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (!isNaN(value) && value > 0 && value <= 100) {
-                      setFormData((prev) => ({ ...prev, servings: value }));
-                    }
-                  }}
-                  placeholder="4"
-                  disabled={loading}
-                  className="w-20"
-                />
-                <span className="text-sm text-muted-foreground">
-                  {tServing("people")}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Ingredients */}
-        <Card>
-          <CardContent>
-            <h3 className="text-lg font-semibold mb-3">{t("ingredients")}</h3>
-            <StructuredIngredientInput
-              key="ingredients-input"
-              ingredients={formData.ingredients}
-              onChange={handleIngredientsChange}
-              disabled={loading}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Instructions */}
-        <Card>
-          <CardContent>
-            <h3 className="text-lg font-semibold mb-3">{t("instructions")}</h3>
-            <div className="space-y-2">
-              <Textarea
-                ref={textareaRef}
-                id="description"
-                value={formData.description}
-                onChange={(e) => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }));
-                  // Trigger resize on input
-                  setTimeout(autoResizeTextarea, 0);
-                }}
-                placeholder={t("descriptionPlaceholder")}
-                className="min-h-[120px] resize-none overflow-hidden"
-                disabled={loading}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tags */}
         <Card>
           <CardContent className="p-0">
             <CategorizedTagSelector
@@ -911,18 +178,9 @@ export function RecipeEditForm({
           </CardContent>
         </Card>
 
-        {/* Action Buttons */}
         <div className="flex gap-3 pt-4 border-t">
           {standalone ? (
             <>
-              <Button
-                variant="outline"
-                disabled={loading}
-                className="flex-1"
-                onClick={onCancel}
-              >
-                {t("cancel")}
-              </Button>
               <Button
                 onClick={handleSave}
                 disabled={loading}
@@ -934,6 +192,14 @@ export function RecipeEditForm({
                   ? t("saveChanges")
                   : t("createRecipe")}
               </Button>
+              <Button
+                variant="outline"
+                disabled={loading}
+                className="flex-1"
+                onClick={onCancel}
+              >
+                {t("cancel")}
+              </Button>
             </>
           ) : (
             <>
@@ -944,11 +210,6 @@ export function RecipeEditForm({
                   aria-hidden="true"
                 />
               </SheetClose>
-              <SheetClose asChild>
-                <Button variant="outline" disabled={loading} className="flex-1">
-                  {t("cancel")}
-                </Button>
-              </SheetClose>
               <Button
                 onClick={handleSave}
                 disabled={loading}
@@ -956,6 +217,11 @@ export function RecipeEditForm({
               >
                 {loading ? t("saving") : t("saveChanges")}
               </Button>
+              <SheetClose asChild>
+                <Button variant="outline" disabled={loading} className="flex-1">
+                  {t("cancel")}
+                </Button>
+              </SheetClose>
             </>
           )}
         </div>
@@ -972,68 +238,21 @@ export function RecipeEditForm({
       onCancel,
       recipe.id,
       t,
-      tCategories,
-      tSeasons,
-      tServing,
-      autoResizeTextarea,
     ]
   );
 
-  // Single column layout (original layout)
-  if (layoutMode === "single-column") {
-    return (
-      <div className="space-y-4 sm:space-y-6 p-0">
-        {/* AI Chat Assistant */}
-        {includeChat && (
-          <div className="mb-6">
-            <ChatInterface
-              selectedRecipe={recipe}
-              onRecipeGenerated={handleAIRecipeUpdate}
-              currentFormState={memoizedFormState}
-            />
-          </div>
-        )}
-
-        {FormSections}
-
-        {/* Hidden close button for programmatic closing - only in sheet mode */}
-        {!standalone && (
-          <button ref={closeButtonRef} className="hidden" aria-hidden="true" />
-        )}
-      </div>
-    );
-  }
-
-  // Two-column layout for desktop
   return (
-    <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-8">
-      {/* Left Column - Chat Interface (Desktop: 5/12, Mobile: full width) */}
-      {includeChat && (
-        <div className="lg:col-span-5">
-          <div className="lg:sticky lg:top-6 lg:self-start">
-            <ChatInterface
-              selectedRecipe={recipe}
-              onRecipeGenerated={handleAIRecipeUpdate}
-              currentFormState={memoizedFormState}
-              isDesktopSidebar={true}
-            />
-          </div>
-        </div>
+    <FormLayoutRenderer
+      layoutMode={layoutMode}
+      includeChat={includeChat}
+      recipe={recipe}
+      memoizedFormState={memoizedFormState}
+      onAIRecipeUpdate={handleAIRecipeUpdate}
+    >
+      {FormSections}
+      {!standalone && (
+        <button ref={closeButtonRef} className="hidden" aria-hidden="true" />
       )}
-
-      {/* Right Column - Form (Desktop: 7/12, Mobile: full width) */}
-      <div
-        className={`space-y-4 sm:space-y-6 lg:!mt-0 ${
-          includeChat ? "lg:col-span-7" : "lg:col-span-12"
-        }`}
-      >
-        {FormSections}
-
-        {/* Hidden close button for programmatic closing - only in sheet mode */}
-        {!standalone && (
-          <button ref={closeButtonRef} className="hidden" aria-hidden="true" />
-        )}
-      </div>
-    </div>
+    </FormLayoutRenderer>
   );
 }

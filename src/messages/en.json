@@ -104,7 +104,6 @@
     "titlePlaceholder": "Enter recipe title",
     "description": "Description",
     "ingredients": "Ingredients",
-    "addIngredient": "Add Ingredient",
     "amount": "Amount",
     "unit": "Unit",
     "ingredientName": "Ingredient name",
@@ -402,7 +401,8 @@
     "amountHeader": "Amount",
     "unitHeader": "Unit",
     "ingredientHeader": "Ingredient",
-    "notesHeader": "Notes"
+    "notesHeader": "Notes",
+    "addIngredient": "Add Ingredient"
   },
   "units": {
     "g": "g",

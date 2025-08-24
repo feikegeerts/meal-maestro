@@ -9,7 +9,6 @@ import {
 } from "@/types/recipe";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -114,38 +113,39 @@ function StructuredIngredientInputComponent({
 
   return (
     <div className="space-y-4">
-      <Label className="text-base font-medium">Ingredients</Label>
+      {ingredients.length === 0 ? (
+        <div className="text-center text-muted-foreground py-8">
+          No ingredients added yet. Click &quot;Add Ingredient&quot; to get
+          started.
+        </div>
+      ) : (
+        <>
+          {/* Desktop Table Layout */}
+          <div className="hidden sm:block">
+            {/* Table Headers */}
+            <div className="flex gap-2 pb-2 mb-3 text-xs font-medium text-muted-foreground border-b">
+              <div className="w-8 text-left">#</div>
+              <div className="w-20 text-left">{t("amountHeader")}</div>
+              <div className="w-24 text-left">{t("unitHeader")}</div>
+              <div className="flex-1 text-left">{t("ingredientHeader")}</div>
+              <div className="w-32 text-left">{t("notesHeader")}</div>
+              <div className="w-8 text-left"></div>
+            </div>
 
-      <div className="space-y-4">
-        {ingredients.map((ingredient, index) => (
-          <div key={ingredient.id} className="space-y-3">
-            {/* Mobile Layout (Stacked) */}
-            <div className="block sm:hidden">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Ingredient {index + 1}
-                </span>
-                {ingredients.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeIngredient(ingredient.id)}
-                    disabled={disabled}
-                    className="px-2"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
+            {/* Table Rows */}
+            <div className="space-y-2">
+              {ingredients.map((ingredient, index) => (
+                <div
+                  key={ingredient.id}
+                  className="flex gap-2 items-center py-1"
+                >
+                  {/* Index */}
+                  <div className="w-8 text-center text-sm text-muted-foreground">
+                    {index + 1}
+                  </div>
 
-              <div className="space-y-3">
-                {/* Amount and Unit Row */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">
-                      {t("amountHeader")}
-                    </Label>
+                  {/* Amount */}
+                  <div className="w-20">
                     <Input
                       type="number"
                       step={getStepSizeForUnit(ingredient.unit).toString()}
@@ -156,13 +156,12 @@ function StructuredIngredientInputComponent({
                         handleAmountChange(ingredient.id, e.target.value)
                       }
                       disabled={disabled}
-                      className="text-center"
+                      className="text-center h-9 text-sm"
                     />
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">
-                      {t("unitHeader")}
-                    </Label>
+
+                  {/* Unit */}
+                  <div className="w-24">
                     <Select
                       value={ingredient.unit || "none"}
                       onValueChange={(value) =>
@@ -170,8 +169,8 @@ function StructuredIngredientInputComponent({
                       }
                       disabled={disabled}
                     >
-                      <SelectTrigger className="text-xs">
-                        <SelectValue placeholder={t("unitPlaceholder")} />
+                      <SelectTrigger className="h-9 w-full text-sm">
+                        <SelectValue placeholder="-" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">-</SelectItem>
@@ -183,163 +182,171 @@ function StructuredIngredientInputComponent({
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
 
-                {/* Ingredient Name */}
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">
-                    {t("ingredientHeader")}
-                  </Label>
-                  <Input
-                    placeholder={t("ingredientNamePlaceholder")}
-                    value={ingredient.name}
-                    onChange={(e) =>
-                      updateIngredient(ingredient.id, { name: e.target.value })
-                    }
-                    disabled={disabled}
-                  />
-                </div>
+                  {/* Ingredient Name */}
+                  <div className="flex-1">
+                    <Input
+                      placeholder={t("ingredientNamePlaceholder")}
+                      value={ingredient.name}
+                      onChange={(e) =>
+                        updateIngredient(ingredient.id, {
+                          name: e.target.value,
+                        })
+                      }
+                      disabled={disabled}
+                      className="h-9 text-sm"
+                    />
+                  </div>
 
-                {/* Notes */}
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">
-                    {t("notesHeader")}
-                  </Label>
-                  <Input
-                    placeholder={t("notesPlaceholder")}
-                    value={ingredient.notes || ""}
-                    onChange={(e) =>
-                      updateIngredient(ingredient.id, { notes: e.target.value })
-                    }
-                    disabled={disabled}
-                  />
+                  {/* Notes */}
+                  <div className="w-32">
+                    <Input
+                      placeholder={t("notesPlaceholder")}
+                      value={ingredient.notes || ""}
+                      onChange={(e) =>
+                        updateIngredient(ingredient.id, {
+                          notes: e.target.value,
+                        })
+                      }
+                      disabled={disabled}
+                      className="h-9 text-sm"
+                    />
+                  </div>
+
+                  {/* Remove Button */}
+                  <div className="w-8 text-center">
+                    {ingredients.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeIngredient(ingredient.id)}
+                        disabled={disabled}
+                        className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
+          </div>
 
-            {/* Desktop Layout (Grid) */}
-            <div className="hidden sm:flex items-center gap-2">
-              <span className="text-sm text-muted-foreground w-6">
-                {index + 1}.
-              </span>
-              <div className="flex-1 grid grid-cols-12 gap-2">
-                {/* Amount */}
-                <div className="col-span-2">
-                  <Input
-                    type="number"
-                    step={getStepSizeForUnit(ingredient.unit).toString()}
-                    min="0"
-                    placeholder="0"
-                    value={ingredient.amount || ""}
-                    onChange={(e) =>
-                      handleAmountChange(ingredient.id, e.target.value)
-                    }
-                    disabled={disabled}
-                    className="text-center"
-                  />
-                </div>
-
-                {/* Unit */}
-                <div className="col-span-2">
-                  <Select
-                    value={ingredient.unit || "none"}
-                    onValueChange={(value) =>
-                      handleUnitSelect(ingredient.id, value)
-                    }
-                    disabled={disabled}
-                  >
-                    <SelectTrigger className="text-xs">
-                      <SelectValue placeholder={t("unitPlaceholder")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">-</SelectItem>
-                      {COOKING_UNITS.map((unit) => (
-                        <SelectItem key={unit} value={unit}>
-                          {tUnits(unit)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Name */}
-                <div className="col-span-5">
-                  <Input
-                    placeholder={t("ingredientNamePlaceholder")}
-                    value={ingredient.name}
-                    onChange={(e) =>
-                      updateIngredient(ingredient.id, { name: e.target.value })
-                    }
-                    disabled={disabled}
-                    className="flex-1"
-                  />
-                </div>
-
-                {/* Notes */}
-                <div className="col-span-2">
-                  <Input
-                    placeholder={t("notesPlaceholder")}
-                    value={ingredient.notes || ""}
-                    onChange={(e) =>
-                      updateIngredient(ingredient.id, { notes: e.target.value })
-                    }
-                    disabled={disabled}
-                    className="text-xs"
-                  />
-                </div>
-
-                {/* Remove Button */}
-                <div className="col-span-1">
+          {/* Mobile Layout - Compact List */}
+          <div className="block sm:hidden space-y-3">
+            {ingredients.map((ingredient, index) => (
+              <div key={ingredient.id} className="bg-muted/30 rounded-lg p-2.5">
+                {/* Header Row with Index and Delete */}
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {index + 1}.
+                  </span>
                   {ingredients.length > 1 && (
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => removeIngredient(ingredient.id)}
                       disabled={disabled}
-                      className="px-2 h-full"
+                      className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3 w-3" />
                     </Button>
                   )}
                 </div>
+
+                {/* Optimized Two-Row Layout */}
+                <div className="space-y-2">
+                  {/* Row 1: Amount + Unit (compact) */}
+                  <div className="flex gap-2 items-center">
+                    <div className="w-20">
+                      <Input
+                        type="number"
+                        step={getStepSizeForUnit(ingredient.unit).toString()}
+                        min="0"
+                        placeholder="0"
+                        value={ingredient.amount || ""}
+                        onChange={(e) =>
+                          handleAmountChange(ingredient.id, e.target.value)
+                        }
+                        disabled={disabled}
+                        className="text-center h-9 text-sm px-3 py-1"
+                      />
+                    </div>
+                    <div className="w-20">
+                      <Select
+                        value={ingredient.unit || "none"}
+                        onValueChange={(value) =>
+                          handleUnitSelect(ingredient.id, value)
+                        }
+                        disabled={disabled}
+                      >
+                        <SelectTrigger className="h-9 text-sm min-h-9">
+                          <SelectValue placeholder="-" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">-</SelectItem>
+                          {COOKING_UNITS.map((unit) => (
+                            <SelectItem key={unit} value={unit}>
+                              {tUnits(unit)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Ingredient Name (full width) */}
+                  <div>
+                    <Input
+                      placeholder={t("ingredientNamePlaceholder")}
+                      value={ingredient.name}
+                      onChange={(e) =>
+                        updateIngredient(ingredient.id, {
+                          name: e.target.value,
+                        })
+                      }
+                      disabled={disabled}
+                      className="h-9 text-sm"
+                    />
+                  </div>
+
+                  {/* Row 3: Notes (if needed) */}
+                  {(ingredient.notes || !disabled) && (
+                    <div>
+                      <Input
+                        placeholder={t("notesPlaceholder")}
+                        value={ingredient.notes || ""}
+                        onChange={(e) =>
+                          updateIngredient(ingredient.id, {
+                            notes: e.target.value,
+                          })
+                        }
+                        disabled={disabled}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-
+            ))}
           </div>
-        ))}
-      </div>
-
-      {/* Column headers for desktop only */}
-      <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground border-t pt-2">
-        <span className="w-6"></span>
-        <div className="flex-1 grid grid-cols-12 gap-2">
-          <div className="col-span-2 text-center">{t("amountHeader")}</div>
-          <div className="col-span-2 text-center">{t("unitHeader")}</div>
-          <div className="col-span-5 text-center">{t("ingredientHeader")}</div>
-          <div className="col-span-2 text-center">{t("notesHeader")}</div>
-          <div className="col-span-1"></div>
-        </div>
-      </div>
-
-      {ingredients.length === 0 && (
-        <div className="text-center text-muted-foreground py-8">
-          No ingredients added yet. Click &quot;Add Ingredient&quot; to get
-          started.
-        </div>
+        </>
       )}
 
       {/* Add Ingredient Button at Bottom */}
-      <div className="flex justify-center pt-2">
+      <div className="flex justify-center pt-4">
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={addIngredient}
           disabled={disabled}
+          className="h-8 text-sm sm:h-9 sm:text-xs"
         >
-          <Plus className="h-4 w-4 mr-1" />
-          Add Ingredient
+          <Plus className="h-3.5 w-3.5 mr-1.5 sm:h-4 sm:w-4 sm:mr-2" />
+          {t("addIngredient")}
         </Button>
       </div>
     </div>
