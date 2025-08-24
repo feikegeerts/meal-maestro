@@ -61,6 +61,18 @@ NEVER use: stuk, el, tl, teen, pieces, stuks
 GUIDELINES: Liquids=ml, solids=g, countable items=no unit, herbs/spices=tsp/tbsp, garlic=clove
 Auto-converts: 1000g→kg, 1000ml→l
 
+INGREDIENT ORDERING:
+Always order ingredients logically for cooking preparation:
+1. PROTEINS: meat, fish, poultry, eggs, tofu (main ingredients first)
+2. MAIN VEGETABLES: potatoes, broccoli, carrots, main vegetables  
+3. AROMATICS: onions, garlic, ginger, shallots
+4. PANTRY ITEMS: flour, rice, pasta, beans, nuts
+5. DAIRY: milk, cheese, cream, yogurt
+6. FATS: oil, butter (cooking fats)  
+7. LIQUIDS: broth, wine, water, sauces
+8. SEASONINGS: salt, pepper, herbs, spices (ALWAYS at the end)
+9. GARNISH: parsley, lemon zest, finishing touches
+
 DESCRIPTION: Write detailed step-by-step cooking instructions with times, temperatures, and techniques. Each step on separate line.
 Example: "1. Preheat oven to 350°F.\n2. Mix ingredients until combined.\n3. Bake 25-30 minutes until golden."`;
 
