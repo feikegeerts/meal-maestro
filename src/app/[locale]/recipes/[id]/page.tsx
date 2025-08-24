@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "@/app/i18n/routing";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -42,6 +42,11 @@ import {
 import { setRedirectUrl, processInstructions } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useRecipeTranslations } from "@/messages";
+import {
+  IngredientFormatterService,
+  createTranslationAdapter,
+} from "@/utils/ingredient-pluralization";
+import { normalizeIngredientUnit, formatFraction, pluralizeUnit } from "@/types/recipe";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
@@ -60,8 +65,18 @@ export default function RecipeDetailPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const t = useTranslations("recipes");
   const tUnits = useTranslations("units");
+  const tIngredientPlurals = useTranslations("ingredientPlurals");
   const { translateCategory, translateSeason, translateTag } =
     useRecipeTranslations();
+
+  // Create ingredient formatter service with proper dependency injection
+  const ingredientFormatter = useMemo(() => {
+    const translationAdapter = createTranslationAdapter(
+      tUnits,
+      tIngredientPlurals
+    );
+    return new IngredientFormatterService(translationAdapter);
+  }, [tUnits, tIngredientPlurals]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -507,16 +522,43 @@ export default function RecipeDetailPage() {
               <div className="space-y-1">
                 {(displayRecipe || recipe)?.ingredients.map(
                   (ingredient, index) => {
-                    // Format amount and unit
-                    const amountText = ingredient.amount
-                      ? `${ingredient.amount}${
-                          ingredient.unit
-                            ? ` ${tUnits(ingredient.unit) || ingredient.unit}`
-                            : ""
-                        }`
-                      : ingredient.unit
-                      ? tUnits(ingredient.unit) || ingredient.unit
-                      : "";
+                    // For the grid layout, we need to separate amount/unit from ingredient name
+                    let amountText = '';
+                    let ingredientNameWithNotes = ingredient.name;
+                    
+                    const hasAmount = ingredient.amount !== null && Number.isFinite(ingredient.amount);
+                    
+                    if (hasAmount && ingredient.amount !== null) {
+                      // Get the properly formatted amount and unit
+                      const smartResult = normalizeIngredientUnit(ingredient.amount, ingredient.unit);
+                      const finalAmount = smartResult?.amount ?? ingredient.amount;
+                      const finalUnit = smartResult?.unit ?? ingredient.unit;
+                      const pluralizedUnit = pluralizeUnit(finalUnit, finalAmount);
+                      
+                      // Format amount text for the left column
+                      amountText = formatFraction(finalAmount);
+                      if (pluralizedUnit) {
+                        amountText += ` ${tUnits(pluralizedUnit) || pluralizedUnit}`;
+                      }
+                      
+                      // Apply ingredient name pluralization/singularization based on the final amount
+                      if (finalAmount > 1) {
+                        // Try to pluralize: 1 ui -> 2 uien
+                        ingredientNameWithNotes = ingredientFormatter.pluralizeIngredientName(ingredient.name);
+                      } else if (finalAmount === 1) {
+                        // Try to singularize: 2 uien -> 1 ui
+                        ingredientNameWithNotes = ingredientFormatter.singularizeIngredientName(ingredient.name);
+                      }
+                      
+                    } else if (ingredient.unit) {
+                      // Unit-only ingredients
+                      amountText = tUnits(ingredient.unit) || ingredient.unit;
+                    }
+                    
+                    // Add notes if present
+                    if (ingredient.notes) {
+                      ingredientNameWithNotes += ` (${ingredient.notes})`;
+                    }
 
                     return (
                       <div
@@ -530,12 +572,7 @@ export default function RecipeDetailPage() {
                         </div>
                         <div className="col-span-8">
                           <span className="text-sm leading-relaxed">
-                            {ingredient.name}
-                            {ingredient.notes && (
-                              <span className="text-muted-foreground ml-1">
-                                ({ingredient.notes})
-                              </span>
-                            )}
+                            {ingredientNameWithNotes}
                           </span>
                         </div>
                       </div>

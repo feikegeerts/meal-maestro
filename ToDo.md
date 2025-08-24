@@ -1,8 +1,7 @@
 ### Phase 5: Post-MVP Enhancements
 
 - [ ] AI Performance, soms duurt die een beetje lang
-- [ ] sorting of ingredients. I think it's weird that pepper and salt are sometimes in the middle of the ingredient list.
-- [ ] use pluralize for ingredients or singularize when needed. For example when the ingredients list 1 union, when increase the portion size and it suddenly lists 2, it should say 2 unions. Somehow we need to make the display logic smart without making changes to the data in the database. The vice versa should also happen. 2 unions and then reducing the servings size should go to 1 union. This is complex because in dutch it depends on which word, and pluralization is hard. What can we do to make this better?
+- [ ] optimize ✓ Compiled /api/user/usage-cost in 532ms call to only be triggered when the menu dropdown is openend.
 - [ ] competitor layouts overnemen zowel desktop als mobile voor recepten weergeven en toevoegen, recipes details has been done, edit recipe still to do
 - [ ] structed ingredient table layout is beetje gek met de headers onderaan
 - [ ] custom smtp server for magic link emails

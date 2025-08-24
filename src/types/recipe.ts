@@ -469,35 +469,6 @@ export function formatIngredientDisplay(ingredient: RecipeIngredient): string {
   return `${amount}${unit} ${ingredient.name}${notes}`;
 }
 
-export function formatIngredientDisplayWithTranslation(
-  ingredient: RecipeIngredient, 
-  translateUnit: (unit: string) => string
-): string {
-  if (ingredient.amount === null) {
-    const notes = ingredient.notes ? ` (${ingredient.notes})` : '';
-    return `${ingredient.name}${notes}`;
-  }
-  
-  // Handle NaN or invalid numbers
-  if (isNaN(ingredient.amount) || !isFinite(ingredient.amount)) {
-    const notes = ingredient.notes ? ` (${ingredient.notes})` : '';
-    return `${ingredient.name}${notes}`;
-  }
-  
-  // Apply smart unit conversion
-  const smartResult = normalizeIngredientUnit(ingredient.amount, ingredient.unit);
-  const finalAmount = smartResult ? smartResult.amount : ingredient.amount;
-  const finalUnit = smartResult ? smartResult.unit : ingredient.unit;
-  
-  // Apply pluralization before translation
-  const pluralizedUnit = pluralizeUnit(finalUnit, finalAmount);
-  
-  const amount = formatFraction(finalAmount);
-  const unit = pluralizedUnit ? ` ${translateUnit(pluralizedUnit) || pluralizedUnit}` : '';
-  const notes = ingredient.notes ? ` (${ingredient.notes})` : '';
-  
-  return `${amount}${unit} ${ingredient.name}${notes}`;
-}
 
 // Smart cooking units for dropdown (7 total)
 export const COOKING_UNITS = [
