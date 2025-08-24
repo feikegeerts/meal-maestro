@@ -349,6 +349,17 @@
     "assistantTitle": "AI Recipe Assistant",
     "thinking": "AI is thinking...",
     "inputPlaceholder": "Type your message...",
+    "loading": {
+      "analyzingImage": "Analyzing image...",
+      "understandingContent": "Understanding content...",
+      "processingWithAI": "Processing with AI...",
+      "checkingURL": "Checking URL...",
+      "extractingRecipe": "Extracting recipe...",
+      "processingIngredients": "Processing ingredients...",
+      "processingRequest": "Processing request...",
+      "thinkingAboutRecipe": "Thinking about recipe...",
+      "finalizingResponse": "Finalizing response..."
+    },
     "currentlyViewing": "Currently viewing",
     "welcomeMessage": "Hello! I'm Meal Maestro, your AI recipe assistant. I can help you create recipes by chatting with me, or you can paste recipe text, share a URL, or even upload a photo for me to analyze. What recipe would you like to work on today?",
     "processingError": "I apologize, but I encountered an issue processing your request.",

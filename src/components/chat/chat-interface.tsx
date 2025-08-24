@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useIntelligentLoading } from "@/hooks/useIntelligentLoading";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,6 +84,9 @@ export function ChatInterface({
   const [isDragging, setIsDragging] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Use the intelligent loading hook
+  const { loadingMessage, startIntelligentLoading, stopIntelligentLoading } = useIntelligentLoading({ t });
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -196,6 +200,9 @@ export function ChatInterface({
     setError(null);
     setIsLoading(true);
     
+    // Start intelligent loading sequence
+    startIntelligentLoading(userMessage, !!imageToProcess);
+    
     // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -305,6 +312,7 @@ export function ChatInterface({
       setError(err instanceof Error ? err.message : "Failed to send message");
     } finally {
       setIsLoading(false);
+      stopIntelligentLoading();
     }
   };
 
@@ -370,7 +378,7 @@ export function ChatInterface({
               {isLoading && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">{t("thinking")}</span>
+                  <span className="text-sm">{loadingMessage || t("thinking")}</span>
                 </div>
               )}
               <div ref={messagesEndRef} />

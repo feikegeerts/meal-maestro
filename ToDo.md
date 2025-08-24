@@ -1,7 +1,5 @@
 ### Phase 5: Post-MVP Enhancements
 
-- [ ] AI Performance, soms duurt die een beetje lang
-- [ ] optimize ✓ Compiled /api/user/usage-cost in 532ms call to only be triggered when the menu dropdown is openend.
 - [ ] competitor layouts overnemen zowel desktop als mobile voor recepten weergeven en toevoegen, recipes details has been done, edit recipe still to do
 - [ ] structed ingredient table layout is beetje gek met de headers onderaan
 - [ ] custom smtp server for magic link emails

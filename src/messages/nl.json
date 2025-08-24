@@ -349,6 +349,17 @@
     "assistantTitle": "AI Recept Assistant",
     "thinking": "AI is aan het denken...",
     "inputPlaceholder": "Typ je bericht...",
+    "loading": {
+      "analyzingImage": "Afbeelding analyseren...",
+      "understandingContent": "Inhoud begrijpen...",
+      "processingWithAI": "Verwerken met AI...",
+      "checkingURL": "URL controleren...",
+      "extractingRecipe": "Recept ophalen...",
+      "processingIngredients": "Ingrediënten verwerken...",
+      "processingRequest": "Verzoek verwerken...",
+      "thinkingAboutRecipe": "Nadenken over recept...",
+      "finalizingResponse": "Antwoord afronden..."
+    },
     "currentlyViewing": "Momenteel bekijkt",
     "welcomeMessage": "Hey! Ik ben Meal Maestro, je AI receptenhulp. Ik kan recepten maken door samen met je te chatten, of je kunt een recepttekst plakken, een URL delen, of zelfs een foto uploaden die ik voor je kan analyseren. Aan welk recept wil je vandaag werken?",
     "processingError": "Sorry, maar ik had een probleem bij het verwerken van je verzoek.",
