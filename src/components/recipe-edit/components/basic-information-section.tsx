@@ -58,9 +58,7 @@ export function BasicInformationSection({
           />
         </div>
 
-        <div
-          className={`grid grid-cols-1 md:grid-cols-[auto_auto_auto] md:gap-6 gap-4 md:justify-start`}
-        >
+        <div className={`flex flex-wrap gap-4 md:gap-6`}>
           <div className={SPACING_CONFIG.INPUT_SPACING}>
             <Label htmlFor="category">{t("category")}</Label>
             <Select

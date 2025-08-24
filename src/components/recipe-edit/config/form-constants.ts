@@ -29,7 +29,7 @@ export const SPACING_CONFIG = {
 
 export const VALIDATION_MESSAGES = {
   TITLE_REQUIRED: "Title is required",
-  DESCRIPTION_REQUIRED: "Instructions are required", 
+  DESCRIPTION_REQUIRED: "Instructions are required",
   INGREDIENTS_REQUIRED: "At least one ingredient is required",
   CATEGORY_REQUIRED: "Category is required",
 } as const;

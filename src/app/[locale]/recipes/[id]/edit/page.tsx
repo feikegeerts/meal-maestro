@@ -177,18 +177,14 @@ export default function EditRecipePage() {
       />
 
       {/* Form */}
-      <div className="bg-card rounded-lg shadow-lg">
-        <div className="p-6">
-          <RecipeEditForm
-            recipe={recipe}
-            onSave={handleSave}
-            loading={saveLoading}
-            includeChat={false}
-            standalone={true}
-            onCancel={handleCancel}
-          />
-        </div>
-      </div>
+      <RecipeEditForm
+        recipe={recipe}
+        onSave={handleSave}
+        loading={saveLoading}
+        includeChat={false}
+        standalone={true}
+        onCancel={handleCancel}
+      />
     </PageWrapper>
   );
 }

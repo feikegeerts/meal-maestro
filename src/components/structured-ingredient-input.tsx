@@ -237,29 +237,13 @@ function StructuredIngredientInputComponent({
           <div className="block sm:hidden space-y-3">
             {ingredients.map((ingredient, index) => (
               <div key={ingredient.id} className="bg-muted/30 rounded-lg p-2.5">
-                {/* Header Row with Index and Delete */}
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {index + 1}.
-                  </span>
-                  {ingredients.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeIngredient(ingredient.id)}
-                      disabled={disabled}
-                      className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
-
-                {/* Optimized Two-Row Layout */}
+                {/* Optimized Layout */}
                 <div className="space-y-2">
-                  {/* Row 1: Amount + Unit (compact) */}
+                  {/* Row 1: Index + Amount + Unit + Delete */}
                   <div className="flex gap-2 items-center">
+                    <span className="text-xs font-medium text-muted-foreground w-6">
+                      {index + 1}.
+                    </span>
                     <div className="w-20">
                       <Input
                         type="number"
@@ -295,6 +279,19 @@ function StructuredIngredientInputComponent({
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="flex-1"></div>
+                    {ingredients.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeIngredient(ingredient.id)}
+                        disabled={disabled}
+                        className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
 
                   {/* Row 2: Ingredient Name (full width) */}

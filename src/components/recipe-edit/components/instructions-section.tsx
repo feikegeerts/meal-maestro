@@ -4,7 +4,6 @@ import { useRef, useEffect, useCallback } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
-import { FORM_CONFIG } from "../config/form-constants";
 
 interface InstructionsSectionProps {
   description: string;
@@ -48,7 +47,7 @@ export function InstructionsSection({
             value={description}
             onChange={(e) => handleDescriptionChange(e.target.value)}
             placeholder={t("descriptionPlaceholder")}
-            className={`min-h-[${FORM_CONFIG.MIN_TEXTAREA_HEIGHT}px] resize-none overflow-hidden text-sm sm:text-base`}
+            className="min-h-[160px] resize-none overflow-hidden text-sm sm:text-base"
             disabled={loading}
           />
         </div>

@@ -241,6 +241,108 @@ export function RecipeEditForm({
     ]
   );
 
+  // Smart two-column sections for when chat is not included
+  const LeftColumnSections = useMemo(
+    () => (
+      <>
+        {errors.length > 0 && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-destructive space-y-1">
+                {errors.map((error, index) => (
+                  <div key={index}>{error}</div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <BasicInformationSection
+          formData={formData}
+          onFormDataChange={handleFormDataChange}
+          loading={loading}
+        />
+
+        <IngredientsSection
+          ingredients={formData.ingredients}
+          onIngredientsChange={handleIngredientsChange}
+          loading={loading}
+        />
+      </>
+    ),
+    [errors, formData, loading, handleIngredientsChange, handleFormDataChange]
+  );
+
+  const RightColumnSections = useMemo(
+    () => (
+      <>
+        <InstructionsSection
+          description={formData.description}
+          onDescriptionChange={(description) =>
+            handleFormDataChange({ description })
+          }
+          loading={loading}
+        />
+
+        <Card>
+          <CardContent className="p-0">
+            <CategorizedTagSelector
+              formData={formData}
+              onFormDataChange={handleFormDataChange}
+              disabled={loading}
+            />
+          </CardContent>
+        </Card>
+      </>
+    ),
+    [formData, handleFormDataChange, loading]
+  );
+
+  const ActionButtons = useMemo(
+    () => (
+      <div className="flex gap-3 pt-4 border-t">
+        {standalone ? (
+          <>
+            <Button onClick={handleSave} disabled={loading} className="flex-1">
+              {loading
+                ? t("saving")
+                : recipe.id
+                ? t("saveChanges")
+                : t("createRecipe")}
+            </Button>
+            <Button
+              variant="outline"
+              disabled={loading}
+              className="flex-1"
+              onClick={onCancel}
+            >
+              {t("cancel")}
+            </Button>
+          </>
+        ) : (
+          <>
+            <SheetClose asChild>
+              <button
+                ref={closeButtonRef}
+                className="hidden"
+                aria-hidden="true"
+              />
+            </SheetClose>
+            <Button onClick={handleSave} disabled={loading} className="flex-1">
+              {loading ? t("saving") : t("saveChanges")}
+            </Button>
+            <SheetClose asChild>
+              <Button variant="outline" disabled={loading} className="flex-1">
+                {t("cancel")}
+              </Button>
+            </SheetClose>
+          </>
+        )}
+      </div>
+    ),
+    [handleSave, loading, recipe.id, standalone, onCancel, t]
+  );
+
   return (
     <FormLayoutRenderer
       layoutMode={layoutMode}
@@ -248,6 +350,9 @@ export function RecipeEditForm({
       recipe={recipe}
       memoizedFormState={memoizedFormState}
       onAIRecipeUpdate={handleAIRecipeUpdate}
+      leftColumnSections={LeftColumnSections}
+      rightColumnSections={RightColumnSections}
+      actionButtons={ActionButtons}
     >
       {FormSections}
       {!standalone && (
