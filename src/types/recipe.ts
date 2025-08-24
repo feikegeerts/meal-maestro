@@ -510,3 +510,34 @@ export const COOKING_UNITS = [
   'clove'
 ];
 
+// Unit-based step sizes for quantity inputs
+const UNIT_STEP_CONFIG: Record<string, number> = {
+  // Large volume units - maintain current behavior
+  'ml': 25,
+  'l': 0.25,
+  
+  // Weight units - reasonable increments  
+  'g': 25,
+  'kg': 0.25,
+  
+  // Small volume units - smaller increments
+  'tbsp': 0.5,
+  'tsp': 0.25,
+  
+  // Discrete/count units - step of 1
+  'clove': 1
+};
+
+/**
+ * Returns the appropriate step size for quantity inputs based on unit type
+ * @param unit - The cooking unit (or null for unitless ingredients)
+ * @returns Step size as a number
+ */
+export function getStepSizeForUnit(unit: string | null): number {
+  if (!unit) {
+    return 1; // Default step for unitless ingredients
+  }
+  
+  return UNIT_STEP_CONFIG[unit] || 1; // Default to 1 for unknown units
+}
+

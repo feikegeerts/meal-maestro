@@ -5,6 +5,7 @@ import {
   RecipeIngredient,
   COOKING_UNITS,
   normalizeIngredientUnit,
+  getStepSizeForUnit,
 } from "@/types/recipe";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -147,7 +148,7 @@ function StructuredIngredientInputComponent({
                     </Label>
                     <Input
                       type="number"
-                      step="25"
+                      step={getStepSizeForUnit(ingredient.unit).toString()}
                       min="0"
                       placeholder="0"
                       value={ingredient.amount || ""}
@@ -226,7 +227,7 @@ function StructuredIngredientInputComponent({
                 <div className="col-span-2">
                   <Input
                     type="number"
-                    step="25"
+                    step={getStepSizeForUnit(ingredient.unit).toString()}
                     min="0"
                     placeholder="0"
                     value={ingredient.amount || ""}
