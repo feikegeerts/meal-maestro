@@ -1,7 +1,5 @@
 ### Phase 5: Post-MVP Enhancements
 
-- [ ] competitor layouts overnemen zowel desktop als mobile voor recepten weergeven en toevoegen, recipes details has been done, edit recipe still to do
-- [ ] structed ingredient table layout is beetje gek met de headers onderaan
 - [ ] custom smtp server for magic link emails
 - [ ] Secure code scanning
 - [ ] **5.11** Implement caching strategies
