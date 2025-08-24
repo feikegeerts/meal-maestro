@@ -8,6 +8,10 @@ interface UserCostData {
   userId: string;
 }
 
+interface UseUserCostsOptions {
+  lazy?: boolean;
+}
+
 interface UseUserCostsReturn {
   data: UserCostData | null;
   loading: boolean;
@@ -15,7 +19,7 @@ interface UseUserCostsReturn {
   refetch: () => Promise<void>;
 }
 
-export function useUserCosts(): UseUserCostsReturn {
+export function useUserCosts(options: UseUserCostsOptions = {}): UseUserCostsReturn {
   const { user } = useAuth();
   const [data, setData] = useState<UserCostData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -61,21 +65,23 @@ export function useUserCosts(): UseUserCostsReturn {
     }
   }, [user]);
 
-  // Fetch costs on mount and when user changes
+  // Fetch costs on mount and when user changes (only if not lazy)
   useEffect(() => {
-    fetchCosts();
-  }, [fetchCosts]);
+    if (!options.lazy) {
+      fetchCosts();
+    }
+  }, [fetchCosts, options.lazy]);
 
-  // Auto-refresh every 5 minutes
+  // Auto-refresh every 5 minutes (only if not lazy and data has been fetched)
   useEffect(() => {
-    if (!user) return;
+    if (!user || options.lazy || !data) return;
 
     const interval = setInterval(() => {
       fetchCosts();
     }, 5 * 60 * 1000); // 5 minutes
 
     return () => clearInterval(interval);
-  }, [fetchCosts, user]);
+  }, [fetchCosts, user, options.lazy, data]);
 
   return {
     data,

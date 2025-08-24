@@ -461,6 +461,7 @@ export default function RecipeDetailPage() {
                 src="/placeholder-image.webp"
                 alt={`Recipe: ${recipe.title}`}
                 fill
+                priority
                 className="rounded-xl object-cover shadow-lg"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 50vw"
               />

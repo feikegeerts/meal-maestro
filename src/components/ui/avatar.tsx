@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
+import Image from "next/image"
 
 import { cn } from "@/lib/utils"
 
@@ -23,13 +24,53 @@ function Avatar({
 
 function AvatarImage({
   className,
+  src,
+  alt = "Avatar",
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+  const [imageError, setImageError] = React.useState(false);
+
+  // Reset error state when src changes
+  React.useEffect(() => {
+    setImageError(false);
+  }, [src]);
+
+  if (!src || typeof src !== 'string' || imageError) {
+    return null;
+  }
+
+  // Filter out props that are not compatible with Next.js Image
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  const {
+    onLoadingStatusChange,
+    asChild,
+    width,
+    height,
+    ...imageProps
+  } = props;
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+
   return (
-    <AvatarPrimitive.Image
-      data-slot="avatar-image"
-      className={cn("aspect-square size-full", className)}
-      {...props}
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      className={cn("aspect-square object-cover", className)}
+      quality={75}
+      unoptimized={src.includes('googleusercontent.com')}
+      sizes="(max-width: 48px) 48px, (max-width: 96px) 96px, 128px"
+      onLoad={() => {
+        if (onLoadingStatusChange) {
+          onLoadingStatusChange('loaded');
+        }
+      }}
+      onError={() => {
+        setImageError(true);
+        if (onLoadingStatusChange) {
+          onLoadingStatusChange('error');
+        }
+      }}
+      {...imageProps}
     />
   )
 }

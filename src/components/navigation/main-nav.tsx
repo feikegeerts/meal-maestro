@@ -49,7 +49,9 @@ export function MainNav() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [, setAdminCheckLoading] = useState(true);
-  const { data: costData, loading: costLoading } = useUserCosts();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [userSheetOpen, setUserSheetOpen] = useState(false);
+  const { data: costData, loading: costLoading, refetch: fetchCosts } = useUserCosts({ lazy: true });
   const t = useTranslations('navigation');
   const tAdmin = useTranslations('admin');
   const tA11y = useTranslations('accessibility');
@@ -77,6 +79,20 @@ export function MainNav() {
 
   const handleLanguageChange = (newLocale: string) => {
     router.push(pathname, { locale: newLocale });
+  };
+
+  const handleUserMenuOpenChange = (open: boolean) => {
+    setUserMenuOpen(open);
+    if (open && !costData) {
+      fetchCosts();
+    }
+  };
+
+  const handleUserSheetOpenChange = (open: boolean) => {
+    setUserSheetOpen(open);
+    if (open && !costData) {
+      fetchCosts();
+    }
   };
 
   const formatCost = (cost: number): string => {
@@ -157,7 +173,7 @@ export function MainNav() {
             </NavigationMenu>
 
             {/* User Dropdown */}
-            <DropdownMenu>
+            <DropdownMenu open={userMenuOpen} onOpenChange={handleUserMenuOpenChange}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
@@ -177,32 +193,21 @@ export function MainNav() {
               <DropdownMenuContent className="w-56 sm:w-64 max-w-[calc(100vw-2rem)]" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage
-                          src={profile?.avatar_url || undefined}
-                          alt={profile?.display_name || user?.email || "User"}
-                        />
-                        <AvatarFallback>
-                          <User className="h-5 w-5" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {profile?.display_name || "User"}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {profile?.display_name || "User"}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
                     </div>
                     {costLoading ? (
-                      <div className="space-y-1 pl-12">
+                      <div className="space-y-1">
                         <div className="h-3 w-20 animate-pulse bg-muted rounded"></div>
                         <div className="h-3 w-16 animate-pulse bg-muted rounded"></div>
                       </div>
                     ) : (
-                      <div className="space-y-1 pl-12">
+                      <div className="space-y-1">
                         <p className="text-xs leading-none text-muted-foreground">
                           {tAdmin('totalCosts')}: {formatCost(costData?.totalCost || 0)}
                         </p>
@@ -259,7 +264,7 @@ export function MainNav() {
           {/* Mobile Navigation */}
           <div className="md:hidden flex items-center space-x-2">            
             {/* Mobile User Avatar - Sheet */}
-            <Sheet>
+            <Sheet open={userSheetOpen} onOpenChange={handleUserSheetOpenChange}>
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
@@ -287,34 +292,23 @@ export function MainNav() {
                 <div className="mt-6 space-y-6">
                   {/* User Info Section */}
                   <div className="flex flex-col space-y-3">
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage
-                          src={profile?.avatar_url || undefined}
-                          alt={profile?.display_name || user?.email || "User"}
-                        />
-                        <AvatarFallback>
-                          <User className="h-6 w-6" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {profile?.display_name || "User"}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {profile?.display_name || "User"}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
                     </div>
                     
                     {/* Usage Stats */}
                     {costLoading ? (
-                      <div className="space-y-2 pl-15">
+                      <div className="space-y-2">
                         <div className="h-3 w-24 animate-pulse bg-muted rounded"></div>
                         <div className="h-3 w-20 animate-pulse bg-muted rounded"></div>
                       </div>
                     ) : (
-                      <div className="space-y-1 pl-15">
+                      <div className="space-y-1">
                         <p className="text-xs leading-none text-muted-foreground">
                           {tAdmin('totalCosts')}: {formatCost(costData?.totalCost || 0)}
                         </p>
