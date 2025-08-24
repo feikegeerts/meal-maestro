@@ -40,6 +40,7 @@ export default async function LocaleLayout({
       attribute="class"
       defaultTheme="system"
       enableSystem
+      storageKey="meal-maestro-theme"
       disableTransitionOnChange
     >
       <NextIntlClientProvider messages={messages}>

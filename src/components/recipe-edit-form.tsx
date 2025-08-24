@@ -98,7 +98,6 @@ export const triggerAutoSave = async (): Promise<boolean> => {
   }
 };
 
-
 interface CategorizedTagSelectorProps {
   formData: RecipeInput;
   onFormDataChange: (updates: Partial<RecipeInput>) => void;
@@ -120,95 +119,117 @@ function CategorizedTagSelector({
   const tHeaders = useTranslations("tagCategoryHeaders");
 
   const handleCuisineChange = (cuisine: string) => {
-    onFormDataChange({ cuisine: cuisine === formData.cuisine ? undefined : cuisine });
+    onFormDataChange({
+      cuisine: cuisine === formData.cuisine ? undefined : cuisine,
+    });
   };
 
   const handleArrayTagToggle = (
-    fieldName: keyof Pick<RecipeInput, 'diet_types' | 'cooking_methods' | 'dish_types' | 'proteins' | 'occasions' | 'characteristics'>,
+    fieldName: keyof Pick<
+      RecipeInput,
+      | "diet_types"
+      | "cooking_methods"
+      | "dish_types"
+      | "proteins"
+      | "occasions"
+      | "characteristics"
+    >,
     tag: string
   ) => {
     const currentArray = formData[fieldName] || [];
     const newArray = currentArray.includes(tag)
-      ? currentArray.filter(t => t !== tag)
+      ? currentArray.filter((t) => t !== tag)
       : [...currentArray, tag];
     onFormDataChange({ [fieldName]: newArray });
   };
 
   // Helper function to get all selected tags
   const getSelectedTags = () => {
-    const selectedTags: Array<{ value: string; label: string; type: string }> = [];
-    
+    const selectedTags: Array<{ value: string; label: string; type: string }> =
+      [];
+
     // Cuisine
     if (formData.cuisine) {
       selectedTags.push({
         value: formData.cuisine,
         label: tCuisines(formData.cuisine),
-        type: 'cuisine'
+        type: "cuisine",
       });
     }
-    
+
     // Diet types
-    (formData.diet_types || []).forEach(tag => {
+    (formData.diet_types || []).forEach((tag) => {
       selectedTags.push({
         value: tag,
         label: tDietTypes(tag),
-        type: 'diet_types'
+        type: "diet_types",
       });
     });
-    
+
     // Cooking methods
-    (formData.cooking_methods || []).forEach(tag => {
+    (formData.cooking_methods || []).forEach((tag) => {
       selectedTags.push({
         value: tag,
         label: tCookingMethods(tag),
-        type: 'cooking_methods'
+        type: "cooking_methods",
       });
     });
-    
+
     // Dish types
-    (formData.dish_types || []).forEach(tag => {
+    (formData.dish_types || []).forEach((tag) => {
       selectedTags.push({
         value: tag,
         label: tDishTypes(tag),
-        type: 'dish_types'
+        type: "dish_types",
       });
     });
-    
+
     // Proteins
-    (formData.proteins || []).forEach(tag => {
+    (formData.proteins || []).forEach((tag) => {
       selectedTags.push({
         value: tag,
         label: tProteinTypes(tag),
-        type: 'proteins'
+        type: "proteins",
       });
     });
-    
+
     // Occasions
-    (formData.occasions || []).forEach(tag => {
+    (formData.occasions || []).forEach((tag) => {
       selectedTags.push({
         value: tag,
         label: tOccasionTypes(tag),
-        type: 'occasions'
+        type: "occasions",
       });
     });
-    
+
     // Characteristics
-    (formData.characteristics || []).forEach(tag => {
+    (formData.characteristics || []).forEach((tag) => {
       selectedTags.push({
         value: tag,
         label: tCharacteristicTypes(tag),
-        type: 'characteristics'
+        type: "characteristics",
       });
     });
-    
+
     return selectedTags;
   };
 
   const removeTag = (tagValue: string, tagType: string) => {
-    if (tagType === 'cuisine') {
+    if (tagType === "cuisine") {
       handleCuisineChange(tagValue);
     } else {
-      handleArrayTagToggle(tagType as keyof Pick<RecipeInput, 'diet_types' | 'cooking_methods' | 'dish_types' | 'proteins' | 'occasions' | 'characteristics'>, tagValue);
+      handleArrayTagToggle(
+        tagType as keyof Pick<
+          RecipeInput,
+          | "diet_types"
+          | "cooking_methods"
+          | "dish_types"
+          | "proteins"
+          | "occasions"
+          | "characteristics"
+        >,
+        tagValue
+      );
     }
   };
 
@@ -217,44 +238,51 @@ function CategorizedTagSelector({
   return (
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem value="tags" className="border-0">
-        <AccordionTrigger className="px-6 py-4 hover:no-underline" disabled={disabled}>
-          <div className="flex flex-col items-start gap-3 flex-1">
+        <AccordionTrigger
+          className="px-6 py-6 hover:no-underline"
+          disabled={disabled}
+        >
+          <div className="flex items-center justify-between w-full">
             <h3 className="text-lg font-semibold">Tags</h3>
-            {selectedTags.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {selectedTags.map((tag, index) => (
-                  <Badge
-                    key={`${tag.type}-${tag.value}-${index}`}
-                    variant="secondary"
-                    className="flex items-center gap-1 pr-1 text-xs"
-                  >
-                    <span>{tag.label}</span>
-                    <span
-                      className="h-auto w-auto p-0.5 cursor-pointer hover:bg-accent/50 rounded-sm transition-colors flex items-center justify-center"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!disabled) {
-                          removeTag(tag.value, tag.type);
-                        }
-                      }}
-                      aria-label="Remove tag"
-                      role="button"
-                    >
-                      <X className="h-2.5 w-2.5" />
-                    </span>
-                  </Badge>
-                ))}
-              </div>
-            ) : (
-              <span className="text-xs text-muted-foreground">No tags selected</span>
-            )}
           </div>
         </AccordionTrigger>
-        <AccordionContent className="px-6 pb-4">
+
+        {selectedTags.length > 0 && (
+          <div className="px-6 pt-4 pb-4">
+            <div className="flex flex-wrap gap-2 leading-relaxed">
+              {selectedTags.map((tag, index) => (
+                <Badge
+                  key={`${tag.type}-${tag.value}-${index}`}
+                  variant="secondary"
+                  className="flex items-center gap-1.5 pr-1 text-xs py-1.5 px-2.5"
+                >
+                  <span className="leading-none">{tag.label}</span>
+                  <span
+                    className="h-auto w-auto p-0.5 cursor-pointer hover:bg-accent/50 rounded-sm transition-colors flex items-center justify-center ml-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!disabled) {
+                        removeTag(tag.value, tag.type);
+                      }
+                    }}
+                    aria-label="Remove tag"
+                    role="button"
+                  >
+                    <X className="h-3 w-3" />
+                  </span>
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <AccordionContent className="px-6 pb-6 pt-4 border-t border-border/50">
           <div className="space-y-6">
             {/* Cuisine (Single Selection) */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">{tHeaders("cuisine")}</Label>
+              <Label className="text-sm font-medium mb-2 block">
+                {tHeaders("cuisine")}
+              </Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {CUISINE_TYPES.map((cuisine) => (
                   <div key={cuisine} className="flex items-center space-x-2">
@@ -277,14 +305,18 @@ function CategorizedTagSelector({
 
             {/* Diet Types */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">{tHeaders("dietTypes")}</Label>
+              <Label className="text-sm font-medium mb-2 block">
+                {tHeaders("dietTypes")}
+              </Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {DIET_TYPES.map((dietType) => (
                   <div key={dietType} className="flex items-center space-x-2">
                     <Checkbox
                       id={`diet-${dietType}`}
                       checked={(formData.diet_types || []).includes(dietType)}
-                      onCheckedChange={() => handleArrayTagToggle('diet_types', dietType)}
+                      onCheckedChange={() =>
+                        handleArrayTagToggle("diet_types", dietType)
+                      }
                       disabled={disabled}
                     />
                     <Label
@@ -300,14 +332,20 @@ function CategorizedTagSelector({
 
             {/* Cooking Methods */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">{tHeaders("cookingMethods")}</Label>
+              <Label className="text-sm font-medium mb-2 block">
+                {tHeaders("cookingMethods")}
+              </Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {COOKING_METHOD_TYPES.map((method) => (
                   <div key={method} className="flex items-center space-x-2">
                     <Checkbox
                       id={`cooking-${method}`}
-                      checked={(formData.cooking_methods || []).includes(method)}
-                      onCheckedChange={() => handleArrayTagToggle('cooking_methods', method)}
+                      checked={(formData.cooking_methods || []).includes(
+                        method
+                      )}
+                      onCheckedChange={() =>
+                        handleArrayTagToggle("cooking_methods", method)
+                      }
                       disabled={disabled}
                     />
                     <Label
@@ -323,14 +361,18 @@ function CategorizedTagSelector({
 
             {/* Dish Types */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">{tHeaders("dishTypes")}</Label>
+              <Label className="text-sm font-medium mb-2 block">
+                {tHeaders("dishTypes")}
+              </Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {DISH_TYPES.map((dishType) => (
                   <div key={dishType} className="flex items-center space-x-2">
                     <Checkbox
                       id={`dish-${dishType}`}
                       checked={(formData.dish_types || []).includes(dishType)}
-                      onCheckedChange={() => handleArrayTagToggle('dish_types', dishType)}
+                      onCheckedChange={() =>
+                        handleArrayTagToggle("dish_types", dishType)
+                      }
                       disabled={disabled}
                     />
                     <Label
@@ -346,14 +388,18 @@ function CategorizedTagSelector({
 
             {/* Protein Types */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">{tHeaders("proteinTypes")}</Label>
+              <Label className="text-sm font-medium mb-2 block">
+                {tHeaders("proteinTypes")}
+              </Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {PROTEIN_TYPES.map((protein) => (
                   <div key={protein} className="flex items-center space-x-2">
                     <Checkbox
                       id={`protein-${protein}`}
                       checked={(formData.proteins || []).includes(protein)}
-                      onCheckedChange={() => handleArrayTagToggle('proteins', protein)}
+                      onCheckedChange={() =>
+                        handleArrayTagToggle("proteins", protein)
+                      }
                       disabled={disabled}
                     />
                     <Label
@@ -369,14 +415,18 @@ function CategorizedTagSelector({
 
             {/* Occasions */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">{tHeaders("occasionTypes")}</Label>
+              <Label className="text-sm font-medium mb-2 block">
+                {tHeaders("occasionTypes")}
+              </Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {OCCASION_TYPES.map((occasion) => (
                   <div key={occasion} className="flex items-center space-x-2">
                     <Checkbox
                       id={`occasion-${occasion}`}
                       checked={(formData.occasions || []).includes(occasion)}
-                      onCheckedChange={() => handleArrayTagToggle('occasions', occasion)}
+                      onCheckedChange={() =>
+                        handleArrayTagToggle("occasions", occasion)
+                      }
                       disabled={disabled}
                     />
                     <Label
@@ -392,14 +442,23 @@ function CategorizedTagSelector({
 
             {/* Characteristics */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">{tHeaders("characteristicTypes")}</Label>
+              <Label className="text-sm font-medium mb-2 block">
+                {tHeaders("characteristicTypes")}
+              </Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {CHARACTERISTIC_TYPES.map((characteristic) => (
-                  <div key={characteristic} className="flex items-center space-x-2">
+                  <div
+                    key={characteristic}
+                    className="flex items-center space-x-2"
+                  >
                     <Checkbox
                       id={`char-${characteristic}`}
-                      checked={(formData.characteristics || []).includes(characteristic)}
-                      onCheckedChange={() => handleArrayTagToggle('characteristics', characteristic)}
+                      checked={(formData.characteristics || []).includes(
+                        characteristic
+                      )}
+                      onCheckedChange={() =>
+                        handleArrayTagToggle("characteristics", characteristic)
+                      }
                       disabled={disabled}
                     />
                     <Label
@@ -476,12 +535,16 @@ export function RecipeEditForm({
       formData.description !== recipe.description ||
       formData.category !== recipe.category ||
       formData.cuisine !== recipe.cuisine ||
-      JSON.stringify(formData.diet_types) !== JSON.stringify(recipe.diet_types) ||
-      JSON.stringify(formData.cooking_methods) !== JSON.stringify(recipe.cooking_methods) ||
-      JSON.stringify(formData.dish_types) !== JSON.stringify(recipe.dish_types) ||
+      JSON.stringify(formData.diet_types) !==
+        JSON.stringify(recipe.diet_types) ||
+      JSON.stringify(formData.cooking_methods) !==
+        JSON.stringify(recipe.cooking_methods) ||
+      JSON.stringify(formData.dish_types) !==
+        JSON.stringify(recipe.dish_types) ||
       JSON.stringify(formData.proteins) !== JSON.stringify(recipe.proteins) ||
       JSON.stringify(formData.occasions) !== JSON.stringify(recipe.occasions) ||
-      JSON.stringify(formData.characteristics) !== JSON.stringify(recipe.characteristics) ||
+      JSON.stringify(formData.characteristics) !==
+        JSON.stringify(recipe.characteristics) ||
       formData.season !== recipe.season;
 
     // Update global state for auto-save
@@ -578,11 +641,15 @@ export function RecipeEditForm({
         ...(recipeData.category && { category: recipeData.category }),
         ...(recipeData.cuisine && { cuisine: recipeData.cuisine }),
         ...(recipeData.diet_types && { diet_types: recipeData.diet_types }),
-        ...(recipeData.cooking_methods && { cooking_methods: recipeData.cooking_methods }),
+        ...(recipeData.cooking_methods && {
+          cooking_methods: recipeData.cooking_methods,
+        }),
         ...(recipeData.dish_types && { dish_types: recipeData.dish_types }),
         ...(recipeData.proteins && { proteins: recipeData.proteins }),
         ...(recipeData.occasions && { occasions: recipeData.occasions }),
-        ...(recipeData.characteristics && { characteristics: recipeData.characteristics }),
+        ...(recipeData.characteristics && {
+          characteristics: recipeData.characteristics,
+        }),
         ...(recipeData.season && { season: recipeData.season }),
         ...(recipeData.ingredients &&
           recipeData.ingredients.length > 0 && {
@@ -599,7 +666,6 @@ export function RecipeEditForm({
               })),
           }),
       };
-
 
       setFormData(updatedFormData);
       setErrors([]);
@@ -669,8 +735,8 @@ export function RecipeEditForm({
   const autoResizeTextarea = useCallback(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = textarea.scrollHeight + 'px';
+      textarea.style.height = "auto";
+      textarea.style.height = textarea.scrollHeight + "px";
     }
   }, []);
 
@@ -788,7 +854,9 @@ export function RecipeEditForm({
                   disabled={loading}
                   className="w-20"
                 />
-                <span className="text-sm text-muted-foreground">{tServing('people')}</span>
+                <span className="text-sm text-muted-foreground">
+                  {tServing("people")}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -938,7 +1006,7 @@ export function RecipeEditForm({
 
   // Two-column layout for desktop
   return (
-    <div className="lg:grid lg:grid-cols-12 lg:gap-8 space-y-6 lg:space-y-0">
+    <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-8">
       {/* Left Column - Chat Interface (Desktop: 5/12, Mobile: full width) */}
       {includeChat && (
         <div className="lg:col-span-5">
@@ -955,7 +1023,7 @@ export function RecipeEditForm({
 
       {/* Right Column - Form (Desktop: 7/12, Mobile: full width) */}
       <div
-        className={`space-y-4 sm:space-y-6 ${
+        className={`space-y-4 sm:space-y-6 lg:!mt-0 ${
           includeChat ? "lg:col-span-7" : "lg:col-span-12"
         }`}
       >
