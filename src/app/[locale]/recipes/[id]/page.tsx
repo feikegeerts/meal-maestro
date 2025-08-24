@@ -10,7 +10,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -25,7 +25,7 @@ import {
 import { Recipe, RecipeCategory, RecipeSeason } from "@/types/recipe";
 import { useLocalizedDateFormatter } from "@/lib/date-utils";
 import { ServingSizeSelector } from "@/components/serving-size-selector";
-import Image from 'next/image';
+import Image from "next/image";
 import {
   ArrowLeft,
   Edit,
@@ -47,7 +47,11 @@ export default function RecipeDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { getRecipeById, updateRecipe: updateRecipeInContext, removeRecipe } = useRecipes();
+  const {
+    getRecipeById,
+    updateRecipe: updateRecipeInContext,
+    removeRecipe,
+  } = useRecipes();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const { formatDateWithFallback } = useLocalizedDateFormatter();
   const [displayRecipe, setDisplayRecipe] = useState<Recipe | null>(null);
@@ -181,7 +185,7 @@ export default function RecipeDetailPage() {
 
       // Update context to remove the deleted recipe
       removeRecipe(recipe.id);
-      
+
       router.push("/recipes");
     } catch (error) {
       console.error("Error deleting recipe:", error);
@@ -269,10 +273,10 @@ export default function RecipeDetailPage() {
             <div className="order-2 lg:order-1 space-y-6 lg:col-span-2">
               {/* Title & Category Section */}
               <div>
-                <CardTitle className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 leading-tight">
+                <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 leading-tight">
                   {recipe.title}
                 </CardTitle>
-                
+
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <ChefHat className="h-4 w-4" />
@@ -293,130 +297,149 @@ export default function RecipeDetailPage() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2 flex-wrap mt-6">
-                    <Button
-                      onClick={handleMarkEaten}
-                      disabled={!!actionLoading}
-                      variant="default"
-                      size="default"
-                    >
-                      {actionLoading === "mark-eaten" ? (
-                        <>
-                          <span className="animate-spin mr-2">⏳</span>
-                          {t("marking")}
-                        </>
-                      ) : (
-                        <>
-                          <Utensils className="mr-2 h-4 w-4" />
-                          {t("markAsEatenDetail")}
-                        </>
-                      )}
-                    </Button>
+                <Button
+                  onClick={handleMarkEaten}
+                  disabled={!!actionLoading}
+                  variant="default"
+                  size="default"
+                >
+                  {actionLoading === "mark-eaten" ? (
+                    <>
+                      <span className="animate-spin mr-2">⏳</span>
+                      {t("marking")}
+                    </>
+                  ) : (
+                    <>
+                      <Utensils className="mr-2 h-4 w-4" />
+                      {t("markAsEatenDetail")}
+                    </>
+                  )}
+                </Button>
 
-                    <Button
-                      variant="outline"
-                      size="default"
-                      disabled={!!actionLoading}
-                      onClick={handleEdit}
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      {t("editDetail")}
-                    </Button>
+                <Button
+                  variant="outline"
+                  size="default"
+                  disabled={!!actionLoading}
+                  onClick={handleEdit}
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  {t("editDetail")}
+                </Button>
 
-
-                    <Button
-                      onClick={handleDelete}
-                      disabled={!!actionLoading}
-                      variant="ghost"
-                      size="default"
-                      className="text-destructive hover:text-destructive"
-                    >
-                      {actionLoading === "delete" ? (
-                        <>
-                          <span className="animate-spin mr-2">⏳</span>
-                          {t("deleting")}
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          {t("deleteDetail")}
-                        </>
-                      )}
-                    </Button>
+                <Button
+                  onClick={handleDelete}
+                  disabled={!!actionLoading}
+                  variant="ghost"
+                  size="default"
+                  className="text-destructive hover:text-destructive"
+                >
+                  {actionLoading === "delete" ? (
+                    <>
+                      <span className="animate-spin mr-2">⏳</span>
+                      {t("deleting")}
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      {t("deleteDetail")}
+                    </>
+                  )}
+                </Button>
               </div>
 
               {/* Tags */}
               <div className="flex flex-wrap gap-2 mt-6">
-                    {recipe.cuisine && (
-                      <Badge variant="secondary" className="text-sm px-3 py-2">
-                        <Tag className="mr-1 h-3 w-3" />
-                        {translateTag("cuisine", recipe.cuisine)}
-                      </Badge>
-                    )}
-                    {recipe.diet_types?.map((dietType) => (
-                      <Badge key={dietType} variant="secondary" className="text-sm px-3 py-2">
-                        <Tag className="mr-1 h-3 w-3" />
-                        {translateTag("dietType", dietType)}
-                      </Badge>
-                    ))}
-                    {recipe.cooking_methods?.map((method) => (
-                      <Badge key={method} variant="secondary" className="text-sm px-3 py-2">
-                        <Tag className="mr-1 h-3 w-3" />
-                        {translateTag("cookingMethod", method)}
-                      </Badge>
-                    ))}
-                    {recipe.dish_types?.map((dishType) => (
-                      <Badge key={dishType} variant="secondary" className="text-sm px-3 py-2">
-                        <Tag className="mr-1 h-3 w-3" />
-                        {translateTag("dishType", dishType)}
-                      </Badge>
-                    ))}
-                    {recipe.proteins?.map((protein) => (
-                      <Badge key={protein} variant="secondary" className="text-sm px-3 py-2">
-                        <Tag className="mr-1 h-3 w-3" />
-                        {translateTag("protein", protein)}
-                      </Badge>
-                    ))}
-                    {recipe.occasions?.map((occasion) => (
-                      <Badge key={occasion} variant="secondary" className="text-sm px-3 py-2">
-                        <Tag className="mr-1 h-3 w-3" />
-                        {translateTag("occasion", occasion)}
-                      </Badge>
-                    ))}
-                    {recipe.characteristics?.map((characteristic) => (
-                      <Badge
-                        key={characteristic}
-                        variant="secondary"
-                        className="text-sm px-3 py-2"
-                      >
-                        <Tag className="mr-1 h-3 w-3" />
-                        {translateTag("characteristic", characteristic)}
-                      </Badge>
-                    ))}
+                {recipe.cuisine && (
+                  <Badge variant="secondary" className="text-sm px-3 py-2">
+                    <Tag className="mr-1 h-3 w-3" />
+                    {translateTag("cuisine", recipe.cuisine)}
+                  </Badge>
+                )}
+                {recipe.diet_types?.map((dietType) => (
+                  <Badge
+                    key={dietType}
+                    variant="secondary"
+                    className="text-sm px-3 py-2"
+                  >
+                    <Tag className="mr-1 h-3 w-3" />
+                    {translateTag("dietType", dietType)}
+                  </Badge>
+                ))}
+                {recipe.cooking_methods?.map((method) => (
+                  <Badge
+                    key={method}
+                    variant="secondary"
+                    className="text-sm px-3 py-2"
+                  >
+                    <Tag className="mr-1 h-3 w-3" />
+                    {translateTag("cookingMethod", method)}
+                  </Badge>
+                ))}
+                {recipe.dish_types?.map((dishType) => (
+                  <Badge
+                    key={dishType}
+                    variant="secondary"
+                    className="text-sm px-3 py-2"
+                  >
+                    <Tag className="mr-1 h-3 w-3" />
+                    {translateTag("dishType", dishType)}
+                  </Badge>
+                ))}
+                {recipe.proteins?.map((protein) => (
+                  <Badge
+                    key={protein}
+                    variant="secondary"
+                    className="text-sm px-3 py-2"
+                  >
+                    <Tag className="mr-1 h-3 w-3" />
+                    {translateTag("protein", protein)}
+                  </Badge>
+                ))}
+                {recipe.occasions?.map((occasion) => (
+                  <Badge
+                    key={occasion}
+                    variant="secondary"
+                    className="text-sm px-3 py-2"
+                  >
+                    <Tag className="mr-1 h-3 w-3" />
+                    {translateTag("occasion", occasion)}
+                  </Badge>
+                ))}
+                {recipe.characteristics?.map((characteristic) => (
+                  <Badge
+                    key={characteristic}
+                    variant="secondary"
+                    className="text-sm px-3 py-2"
+                  >
+                    <Tag className="mr-1 h-3 w-3" />
+                    {translateTag("characteristic", characteristic)}
+                  </Badge>
+                ))}
               </div>
 
               {/* Metadata */}
               <div className="grid grid-cols-1 gap-3 text-sm mt-8">
-                    <div className="flex items-center gap-2">
-                      <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">
-                        {t("createdDetail")}:
-                      </span>
-                      <span className="font-medium">
-                        {formatDateWithFallback(recipe.created_at, t("never"))}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">
-                        {t("lastEatenDetail")}:
-                      </span>
-                      <span className="font-medium">
-                        {formatDateWithFallback(recipe.last_eaten, t("never"))}
-                      </span>
-                    </div>
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">
+                    {t("createdDetail")}:
+                  </span>
+                  <span className="font-medium">
+                    {formatDateWithFallback(recipe.created_at, t("never"))}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">
+                    {t("lastEatenDetail")}:
+                  </span>
+                  <span className="font-medium">
+                    {formatDateWithFallback(recipe.last_eaten, t("never"))}
+                  </span>
+                </div>
               </div>
             </div>
-            
+
             {/* Large Hero Image - Right side */}
             <div className="order-1 lg:order-2 lg:col-span-3 relative h-64 sm:h-80 lg:h-[600px] group">
               <Image
@@ -426,7 +449,7 @@ export default function RecipeDetailPage() {
                 className="rounded-xl object-cover shadow-lg"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 50vw"
               />
-              
+
               {/* Upload Photo Button Overlay */}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -443,9 +466,12 @@ export default function RecipeDetailPage() {
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Photo uploads coming soon!</AlertDialogTitle>
+                    <AlertDialogTitle>
+                      Photo uploads coming soon!
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                      Recipe photos are currently under development and will be available in a future update. Stay tuned!
+                      Recipe photos are currently under development and will be
+                      available in a future update. Stay tuned!
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogAction>OK</AlertDialogAction>

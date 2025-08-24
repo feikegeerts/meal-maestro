@@ -57,6 +57,8 @@ import { useRecipes } from "@/contexts/recipe-context";
 import { recipeService } from "@/lib/recipe-service";
 import { toast } from "sonner";
 import { useTranslations } from 'next-intl';
+import { useRecipeTranslations } from '@/messages';
+import { CuisineType, DietType, CookingMethodType, DishType, ProteinType, OccasionType, CharacteristicType } from "@/types/recipe";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -75,6 +77,7 @@ export function RecipeDataTable<TData, TValue>({
   const tTable = useTranslations('recipeTable');
   const tCategories = useTranslations('categories');
   const tSeasons = useTranslations('seasons');
+  const { translateTag } = useRecipeTranslations();
   
   const getColumnDisplayName = (columnId: string): string => {
     switch (columnId) {
@@ -127,6 +130,7 @@ export function RecipeDataTable<TData, TValue>({
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, _columnId, filterValue) => {
       const searchValue = filterValue.toLowerCase();
+      const recipe = row.original as Recipe;
 
       // Search in title
       const title = row.getValue("title") as string;
@@ -140,8 +144,7 @@ export function RecipeDataTable<TData, TValue>({
       const season = row.getValue("season") as string;
       if (season?.toLowerCase().includes(searchValue)) return true;
 
-      // Search in categorized tags
-      const recipe = row.original as Recipe;
+      // Search in categorized tags (both raw and translated values)
       const allTags = [
         ...(recipe.cuisine ? [recipe.cuisine] : []),
         ...(recipe.diet_types || []),
@@ -151,12 +154,52 @@ export function RecipeDataTable<TData, TValue>({
         ...(recipe.occasions || []),
         ...(recipe.characteristics || [])
       ];
+      
+      // Check raw tag values
       if (allTags?.some((tag) => tag.toLowerCase().includes(searchValue)))
+        return true;
+        
+      // Check translated tag values
+      const translatedTags: string[] = [];
+      if (recipe.cuisine) {
+        translatedTags.push(translateTag('cuisine', recipe.cuisine as CuisineType));
+      }
+      if (recipe.diet_types) {
+        recipe.diet_types.forEach(dietType => {
+          translatedTags.push(translateTag('dietType', dietType as DietType));
+        });
+      }
+      if (recipe.cooking_methods) {
+        recipe.cooking_methods.forEach(method => {
+          translatedTags.push(translateTag('cookingMethod', method as CookingMethodType));
+        });
+      }
+      if (recipe.dish_types) {
+        recipe.dish_types.forEach(dishType => {
+          translatedTags.push(translateTag('dishType', dishType as DishType));
+        });
+      }
+      if (recipe.proteins) {
+        recipe.proteins.forEach(protein => {
+          translatedTags.push(translateTag('protein', protein as ProteinType));
+        });
+      }
+      if (recipe.occasions) {
+        recipe.occasions.forEach(occasion => {
+          translatedTags.push(translateTag('occasion', occasion as OccasionType));
+        });
+      }
+      if (recipe.characteristics) {
+        recipe.characteristics.forEach(characteristic => {
+          translatedTags.push(translateTag('characteristic', characteristic as CharacteristicType));
+        });
+      }
+      
+      if (translatedTags?.some((tag) => tag.toLowerCase().includes(searchValue)))
         return true;
 
       // Search in description (if available in row data)
-      const original = row.original as Recipe;
-      if (original?.description?.toLowerCase().includes(searchValue))
+      if (recipe?.description?.toLowerCase().includes(searchValue))
         return true;
 
       return false;
