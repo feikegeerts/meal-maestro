@@ -130,7 +130,14 @@
     "descriptionPlaceholder": "1. Heat oil in a large skillet over medium-high heat.\n2. Add rice and stir-fry for 3-4 minutes until heated through.\n3. Push rice to one side and scramble eggs on the other side.\n4. Mix eggs with rice and add vegetables.\n5. Season with soy sauce and serve hot.",
     "noTagsFound": "No tags found matching \"{query}\"",
     "tagsSelected": "{count} tag selected",
-    "tagsSelectedPlural": "{count} tags selected"
+    "tagsSelectedPlural": "{count} tags selected",
+    "validationErrors": {
+      "title": "Please check these details",
+      "titleMissing": "Your recipe needs a name so you can find it later",
+      "descriptionMissing": "Adding a description helps you remember what makes this recipe special",
+      "ingredientNameMissing": "Some ingredients are missing their names - what should we add?",
+      "ingredientIssue": "Let's make sure all your ingredients are properly filled in"
+    }
   },
   "categories": {
     "breakfast": "Breakfast",

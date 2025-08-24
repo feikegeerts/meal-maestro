@@ -9,9 +9,10 @@ import {
   validateRecipeInput,
 } from "@/types/recipe";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SheetClose } from "@/components/ui/sheet";
 import { useTranslations } from "next-intl";
+import { AlertCircle } from "lucide-react";
 
 import { useAutoSave } from "./recipe-edit/hooks/use-auto-save";
 import { FormTransformerService } from "./recipe-edit/services/form-transformer";
@@ -136,18 +137,6 @@ export function RecipeEditForm({
   const FormSections = useMemo(
     () => (
       <>
-        {errors.length > 0 && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-destructive space-y-1">
-                {errors.map((error, index) => (
-                  <div key={index}>{error}</div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <BasicInformationSection
           formData={formData}
           onFormDataChange={handleFormDataChange}
@@ -173,6 +162,32 @@ export function RecipeEditForm({
           onFormDataChange={handleFormDataChange}
           disabled={loading}
         />
+
+        {errors.length > 0 && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>{t("validationErrors.title")}</AlertTitle>
+            <AlertDescription>
+              <div className="space-y-1">
+                {errors.map((error, index) => {
+                  // Convert system messages to more conversational ones
+                  let friendlyError = error;
+                  if (error.includes("title is required")) {
+                    friendlyError = t("validationErrors.titleMissing");
+                  } else if (error.includes("description is required")) {
+                    friendlyError = t("validationErrors.descriptionMissing");
+                  } else if (error.includes("name is required")) {
+                    friendlyError = t("validationErrors.ingredientNameMissing");
+                  } else if (error.includes("ingredients")) {
+                    friendlyError = t("validationErrors.ingredientIssue");
+                  }
+
+                  return <div key={index}>• {friendlyError}</div>;
+                })}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="flex gap-3 pt-4 border-t">
           {standalone ? (
@@ -241,18 +256,6 @@ export function RecipeEditForm({
   const LeftColumnSections = useMemo(
     () => (
       <>
-        {errors.length > 0 && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-destructive space-y-1">
-                {errors.map((error, index) => (
-                  <div key={index}>{error}</div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <BasicInformationSection
           formData={formData}
           onFormDataChange={handleFormDataChange}
@@ -266,7 +269,7 @@ export function RecipeEditForm({
         />
       </>
     ),
-    [errors, formData, loading, handleIngredientsChange, handleFormDataChange]
+    [formData, loading, handleIngredientsChange, handleFormDataChange]
   );
 
   const RightColumnSections = useMemo(
@@ -292,47 +295,70 @@ export function RecipeEditForm({
 
   const ActionButtons = useMemo(
     () => (
-      <div className="flex gap-3 pt-4 border-t">
-        {standalone ? (
-          <>
-            <Button onClick={handleSave} disabled={loading} className="flex-1">
-              {loading
-                ? t("saving")
-                : recipe.id
-                ? t("saveChanges")
-                : t("createRecipe")}
-            </Button>
-            <Button
-              variant="outline"
-              disabled={loading}
-              className="flex-1"
-              onClick={onCancel}
-            >
-              {t("cancel")}
-            </Button>
-          </>
-        ) : (
-          <>
-            <SheetClose asChild>
-              <button
-                ref={closeButtonRef}
-                className="hidden"
-                aria-hidden="true"
-              />
-            </SheetClose>
-            <Button onClick={handleSave} disabled={loading} className="flex-1">
-              {loading ? t("saving") : t("saveChanges")}
-            </Button>
-            <SheetClose asChild>
-              <Button variant="outline" disabled={loading} className="flex-1">
+      <>
+        {errors.length > 0 && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Validation Errors</AlertTitle>
+            <AlertDescription>
+              <div className="space-y-1">
+                {errors.map((error, index) => (
+                  <div key={index}>• {error}</div>
+                ))}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+        <div className="flex gap-3 pt-4 border-t">
+          {standalone ? (
+            <>
+              <Button
+                onClick={handleSave}
+                disabled={loading}
+                className="flex-1"
+              >
+                {loading
+                  ? t("saving")
+                  : recipe.id
+                  ? t("saveChanges")
+                  : t("createRecipe")}
+              </Button>
+              <Button
+                variant="outline"
+                disabled={loading}
+                className="flex-1"
+                onClick={onCancel}
+              >
                 {t("cancel")}
               </Button>
-            </SheetClose>
-          </>
-        )}
-      </div>
+            </>
+          ) : (
+            <>
+              <SheetClose asChild>
+                <button
+                  ref={closeButtonRef}
+                  className="hidden"
+                  aria-hidden="true"
+                />
+              </SheetClose>
+              <Button
+                onClick={handleSave}
+                disabled={loading}
+                className="flex-1"
+              >
+                {loading ? t("saving") : t("saveChanges")}
+              </Button>
+              <SheetClose asChild>
+                <Button variant="outline" disabled={loading} className="flex-1">
+                  {t("cancel")}
+                </Button>
+              </SheetClose>
+            </>
+          )}
+        </div>
+      </>
     ),
-    [handleSave, loading, recipe.id, standalone, onCancel, t]
+    [handleSave, loading, recipe.id, standalone, onCancel, t, errors]
   );
 
   return (

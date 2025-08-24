@@ -131,7 +131,14 @@
     "descriptionPlaceholder": "1. Verhit olie in een grote koekenpan op middelhoog vuur.\n2. Voeg rijst toe en roerbak 3-4 minuten tot het goed heet is.\n3. Schuif rijst naar één kant en roerei eieren aan de andere kant.\n4. Meng eieren met rijst en voeg groenten toe.\n5. Kruid met sojasaus en serveer heet.",
     "noTagsFound": "Geen tags gevonden voor \"{query}\"",
     "tagsSelected": "{count} tag geselecteerd",
-    "tagsSelectedPlural": "{count} tags geselecteerd"
+    "tagsSelectedPlural": "{count} tags geselecteerd",
+    "validationErrors": {
+      "title": "Even controleren",
+      "titleMissing": "Je recept heeft een naam nodig zodat je het later terug kunt vinden",
+      "descriptionMissing": "Een beschrijving helpt je herinneren wat dit recept zo bijzonder maakt",
+      "ingredientNameMissing": "Sommige ingrediënten missen hun naam - wat zullen we toevoegen?",
+      "ingredientIssue": "Laten we ervoor zorgen dat al je ingrediënten goed zijn ingevuld"
+    }
   },
   "categories": {
     "breakfast": "Ontbijt",
