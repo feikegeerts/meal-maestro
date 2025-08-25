@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Camera, Upload, ChevronDown, Image as ImageIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { validateImageFile } from "@/lib/file-utils";
 
 interface ImageUploadButtonProps {
   onImageSelect: (file: File) => void;
@@ -27,15 +28,10 @@ export function ImageUploadButton({
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
-        return;
-      }
-      
-      // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image file must be smaller than 5MB');
+      // Validate file using shared validation logic
+      const validation = validateImageFile(file);
+      if (!validation.isValid) {
+        alert(validation.error);
         return;
       }
       

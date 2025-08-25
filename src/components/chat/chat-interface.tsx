@@ -19,6 +19,8 @@ import {
 import { Recipe } from "@/types/recipe";
 import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
+import { useImageCompression } from "@/hooks/useImageCompression";
+import { IMAGE_COMPRESSION_CONFIG } from "@/lib/image-compression-config";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -80,13 +82,24 @@ export function ChatInterface({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(isDesktopSidebar ? true : false);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+
+  // Image compression state and actions
+  const {
+    selectedImage,
+    compressedImageData,
+    isCompressing,
+    error: imageError,
+    handleImageSelect,
+    clearImage,
+    clearError,
+  } = useImageCompression();
   const [isDragging, setIsDragging] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Use the intelligent loading hook
-  const { loadingMessage, startIntelligentLoading, stopIntelligentLoading } = useIntelligentLoading({ t });
+  const { loadingMessage, startIntelligentLoading, stopIntelligentLoading } =
+    useIntelligentLoading({ t });
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -101,8 +114,8 @@ export function ChatInterface({
   // Cleanup object URLs on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
-      messages.forEach(message => {
-        if (message.imageUrl && message.imageUrl.startsWith('blob:')) {
+      messages.forEach((message) => {
+        if (message.imageUrl && message.imageUrl.startsWith("blob:")) {
           URL.revokeObjectURL(message.imageUrl);
         }
       });
@@ -112,7 +125,7 @@ export function ChatInterface({
   // Auto-resize textarea based on content
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   };
@@ -123,15 +136,19 @@ export function ChatInterface({
     adjustTextareaHeight();
   };
 
-  // Handle image selection from upload button
-  const handleImageSelect = useCallback((file: File) => {
-    setSelectedImage(file);
-  }, []);
+  // Handle image errors from compression hook
+  useEffect(() => {
+    if (imageError) {
+      setError(imageError);
+    }
+  }, [imageError]);
 
   // Handle image removal
   const handleImageRemove = useCallback(() => {
-    setSelectedImage(null);
-  }, []);
+    clearImage();
+    clearError();
+    setError(null);
+  }, [clearImage, clearError]);
 
   // Convert file to base64 for API
   const fileToBase64 = (file: File): Promise<string> => {
@@ -139,7 +156,7 @@ export function ChatInterface({
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
+      reader.onerror = (error) => reject(error);
     });
   };
 
@@ -156,56 +173,64 @@ export function ChatInterface({
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    const imageFile = files.find(file => file.type.startsWith('image/'));
-    
-    if (imageFile) {
-      if (imageFile.size > 5 * 1024 * 1024) {
-        setError('Image file must be smaller than 5MB');
-        return;
-      }
-      setSelectedImage(imageFile);
-    }
-  }, []);
-
-  // Handle paste events
-  const handlePaste = useCallback((e: React.ClipboardEvent) => {
-    const items = Array.from(e.clipboardData.items);
-    const imageItem = items.find(item => item.type.startsWith('image/'));
-    
-    if (imageItem) {
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
       e.preventDefault();
-      const file = imageItem.getAsFile();
-      if (file) {
-        if (file.size > 5 * 1024 * 1024) {
-          setError('Image file must be smaller than 5MB');
+      setIsDragging(false);
+
+      const files = Array.from(e.dataTransfer.files);
+      const imageFile = files.find((file) => file.type.startsWith("image/"));
+
+      if (imageFile) {
+        if (imageFile.size > IMAGE_COMPRESSION_CONFIG.MAX_FILE_SIZE_BYTES) {
+          setError(IMAGE_COMPRESSION_CONFIG.ERROR_MESSAGES.FILE_TOO_LARGE);
           return;
         }
-        setSelectedImage(file);
+        handleImageSelect(imageFile);
       }
-    }
-  }, []);
+    },
+    [handleImageSelect]
+  );
+
+  // Handle paste events
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      const items = Array.from(e.clipboardData.items);
+      const imageItem = items.find((item) => item.type.startsWith("image/"));
+
+      if (imageItem) {
+        e.preventDefault();
+        const file = imageItem.getAsFile();
+        if (file) {
+          if (file.size > IMAGE_COMPRESSION_CONFIG.MAX_FILE_SIZE_BYTES) {
+            setError(IMAGE_COMPRESSION_CONFIG.ERROR_MESSAGES.FILE_TOO_LARGE);
+            return;
+          }
+          handleImageSelect(file);
+        }
+      }
+    },
+    [handleImageSelect]
+  );
 
   const sendMessage = async () => {
     if ((!inputMessage.trim() && !selectedImage) || isLoading) return;
 
     const userMessage = inputMessage.trim();
     const imageToProcess = selectedImage;
+    const compressedImageForApi = compressedImageData;
     setInputMessage("");
-    setSelectedImage(null);
+    clearImage();
+    clearError();
     setError(null);
     setIsLoading(true);
-    
+
     // Start intelligent loading sequence
     startIntelligentLoading(userMessage, !!imageToProcess);
-    
+
     // Reset textarea height
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = "auto";
     }
 
     // Create image URL for display if we have an image
@@ -227,10 +252,15 @@ export function ChatInterface({
     setMessages(newMessages);
 
     try {
-      // Convert image to base64 if present
+      // Use compressed image data if available, otherwise convert original
       let imageData: string | undefined;
       if (imageToProcess) {
-        imageData = await fileToBase64(imageToProcess);
+        if (compressedImageForApi) {
+          imageData = compressedImageForApi;
+        } else {
+          // Fallback to original file if compression failed
+          imageData = await fileToBase64(imageToProcess);
+        }
       }
 
       const requestBody = {
@@ -282,7 +312,7 @@ export function ChatInterface({
       // Ensure all messages have timestamps
       const messagesWithTimestamps = data.conversation_history.map((msg) => ({
         ...msg,
-        timestamp: msg.timestamp || new Date().toISOString()
+        timestamp: msg.timestamp || new Date().toISOString(),
       }));
       setMessages(messagesWithTimestamps);
 
@@ -378,7 +408,9 @@ export function ChatInterface({
               {isLoading && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">{loadingMessage || t("thinking")}</span>
+                  <span className="text-sm">
+                    {loadingMessage || t("thinking")}
+                  </span>
                 </div>
               )}
               <div ref={messagesEndRef} />
@@ -387,14 +419,22 @@ export function ChatInterface({
             <Separator />
 
             {/* Input Area */}
-            <div className="p-4" 
-                 onDragOver={handleDragOver}
-                 onDragLeave={handleDragLeave}
-                 onDrop={handleDrop}
+            <div
+              className="p-4"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
             >
               {error && (
-                <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded p-2 mb-3">
-                  {error}
+                <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded p-2 mb-3 flex items-center justify-between">
+                  <span>{error}</span>
+                  <button
+                    onClick={() => setError(null)}
+                    className="text-destructive hover:text-destructive/80 ml-2"
+                    aria-label="Dismiss error"
+                  >
+                    ×
+                  </button>
                 </div>
               )}
 
@@ -426,7 +466,11 @@ export function ChatInterface({
                     onChange={handleInputChange}
                     onKeyDown={handleKeyPress}
                     onPaste={handlePaste}
-                    placeholder={selectedImage ? "Add a message about this image (optional)" : t("inputPlaceholder")}
+                    placeholder={
+                      selectedImage
+                        ? "Add a message about this image (optional)"
+                        : t("inputPlaceholder")
+                    }
                     disabled={isLoading}
                     className="resize-none min-h-10 max-h-32 py-2"
                     rows={1}
@@ -439,7 +483,11 @@ export function ChatInterface({
                 />
                 <Button
                   onClick={sendMessage}
-                  disabled={(!inputMessage.trim() && !selectedImage) || isLoading}
+                  disabled={
+                    (!inputMessage.trim() && !selectedImage) ||
+                    isLoading ||
+                    isCompressing
+                  }
                   size="icon"
                   className="h-10 w-10 flex-shrink-0"
                 >
