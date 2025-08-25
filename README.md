@@ -137,59 +137,18 @@ meal-maestro/
 - `pnpm start` - Start production server
 - `pnpm lint` - Run ESLint
 
-## Release Workflow
+## Development Workflow
 
-This project uses semantic-release for automated version management and releases.
-
-### Developer Workflow
+### Branch Strategy
 
 1. **Development**: Work in `preview` branch with multiple commits and iterations
-2. **Testing**: Preview branch automatically deploys to Vercel preview environment
+2. **Testing**: Preview branch automatically deploys to Vercel preview environment  
 3. **Release**: When ready, rebase `main` branch onto `preview` and push to production
-4. **Automatic Versioning**: GitHub Actions automatically analyzes commits and bumps version
-
-### Commit Convention
-
-Follow conventional commits for automatic versioning:
-
-- `feat: add new feature` → **Minor version bump** (0.1.0 → 0.2.0)
-- `fix: resolve bug` → **Patch version bump** (0.1.0 → 0.1.1)  
-- `feat!: breaking change` or `BREAKING CHANGE:` → **Major version bump** (0.1.0 → 1.0.0)
-- `docs:`, `refactor:`, `test:`, `chore:` → **No version bump**
-
-### Release Process
-
-1. **Develop**: Make changes in `preview` branch with conventional commit messages
-2. **Test**: Verify changes in preview environment
-3. **Release**: Rebase `main` onto `preview` and push
-4. **Automatic**: GitHub Actions will:
-   - Analyze commits since last release
-   - Calculate new version number
-   - Update `package.json` and `CHANGELOG.md`
-   - Create GitHub release with auto-generated notes
-   - Deploy to production
-
-### Manual Release (if needed)
-
-```bash
-# Preview what would happen
-npx semantic-release --dry-run
-
-# Perform actual release (not recommended for production)
-npx semantic-release
-```
 
 ### Version Information
 
 - **Current version**: Always available in the About page (reads from `package.json`)
-- **Check latest release**: `git tag --sort=-version:refname | head -1`
-- **Version history**: Check GitHub releases or `CHANGELOG.md`
-
-### Troubleshooting
-
-- **No release created**: Check that commit messages follow conventional commit format
-- **Wrong version bump**: Review commit types (`feat`/`fix`/`BREAKING CHANGE`)
-- **Failed workflow**: Check GitHub Actions logs and ensure `GITHUB_TOKEN` has write permissions
+- Manual version updates in `package.json` when needed
 
 ## Deployment
 
