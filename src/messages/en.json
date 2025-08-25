@@ -6,6 +6,7 @@
   "navigation": {
     "recipes": "Recipes",
     "admin": "Admin",
+    "about": "About",
     "logout": "Log out",
     "menu": "Menu",
     "navigation": "Navigation",
@@ -550,5 +551,38 @@
     "clear": "Clear",
     "apply": "Apply",
     "reset": "Reset"
+  },
+  "about": {
+    "title": "About Meal Maestro",
+    "philosophy": {
+      "title": "Our Philosophy",
+      "description": "This app represents how software should work: no subscriptions, no ads, no tracking cookies. Just a tool that does what it says, respects your privacy, and gets out of your way."
+    },
+    "story": {
+      "title": "Why This App?",
+      "description": "Built by a developer who always wanted a recipe management app but found entering recipes manually tedious and time-consuming. The solution? Harness AI to make adding recipes effortless while providing intelligent recommendations and assistance with recipe management."
+    },
+    "version": {
+      "current": "Current Version",
+      "buildWith": "Powered by AI"
+    },
+    "sustainability": {
+      "title": "Keeping It Running",
+      "description": "This app runs on generosity. If Meal Maestro saves you time and brings joy to your cooking, consider leaving a tip to help keep it running ad-free and subscription-free.",
+      "tipJar": "Support with a Tip"
+    },
+    "community": {
+      "title": "Join the Community",
+      "shareText": "Share Meal Maestro with fellow cooking enthusiasts",
+      "feedbackText": "Send feedback to help improve the app",
+      "shareButton": "Share App",
+      "feedbackButton": "Send Feedback"
+    },
+    "values": {
+      "respectsPrivacy": "Respects privacy",
+      "adFree": "Ad-free", 
+      "noSubscriptions": "No subscriptions",
+      "simpleToUse": "Simple to use"
+    }
   }
 }

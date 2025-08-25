@@ -4,8 +4,9 @@
 - [ ] Secure code scanning
 - [ ] **5.11** Implement caching strategies
 - [ ] **5.12** Add buy me a coffee functionality
-- [ ] **5.13** Improve deployment pipeline with automatic version bumping
-- [ ] About page with version and release notes
+- [x] **5.13** Improve deployment pipeline with automatic version bumping
+- [x] About page with version and release notes
+- [ ] Costs overview of running the app on the about page?
 - [ ] Google app for google login customize with meal meastro logo and text, might require approval from google
 - [ ] Main page should have ai less promenent and focus more on the recipe management and easy of adding recipes. also use this as inspiration: https://popsa.com/en-gb/features/
 

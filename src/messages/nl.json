@@ -6,6 +6,7 @@
   "navigation": {
     "recipes": "Recepten",
     "admin": "Admin",
+    "about": "Over",
     "logout": "Uitloggen",
     "menu": "Menu",
     "navigation": "Navigatie",
@@ -552,5 +553,38 @@
     "clear": "Wissen",
     "apply": "Apply",
     "reset": "Reset"
+  },
+  "about": {
+    "title": "Over Meal Maestro",
+    "philosophy": {
+      "title": "Onze Filosofie",
+      "description": "Deze app laat zien hoe software zou moeten werken: geen abonnementen, geen advertenties, geen tracking cookies. Gewoon een tool die het doet, niks meer, niks minder."
+    },
+    "story": {
+      "title": "Waarom Deze App?",
+      "description": "Gebouwd door een ontwikkelaar die altijd al een receptenbeheer app wilde, maar het handmatig invoeren van recepten tijdrovend en saai vond. De oplossing? AI gebruiken om recepten toevoegen makkelijk te maken, met intelligente aanbevelingen en hulp bij receptenbeheer."
+    },
+    "version": {
+      "current": "Huidige Versie",
+      "buildWith": "Aangedreven door AI"
+    },
+    "sustainability": {
+      "title": "In de Lucht Houden",
+      "description": "Deze app draait op vrijgevigheid. Als Meal Maestro je tijd bespaart en vreugde brengt bij het koken, overweeg dan een fooi om de app advertentievrij en abonnementsvrij te houden.",
+      "tipJar": "Steun met een Fooi"
+    },
+    "community": {
+      "title": "Word Onderdeel van de Community",
+      "shareText": "Deel Meal Maestro met medekookliefhebbers",
+      "feedbackText": "Stuur feedback om de app te helpen verbeteren",
+      "shareButton": "App Delen",
+      "feedbackButton": "Feedback Sturen"
+    },
+    "values": {
+      "respectsPrivacy": "Respecteert privacy",
+      "adFree": "Advertentievrij",
+      "noSubscriptions": "Geen abonnementen",
+      "simpleToUse": "Eenvoudig te gebruiken"
+    }
   }
 }

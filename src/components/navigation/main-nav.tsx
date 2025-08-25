@@ -2,7 +2,7 @@
 
 import { Link, usePathname, useRouter } from "@/app/i18n/routing";
 import { useState, useEffect } from "react";
-import { ChefHat, BookOpen, Menu, LogOut, User, Shield, Globe } from "lucide-react";
+import { ChefHat, BookOpen, Menu, LogOut, User, Shield, Globe, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useUserCosts } from "@/lib/hooks/use-user-costs";
@@ -61,6 +61,11 @@ export function MainNav() {
       name: t('recipes'),
       href: "/recipes",
       icon: BookOpen,
+    },
+    {
+      name: t('about'),
+      href: "/about",
+      icon: Info,
     },
   ];
 
