@@ -50,7 +50,7 @@ export default function AboutPage() {
           try {
             await navigator.clipboard.writeText(window.location.origin);
             toast.success(t('shareSuccess'));
-          } catch (clipboardErr) {
+          } catch (_clipboardErr) {
             toast.error(t('shareError'));
           }
         }
@@ -60,7 +60,7 @@ export default function AboutPage() {
       try {
         await navigator.clipboard.writeText(window.location.origin);
         toast.success(t('shareSuccess'));
-      } catch (err) {
+      } catch (_err) {
         toast.error(t('shareError'));
       }
     }
