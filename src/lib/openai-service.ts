@@ -109,7 +109,7 @@ export async function createChatCompletion(
     });
 
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("OpenAI request timeout")), 25000); // 25 second timeout
+      setTimeout(() => reject(new Error("OpenAI request timeout")), 55000); // 55 second timeout (5s buffer before Vercel 60s limit)
     });
 
     const completion = await Promise.race([completionPromise, timeoutPromise]) as OpenAI.Chat.Completions.ChatCompletion;

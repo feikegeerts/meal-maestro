@@ -5,7 +5,7 @@
   "installCommand": "pnpm install",
   "functions": {
     "src/app/api/recipes/chat/route.ts": {
-      "maxDuration": 25
+      "maxDuration": 60
     }
   }
 }
