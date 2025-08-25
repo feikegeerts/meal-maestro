@@ -354,7 +354,7 @@
     "updateRecipeError": "Recept bijwerken mislukt. Probeer opnieuw."
   },
   "chat": {
-    "assistantTitle": "AI Recept Assistant",
+    "assistantTitle": "AI Recept Assistent",
     "thinking": "AI is aan het denken...",
     "inputPlaceholder": "Typ je bericht...",
     "loading": {

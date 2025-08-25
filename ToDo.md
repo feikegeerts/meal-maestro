@@ -1,10 +1,5 @@
 ### Phase 5: Post-MVP Enhancements
 
-- [ ] **URGENT** Fix mobile photo upload timeout issue - 25s Vercel limit causing SIGTERM
-- [ ] Implement client-side image compression using existing image-conversion.ts utility  
-- [ ] Reduce OpenAI timeout from 25s to 20s to avoid Vercel SIGTERM race condition
-- [ ] Add image size validation and compression in chat interface before upload
-- [ ] Test mobile photo upload performance with compressed images
 - [ ] chat interface header needs to be localized.
 - [ ] automatic version bump in the about page
 - [ ] **5.12** Add buy me a coffee functionality, with stripe or ko-fi
