@@ -568,7 +568,7 @@
     },
     "sustainability": {
       "title": "Keeping It Running",
-      "description": "This app runs on generosity. If Meal Maestro saves you time and brings joy to your cooking, consider leaving a tip to help keep it running ad-free and subscription-free.",
+      "description": "This app runs on generosity. If Meal Maestro saves you time and helps with your recipe management, consider leaving a tip to help keep it running ad-free and subscription-free.",
       "tipJar": "Support with a Tip"
     },
     "community": {
@@ -583,6 +583,8 @@
       "adFree": "Ad-free", 
       "noSubscriptions": "No subscriptions",
       "simpleToUse": "Simple to use"
-    }
+    },
+    "shareSuccess": "Link copied to clipboard!",
+    "shareError": "Failed to copy link"
   }
 }

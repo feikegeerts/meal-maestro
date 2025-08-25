@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getAppVersion, formatVersion } from '@/lib/version';
+import { toast } from 'sonner';
 
 export default function AboutPage() {
   const t = useTranslations('about');
@@ -42,11 +43,26 @@ export default function AboutPage() {
           text: 'Check out Meal Maestro - an AI-powered recipe management app that respects your privacy!',
           url: window.location.origin,
         });
+        // Native sharing succeeded, no toast needed
       } catch (err) {
-        console.log('Error sharing:', err);
+        if (err instanceof Error && err.name !== 'AbortError') {
+          // Fallback to clipboard if native sharing failed (but not if user cancelled)
+          try {
+            await navigator.clipboard.writeText(window.location.origin);
+            toast.success(t('shareSuccess'));
+          } catch (clipboardErr) {
+            toast.error(t('shareError'));
+          }
+        }
       }
     } else {
-      navigator.clipboard.writeText(window.location.origin);
+      // Desktop fallback - copy to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.origin);
+        toast.success(t('shareSuccess'));
+      } catch (err) {
+        toast.error(t('shareError'));
+      }
     }
   };
 

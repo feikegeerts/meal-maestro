@@ -570,7 +570,7 @@
     },
     "sustainability": {
       "title": "In de Lucht Houden",
-      "description": "Deze app draait op vrijgevigheid. Als Meal Maestro je tijd bespaart en vreugde brengt bij het koken, overweeg dan een fooi om de app advertentievrij en abonnementsvrij te houden.",
+      "description": "Deze app draait op vrijgevigheid. Als Meal Maestro je tijd bespaart en je helpt met je receptenbeheer, overweeg dan een fooi om de app advertentievrij en abonnementsvrij te houden.",
       "tipJar": "Steun met een Fooi"
     },
     "community": {
@@ -585,6 +585,8 @@
       "adFree": "Advertentievrij",
       "noSubscriptions": "Geen abonnementen",
       "simpleToUse": "Eenvoudig te gebruiken"
-    }
+    },
+    "shareSuccess": "Link gekopieerd naar klembord!",
+    "shareError": "Link kopiëren mislukt"
   }
 }
