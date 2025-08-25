@@ -57,7 +57,6 @@ function AvatarImage({
       fill
       className={cn("aspect-square object-cover", className)}
       quality={75}
-      unoptimized={src.includes('googleusercontent.com')}
       sizes="(max-width: 48px) 48px, (max-width: 96px) 96px, 128px"
       onLoad={() => {
         if (onLoadingStatusChange) {

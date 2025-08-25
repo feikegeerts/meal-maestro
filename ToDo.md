@@ -1,7 +1,5 @@
 ### Phase 5: Post-MVP Enhancements
 
-- [ ] chat interface header needs to be localized.
-- [ ] automatic version bump in the about page
 - [ ] **5.12** Add buy me a coffee functionality, with stripe or ko-fi
 - [ ] Costs overview of running the app on the about page?
 - [ ] Google app for google login customize with meal meastro logo and text, might require approval from google
