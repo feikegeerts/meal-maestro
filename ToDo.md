@@ -17,6 +17,7 @@
 
 - [ ] **9.1** Usage analytics and metrics
 - [ ] **9.2** Performance monitoring
+- [ ] Maximize the spend of a user in a given month, point them to the donate
 
 ### Phase 8: Quality of life
 

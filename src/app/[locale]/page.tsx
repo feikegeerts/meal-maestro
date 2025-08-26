@@ -47,7 +47,7 @@ function HomeContent() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {user ? (
               /* Authenticated User CTA */
-              <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex flex-col items-center gap-4">
                 <div className="flex items-center gap-3">
                   <div className="bg-primary/10 rounded-full p-2 relative overflow-hidden">
                     {profile?.avatar_url ? (
@@ -62,26 +62,28 @@ function HomeContent() {
                       <User className="h-5 w-5 text-primary" />
                     )}
                   </div>
-                  <div className="text-left">
+                  <div className="text-center">
                     <p className="text-sm font-medium text-foreground">
-                      Welcome back, {profile?.display_name || "User"}!
+                      {t('welcomeBack')}, {profile?.display_name || "User"}!
                     </p>
                   </div>
                 </div>
-                <Link href="/recipes">
-                  <Button size="lg">
-                    <BookOpen className="mr-2 h-5 w-5" />
-                    Go to Recipes
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <Link href="/recipes">
+                    <Button size="lg">
+                      <BookOpen className="mr-2 h-5 w-5" />
+                      {t('goToRecipes')}
+                    </Button>
+                  </Link>
+                  <Button
+                    onClick={handleSignOut}
+                    variant="outline"
+                    size="lg"
+                  >
+                    <LogOut className="mr-2 h-5 w-5" />
+                    {t('signOut')}
                   </Button>
-                </Link>
-                <Button
-                  onClick={handleSignOut}
-                  variant="outline"
-                  size="lg"
-                >
-                  <LogOut className="mr-2 h-5 w-5" />
-                  {t('signOut')}
-                </Button>
+                </div>
               </div>
             ) : (
               /* Unauthenticated User CTA */

@@ -32,6 +32,8 @@
     "signInDescription": "Sign in to start organizing your recipes with AI-powered management",
     "signedInMessage": "You're successfully signed in and ready to start managing your recipes!",
     "signOut": "Sign Out",
+    "welcomeBack": "Welcome back",
+    "goToRecipes": "Go to Recipes",
     "termsText": "By signing in, you agree to our use of essential cookies for authentication, terms of service and privacy policy. Your recipes will be securely stored and only accessible to you."
   },
   "auth": {
