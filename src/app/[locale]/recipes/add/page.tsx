@@ -45,7 +45,7 @@ export default function AddRecipePage() {
   useEffect(() => {
     if (!authLoading && !user) {
       setRedirectUrl("/recipes/add");
-      router.push("/");
+      router.push("/login");
       return;
     }
   }, [user, authLoading, router]);

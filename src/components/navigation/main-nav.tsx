@@ -134,9 +134,17 @@ export function MainNav() {
     ...(isAdmin ? [adminNavigationItem] : [])
   ];
 
-  if (!user) {
-    return null;
-  }
+  // Show navigation for both authenticated and unauthenticated users
+  const publicNavigationItems = [
+    {
+      name: t('about'),
+      href: "/about",
+      icon: Info,
+    },
+  ];
+
+  // Show different navigation items based on auth state
+  const displayedItems = user ? navigationItems : publicNavigationItems;
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -152,7 +160,7 @@ export function MainNav() {
           <div className="hidden md:flex items-center space-x-4">
             <NavigationMenu>
               <NavigationMenuList>
-                {navigationItems.map((item) => {
+                {displayedItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
 
@@ -177,115 +185,128 @@ export function MainNav() {
               </NavigationMenuList>
             </NavigationMenu>
 
-            {/* User Dropdown */}
-            <DropdownMenu open={userMenuOpen} onOpenChange={handleUserMenuOpenChange}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-8 w-8 rounded-full hover:bg-accent hover:ring-2 hover:ring-ring hover:ring-offset-2 focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all cursor-pointer"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={profile?.avatar_url || undefined}
-                      alt={profile?.display_name || user?.email || "User"}
-                    />
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 sm:w-64 max-w-[calc(100vw-2rem)]" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        {profile?.display_name || "User"}
-                      </p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
-                      </p>
+            {/* User Area - Authenticated or Login Button */}
+            {user ? (
+              /* Authenticated User Dropdown */
+              <DropdownMenu open={userMenuOpen} onOpenChange={handleUserMenuOpenChange}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full hover:bg-accent hover:ring-2 hover:ring-ring hover:ring-offset-2 focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all cursor-pointer"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={profile?.avatar_url || undefined}
+                        alt={profile?.display_name || user?.email || "User"}
+                      />
+                      <AvatarFallback>
+                        <User className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 sm:w-64 max-w-[calc(100vw-2rem)]" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {profile?.display_name || "User"}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                      {costLoading ? (
+                        <div className="space-y-1">
+                          <div className="h-3 w-20 animate-pulse bg-muted rounded"></div>
+                          <div className="h-3 w-16 animate-pulse bg-muted rounded"></div>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {tAdmin('totalCosts')}: {formatCost(costData?.totalCost || 0)}
+                          </p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {tAdmin('totalCalls')}: {costData?.totalCalls || 0}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    {costLoading ? (
-                      <div className="space-y-1">
-                        <div className="h-3 w-20 animate-pulse bg-muted rounded"></div>
-                        <div className="h-3 w-16 animate-pulse bg-muted rounded"></div>
-                      </div>
-                    ) : (
-                      <div className="space-y-1">
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {tAdmin('totalCosts')}: {formatCost(costData?.totalCost || 0)}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {tAdmin('totalCalls')}: {costData?.totalCalls || 0}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                
-                {/* Language Selection Submenu */}
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="flex items-center gap-3">
-                    <Globe className="h-4 w-4" />
-                    <span>{t('language')}</span>
-                    <span className="ml-2 text-sm">
-                      {languages.find(lang => lang.code === locale)?.flag}
-                    </span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    {languages.map((language) => (
-                      <DropdownMenuItem
-                        key={language.code}
-                        onClick={() => handleLanguageChange(language.code)}
-                        className={cn(
-                          "flex items-center gap-3",
-                          locale === language.code && "bg-accent text-accent-foreground"
-                        )}
-                      >
-                        <span className="text-sm">{language.flag}</span>
-                        <span className="text-sm">{language.name}</span>
-                        {locale === language.code && (
-                          <div className="ml-auto h-2 w-2 bg-primary rounded-full" />
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                
-                {/* Theme Selection Submenu */}
-                <ThemeMenu variant="dropdown" />
-                
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>{t('logout')}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  
+                  {/* Language Selection Submenu */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="flex items-center gap-3">
+                      <Globe className="h-4 w-4" />
+                      <span>{t('language')}</span>
+                      <span className="ml-2 text-sm">
+                        {languages.find(lang => lang.code === locale)?.flag}
+                      </span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {languages.map((language) => (
+                        <DropdownMenuItem
+                          key={language.code}
+                          onClick={() => handleLanguageChange(language.code)}
+                          className={cn(
+                            "flex items-center gap-3",
+                            locale === language.code && "bg-accent text-accent-foreground"
+                          )}
+                        >
+                          <span className="text-sm">{language.flag}</span>
+                          <span className="text-sm">{language.name}</span>
+                          {locale === language.code && (
+                            <div className="ml-auto h-2 w-2 bg-primary rounded-full" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  
+                  {/* Theme Selection Submenu */}
+                  <ThemeMenu variant="dropdown" />
+                  
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>{t('logout')}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              /* Login Button for Unauthenticated Users */
+              <Link href="/login">
+                <Button variant="default" size="sm">
+                  <User className="mr-2 h-4 w-4" />
+                  {t('signIn')}
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Navigation */}
-          <div className="md:hidden flex items-center space-x-2">            
-            {/* Mobile User Avatar - Sheet */}
-            <Sheet open={userSheetOpen} onOpenChange={handleUserSheetOpenChange}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-8 w-8 rounded-full hover:bg-accent hover:ring-2 hover:ring-ring hover:ring-offset-2 focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all cursor-pointer"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={profile?.avatar_url || undefined}
-                      alt={profile?.display_name || user?.email || "User"}
-                    />
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </SheetTrigger>
+          <div className="md:hidden flex items-center space-x-2">
+            {/* Mobile User Area */}
+            {user ? (
+              /* Mobile User Avatar - Sheet for authenticated users */
+              <Sheet open={userSheetOpen} onOpenChange={handleUserSheetOpenChange}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full hover:bg-accent hover:ring-2 hover:ring-ring hover:ring-offset-2 focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all cursor-pointer"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={profile?.avatar_url || undefined}
+                        alt={profile?.display_name || user?.email || "User"}
+                      />
+                      <AvatarFallback>
+                        <User className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </SheetTrigger>
               <SheetContent side="right" className="w-[280px]">
                 <SheetHeader>
                   <SheetTitle className="flex items-center space-x-2">
@@ -365,6 +386,15 @@ export function MainNav() {
                 </div>
               </SheetContent>
             </Sheet>
+            ) : (
+              /* Login Button for Mobile Unauthenticated Users */
+              <Link href="/login">
+                <Button variant="default" size="sm">
+                  <User className="mr-2 h-4 w-4" />
+                  {t('signIn')}
+                </Button>
+              </Link>
+            )}
 
             {/* Mobile Menu Sheet */}
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -381,7 +411,7 @@ export function MainNav() {
                   </SheetTitle>
                 </SheetHeader>
                 <div className="mt-6 space-y-3">
-                  {navigationItems.map((item) => {
+                  {displayedItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
 

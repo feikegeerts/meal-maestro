@@ -81,7 +81,7 @@ export default function RecipeDetailPage() {
   useEffect(() => {
     if (!authLoading && !user) {
       setRedirectUrl(`/recipes/${id}`);
-      router.push("/");
+      router.push("/login");
       return;
     }
   }, [user, authLoading, router, id]);

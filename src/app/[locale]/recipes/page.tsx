@@ -29,7 +29,7 @@ export default function RecipesPage() {
   useEffect(() => {
     if (!loading && !user) {
       setRedirectUrl("/recipes");
-      router.push("/");
+      router.push("/login");
       return;
     }
 

@@ -29,7 +29,7 @@ export default function EditRecipePage() {
   useEffect(() => {
     if (!authLoading && !user) {
       setRedirectUrl(`/recipes/${id}/edit`);
-      router.push("/");
+      router.push("/login");
       return;
     }
   }, [user, authLoading, router, id]);
