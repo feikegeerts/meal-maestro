@@ -560,7 +560,7 @@
   "about": {
     "title": "Over Meal Maestro",
     "philosophy": {
-      "title": "Onze Filosofie",
+      "title": "Mijn Filosofie",
       "description": "Meal Maestro laat zien hoe software wél zou moeten werken: geen abonnementen, geen advertenties, geen tracking cookies. Gewoon een handige tool die doet wat ‘ie moet doen — niet meer en niet minder."
     },
     "story": {
@@ -590,6 +590,41 @@
       "adFree": "Zonder advertenties",
       "noSubscriptions": "Geen abonnementen",
       "simpleToUse": "Makkelijk in gebruik"
+    },
+    "costs": {
+      "title": "Transparantie in Kosten",
+      "description": "Ik deel graag wat het kost om Meal Maestro te runnen. Hier is een overzicht van de infrastructuurkosten en de kosten die door jouw gebruik worden gegenereerd.",
+      "infrastructure": {
+        "title": "Infrastructuurkosten",
+        "domain": "Domein registratie",
+        "hosting": "Hosting (Vercel)",
+        "database": "Database (Supabase)",
+        "free": "Gratis pakket",
+        "vercelLimits": {
+          "title": "Vercel Gratis Pakket Limieten:",
+          "bandwidth": "100 GB bandbreedte/maand",
+          "builds": "6.000 build minuten/maand",
+          "usage": "Alleen voor hobby projecten",
+          "userLimit": "~100 gebruikers"
+        },
+        "supabaseLimits": {
+          "title": "Supabase Gratis Pakket Limieten:",
+          "bandwidth": "10 GB bandbreedte/maand",
+          "storage": "1 GB bestandsopslag",
+          "usage": "Alleen voor hobby projecten",
+          "userLimit": "~100 gebruikers"
+        }
+      },
+      "usage": {
+        "title": "Jouw Gebruikskosten",
+        "yourCosts": "Deze kosten hebben te maken met het genereren en opslaan van jouw recepten.",
+        "openai": "OpenAI API aanroepen",
+        "photoStorage": "Fotoopslag",
+        "calls": "Totaal aanroepen",
+        "tokens": "Totaal tokens",
+        "comingSoon": "Binnenkort",
+        "signInToSee": "Log in om je persoonlijke gebruikskosten te zien:"
+      }
     },
     "shareSuccess": "Link gekopieerd naar klembord!",
     "shareError": "Link kopiëren mislukt"
