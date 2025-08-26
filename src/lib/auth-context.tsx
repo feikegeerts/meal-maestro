@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   ReactNode,
 } from "react";
 import { User, Session, AuthError, OAuthResponse } from "@supabase/supabase-js";
@@ -40,7 +41,60 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Session health monitoring
+  // Global refresh lock to prevent concurrent refresh attempts
+  const refreshLockRef = useRef<Promise<boolean> | null>(null);
+
+  // Safe refresh with global lock to prevent race conditions
+  const performSafeRefresh = useCallback(async (): Promise<boolean> => {
+    // If a refresh is already in progress, wait for it to complete
+    if (refreshLockRef.current) {
+      try {
+        return await refreshLockRef.current;
+      } catch (error) {
+        console.error("Error waiting for existing refresh:", error);
+        return false;
+      }
+    }
+
+    // Start a new refresh operation
+    const refreshPromise = async (): Promise<boolean> => {
+      try {
+        const { data: refreshData, error: refreshError } =
+          await supabase.auth.refreshSession();
+        
+        if (refreshData.session && !refreshError) {
+          await syncTokensWithServer(refreshData.session);
+          return true;
+        }
+        
+        // Handle specific "Already Used" error gracefully
+        if (refreshError?.message?.includes("Already Used")) {
+          console.debug("Refresh token already used by another process");
+          
+          // Try to get the current session (another process may have refreshed it)
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            return true;
+          }
+        }
+        
+        console.error("Token refresh failed:", refreshError);
+        return false;
+      } catch (error) {
+        console.error("Token refresh exception:", error);
+        return false;
+      } finally {
+        // Clear the lock when done
+        refreshLockRef.current = null;
+      }
+    };
+
+    // Store the promise so other calls can wait for it
+    refreshLockRef.current = refreshPromise();
+    return await refreshLockRef.current;
+  }, []);
+
+  // Session health monitoring with race condition protection
   const validateSession = useCallback(async (): Promise<boolean> => {
     try {
       const {
@@ -59,17 +113,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (timeUntilExpiry <= 300) {
         // 5 minutes - proactively refresh
-        try {
-          const { data: refreshData, error: refreshError } =
-            await supabase.auth.refreshSession();
-          if (refreshData.session && !refreshError) {
-            await syncTokensWithServer(refreshData.session);
-            return true;
-          }
-        } catch (refreshError) {
-          console.error("Proactive token refresh failed:", refreshError);
-          return false;
-        }
+        return await performSafeRefresh();
       }
 
       return true;
@@ -77,7 +121,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error("Session validation error:", error);
       return false;
     }
-  }, []);
+  }, [performSafeRefresh]);
 
   // Sync tokens with server for HTTP-only cookie auth
   const syncTokensWithServer = async (session: Session, retries = 3) => {

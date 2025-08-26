@@ -117,7 +117,6 @@ export default function AdminDashboard() {
     if (!user || !profile) {
       setIsAdmin(false);
       setAdminLoading(false);
-      router.push("/recipes");
       return;
     }
 
@@ -126,11 +125,25 @@ export default function AdminDashboard() {
       setIsAdmin(true);
     } else {
       setIsAdmin(false);
-      router.push("/recipes");
     }
 
     setAdminLoading(false);
-  }, [user, profile, authLoading, router]);
+  }, [user, profile, authLoading]);
+
+  // Handle navigation based on authentication state
+  useEffect(() => {
+    if (!authLoading && !adminLoading) {
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+      
+      if (isAdmin === false) {
+        router.push("/recipes");
+        return;
+      }
+    }
+  }, [user, isAdmin, authLoading, adminLoading, router]);
 
   // Fetch overview stats once admin status is confirmed
   useEffect(() => {
@@ -162,13 +175,8 @@ export default function AdminDashboard() {
     return <PageLoading />;
   }
 
-  if (!user) {
-    router.push("/login");
-    return <PageLoading />;
-  }
-
-  if (isAdmin === false) {
-    return null; // Will redirect via useEffect
+  if (!user || isAdmin === false) {
+    return <PageLoading />; // Will redirect via useEffect
   }
 
   if (loading && !stats) {

@@ -41,6 +41,15 @@ export async function getAuthenticatedUser(): Promise<AuthUser | null> {
           });
 
           if (refreshError) {
+            // Handle "Already Used" error gracefully - another process may have refreshed
+            if (refreshError.message?.includes("Already Used")) {
+              console.debug('Refresh token already used by another process');
+              // Clear the cookies since they're stale
+              cookieStore.delete('sb-access-token');
+              cookieStore.delete('sb-refresh-token');
+              return null;
+            }
+            
             console.error('Token refresh failed:', refreshError.message, refreshError.status);
             // Clear invalid cookies
             cookieStore.delete('sb-access-token');
