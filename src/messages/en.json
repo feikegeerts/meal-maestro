@@ -572,7 +572,10 @@
     "sustainability": {
       "title": "Support Meal Maestro",
       "description": "Meal Maestro is free to use, without ads and without subscriptions. Does the app save you a lot of time? Then I would greatly appreciate it if you would make a contribution. Together we keep Meal Maestro running, free from ads and subscriptions. It costs money to use the AI and to host the website online. With your support I can ensure that Meal Maestro remains available and independent.",
-      "tipJar": "Support on Ko-fi"
+      "tipJar": "Support via PayPal",
+      "bankTransfer": "Or transfer directly:",
+      "qrInstructions": "Scan with your banking app (not camera)",
+      "copyIban": "Copy Bank Details"
     },
     "community": {
       "title": "Share Meal Maestro",

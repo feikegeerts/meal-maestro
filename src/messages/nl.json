@@ -574,7 +574,10 @@
     "sustainability": {
       "title": "Steun Meal Maestro",
       "description": "Meal Maestro is gratis te gebruiken, zonder advertenties en zonder abonnementen. Bespaart de app je veel tijd? Dan waardeer ik het enorm als je een bijdrage wilt leveren. Samen houden we Meal Maestro draaiende, vrij van advertenties en abonnementen. Het kost namelijk geld om de AI te gebruiken en de website online te hosten. Met jouw steun kan ik ervoor zorgen dat Meal Maestro beschikbaar en onafhankelijk blijft.",
-      "tipJar": "Steun via Ko-fi"
+      "tipJar": "Steun via PayPal",
+      "bankTransfer": "Of overmaken via:",
+      "qrInstructions": "Scan met je bank app (niet camera)",
+      "copyIban": "Bank Details Kopiëren"
     },
     "community": {
       "title": "Deel Meal Maestro",

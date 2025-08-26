@@ -140,14 +140,60 @@ export default function AboutPage() {
               <p className="text-muted-foreground">
                 {t('sustainability.description')}
               </p>
-              <Button 
-                className="w-full" 
-                onClick={() => window.open('https://ko-fi.com/feikegeerts', '_blank')}
-              >
-                <Heart className="h-4 w-4 mr-2" />
-                {t('sustainability.tipJar')}
-                <ExternalLink className="h-4 w-4 ml-2" />
-              </Button>
+              <div className="space-y-3">
+                <Button 
+                  className="w-full" 
+                  onClick={() => window.open('https://paypal.me/feikegeerts', '_blank')}
+                >
+                  <Heart className="h-4 w-4 mr-2" />
+                  {t('sustainability.tipJar')}
+                  <ExternalLink className="h-4 w-4 ml-2" />
+                </Button>
+                
+                <div className="text-center space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {t('sustainability.bankTransfer')}
+                  </p>
+                  
+                  {/* Desktop: Show QR code */}
+                  <div className="hidden sm:block">
+                    <div className="flex justify-center">
+                      <img 
+                        src="/sepa-qr-code.png" 
+                        alt="SEPA QR Code for bank transfer"
+                        className="w-32 h-32"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {t('sustainability.qrInstructions')}
+                    </p>
+                  </div>
+                  
+                  {/* Mobile: Show clickable bank details */}
+                  <div className="sm:hidden">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: 'Bank Transfer Details',
+                            text: 'IBAN: NL07 ASNB 8851 7276 94\nReference: Meal Maestro Donation'
+                          });
+                        } else {
+                          navigator.clipboard?.writeText('NL07ASNB8851727694');
+                        }
+                      }}
+                    >
+                      💳 {t('sustainability.copyIban')}
+                    </Button>
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground">
+                    NL07 ASNB 8851 7276 94
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
