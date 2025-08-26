@@ -13,6 +13,7 @@ import {
   Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -160,114 +161,6 @@ export default function AboutPage() {
           </CardContent>
         </Card>
 
-        {/* Two-column layout for bottom sections */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Sustainability */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
-                {t("sustainability.title")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground">
-                {t("sustainability.description")}
-              </p>
-              <div className="space-y-3">
-                <Button
-                  className="w-full"
-                  onClick={() =>
-                    window.open("https://paypal.me/feikegeerts", "_blank")
-                  }
-                >
-                  <Heart className="h-4 w-4 mr-2" />
-                  {t("sustainability.tipJar")}
-                  <ExternalLink className="h-4 w-4 ml-2" />
-                </Button>
-
-                <div className="text-center space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    {t("sustainability.bankTransfer")}
-                  </p>
-
-                  {/* Desktop: Show QR code */}
-                  <div className="hidden sm:block">
-                    <div className="flex justify-center">
-                      <img
-                        src="/sepa-qr-code.png"
-                        alt="SEPA QR Code for bank transfer"
-                        className="w-32 h-32"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {t("sustainability.qrInstructions")}
-                    </p>
-                  </div>
-
-                  {/* Mobile: Show clickable bank details */}
-                  <div className="sm:hidden">
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => {
-                        if (navigator.share) {
-                          navigator.share({
-                            title: "Bank Transfer Details",
-                            text: "IBAN: NL07 ASNB 8851 7276 94\nReference: Meal Maestro Donation",
-                          });
-                        } else {
-                          navigator.clipboard?.writeText("NL07ASNB8851727694");
-                        }
-                      }}
-                    >
-                      💳 {t("sustainability.copyIban")}
-                    </Button>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    NL07 ASNB 8851 7276 94
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Community */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                {t("community.title")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground">
-                {t("community.description")}
-              </p>
-              <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleShare}
-                >
-                  <Globe className="h-4 w-4 mr-2" />
-                  {t("community.shareButton")}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  disabled
-                  title="Coming soon!"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  {t("community.feedbackButton")}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Costs Section */}
         <Card>
           <CardHeader>
@@ -281,120 +174,10 @@ export default function AboutPage() {
               {t("costs.description")}
             </p>
 
-            <div className="grid md:grid-cols-2 gap-12">
-              {/* Infrastructure Costs */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4 h-10">
-                  <h3 className="font-semibold text-lg">
-                    {t("costs.infrastructure.title")}
-                  </h3>
-                </div>
-                <ul className="space-y-3 list-none">
-                  <li className="flex justify-between items-center">
-                    <span className="text-muted-foreground">
-                      {t("costs.infrastructure.domain")}
-                    </span>
-                    <span className="font-medium text-right">€25/year</span>
-                  </li>
-                  <li className="flex justify-between items-center">
-                    <span className="text-muted-foreground">
-                      {t("costs.infrastructure.hosting")}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-green-600 text-right">
-                        {t("costs.infrastructure.free")}
-                      </span>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button className="p-1 rounded-full hover:bg-accent focus:bg-accent focus:outline-none transition-colors">
-                            <Info className="h-3 w-3 text-muted-foreground hover:text-foreground transition-colors" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-80">
-                          <div className="space-y-2">
-                            <p className="text-sm font-medium">
-                              {t("costs.infrastructure.vercelLimits.title")}
-                            </p>
-                            <ul className="text-xs space-y-1 text-muted-foreground">
-                              <li>
-                                •{" "}
-                                {t(
-                                  "costs.infrastructure.vercelLimits.bandwidth"
-                                )}
-                              </li>
-                              <li>
-                                •{" "}
-                                {t("costs.infrastructure.vercelLimits.builds")}
-                              </li>
-                              <li>
-                                • {t("costs.infrastructure.vercelLimits.usage")}
-                              </li>
-                              <li>
-                                •{" "}
-                                {t(
-                                  "costs.infrastructure.vercelLimits.userLimit"
-                                )}
-                              </li>
-                            </ul>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </li>
-                  <li className="flex justify-between items-center">
-                    <span className="text-muted-foreground">
-                      {t("costs.infrastructure.database")}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-green-600 text-right">
-                        {t("costs.infrastructure.free")}
-                      </span>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button className="p-1 rounded-full hover:bg-accent focus:bg-accent focus:outline-none transition-colors">
-                            <Info className="h-3 w-3 text-muted-foreground hover:text-foreground transition-colors" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-80">
-                          <div className="space-y-2">
-                            <p className="text-sm font-medium">
-                              {t("costs.infrastructure.supabaseLimits.title")}
-                            </p>
-                            <ul className="text-xs space-y-1 text-muted-foreground">
-                              <li>
-                                •{" "}
-                                {t(
-                                  "costs.infrastructure.supabaseLimits.bandwidth"
-                                )}
-                              </li>
-                              <li>
-                                •{" "}
-                                {t(
-                                  "costs.infrastructure.supabaseLimits.storage"
-                                )}
-                              </li>
-                              <li>
-                                •{" "}
-                                {t("costs.infrastructure.supabaseLimits.usage")}
-                              </li>
-                              <li>
-                                •{" "}
-                                {t(
-                                  "costs.infrastructure.supabaseLimits.userLimit"
-                                )}
-                              </li>
-                            </ul>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-
+            <div className="grid md:grid-cols-3 gap-8">
               {/* User Usage Costs */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-4 h-10">
                   <h3 className="font-semibold text-lg">
                     {t("costs.usage.title")}
                   </h3>
@@ -476,9 +259,251 @@ export default function AboutPage() {
                   </div>
                 )}
               </div>
+
+              {/* Infrastructure Costs */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4 h-10">
+                  <h3 className="font-semibold text-lg">
+                    {t("costs.infrastructure.title")}
+                  </h3>
+                </div>
+                <ul className="space-y-3 list-none">
+                  <li className="flex justify-between items-center">
+                    <span className="text-muted-foreground">
+                      {t("costs.infrastructure.domain")}
+                    </span>
+                    <span className="font-medium text-right">€25/year</span>
+                  </li>
+                  <li className="flex justify-between items-center">
+                    <span className="text-muted-foreground">
+                      {t("costs.infrastructure.hosting")}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-green-600 text-right">
+                        {t("costs.infrastructure.free")}
+                      </span>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button className="p-1 rounded-full hover:bg-accent focus:bg-accent focus:outline-none transition-colors">
+                            <Info className="h-3 w-3 text-muted-foreground hover:text-foreground transition-colors" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80">
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium">
+                              {t("costs.infrastructure.vercelLimits.title")}
+                            </p>
+                            <ul className="text-xs space-y-1 text-muted-foreground">
+                              <li>
+                                •{" "}
+                                {t(
+                                  "costs.infrastructure.vercelLimits.bandwidth"
+                                )}
+                              </li>
+                              <li>
+                                •{" "}
+                                {t("costs.infrastructure.vercelLimits.builds")}
+                              </li>
+                              <li>
+                                • {t("costs.infrastructure.vercelLimits.usage")}
+                              </li>
+                              <li>
+                                •{" "}
+                                {t(
+                                  "costs.infrastructure.vercelLimits.userLimit"
+                                )}
+                              </li>
+                            </ul>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </li>
+                  <li className="flex justify-between items-center">
+                    <span className="text-muted-foreground">
+                      {t("costs.infrastructure.database")}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-green-600 text-right">
+                        {t("costs.infrastructure.free")}
+                      </span>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button className="p-1 rounded-full hover:bg-accent focus:bg-accent focus:outline-none transition-colors">
+                            <Info className="h-3 w-3 text-muted-foreground hover:text-foreground transition-colors" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80">
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium">
+                              {t("costs.infrastructure.supabaseLimits.title")}
+                            </p>
+                            <ul className="text-xs space-y-1 text-muted-foreground">
+                              <li>
+                                •{" "}
+                                {t(
+                                  "costs.infrastructure.supabaseLimits.bandwidth"
+                                )}
+                              </li>
+                              <li>
+                                •{" "}
+                                {t(
+                                  "costs.infrastructure.supabaseLimits.storage"
+                                )}
+                              </li>
+                              <li>
+                                •{" "}
+                                {t("costs.infrastructure.supabaseLimits.usage")}
+                              </li>
+                              <li>
+                                •{" "}
+                                {t(
+                                  "costs.infrastructure.supabaseLimits.userLimit"
+                                )}
+                              </li>
+                            </ul>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Development Costs */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4 h-10">
+                  <h3 className="font-semibold text-lg">
+                    {t("costs.development.title")}
+                  </h3>
+                </div>
+                <ul className="space-y-3 list-none">
+                  <li className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">
+                        {t("costs.development.aiSubscription")}
+                      </span>
+                      <span className="font-medium text-right">€120</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground pl-0">
+                      {t("costs.development.oneTime")}
+                    </div>
+                  </li>
+                </ul>
+              </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Two-column layout for bottom sections */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Sustainability */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                {t("sustainability.title")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground">
+                {t("sustainability.description")}
+              </p>
+              <div className="space-y-3">
+                <Button
+                  className="w-full"
+                  onClick={() =>
+                    window.open("https://paypal.me/feikegeerts", "_blank")
+                  }
+                >
+                  <Heart className="h-4 w-4 mr-2" />
+                  {t("sustainability.tipJar")}
+                  <ExternalLink className="h-4 w-4 ml-2" />
+                </Button>
+
+                <div className="text-center space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {t("sustainability.bankTransfer")}
+                  </p>
+
+                  {/* Desktop: Show QR code */}
+                  <div className="hidden sm:block">
+                    <div className="flex justify-center">
+                      <Image
+                        src="/sepa-qr-code.png"
+                        alt="SEPA QR Code for bank transfer"
+                        width={128}
+                        height={128}
+                        className="w-32 h-32"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {t("sustainability.qrInstructions")}
+                    </p>
+                  </div>
+
+                  {/* Mobile: Show clickable bank details */}
+                  <div className="sm:hidden">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: "Bank Transfer Details",
+                            text: "IBAN: NL07 ASNB 8851 7276 94\nReference: Meal Maestro Donation",
+                          });
+                        } else {
+                          navigator.clipboard?.writeText("NL07ASNB8851727694");
+                        }
+                      }}
+                    >
+                      💳 {t("sustainability.copyIban")}
+                    </Button>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    NL07 ASNB 8851 7276 94
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Community */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                {t("community.title")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground">
+                {t("community.description")}
+              </p>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleShare}
+                >
+                  <Globe className="h-4 w-4 mr-2" />
+                  {t("community.shareButton")}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled
+                  title="Coming soon!"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  {t("community.feedbackButton")}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

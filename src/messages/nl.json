@@ -599,7 +599,7 @@
         "domain": "Domein registratie",
         "hosting": "Hosting (Vercel)",
         "database": "Database (Supabase)",
-        "free": "Gratis pakket",
+        "free": "Gratis",
         "vercelLimits": {
           "title": "Vercel Gratis Pakket Limieten:",
           "bandwidth": "100 GB bandbreedte/maand",
@@ -614,6 +614,11 @@
           "usage": "Alleen voor hobby projecten",
           "userLimit": "~100 gebruikers"
         }
+      },
+      "development": {
+        "title": "Ontwikkelkosten",
+        "aiSubscription": "Claude AI abonnement",
+        "oneTime": "Eenmalig (tijdens ontwikkeling)"
       },
       "usage": {
         "title": "Jouw Gebruikskosten",

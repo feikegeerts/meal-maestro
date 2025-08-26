@@ -613,6 +613,11 @@
           "userLimit": "~100 users"
         }
       },
+      "development": {
+        "title": "Development Costs",
+        "aiSubscription": "Claude AI subscription",
+        "oneTime": "One-time (during build)"
+      },
       "usage": {
         "title": "Your Usage Costs",
         "yourCosts": "These costs are related to generating and storing your recipes.",
