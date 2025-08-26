@@ -1,6 +1,6 @@
 ### Phase 5: Post-MVP Enhancements
 
-- [ ] **5.12** Add buy me a coffee functionality, with stripe or ko-fi
+- [ ] **5.12** Add buy me a coffee functionality, with ko-fi and paypal and add a QR code / tikkie
 - [ ] Costs overview of running the app on the about page?
 - [ ] Google app for google login customize with meal meastro logo and text, might require approval from google
 - [ ] Main page should have ai less promenent and focus more on the recipe management and easy of adding recipes. also use this as inspiration: https://popsa.com/en-gb/features/

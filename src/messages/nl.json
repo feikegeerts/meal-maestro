@@ -558,7 +558,7 @@
     "title": "Over Meal Maestro",
     "philosophy": {
       "title": "Onze Filosofie",
-      "description": "Deze app laat zien hoe software zou moeten werken: geen abonnementen, geen advertenties, geen tracking cookies. Gewoon een tool die het doet, niks meer, niks minder."
+      "description": "Meal Maestro laat zien hoe software wél zou moeten werken: geen abonnementen, geen advertenties, geen tracking cookies. Gewoon een handige tool die doet wat ‘ie moet doen — niet meer en niet minder."
     },
     "story": {
       "title": "Waarom Deze App?",
@@ -569,22 +569,21 @@
       "buildWith": "Aangedreven door AI"
     },
     "sustainability": {
-      "title": "In de Lucht Houden",
-      "description": "Deze app draait op vrijgevigheid. Als Meal Maestro je tijd bespaart en je helpt met je receptenbeheer, overweeg dan een fooi om de app advertentievrij en abonnementsvrij te houden.",
-      "tipJar": "Steun met een Fooi"
+      "title": "Steun Meal Maestro",
+      "description": "Meal Maestro is gratis te gebruiken, zonder advertenties en zonder abonnementen. Bespaart de app je veel tijd? Dan waardeer ik het enorm als je een bijdrage wilt leveren. Samen houden we Meal Maestro draaiende, vrij van advertenties en abonnementen. Het kost namelijk geld om de AI te gebruiken en de website online te hosten. Met jouw steun kan ik ervoor zorgen dat Meal Maestro beschikbaar en onafhankelijk blijft.",
+      "tipJar": "Steun via Ko-fi"
     },
     "community": {
-      "title": "Word Onderdeel van de Community",
-      "shareText": "Deel Meal Maestro met medekookliefhebbers",
-      "feedbackText": "Stuur feedback om de app te helpen verbeteren",
+      "title": "Deel Meal Maestro",
+      "description": "Vind je Meal Maestro handig? Deel de app met andere kookliefhebbers en help mee om het platform beter te maken met jouw feedback.",
       "shareButton": "App Delen",
       "feedbackButton": "Feedback Sturen"
     },
     "values": {
-      "respectsPrivacy": "Respecteert privacy",
-      "adFree": "Advertentievrij",
+      "respectsPrivacy": "Privacy voorop",
+      "adFree": "Zonder advertenties",
       "noSubscriptions": "Geen abonnementen",
-      "simpleToUse": "Eenvoudig te gebruiken"
+      "simpleToUse": "Makkelijk in gebruik"
     },
     "shareSuccess": "Link gekopieerd naar klembord!",
     "shareError": "Link kopiëren mislukt"

@@ -142,7 +142,7 @@ export default function AboutPage() {
               </p>
               <Button 
                 className="w-full" 
-                onClick={() => window.open('https://buymeacoffee.com/mealmeastro', '_blank')}
+                onClick={() => window.open('https://ko-fi.com/feikegeerts', '_blank')}
               >
                 <Heart className="h-4 w-4 mr-2" />
                 {t('sustainability.tipJar')}
@@ -160,14 +160,9 @@ export default function AboutPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  {t('community.shareText')}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {t('community.feedbackText')}
-                </p>
-              </div>
+              <p className="text-muted-foreground">
+                {t('community.description')}
+              </p>
               <div className="space-y-2">
                 <Button 
                   variant="outline" 

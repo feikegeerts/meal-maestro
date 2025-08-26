@@ -556,7 +556,7 @@
     "title": "About Meal Maestro",
     "philosophy": {
       "title": "Our Philosophy",
-      "description": "This app represents how software should work: no subscriptions, no ads, no tracking cookies. Just a tool that does what it says, respects your privacy, and gets out of your way."
+      "description": "Meal Maestro shows how software should really work: no subscriptions, no ads, no tracking cookies. Just a handy tool that does what it's supposed to do — nothing more, nothing less."
     },
     "story": {
       "title": "Why This App?",
@@ -567,22 +567,21 @@
       "buildWith": "Powered by AI"
     },
     "sustainability": {
-      "title": "Keeping It Running",
-      "description": "This app runs on generosity. If Meal Maestro saves you time and helps with your recipe management, consider leaving a tip to help keep it running ad-free and subscription-free.",
-      "tipJar": "Support with a Tip"
+      "title": "Support Meal Maestro",
+      "description": "Meal Maestro is free to use, without ads and without subscriptions. Does the app save you a lot of time? Then I would greatly appreciate it if you would make a contribution. Together we keep Meal Maestro running, free from ads and subscriptions. It costs money to use the AI and to host the website online. With your support I can ensure that Meal Maestro remains available and independent.",
+      "tipJar": "Support on Ko-fi"
     },
     "community": {
-      "title": "Join the Community",
-      "shareText": "Share Meal Maestro with fellow cooking enthusiasts",
-      "feedbackText": "Send feedback to help improve the app",
+      "title": "Share Meal Maestro",
+      "description": "Find Meal Maestro helpful? Share the app with fellow cooking enthusiasts and help make the platform better with your feedback.",
       "shareButton": "Share App",
       "feedbackButton": "Send Feedback"
     },
     "values": {
-      "respectsPrivacy": "Respects privacy",
-      "adFree": "Ad-free", 
+      "respectsPrivacy": "Privacy first",
+      "adFree": "Without ads", 
       "noSubscriptions": "No subscriptions",
-      "simpleToUse": "Simple to use"
+      "simpleToUse": "Easy to use"
     },
     "shareSuccess": "Link copied to clipboard!",
     "shareError": "Failed to copy link"
