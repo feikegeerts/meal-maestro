@@ -37,6 +37,16 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-error: var(--error);
+  --color-error-foreground: var(--error-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-purple: var(--purple);
+  --color-purple-foreground: var(--purple-foreground);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -81,6 +91,18 @@
   --sidebar-accent-foreground: oklch(0.25 0.02 240);
   --sidebar-border: oklch(0.88 0.008 240);
   --sidebar-ring: oklch(0.55 0.12 145);
+
+  /* Additional semantic colors */
+  --success: oklch(0.55 0.12 145);
+  --success-foreground: oklch(0.98 0.005 240);
+  --warning: oklch(0.65 0.15 65);
+  --warning-foreground: oklch(0.98 0.005 240);
+  --error: oklch(0.62 0.16 27.5);
+  --error-foreground: oklch(0.98 0.005 240);
+  --info: oklch(0.55 0.12 220);
+  --info-foreground: oklch(0.98 0.005 240);
+  --purple: oklch(0.58 0.14 320);
+  --purple-foreground: oklch(0.98 0.005 240);
 }
 
 .dark {
@@ -120,6 +142,18 @@
   --sidebar-accent-foreground: oklch(0.92 0.01 240);
   --sidebar-border: oklch(0.92 0.01 240 / 12%);
   --sidebar-ring: oklch(0.65 0.12 145);
+
+  /* Additional semantic colors for dark mode */
+  --success: oklch(0.65 0.12 145);
+  --success-foreground: oklch(0.11 0.008 240);
+  --warning: oklch(0.75 0.15 65);
+  --warning-foreground: oklch(0.11 0.008 240);
+  --error: oklch(0.704 0.191 22.216);
+  --error-foreground: oklch(0.11 0.008 240);
+  --info: oklch(0.65 0.12 220);
+  --info-foreground: oklch(0.11 0.008 240);
+  --purple: oklch(0.68 0.14 320);
+  --purple-foreground: oklch(0.11 0.008 240);
 }
 
 @layer base {

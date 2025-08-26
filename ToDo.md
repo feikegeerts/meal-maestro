@@ -1,8 +1,7 @@
 ### Phase 5: Post-MVP Enhancements
 
 - [x] **5.12** Add buy me a coffee functionality, with PayPal.me
-
-- [ ] Costs overview of running the app on the about page?
+- [x] Costs overview of running the app on the about page?
 - [ ] Google app for google login customize with meal meastro logo and text, might require approval from google
 - [ ] Main page should have ai less promenent and focus more on the recipe management and easy of adding recipes. also use this as inspiration: https://popsa.com/en-gb/features/
 - [ ] custom smtp server for magic link emails
@@ -26,3 +25,4 @@
 - [ ] write more tests
 - [ ] add account deletion GDPR proof, cost and usage tracking should stay but recipes and user profile should be deleted
 - [ ] Add bunq.me donation link for mobile-friendly bank transfers
+- [ ] Feedback form on the about page

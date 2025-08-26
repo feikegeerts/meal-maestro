@@ -568,8 +568,7 @@
       "description": "Gebouwd door een ontwikkelaar die altijd al een receptenbeheer app wilde, maar het handmatig invoeren van recepten tijdrovend en saai vond. De oplossing? AI gebruiken om recepten toevoegen makkelijk te maken, met intelligente aanbevelingen en hulp bij receptenbeheer."
     },
     "version": {
-      "current": "Huidige Versie",
-      "buildWith": "Aangedreven door AI"
+      "current": "Huidige Versie"
     },
     "sustainability": {
       "title": "Steun Meal Maestro",
@@ -600,6 +599,7 @@
         "hosting": "Hosting (Vercel)",
         "database": "Database (Supabase)",
         "free": "Gratis",
+        "perYear": "jaar",
         "vercelLimits": {
           "title": "Vercel Gratis Pakket Limieten:",
           "bandwidth": "100 GB bandbreedte/maand",

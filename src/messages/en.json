@@ -566,8 +566,7 @@
       "description": "Built by a developer who always wanted a recipe management app but found entering recipes manually tedious and time-consuming. The solution? Harness AI to make adding recipes effortless while providing intelligent recommendations and assistance with recipe management."
     },
     "version": {
-      "current": "Current Version",
-      "buildWith": "Powered by AI"
+      "current": "Current Version"
     },
     "sustainability": {
       "title": "Support Meal Maestro",
@@ -598,6 +597,7 @@
         "hosting": "Hosting (Vercel)",
         "database": "Database (Supabase)",
         "free": "Free",
+        "perYear": "year",
         "vercelLimits": {
           "title": "Vercel Free Tier Limits:",
           "bandwidth": "100 GB bandwidth/month",
