@@ -3,7 +3,7 @@
 ## Authentication & User Experience
 
 1. [ ] Google app for google login customize with meal maestro logo and text, might require approval from google
-2. [ ] Custom SMTP server for magic link emails
+2. [x] Custom SMTP server for magic link emails
 3. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 
 ## Advanced Recipe Features
@@ -13,7 +13,6 @@
 
 ## Performance & Infrastructure
 
-6. [ ] Implement caching strategies
 7. [ ] Performance monitoring
 
 ## Analytics & Monetization
@@ -31,6 +30,7 @@
 
 ## Marketing & Documentation
 
-16. [ ] SEO optimizations
+16. [ ] SEO optimizations - Footer???
 17. [ ] Changelog page
-18. [ ] Localized email templates
+18. [ ] Localized email templates using vercel functions and sending emails from code using supabase auth hooks
+19. [ ] Docs folder with some docs

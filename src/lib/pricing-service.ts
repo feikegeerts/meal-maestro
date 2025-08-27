@@ -25,24 +25,41 @@ export interface UsageMetrics {
 }
 
 export class PricingService {
+  private readonly pricingConfig = OPENAI_PRICING;
+  private modelPricingCache = new Map<string, ModelPricing | null>();
   
   public getModelPricing(model: string, tier: ProcessingTier = DEFAULT_TIER): ModelPricing | null {
+    const cacheKey = `${model}:${tier}`;
+    
+    // Check cache first
+    if (this.modelPricingCache.has(cacheKey)) {
+      const cachedResult = this.modelPricingCache.get(cacheKey);
+      if (cachedResult !== undefined) {
+        return cachedResult;
+      }
+    }
+    let result: ModelPricing | null = null;
+    
     if (!isValidModel(model)) {
       if (process.env.NODE_ENV !== 'test') {
         console.warn(`🟡 [PricingService] Unknown model: ${model}`);
       }
-      return null;
-    }
-
-    const modelConfig = OPENAI_PRICING[model];
-    if (!modelConfig[tier]) {
-      if (process.env.NODE_ENV !== 'test') {
-        console.warn(`🟡 [PricingService] Tier ${tier} not available for model ${model}, falling back to standard`);
+      result = null;
+    } else {
+      const modelConfig = this.pricingConfig[model];
+      if (!modelConfig[tier]) {
+        if (process.env.NODE_ENV !== 'test') {
+          console.warn(`🟡 [PricingService] Tier ${tier} not available for model ${model}, falling back to standard`);
+        }
+        result = modelConfig['standard'] || null;
+      } else {
+        result = modelConfig[tier];
       }
-      return modelConfig['standard'] || null;
     }
 
-    return modelConfig[tier];
+    // Cache the result
+    this.modelPricingCache.set(cacheKey, result);
+    return result;
   }
 
   public calculateCost(
@@ -100,12 +117,12 @@ export class PricingService {
   }
 
   public getModelList(): string[] {
-    return Object.keys(OPENAI_PRICING);
+    return Object.keys(this.pricingConfig);
   }
 
   public getAvailableTiers(model: string): ProcessingTier[] {
     if (!isValidModel(model)) return [];
-    return Object.keys(OPENAI_PRICING[model]) as ProcessingTier[];
+    return Object.keys(this.pricingConfig[model]) as ProcessingTier[];
   }
 
   public formatCost(cost: number): string {
