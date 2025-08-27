@@ -1,6 +1,6 @@
-## Tech Stack
+## Tech Stack & Services
 
-### Frontend
+### Frontend Technologies
 
 | Technology   | Website                                          | GitHub                                                                             |
 | ------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
@@ -11,7 +11,7 @@
 | TypeScript   | [typescriptlang.org](https://typescriptlang.org) | [github.com/microsoft/TypeScript](https://github.com/microsoft/TypeScript)         |
 | Lucide Icons | [lucide.dev](https://lucide.dev)                 | [github.com/lucide-icons/lucide](https://github.com/lucide-icons/lucide)           |
 
-### Tooling
+### Development Tools
 
 | Technology  | Website                                                      | GitHub                                                                           |
 | ----------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------- |
@@ -22,13 +22,7 @@
 | lint-staged | N/A                                                          | [github.com/lint-staged/lint-staged](https://github.com/lint-staged/lint-staged) |
 | dotenv      | N/A                                                          | [github.com/motdotla/dotenv](https://github.com/motdotla/dotenv)                 |
 
-### Backend / Hosting
-
-| Technology | Website                          | GitHub                                                       |
-| ---------- | -------------------------------- | ------------------------------------------------------------ |
-| Vercel     | [vercel.com](https://vercel.com) | [github.com/vercel/vercel](https://github.com/vercel/vercel) |
-
-### Testing
+### Testing Framework
 
 | Technology            | Website                                            | GitHub                                                                                                       |
 | --------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -36,6 +30,18 @@
 | React Testing Library | [testing-library.com](https://testing-library.com) | [github.com/testing-library/react-testing-library](https://github.com/testing-library/react-testing-library) |
 | Playwright            | [playwright.dev](https://playwright.dev)           | [github.com/microsoft/playwright](https://github.com/microsoft/playwright)                                   |
 | Mock Service Worker   | [mswjs.io](https://mswjs.io)                       | [github.com/mswjs/msw](https://github.com/mswjs/msw)                                                         |
+
+### External Services (Account Required)
+
+| Service        | Purpose                   | Website                                  | Plan                        |
+| -------------- | ------------------------- | ---------------------------------------- | --------------------------- |
+| **Vercel**     | Hosting & Deployment      | [vercel.com](https://vercel.com)         | Free tier                   |
+| **GitHub**     | Code repository           | [github.com](https://github.com)         | Free tier                   |
+| **Supabase**   | Database & Authentication | [supabase.com](https://supabase.com)     | Free tier                   |
+| **TransIP**    | Domain registrar          | [transip.nl](https://transip.nl)         | Paid domain                 |
+| **CloudFlare** | DNS & Email routing       | [cloudflare.com](https://cloudflare.com) | Free tier                   |
+| **Resend**     | SMTP email service        | [resend.com](https://resend.com)         | Free tier (3k emails/month) |
+| **OpenAI**     | AI recipe processing      | [openai.com](https://openai.com)         | Pay-per-use API             |
 
 # Meal Maestro
 
@@ -142,7 +148,7 @@ meal-maestro/
 ### Branch Strategy
 
 1. **Development**: Work in `preview` branch with multiple commits and iterations
-2. **Testing**: Preview branch automatically deploys to Vercel preview environment  
+2. **Testing**: Preview branch automatically deploys to Vercel preview environment
 3. **Release**: When ready, rebase `main` branch onto `preview` and push to production
 
 ### Version Information
