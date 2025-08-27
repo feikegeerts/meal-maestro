@@ -53,21 +53,45 @@ export class ConversationBuilder {
       nl: nlMessages,
     };
     
-    return messageMap[locale] || messageMap.en;
+    const messages = messageMap[locale] || messageMap.en;
+    const safeMessages = Object.create(null);
+    for (const key in messages) {
+      if (Object.prototype.hasOwnProperty.call(messages, key)) {
+        safeMessages[key] = messages[key];
+      }
+    }
+    return safeMessages;
   }
   
   private t(key: string): string {
     const keys = key.split('.');
     let value: unknown = this.messages;
-    
+
     for (const k of keys) {
-      if (value && typeof value === 'object' && value !== null && k in value) {
-        value = (value as Record<string, unknown>)[k];
+      // Skip dangerous keys that could lead to prototype pollution
+      if (k === '__proto__' || k === 'constructor' || k === 'prototype') {
+        continue;
+      }
+      
+      if (
+        value &&
+        typeof value === 'object' &&
+        value !== null &&
+        Object.hasOwn(value, k)
+      ) {
+        // Use a safe property access that avoids prototype pollution
+        const safeValue = (value as Record<string, unknown>);
+        const descriptor = Object.getOwnPropertyDescriptor(safeValue, k);
+        if (descriptor && descriptor.value !== undefined) {
+          value = descriptor.value;
+        } else {
+          return key;
+        }
       } else {
         return key; // Return key if translation not found
       }
     }
-    
+
     return typeof value === 'string' ? value : key;
   }
   

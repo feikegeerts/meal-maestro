@@ -38,12 +38,7 @@ describe("AuthContext", () => {
     });
 
     it("should provide initial loading state", async () => {
-      let result:
-        | import("@testing-library/react").RenderHookResult<
-            ReturnType<typeof useAuth>,
-            { children: React.ReactNode }
-          >
-        | undefined;
+      let result: import("@testing-library/react").RenderHookResult<ReturnType<typeof useAuth>, { children: React.ReactNode }> | undefined;
       await act(async () => {
         result = renderHook(() => useAuth(), { wrapper });
       });
@@ -58,12 +53,7 @@ describe("AuthContext", () => {
     });
 
     it("should handle successful authentication", async () => {
-      let result:
-        | import("@testing-library/react").RenderHookResult<
-            ReturnType<typeof useAuth>,
-            { children: React.ReactNode }
-          >
-        | undefined;
+      let result: import("@testing-library/react").RenderHookResult<ReturnType<typeof useAuth>, { children: React.ReactNode }> | undefined;
       await act(async () => {
         result = renderHook(() => useAuth(), { wrapper });
       });
@@ -80,12 +70,7 @@ describe("AuthContext", () => {
     });
 
     it("should handle sign in with Google", async () => {
-      let result:
-        | import("@testing-library/react").RenderHookResult<
-            ReturnType<typeof useAuth>,
-            { children: React.ReactNode }
-          >
-        | undefined;
+      let result: import("@testing-library/react").RenderHookResult<ReturnType<typeof useAuth>, { children: React.ReactNode }> | undefined;
       await act(async () => {
         result = renderHook(() => useAuth(), { wrapper });
       });
@@ -103,12 +88,7 @@ describe("AuthContext", () => {
     });
 
     it("should handle sign out", async () => {
-      let result:
-        | import("@testing-library/react").RenderHookResult<
-            ReturnType<typeof useAuth>,
-            { children: React.ReactNode }
-          >
-        | undefined;
+      let result: import("@testing-library/react").RenderHookResult<ReturnType<typeof useAuth>, { children: React.ReactNode }> | undefined;
       await act(async () => {
         result = renderHook(() => useAuth(), { wrapper });
       });
@@ -132,12 +112,7 @@ describe("AuthContext", () => {
         })
       );
 
-      let result:
-        | import("@testing-library/react").RenderHookResult<
-            ReturnType<typeof useAuth>,
-            { children: React.ReactNode }
-          >
-        | undefined;
+      let result: import("@testing-library/react").RenderHookResult<ReturnType<typeof useAuth>, { children: React.ReactNode }> | undefined;
       await act(async () => {
         result = renderHook(() => useAuth(), { wrapper });
       });
@@ -157,12 +132,7 @@ describe("AuthContext", () => {
         })
       );
 
-      let result:
-        | import("@testing-library/react").RenderHookResult<
-            ReturnType<typeof useAuth>,
-            { children: React.ReactNode }
-          >
-        | undefined;
+      let result: import("@testing-library/react").RenderHookResult<ReturnType<typeof useAuth>, { children: React.ReactNode }> | undefined;
       await act(async () => {
         result = renderHook(() => useAuth(), { wrapper });
       });
@@ -186,12 +156,7 @@ describe("AuthContext", () => {
         })
       );
 
-      let result:
-        | import("@testing-library/react").RenderHookResult<
-            ReturnType<typeof useAuth>,
-            { children: React.ReactNode }
-          >
-        | undefined;
+      let result: import("@testing-library/react").RenderHookResult<ReturnType<typeof useAuth>, { children: React.ReactNode }> | undefined;
 
       await act(async () => {
         result = renderHook(() => useAuth(), { wrapper });
@@ -244,12 +209,7 @@ describe("AuthContext", () => {
         })
       );
 
-      let result:
-        | import("@testing-library/react").RenderHookResult<
-            ReturnType<typeof useAuth>,
-            { children: React.ReactNode }
-          >
-        | undefined;
+      let result: import("@testing-library/react").RenderHookResult<ReturnType<typeof useAuth>, { children: React.ReactNode }> | undefined;
 
       await act(async () => {
         result = renderHook(() => useAuth(), { wrapper });
@@ -302,12 +262,7 @@ describe("AuthContext", () => {
         })
       );
 
-      let result:
-        | import("@testing-library/react").RenderHookResult<
-            ReturnType<typeof useAuth>,
-            { children: React.ReactNode }
-          >
-        | undefined;
+      let result: import("@testing-library/react").RenderHookResult<ReturnType<typeof useAuth>, { children: React.ReactNode }> | undefined;
 
       await act(async () => {
         result = renderHook(() => useAuth(), { wrapper });

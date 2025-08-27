@@ -1,28 +1,30 @@
-### Phase 5: Post-MVP Enhancements
+# Post-MVP Development Roadmap
 
-- [x] **5.12** Add buy me a coffee functionality, with PayPal.me
-- [x] Costs overview of running the app on the about page?
-- [ ] Google app for google login customize with meal meastro logo and text, might require approval from google
-- [ ] Main page should have ai less promenent and focus more on the recipe management and easy of adding recipes. also use this as inspiration: https://popsa.com/en-gb/features/
-- [ ] custom smtp server for magic link emails
-- [ ] Secure code scanning
-- [ ] **5.11** Implement caching strategies
+## Authentication & User Experience
+1. [ ] Google app for google login customize with meal maestro logo and text, might require approval from google
+2. [ ] Custom SMTP server for magic link emails
+3. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 
-### Phase 6: Advanced Features
+## Advanced Recipe Features  
+4. [ ] Semantic search using vector embeddings
+5. [ ] Image upload and recipe photo management
 
-- [ ] ??? **7.1** Semantic search using vector embeddings ???
-- [ ] **7.6** Image upload and recipe photo management
+## Performance & Infrastructure
+6. [ ] Implement caching strategies
+7. [ ] Secure code scanning
+8. [ ] Performance monitoring
 
-### Phase 7: Analytics & Optimization
+## Analytics & Monetization
+9. [ ] Usage analytics and metrics
+10. [ ] Maximize the spend of a user in a given month, point them to the donate
+11. [ ] Add bunq.me donation link for mobile-friendly bank transfers
 
-- [ ] **9.1** Usage analytics and metrics
-- [ ] **9.2** Performance monitoring
-- [ ] Maximize the spend of a user in a given month, point them to the donate
+## Quality & Compliance
+12. [ ] Refactor codebase
+13. [ ] Write more tests
+14. [ ] Add account deletion GDPR proof, cost and usage tracking should stay but recipes and user profile should be deleted
+15. [ ] Feedback form on the about page
 
-### Phase 8: Quality of life
-
-- [ ] refactor
-- [ ] write more tests
-- [ ] add account deletion GDPR proof, cost and usage tracking should stay but recipes and user profile should be deleted
-- [ ] Add bunq.me donation link for mobile-friendly bank transfers
-- [ ] Feedback form on the about page
+## Marketing & Documentation
+16. [ ] SEO optimizations
+17. [ ] Changelog page

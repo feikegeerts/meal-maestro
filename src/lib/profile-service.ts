@@ -25,7 +25,7 @@ export const profileService = {
         if (error.code === 'PGRST116') {
           // No rows returned - retry up to 3 times for new users
           if (retryCount < 3) {
-            console.debug(`User profile not found, retrying (${retryCount + 1}/3):`, userId);
+            console.debug("User profile not found, retrying (%d/3):", retryCount + 1, userId);
             await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Progressive delay
             return this.getUserProfile(userId, retryCount + 1);
           } else {

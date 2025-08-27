@@ -149,7 +149,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       } catch (error) {
         console.error(
-          `Failed to sync tokens with server (attempt ${attempt}/${retries}):`,
+          "Failed to sync tokens with server (attempt %d/%d):",
+          attempt,
+          retries,
           error
         );
 

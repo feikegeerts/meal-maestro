@@ -283,15 +283,17 @@ export const handlers = [
   // Very large JSON (should be blocked)
   http.get("https://large-json-site.com/recipe", () => {
     const largeArray = Array(50000).fill("ingredient");
+    const jsonLd = {
+      "@type": "Recipe",
+      "name": "Large Recipe",
+      "recipeIngredient": largeArray
+    };
+
     return HttpResponse.html(`
       <html>
         <body>
           <script type="application/ld+json">
-          {
-            "@type": "Recipe",
-            "name": "Large Recipe",
-            "recipeIngredient": ${JSON.stringify(largeArray)}
-          }
+          ${JSON.stringify(jsonLd)}
           </script>
         </body>
       </html>
