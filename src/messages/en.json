@@ -631,5 +631,17 @@
     },
     "shareSuccess": "Link copied to clipboard!",
     "shareError": "Failed to copy link"
+  },
+  "footer": {
+    "description": "AI-powered recipe management that respects your privacy and keeps your culinary creativity organized.",
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "support": "Support",
+    "donate": "Support Development",
+    "feedback": "Report Issues",
+    "copyright": "Made with care for home cooks everywhere.",
+    "version": "Version",
+    "madeWith": "Made with"
   }
 }
