@@ -38,7 +38,7 @@ import {
   Plus,
   Camera,
 } from "lucide-react";
-import { setRedirectUrl, processInstructions } from "@/lib/utils";
+import { processInstructions } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useRecipeTranslations } from "@/messages";
 import {
@@ -80,7 +80,6 @@ export default function RecipeDetailPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      setRedirectUrl(`/recipes/${id}`);
       router.push("/login");
       return;
     }

@@ -12,7 +12,6 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Recipe, RecipeInput } from "@/types/recipe";
 import { RecipeEditForm } from "@/components/recipe-edit-form";
 import { ArrowLeft } from "lucide-react";
-import { setRedirectUrl } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
 export default function EditRecipePage() {
@@ -28,7 +27,6 @@ export default function EditRecipePage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      setRedirectUrl(`/recipes/${id}/edit`);
       router.push("/login");
       return;
     }

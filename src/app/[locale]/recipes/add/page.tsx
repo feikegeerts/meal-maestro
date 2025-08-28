@@ -10,7 +10,6 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Recipe, RecipeInput, RecipeCategory, RecipeSeason } from "@/types/recipe";
 import { RecipeEditForm } from "@/components/recipe-edit-form";
 import { recipeService } from "@/lib/recipe-service";
-import { setRedirectUrl } from "@/lib/utils";
 import { useTranslations } from 'next-intl';
 
 const generateIngredientId = () => `ingredient-${Date.now()}-${Math.random()}`;
@@ -44,7 +43,6 @@ export default function AddRecipePage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      setRedirectUrl("/recipes/add");
       router.push("/login");
       return;
     }
