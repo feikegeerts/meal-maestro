@@ -6,7 +6,6 @@ import { BookOpen, Menu, LogOut, User, Shield, Globe, Info } from "lucide-react"
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
-import { useUserCosts } from "@/lib/hooks/use-user-costs";
 import { cn } from "@/lib/utils";
 import { useTranslations, useLocale } from 'next-intl';
 import {
@@ -52,9 +51,7 @@ export function MainNav() {
   const [, setAdminCheckLoading] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [userSheetOpen, setUserSheetOpen] = useState(false);
-  const { data: costData, loading: costLoading, refetch: fetchCosts } = useUserCosts({ lazy: true });
   const t = useTranslations('navigation');
-  const tAdmin = useTranslations('admin');
   const tA11y = useTranslations('accessibility');
 
   const baseNavigationItems = [
@@ -89,26 +86,10 @@ export function MainNav() {
 
   const handleUserMenuOpenChange = (open: boolean) => {
     setUserMenuOpen(open);
-    if (open && !costData) {
-      fetchCosts();
-    }
   };
 
   const handleUserSheetOpenChange = (open: boolean) => {
     setUserSheetOpen(open);
-    if (open && !costData) {
-      fetchCosts();
-    }
-  };
-
-  const formatCost = (cost: number): string => {
-    if (cost >= 1) {
-      return `$${cost.toFixed(2)}`;
-    } else if (cost >= 0.001) {
-      return `$${cost.toFixed(4)}`;
-    } else {
-      return `$${cost.toFixed(6)}`;
-    }
   };
 
   // Check if user is admin based on profile role
@@ -208,30 +189,13 @@ export function MainNav() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56 sm:w-64 max-w-[calc(100vw-2rem)]" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-2">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {profile?.display_name || "User"}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
-                      {costLoading ? (
-                        <div className="space-y-1">
-                          <div className="h-3 w-20 animate-pulse bg-muted rounded"></div>
-                          <div className="h-3 w-16 animate-pulse bg-muted rounded"></div>
-                        </div>
-                      ) : (
-                        <div className="space-y-1">
-                          <p className="text-xs leading-none text-muted-foreground">
-                            {tAdmin('totalCosts')}: {formatCost(costData?.totalCost || 0)}
-                          </p>
-                          <p className="text-xs leading-none text-muted-foreground">
-                            {tAdmin('totalCalls')}: {costData?.totalCalls || 0}
-                          </p>
-                        </div>
-                      )}
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {profile?.display_name || "User"}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
@@ -318,32 +282,13 @@ export function MainNav() {
                 
                 <div className="mt-6 space-y-6">
                   {/* User Info Section */}
-                  <div className="flex flex-col space-y-3">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        {profile?.display_name || "User"}
-                      </p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
-                      </p>
-                    </div>
-                    
-                    {/* Usage Stats */}
-                    {costLoading ? (
-                      <div className="space-y-2">
-                        <div className="h-3 w-24 animate-pulse bg-muted rounded"></div>
-                        <div className="h-3 w-20 animate-pulse bg-muted rounded"></div>
-                      </div>
-                    ) : (
-                      <div className="space-y-1">
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {tAdmin('totalCosts')}: {formatCost(costData?.totalCost || 0)}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {tAdmin('totalCalls')}: {costData?.totalCalls || 0}
-                        </p>
-                      </div>
-                    )}
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {profile?.display_name || "User"}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
                   </div>
 
                   {/* Language Selection */}
