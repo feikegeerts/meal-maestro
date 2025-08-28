@@ -97,7 +97,7 @@ function HomeContent() {
                 </Link>
                 <Link href="/about">
                   <Button variant="outline" size="lg">
-                    Learn More
+                    {t('learnMore')}
                   </Button>
                 </Link>
               </div>

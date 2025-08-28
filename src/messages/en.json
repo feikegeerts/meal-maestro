@@ -34,6 +34,7 @@
     "signOut": "Sign Out",
     "welcomeBack": "Welcome back",
     "goToRecipes": "Go to Recipes",
+    "learnMore": "Learn More",
     "termsText": "By signing in, you agree to our use of essential cookies for authentication, terms of service and privacy policy. Your recipes will be securely stored and only accessible to you."
   },
   "auth": {
