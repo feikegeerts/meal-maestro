@@ -35,7 +35,6 @@ import {
   Calendar,
   CalendarDays,
   Tag,
-  ChefHat,
   Plus,
   Camera,
 } from "lucide-react";
@@ -47,6 +46,7 @@ import {
   createTranslationAdapter,
 } from "@/utils/ingredient-pluralization";
 import { normalizeIngredientUnit, formatFraction, pluralizeUnit } from "@/types/recipe";
+import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
@@ -294,7 +294,7 @@ export default function RecipeDetailPage() {
 
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <ChefHat className="h-4 w-4" />
+                    <ChefHatIcon className="h-4 w-4" width={16} height={16} />
                     <span className="text-sm capitalize">
                       {translateCategory(recipe.category as RecipeCategory)}
                     </span>

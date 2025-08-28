@@ -6,7 +6,8 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { User, LogOut, ChefHat, BookOpen } from "lucide-react";
+import { User, LogOut, BookOpen } from "lucide-react";
+import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import Image from "next/image";
 import { useTranslations } from 'next-intl';
 
@@ -31,7 +32,7 @@ function HomeContent() {
         {/* Hero Section */}
         <div className="text-center">
           <div className="flex items-center justify-center mb-6">
-            <ChefHat className="h-16 w-16 md:h-20 md:w-20 text-primary" />
+            <ChefHatIcon className="h-16 w-16 md:h-20 md:w-20 text-primary" width={80} height={80} />
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
             {t('title')}
