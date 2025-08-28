@@ -2,7 +2,7 @@
 
 ## Authentication & User Experience
 
-1. [ ] Google app for google login customize with meal maestro logo and text, might require approval from google
+1. [x] Google app for google login customize with meal maestro logo and text, might require approval from google
 2. [x] Custom SMTP server for magic link emails
 3. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 
