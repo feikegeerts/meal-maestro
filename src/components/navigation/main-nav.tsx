@@ -2,7 +2,7 @@
 
 import { Link, usePathname, useRouter } from "@/app/i18n/routing";
 import { useState, useEffect } from "react";
-import { BookOpen, Menu, LogOut, User, Shield, Globe, Info } from "lucide-react";
+import { BookOpen, Menu, LogOut, User, Shield, Globe, Info, Settings } from "lucide-react";
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
@@ -59,6 +59,11 @@ export function MainNav() {
       name: t('recipes'),
       href: "/recipes",
       icon: BookOpen,
+    },
+    {
+      name: "Account",
+      href: "/account",
+      icon: Settings,
     },
     {
       name: t('about'),
@@ -233,6 +238,7 @@ export function MainNav() {
                   <ThemeMenu variant="dropdown" />
                   
                   <DropdownMenuSeparator />
+                  
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>{t('logout')}</span>
@@ -276,7 +282,7 @@ export function MainNav() {
                 <SheetHeader>
                   <SheetTitle className="flex items-center space-x-2">
                     <User className="h-5 w-5" />
-                    <span>{t('navigation')}</span>
+                    <span>{t('settings')}</span>
                   </SheetTitle>
                 </SheetHeader>
                 
@@ -319,7 +325,7 @@ export function MainNav() {
                   <ThemeMenu variant="buttons" />
 
                   {/* Logout Button */}
-                  <div className="pt-4 border-t">
+                  <div className="pt-4 border-t space-y-2">
                     <Button
                       variant="ghost"
                       onClick={handleSignOut}

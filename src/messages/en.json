@@ -11,6 +11,7 @@
     "signIn": "Sign In",
     "menu": "Menu",
     "navigation": "Navigation",
+    "settings": "Settings",
     "language": "Language",
     "home": "Home",
     "back": "Back",
@@ -685,5 +686,44 @@
     "copyright": "Made with care for home cooks everywhere.",
     "version": "Version",
     "madeWith": "Made with"
+  },
+  "account": {
+    "title": "Account Settings",
+    "info": {
+      "title": "Account Information",
+      "description": "Your account details and sign-in information",
+      "email": "Email Address",
+      "provider": "Sign-in Method"
+    },
+    "dangerZone": {
+      "title": "Danger Zone",
+      "description": "Irreversible and destructive actions",
+      "deleteAccount": {
+        "title": "Delete Account",
+        "description": "Permanently delete your account and all associated data. This action cannot be undone.",
+        "button": "Delete Account",
+        "whatGetsDeleted": "What will be deleted",
+        "whatStays": "What will be preserved",
+        "deleted": {
+          "profile": "Your profile and account information",
+          "recipes": "All your recipes and recipe data",
+          "feedback": "Your feedback submissions"
+        },
+        "preserved": {
+          "costData": "Anonymous usage and cost data (for business accounting)"
+        }
+      }
+    },
+    "deleteAccountModal": {
+      "title": "Delete Account",
+      "warning": "This action will permanently delete your account and cannot be undone.",
+      "confirmationLabel": "Type your email address to confirm:",
+      "confirmationMismatch": "Please type your email address exactly to confirm deletion",
+      "cancel": "Cancel",
+      "confirmDelete": "Delete Account",
+      "deleting": "Deleting...",
+      "success": "Account successfully deleted. You will be signed out.",
+      "error": "Failed to delete account. Please try again."
+    }
   }
 }

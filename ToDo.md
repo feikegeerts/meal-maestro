@@ -4,6 +4,7 @@
 
 1. [x] Google app for google login customize with meal maestro logo and text, might require approval from google
 2. [x] Custom SMTP server for magic link emails
+       2.5 [ ] there are still some routing issues when coming back, i don't want to be on the homepage but on recipes.
 3. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 
 ## Advanced Recipe Features
@@ -32,3 +33,4 @@
 17. [ ] Changelog page
 18. [ ] Localized email templates using vercel functions and sending emails from code using supabase auth hooks
 19. [ ] Docs folder with some docs
+20. [ ] the first magic link email seems to be a registration mail so that needs a template

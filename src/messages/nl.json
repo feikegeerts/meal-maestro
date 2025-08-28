@@ -11,6 +11,7 @@
     "signIn": "Inloggen",
     "menu": "Menu",
     "navigation": "Navigatie",
+    "settings": "Instellingen",
     "language": "Taal",
     "home": "Home",
     "back": "Terug",
@@ -687,5 +688,44 @@
     "copyright": "Gemaakt met zorg voor thuiskoks overal.",
     "version": "Versie",
     "madeWith": "Gemaakt met"
+  },
+  "account": {
+    "title": "Account Instellingen",
+    "info": {
+      "title": "Account Informatie",
+      "description": "Je accountgegevens en aanmeldingsinformatie",
+      "email": "E-mailadres",
+      "provider": "Aanmeldingsmethode"
+    },
+    "dangerZone": {
+      "title": "Gevaren Zone",
+      "description": "Permanente en destructieve acties",
+      "deleteAccount": {
+        "title": "Account Verwijderen",
+        "description": "Verwijder je account en alle bijbehorende gegevens permanent. Deze actie kan niet ongedaan worden gemaakt.",
+        "button": "Account Verwijderen",
+        "whatGetsDeleted": "Wat wordt verwijderd",
+        "whatStays": "Wat behouden blijft",
+        "deleted": {
+          "profile": "Je profiel en accountinformatie",
+          "recipes": "Al je recepten en receptgegevens",
+          "feedback": "Je feedback inzendingen"
+        },
+        "preserved": {
+          "costData": "Anonieme gebruiks- en kostengegevens (voor bedrijfsboekhouding)"
+        }
+      }
+    },
+    "deleteAccountModal": {
+      "title": "Account Verwijderen",
+      "warning": "Deze actie verwijdert je account permanent en kan niet ongedaan worden gemaakt.",
+      "confirmationLabel": "Typ je e-mailadres om te bevestigen:",
+      "confirmationMismatch": "Typ je e-mailadres exact om verwijdering te bevestigen",
+      "cancel": "Annuleren",
+      "confirmDelete": "Account Verwijderen",
+      "deleting": "Verwijderen...",
+      "success": "Account succesvol verwijderd. Je wordt uitgelogd.",
+      "error": "Verwijderen van account mislukt. Probeer het opnieuw."
+    }
   }
 }
