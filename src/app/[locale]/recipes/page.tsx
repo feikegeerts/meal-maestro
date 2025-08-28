@@ -13,7 +13,6 @@ import { RecipesResponse } from "@/types/recipe";
 import { RecipeDataTable } from "@/components/recipes/recipe-data-table";
 import { useRecipeColumns } from "@/components/recipes/recipe-columns";
 import { Plus, RefreshCw } from "lucide-react";
-import { setRedirectUrl } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
 export default function RecipesPage() {
@@ -28,7 +27,6 @@ export default function RecipesPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      setRedirectUrl("/recipes");
       router.push("/login");
       return;
     }

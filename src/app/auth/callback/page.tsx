@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { PageLoading } from '@/components/ui/page-loading'
 import { routing } from '@/app/i18n/routing'
-import { getRedirectUrl, clearRedirectUrl } from '@/lib/utils'
 
 export default function AuthCallback() {
   const router = useRouter()
@@ -22,15 +21,8 @@ export default function AuthCallback() {
           if (event === 'SIGNED_IN' && session) {
             hasHandledAuth.current = true
             
-            // Check for stored redirect URL first
-            const redirectUrl = getRedirectUrl()
-            if (redirectUrl) {
-              clearRedirectUrl()
-              router.push(redirectUrl)
-            } else {
-              // Default redirect to recipes page on successful login
-              router.push(`/${routing.defaultLocale}/recipes`)
-            }
+            // Always redirect to recipes page on successful login
+            router.push(`/${routing.defaultLocale}/recipes`)
           } else if (event === 'SIGNED_OUT') {
             hasHandledAuth.current = true
             router.push(`/${routing.defaultLocale}?error=auth_cancelled`)
@@ -56,15 +48,8 @@ export default function AuthCallback() {
           if (session && !hasHandledAuth.current) {
             hasHandledAuth.current = true
             
-            // Check for stored redirect URL first
-            const redirectUrl = getRedirectUrl()
-            if (redirectUrl) {
-              clearRedirectUrl()
-              router.push(redirectUrl)
-            } else {
-              // Default redirect to recipes page on successful login
-              router.push(`/${routing.defaultLocale}/recipes`)
-            }
+            // Always redirect to recipes page on successful login
+            router.push(`/${routing.defaultLocale}/recipes`)
           } else if (!hasHandledAuth.current) {
             hasHandledAuth.current = true
             router.push(`/${routing.defaultLocale}?error=timeout`)
