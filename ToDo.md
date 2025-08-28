@@ -24,7 +24,7 @@
 12. [ ] Refactor codebase
 13. [ ] Write more tests
 14. [ ] Add account deletion GDPR proof, cost and usage tracking should stay but recipes and user profile should be deleted
-15. [ ] Feedback form on the about page
+15. [x] Feedback form on the about page
 
 ## Marketing & Documentation
 

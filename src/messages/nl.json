@@ -635,6 +635,47 @@
     "shareSuccess": "Link gekopieerd naar klembord!",
     "shareError": "Link kopiëren mislukt"
   },
+  "feedback": {
+    "title": "Feedback Versturen",
+    "description": "Help ons Meal Maestro te verbeteren door je gedachten en suggesties te delen.",
+    "form": {
+      "type": {
+        "label": "Type Feedback",
+        "placeholder": "Selecteer feedback type",
+        "options": {
+          "bugReport": "Bug Rapport",
+          "featureRequest": "Functieverzoek",
+          "generalFeedback": "Algemene Feedback",
+          "praise": "Compliment"
+        }
+      },
+      "subject": {
+        "label": "Onderwerp",
+        "placeholder": "Korte beschrijving van je feedback"
+      },
+      "message": {
+        "label": "Bericht",
+        "placeholder": "Schrijf je feedback hier..."
+      },
+      "submit": "Feedback Versturen",
+      "cancel": "Annuleren",
+      "submitting": "Versturen..."
+    },
+    "success": {
+      "submitted": "Dank je wel! Je feedback is succesvol verstuurd."
+    },
+    "errors": {
+      "rateLimited": "Je hebt recentelijk te veel feedback verstuurd. Probeer het later opnieuw.",
+      "submitFailed": "Feedback versturen mislukt. Probeer het opnieuw.",
+      "networkError": "Netwerkfout. Controleer je verbinding en probeer opnieuw.",
+      "signInRequired": "Log eerst in om feedback te versturen"
+    },
+    "validation": {
+      "required": "Vul alle verplichte velden in",
+      "subjectTooLong": "Onderwerp moet minder dan 200 karakters bevatten",
+      "messageTooLong": "Bericht moet minder dan 2000 karakters bevatten"
+    }
+  },
   "footer": {
     "description": "Receptenbeheer met AI dat je privacy respecteert en je culinaire creativiteit georganiseerd houdt.",
     "legal": "Juridisch",

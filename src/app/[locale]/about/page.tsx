@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   Heart,
@@ -15,7 +16,6 @@ import {
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 import {
   Popover,
   PopoverContent,
@@ -25,14 +25,17 @@ import { getAppVersion, formatVersion } from "@/lib/version";
 import { useAuth } from "@/lib/auth-context";
 import { useUserCosts } from "@/lib/hooks/use-user-costs";
 import { toast } from "sonner";
+import { FeedbackModal } from "@/components/feedback/feedback-modal";
 
 export default function AboutPage() {
   const t = useTranslations("about");
+  const tFeedback = useTranslations("feedback");
   const { user } = useAuth();
   const { data: costData, loading: costLoading } = useUserCosts({
     lazy: !user,
   });
   const { version } = getAppVersion();
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
 
   const values = [
     {
@@ -634,20 +637,28 @@ export default function AboutPage() {
               <Button
                 variant="outline"
                 size="lg"
-                className="flex-1 opacity-60 cursor-not-allowed py-2 px-6 h-auto "
-                disabled
-                title="Coming soon!"
+                className="flex-1 py-2 px-6 h-auto"
+                onClick={() => {
+                  if (user) {
+                    setFeedbackModalOpen(true);
+                  } else {
+                    toast.error(tFeedback("errors.signInRequired"));
+                  }
+                }}
               >
                 <ExternalLink className="h-5 w-5 mr-3" />
                 {t("community.feedbackButton")}
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  Soon
-                </Badge>
               </Button>
             </div>
           </section>
         </div>
       </div>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        open={feedbackModalOpen}
+        onOpenChange={setFeedbackModalOpen}
+      />
     </div>
   );
 }

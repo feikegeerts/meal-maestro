@@ -633,6 +633,47 @@
     "shareSuccess": "Link copied to clipboard!",
     "shareError": "Failed to copy link"
   },
+  "feedback": {
+    "title": "Send Feedback",
+    "description": "Help us improve Meal Maestro by sharing your thoughts and suggestions.",
+    "form": {
+      "type": {
+        "label": "Feedback Type",
+        "placeholder": "Select feedback type",
+        "options": {
+          "bugReport": "Bug Report",
+          "featureRequest": "Feature Request",
+          "generalFeedback": "General Feedback",
+          "praise": "Praise"
+        }
+      },
+      "subject": {
+        "label": "Subject",
+        "placeholder": "Brief description of your feedback"
+      },
+      "message": {
+        "label": "Message",
+        "placeholder": "Share your thoughts..."
+      },
+      "submit": "Send Feedback",
+      "cancel": "Cancel",
+      "submitting": "Sending..."
+    },
+    "success": {
+      "submitted": "Thank you! Your feedback has been submitted successfully."
+    },
+    "errors": {
+      "rateLimited": "You've submitted too much feedback recently. Please try again later.",
+      "submitFailed": "Failed to submit feedback. Please try again.",
+      "networkError": "Network error. Please check your connection and try again.",
+      "signInRequired": "Please sign in to send feedback"
+    },
+    "validation": {
+      "required": "Please fill in all required fields",
+      "subjectTooLong": "Subject must be less than 200 characters",
+      "messageTooLong": "Message must be less than 2000 characters"
+    }
+  },
   "footer": {
     "description": "AI-powered recipe management that respects your privacy and keeps your culinary creativity organized.",
     "legal": "Legal",
