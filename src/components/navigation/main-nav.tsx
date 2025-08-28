@@ -2,7 +2,8 @@
 
 import { Link, usePathname, useRouter } from "@/app/i18n/routing";
 import { useState, useEffect } from "react";
-import { ChefHat, BookOpen, Menu, LogOut, User, Shield, Globe, Info } from "lucide-react";
+import { BookOpen, Menu, LogOut, User, Shield, Globe, Info } from "lucide-react";
+import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useUserCosts } from "@/lib/hooks/use-user-costs";
@@ -152,7 +153,7 @@ export function MainNav() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo and Brand */}
           <Link href="/" className="flex items-center space-x-2">
-            <ChefHat className="h-8 w-8 text-primary" />
+            <ChefHatIcon className="h-8 w-8 text-primary" width={32} height={32} />
             <span className="text-xl font-bold">Meal Maestro</span>
           </Link>
 
@@ -406,7 +407,7 @@ export function MainNav() {
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <SheetHeader>
                   <SheetTitle className="flex items-center space-x-2">
-                    <ChefHat className="h-6 w-6 text-primary" />
+                    <ChefHatIcon className="h-6 w-6 text-primary" width={24} height={24} />
                     <span>{t('navigation')}</span>
                   </SheetTitle>
                 </SheetHeader>

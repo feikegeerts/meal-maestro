@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 import {
-  ChefHat,
   Heart,
   Shield,
   Users,
@@ -13,6 +12,7 @@ import {
   DollarSign,
   Info,
 } from "lucide-react";
+import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
@@ -164,7 +164,7 @@ export default function AboutPage() {
             <div className="space-y-6">
               <div className="flex items-center justify-center gap-4 mb-12">
                 <div className="p-3 bg-primary/20 rounded-2xl backdrop-blur-sm border border-primary/20">
-                  <ChefHat className="h-12 w-12 text-primary" />
+                  <ChefHatIcon className="h-12 w-12 text-primary" width={48} height={48} />
                 </div>
                 <h1 className="text-5xl md:text-6xl font-bold text-foreground">
                   {t("title")}

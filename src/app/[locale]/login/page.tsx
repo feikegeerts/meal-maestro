@@ -8,7 +8,7 @@ import { GoogleLoginButton } from "@/components/auth/google-login-button";
 import { MagicLinkForm } from "@/components/auth/magic-link-form";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ChefHat } from "lucide-react";
+import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import { useTranslations } from 'next-intl';
 
 function LoginContent() {
@@ -74,7 +74,7 @@ function LoginContent() {
           {/* Header */}
           <div className="text-center mb-8 md:mb-12">
             <div className="flex items-center justify-center mb-6">
-              <ChefHat className="h-16 w-16 md:h-20 md:w-20 text-primary" />
+              <ChefHatIcon className="h-16 w-16 md:h-20 md:w-20 text-primary" width={80} height={80} />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
               {t('title')}

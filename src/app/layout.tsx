@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   title: "Meal Maestro",
   description: "AI-powered recipe management system",
   icons: {
-    icon: "/chef-hat.svg",
+    icon: "/chef-hat-sparkle.svg",
   },
 };
 
