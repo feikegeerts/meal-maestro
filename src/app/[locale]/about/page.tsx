@@ -72,6 +72,7 @@ export default function AboutPage() {
           try {
             await navigator.clipboard.writeText(window.location.origin);
             toast.success(t("shareSuccess"));
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (_clipboardErr) {
             toast.error(t("shareError"));
           }
@@ -82,6 +83,7 @@ export default function AboutPage() {
       try {
         await navigator.clipboard.writeText(window.location.origin);
         toast.success(t("shareSuccess"));
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (_err) {
         toast.error(t("shareError"));
       }

@@ -633,5 +633,17 @@
     },
     "shareSuccess": "Link gekopieerd naar klembord!",
     "shareError": "Link kopiëren mislukt"
+  },
+  "footer": {
+    "description": "Receptenbeheer met AI dat je privacy respecteert en je culinaire creativiteit georganiseerd houdt.",
+    "legal": "Juridisch",
+    "privacy": "Privacybeleid",
+    "terms": "Gebruiksvoorwaarden",
+    "support": "Ondersteuning",
+    "donate": "Ontwikkeling Ondersteunen",
+    "feedback": "Problemen Melden",
+    "copyright": "Gemaakt met zorg voor thuiskoks overal.",
+    "version": "Versie",
+    "madeWith": "Gemaakt met"
   }
 }
