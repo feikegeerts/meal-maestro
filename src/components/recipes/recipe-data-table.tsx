@@ -128,6 +128,7 @@ export function RecipeDataTable<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
+    enableColumnResizing: false,
     globalFilterFn: (row, _columnId, filterValue) => {
       const searchValue = filterValue.toLowerCase();
       const recipe = row.original as Recipe;
@@ -453,13 +454,21 @@ export function RecipeDataTable<TData, TValue>({
 
       {/* Table */}
       <div className="rounded-md border text-sm sm:text-base">
-        <Table>
+        <Table 
+          style={{ 
+            width: '100%',
+            tableLayout: 'fixed' 
+          }}
+        >
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead 
+                      key={header.id}
+                      style={{ width: header.getSize() }}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -508,7 +517,10 @@ export function RecipeDataTable<TData, TValue>({
                   }}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell 
+                      key={cell.id}
+                      style={{ width: cell.column.getSize() }}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
