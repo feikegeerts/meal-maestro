@@ -25,38 +25,43 @@ interface SupabaseAuthHookPayload {
 // For development testing, you can use a test secret: 'test-webhook-secret-123'
 // Make sure to configure the real secret in production
 
-function verifySupabaseWebhook(body: string, signature: string, secret: string): boolean {
-  if (!signature || !signature.startsWith('v1,')) {
-    return false;
-  }
-
+function verifyStandardWebhook(
+  body: string, 
+  webhookId: string,
+  webhookTimestamp: string,
+  webhookSignature: string,
+  secret: string
+): boolean {
   try {
-    // Extract the signature from the v1,whsec_ format
-    const sigPart = signature.substring(3); // Remove 'v1,'
-    
-    // Validate signature format (should be base64)
-    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(sigPart)) {
-      console.error('Invalid signature format');
-      return false;
-    }
+    // Standard Webhooks format: timestamp.payload
+    const signedPayload = `${webhookId}.${webhookTimestamp}.${body}`;
     
     // Generate expected signature using HMAC-SHA256
     const expectedSignature = createHmac('sha256', secret)
-      .update(body, 'utf8')
+      .update(signedPayload, 'utf8')
       .digest('base64');
     
+    // Extract signature from v1,base64signature format
+    if (!webhookSignature.startsWith('v1,')) {
+      console.error('Invalid signature format - must start with v1,');
+      return false;
+    }
+    
+    const signature = webhookSignature.substring(3); // Remove 'v1,'
+    
     // Use timing-safe comparison to prevent timing attacks
-    const sigBuffer = Buffer.from(sigPart, 'base64');
+    const sigBuffer = Buffer.from(signature, 'base64');
     const expectedBuffer = Buffer.from(expectedSignature, 'base64');
     
     // Ensure buffers are same length before comparison
     if (sigBuffer.length !== expectedBuffer.length) {
+      console.error('Signature length mismatch');
       return false;
     }
     
     return timingSafeEqual(sigBuffer, expectedBuffer);
   } catch (error) {
-    console.error('Webhook verification error:', error);
+    console.error('Standard webhook verification error:', error);
     return false;
   }
 }
@@ -69,7 +74,11 @@ export async function POST(request: NextRequest) {
   // Get request info for logging
   const userAgent = request.headers.get('user-agent') || 'unknown';
   const clientIP = request.headers.get('x-forwarded-for') || 'unknown';
-  const signature = request.headers.get('x-webhook-signature') || request.headers.get('webhook-signature');
+  
+  // Standard Webhooks specification headers
+  const webhookId = request.headers.get('webhook-id');
+  const webhookTimestamp = request.headers.get('webhook-timestamp');
+  const webhookSignature = request.headers.get('webhook-signature');
   
   // Log security-relevant information
   console.log(`🔐 Auth hook request [${environment}/${vercelEnv}] from IP: ${clientIP}, User-Agent: ${userAgent}`);
@@ -90,16 +99,20 @@ export async function POST(request: NextRequest) {
   // Get the raw body for signature verification
   const body = await request.text();
   
-  // Always verify webhook signature for security
-  if (!signature) {
-    console.error(`❌ Missing webhook signature from IP: ${clientIP}`);
+  // Always verify webhook signature for security (Standard Webhooks spec)
+  if (!webhookId || !webhookTimestamp || !webhookSignature) {
+    console.error(`❌ Missing required webhook headers from IP: ${clientIP}`, {
+      hasId: !!webhookId,
+      hasTimestamp: !!webhookTimestamp,
+      hasSignature: !!webhookSignature
+    });
     return NextResponse.json(
-      { error: 'Missing webhook signature' },
+      { error: 'Missing required webhook headers (webhook-id, webhook-timestamp, webhook-signature)' },
       { status: 401 }
     );
   }
 
-  if (!verifySupabaseWebhook(body, signature, webhookSecret)) {
+  if (!verifyStandardWebhook(body, webhookId, webhookTimestamp, webhookSignature, webhookSecret)) {
     console.error(`❌ Invalid webhook signature from IP: ${clientIP}`);
     return NextResponse.json(
       { error: 'Invalid webhook signature' },

@@ -52,8 +52,9 @@ The Meal Maestro email system provides localized, custom email templates for Sup
 4. Disable default templates for Magic Link and Confirm Signup
 5. Go to Authentication > Hooks
 6. Add Send Email Hook:
+   - **Type**: HTTP Endpoint (not Postgres Function)
    - **URL**: `https://your-domain.com/api/auth/hooks/send-email`
-   - **HTTP Headers**: `webhook-secret: your-webhook-secret`
+   - **Secret**: Your webhook secret (Supabase will automatically add the required Standard Webhooks headers)
 
 ### Environment Variables
 
