@@ -7,5 +7,10 @@
     "src/app/api/recipes/chat/route.ts": {
       "maxDuration": 60
     }
+  },
+  "protectionBypass": {
+    "src/app/api/auth/hooks/send-email/route.ts": {
+      "action": "bypass"
+    }
   }
 }
