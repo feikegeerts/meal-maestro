@@ -1,0 +1,24 @@
+{
+  "emails": {
+    "magic-link": {
+      "subject": "Inloggen bij Meal Maestro",
+      "title": "Klaar om iets lekkers te koken?",
+      "description": "Klik op de knop hieronder om in te loggen bij je Meal Maestro account en begin met het beheren van je recepten.",
+      "cta": "Inloggen bij Meal Maestro", 
+      "footer": {
+        "contact": "Vragen? Beantwoord deze email of neem contact met ons op via",
+        "copyright": "Meal Maestro"
+      }
+    },
+    "confirm-signup": {
+      "subject": "Welkom bij Meal Maestro",
+      "title": "Welkom bij je recepten avontuur!",
+      "description": "Bedankt voor het aanmelden bij Meal Maestro! Klik op de knop hieronder om je account te bevestigen en begin met het organiseren van je recepten met AI-ondersteuning.",
+      "cta": "Bevestig Je Account",
+      "footer": {
+        "contact": "Vragen? Beantwoord deze email of neem contact met ons op via",
+        "copyright": "Meal Maestro"
+      }
+    }
+  }
+}

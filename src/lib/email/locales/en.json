@@ -1,0 +1,24 @@
+{
+  "emails": {
+    "magic-link": {
+      "subject": "Sign in to Meal Maestro",
+      "title": "Ready to cook something amazing?",
+      "description": "Click the button below to sign in to your Meal Maestro account and start managing your recipes.",
+      "cta": "Sign in to Meal Maestro",
+      "footer": {
+        "contact": "Questions? Reply to this email or contact us at",
+        "copyright": "Meal Maestro"
+      }
+    },
+    "confirm-signup": {
+      "subject": "Welcome to Meal Maestro",
+      "title": "Welcome to your recipe adventure!",
+      "description": "Thank you for joining Meal Maestro! Click the button below to confirm your account and start organizing your recipes with AI-powered assistance.",
+      "cta": "Confirm Your Account",
+      "footer": {
+        "contact": "Questions? Reply to this email or contact us at",
+        "copyright": "Meal Maestro"
+      }
+    }
+  }
+}

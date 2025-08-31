@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}} - {{brandName}}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1d2635; background-color: #fdfeff; margin: 0; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); overflow: hidden;">
+
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #059f3d 0%, #047a2f 100%); padding: 40px 30px; text-align: center;">
+            <h1 style="color: #fdfeff; margin: 0; font-size: 28px; font-weight: 700;">{{brandEmoji}} {{brandName}}</h1>
+            <p style="color: #c5f5d6; margin: 8px 0 0 0; font-size: 16px;">Your AI-powered recipe companion</p>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 40px 30px;">
+            <h2 style="color: #1d2635; margin: 0 0 16px 0; font-size: 24px; font-weight: 600;">{{title}}</h2>
+
+            <p style="color: #5d6575; margin: 0 0 24px 0; font-size: 16px;">
+                {{description}}
+            </p>
+
+            <!-- CTA Button -->
+            <div style="text-align: center; margin: 32px 0;">
+                <a href="{{confirmationUrl}}" 
+                   style="display: inline-block; background: linear-gradient(135deg, #059f3d 0%, #047a2f 100%); color: #fdfeff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 2px 4px rgba(5, 159, 61, 0.2);">
+                    {{cta}}
+                </a>
+            </div>
+
+            <p style="color: #8693a6; font-size: 14px; margin: 24px 0 0 0; text-align: center;">
+                This link will expire in 24 hours for security reasons.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #f6f7f9; padding: 24px 30px; border-top: 1px solid #d4d8de; text-align: center;">
+            <p style="color: #5d6575; font-size: 14px; margin: 0;">
+                {{footer.contact}} <a href="mailto:{{supportEmail}}" style="color: #059f3d; text-decoration: none;">{{supportEmail}}</a>
+            </p>
+            <p style="color: #8693a6; font-size: 12px; margin: 8px 0 0 0;">
+                © {{currentYear}} {{footer.copyright}}
+            </p>
+        </div>
+    </div>
+</body>
+</html>
