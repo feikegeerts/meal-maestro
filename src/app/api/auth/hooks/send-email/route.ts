@@ -4,12 +4,18 @@ import { ConfigurationService } from '../../../../../lib/email/services/configur
 import { EmailService } from '../../../../../lib/email/email-service';
 
 interface SupabaseAuthHookPayload {
-  event_type: 'send_email';
-  email_type: 'magic_link' | 'confirm_signup' | 'recovery' | 'email_change_new' | 'email_change_current';
   user: {
     id: string;
     email: string;
     user_metadata?: Record<string, unknown>;
+    aud: string;
+    role: string;
+    phone: string;
+    app_metadata: Record<string, unknown>;
+    identities: Array<unknown>;
+    created_at: string;
+    updated_at: string;
+    is_anonymous: boolean;
   };
   email_data: {
     token: string;
@@ -137,15 +143,27 @@ export async function POST(request: NextRequest) {
     console.log('📦 Raw webhook body:', body);
     const payload: SupabaseAuthHookPayload = JSON.parse(body);
     
-    console.log(`🎯 Supabase auth hook received: ${payload.email_type} for ${payload.user.email}`);
-    console.log('📋 Full payload:', JSON.stringify(payload, null, 2));
+    // Map email_action_type to our email types
+    const emailActionType = payload.email_data.email_action_type;
+    let emailType: string;
     
-    // Only handle email types we support
-    const supportedTypes = ['magic_link', 'confirm_signup'];
-    if (!supportedTypes.includes(payload.email_type)) {
-      console.log(`⚠️ Unsupported email type: ${payload.email_type}. Supported types: ${supportedTypes.join(', ')}`);
-      return NextResponse.json({ message: 'Email type not handled by custom hook' });
+    switch (emailActionType) {
+      case 'signup':
+        emailType = 'confirm_signup';
+        break;
+      case 'magiclink':
+        emailType = 'magic_link';
+        break;
+      case 'recovery':
+        emailType = 'magic_link'; // Use magic link template for recovery
+        break;
+      default:
+        console.log(`⚠️ Unsupported email action type: ${emailActionType}`);
+        return NextResponse.json({ message: 'Email action type not handled by custom hook' });
     }
+    
+    console.log(`🎯 Supabase auth hook: ${emailActionType} → ${emailType} for ${payload.user.email}`);
+    console.log('📋 Full payload:', JSON.stringify(payload, null, 2));
 
     const emailService = new EmailService();
     const userEmail = payload.user.email;
@@ -163,7 +181,7 @@ export async function POST(request: NextRequest) {
 
     let result;
     
-    switch (payload.email_type) {
+    switch (emailType) {
       case 'magic_link':
         result = await emailService.sendMagicLinkEmail(userEmail, confirmationUrl, languageContext);
         break;
@@ -174,7 +192,7 @@ export async function POST(request: NextRequest) {
         
       default:
         return NextResponse.json(
-          { error: `Unsupported email type: ${payload.email_type}` },
+          { error: `Unsupported email type: ${emailType}` },
           { status: 400 }
         );
     }
@@ -182,14 +200,14 @@ export async function POST(request: NextRequest) {
     const processingTime = Date.now() - startTime;
 
     if (result.success) {
-      console.log(`✅ ${payload.email_type} email sent successfully to ${userEmail} (ID: ${result.messageId}) in ${processingTime}ms`);
+      console.log(`✅ ${emailType} email sent successfully to ${userEmail} (ID: ${result.messageId}) in ${processingTime}ms`);
       return NextResponse.json({
-        message: `${payload.email_type} email sent successfully`,
+        message: `${emailType} email sent successfully`,
         messageId: result.messageId,
         processingTimeMs: processingTime
       });
     } else {
-      console.error(`❌ Failed to send ${payload.email_type} email to ${userEmail} after ${processingTime}ms:`, result.error);
+      console.error(`❌ Failed to send ${emailType} email to ${userEmail} after ${processingTime}ms:`, result.error);
       return NextResponse.json(
         { 
           error: result.error,
@@ -225,20 +243,25 @@ function buildConfirmationUrl(payload: SupabaseAuthHookPayload): string {
   // Build the callback URL with appropriate parameters
   const url = new URL('/auth/callback', baseUrl);
   
-  switch (payload.email_type) {
-    case 'magic_link':
+  switch (email_data.email_action_type) {
+    case 'magiclink':
       url.searchParams.set('token_hash', email_data.token_hash);
       url.searchParams.set('type', 'magiclink');
       break;
       
-    case 'confirm_signup':
+    case 'signup':
       url.searchParams.set('token_hash', email_data.token_hash);
       url.searchParams.set('type', 'signup');
       break;
       
+    case 'recovery':
+      url.searchParams.set('token_hash', email_data.token_hash);
+      url.searchParams.set('type', 'recovery');
+      break;
+      
     default:
       url.searchParams.set('token_hash', email_data.token_hash);
-      url.searchParams.set('type', payload.email_type);
+      url.searchParams.set('type', email_data.email_action_type);
       break;
   }
   
@@ -263,7 +286,7 @@ export async function GET() {
 
   return NextResponse.json({
     message: 'Supabase Send Email Hook endpoint is active',
-    supportedEmailTypes: ['magic_link', 'confirm_signup'],
+    supportedEmailActionTypes: ['signup', 'magiclink', 'recovery'],
     webhookSecretConfigured,
     timestamp: new Date().toISOString()
   });
