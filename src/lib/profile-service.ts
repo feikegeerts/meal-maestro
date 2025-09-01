@@ -23,7 +23,16 @@ export const profileService = {
         // For newly created users, the profile might not exist yet
         // This is expected when the database trigger hasn't completed
         if (error.code === 'PGRST116') {
-          // No rows returned - retry up to 3 times for new users
+          // No rows returned - try to create the profile for existing users
+          if (retryCount === 0) {
+            console.debug("User profile not found, attempting to create profile for user:", userId);
+            const createdProfile = await this.createMissingProfile(userId);
+            if (createdProfile) {
+              return createdProfile;
+            }
+          }
+          
+          // Retry up to 3 times for new users
           if (retryCount < 3) {
             console.debug("User profile not found, retrying (%d/3):", retryCount + 1, userId);
             await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Progressive delay
@@ -41,6 +50,46 @@ export const profileService = {
       return data || null;
     } catch (error) {
       console.error("Unexpected error fetching user profile:", error);
+      return null;
+    }
+  },
+
+  async createMissingProfile(userId: string): Promise<UserProfile | null> {
+    try {
+      // Get user info from auth.users
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user || user.id !== userId) {
+        console.error("Cannot create profile: user not authenticated or ID mismatch");
+        return null;
+      }
+
+      const displayName = user.user_metadata?.display_name || 
+                         user.user_metadata?.full_name || 
+                         user.email?.split('@')[0] || 
+                         'User';
+
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .insert({
+          id: userId,
+          email: user.email,
+          display_name: displayName,
+          avatar_url: user.user_metadata?.avatar_url || null,
+          role: 'user'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating missing profile:", error);
+        return null;
+      }
+
+      console.log("Successfully created missing profile for user:", userId);
+      return data;
+    } catch (error) {
+      console.error("Unexpected error creating missing profile:", error);
       return null;
     }
   },
