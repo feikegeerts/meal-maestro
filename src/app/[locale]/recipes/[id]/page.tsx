@@ -13,19 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Recipe, RecipeCategory, RecipeSeason } from "@/types/recipe";
 import { useLocalizedDateFormatter } from "@/lib/date-utils";
 import { ServingSizeSelector } from "@/components/serving-size-selector";
-import Image from "next/image";
 import {
   ArrowLeft,
   Edit,
@@ -36,7 +26,6 @@ import {
   CalendarDays,
   Tag,
   Plus,
-  Camera,
 } from "lucide-react";
 import { processInstructions } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -47,6 +36,7 @@ import {
 } from "@/utils/ingredient-pluralization";
 import { normalizeIngredientUnit, formatFraction, pluralizeUnit } from "@/types/recipe";
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
+import { RecipeImageUpload } from "@/components/recipe-image-upload";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
@@ -129,10 +119,10 @@ export default function RecipeDetailPage() {
       }
     };
 
-    if (user) {
+    if (user?.id) {
       loadRecipe();
     }
-  }, [id, user, getRecipeById, t]);
+  }, [id, user?.id, getRecipeById, t]);
 
   const updateRecipe = async (
     updateData: Partial<import("@/types/recipe").RecipeInput>
@@ -210,6 +200,17 @@ export default function RecipeDetailPage() {
 
   const handleAddRecipe = () => {
     router.push("/recipes/add");
+  };
+
+  const handleImageUpdated = (imageUrl: string | null) => {
+    if (recipe) {
+      const updatedRecipe = { ...recipe, image_url: imageUrl };
+      setRecipe(updatedRecipe);
+      setDisplayRecipe(updatedRecipe);
+      
+      // Don't update context to avoid triggering re-renders
+      // The context will be updated when the user navigates back to recipe list
+    }
   };
 
   if (authLoading || loading) {
@@ -455,43 +456,13 @@ export default function RecipeDetailPage() {
             </div>
 
             {/* Large Hero Image - Right side */}
-            <div className="order-1 lg:order-2 lg:col-span-3 relative h-64 sm:h-80 lg:h-[600px] group">
-              <Image
-                src="/placeholder-image.webp"
-                alt={`Recipe: ${recipe.title}`}
-                fill
-                priority
-                className="rounded-xl object-cover shadow-lg"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 50vw"
+            <div className="order-1 lg:order-2 lg:col-span-3">
+              <RecipeImageUpload
+                recipeId={recipe.id}
+                currentImageUrl={recipe.image_url}
+                recipeTitle={recipe.title}
+                onImageUpdated={handleImageUpdated}
               />
-
-              {/* Upload Photo Button Overlay */}
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer">
-                    <Button
-                      variant="secondary"
-                      size="lg"
-                      className="bg-white/90 hover:bg-white text-gray-900 font-semibold shadow-lg"
-                    >
-                      <Camera className="mr-2 h-5 w-5" />
-                      Add Photo
-                    </Button>
-                  </div>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Photo uploads coming soon!
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Recipe photos are currently under development and will be
-                      available in a future update. Stay tuned!
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogAction>OK</AlertDialogAction>
-                </AlertDialogContent>
-              </AlertDialog>
             </div>
           </div>
         </CardContent>

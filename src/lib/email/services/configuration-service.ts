@@ -54,30 +54,30 @@ export class ConfigurationService {
     const replyToEmail = process.env.RESEND_REPLY_TO;
 
     if (!resendApiKey) {
-      throw new Error('RESEND_API_KEY environment variable is required');
+      throw new Error("RESEND_API_KEY environment variable is required");
     }
 
     if (!fromEmail) {
-      throw new Error('RESEND_FROM_EMAIL environment variable is required');
+      throw new Error("RESEND_FROM_EMAIL environment variable is required");
     }
 
     if (!replyToEmail) {
-      throw new Error('RESEND_REPLY_TO environment variable is required');
+      throw new Error("RESEND_REPLY_TO environment variable is required");
     }
 
     // Validate email formats
-    if (!this.isValidEmail(fromEmail.replace(/^.*<(.+)>.*$/, '$1'))) {
-      throw new Error('RESEND_FROM_EMAIL contains invalid email format');
+    if (!this.isValidEmail(fromEmail.replace(/^.*<(.+)>.*$/, "$1"))) {
+      throw new Error("RESEND_FROM_EMAIL contains invalid email format");
     }
 
     if (!this.isValidEmail(replyToEmail)) {
-      throw new Error('RESEND_REPLY_TO contains invalid email format');
+      throw new Error("RESEND_REPLY_TO contains invalid email format");
     }
 
     return {
       resendApiKey,
       fromEmail,
-      replyToEmail
+      replyToEmail,
     };
   }
 
@@ -89,12 +89,14 @@ export class ConfigurationService {
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!url || !anonKey) {
-      throw new Error('NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are required');
+      throw new Error(
+        "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are required"
+      );
     }
 
     return {
       url,
-      anonKey
+      anonKey,
     };
   }
 
@@ -105,12 +107,14 @@ export class ConfigurationService {
     let secret = process.env.SUPABASE_WEBHOOK_SECRET;
 
     if (!secret) {
-      throw new Error('SUPABASE_WEBHOOK_SECRET environment variable is required');
+      throw new Error(
+        "SUPABASE_WEBHOOK_SECRET environment variable is required"
+      );
     }
 
     // Supabase webhook secrets come with v1, prefix by default
     // Standard Webhooks library expects raw secret, so remove the prefix
-    if (secret.startsWith('v1,')) {
+    if (secret.startsWith("v1,")) {
       secret = secret.substring(3);
     }
 
@@ -126,33 +130,35 @@ export class ConfigurationService {
   private validateWebhookSecret(secret: string): void {
     // Check minimum length for security
     if (secret.length < 32) {
-      console.warn('⚠️ Webhook secret is shorter than recommended 32 characters');
+      console.warn(
+        "⚠️ Webhook secret is shorter than recommended 32 characters"
+      );
     }
 
     // Check for obvious weak secrets
-    const weakSecrets = ['test', 'secret', 'password', '123456', 'webhook'];
+    const weakSecrets = ["test", "secret", "password", "123456", "webhook"];
     const lowerSecret = secret.toLowerCase();
     for (const weak of weakSecrets) {
       if (lowerSecret.includes(weak)) {
-        console.warn(`⚠️ Webhook secret contains potentially weak pattern: ${weak}`);
+        console.warn(
+          `⚠️ Webhook secret contains potentially weak pattern: ${weak}`
+        );
         break;
       }
     }
 
     // Check for whitespace issues
     if (secret !== secret.trim()) {
-      throw new Error('Webhook secret contains leading or trailing whitespace');
+      throw new Error("Webhook secret contains leading or trailing whitespace");
     }
 
     // Check for basic entropy (should contain mix of characters)
     const hasLetter = /[a-zA-Z]/.test(secret);
     const hasNumber = /[0-9]/.test(secret);
-    const hasSymbol = /[^a-zA-Z0-9]/.test(secret);
 
     if (!hasLetter && !hasNumber) {
-      console.warn('⚠️ Webhook secret lacks alphanumeric characters');
+      console.warn("⚠️ Webhook secret lacks alphanumeric characters");
     }
-
   }
 
   /**
@@ -160,22 +166,22 @@ export class ConfigurationService {
    */
   getOpenAIConfig(): OpenAIConfig {
     const apiKey = process.env.OPENAI_API_KEY;
-    const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-    const dailyBudgetStr = process.env.OPENAI_DAILY_BUDGET || '1.00';
+    const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+    const dailyBudgetStr = process.env.OPENAI_DAILY_BUDGET || "1.00";
 
     if (!apiKey) {
-      throw new Error('OPENAI_API_KEY environment variable is required');
+      throw new Error("OPENAI_API_KEY environment variable is required");
     }
 
     const dailyBudget = parseFloat(dailyBudgetStr);
     if (isNaN(dailyBudget) || dailyBudget <= 0) {
-      throw new Error('OPENAI_DAILY_BUDGET must be a positive number');
+      throw new Error("OPENAI_DAILY_BUDGET must be a positive number");
     }
 
     return {
       apiKey,
       model,
-      dailyBudget
+      dailyBudget,
     };
   }
 
@@ -190,46 +196,62 @@ export class ConfigurationService {
     try {
       this.getEmailServiceConfig();
     } catch (error) {
-      errors.push(`Email service: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      errors.push(
+        `Email service: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
 
     // Validate Supabase configuration
     try {
       this.getSupabaseConfig();
     } catch (error) {
-      errors.push(`Supabase: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      errors.push(
+        `Supabase: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
 
     // Validate webhook configuration
     try {
       this.getWebhookConfig();
     } catch (error) {
-      errors.push(`Webhook: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      errors.push(
+        `Webhook: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
 
     // Validate OpenAI configuration (optional for email service)
     try {
       this.getOpenAIConfig();
     } catch (error) {
-      warnings.push(`OpenAI: ${error instanceof Error ? error.message : 'Configuration missing (optional for email service)'}`);
+      warnings.push(
+        `OpenAI: ${
+          error instanceof Error
+            ? error.message
+            : "Configuration missing (optional for email service)"
+        }`
+      );
     }
 
     // Environment-specific validations
     const nodeEnv = process.env.NODE_ENV;
     const vercelEnv = process.env.VERCEL_ENV;
 
-    if (nodeEnv === 'production' && !vercelEnv) {
-      warnings.push('Production environment detected but VERCEL_ENV not set');
+    if (nodeEnv === "production" && !vercelEnv) {
+      warnings.push("Production environment detected but VERCEL_ENV not set");
     }
 
-    if (nodeEnv !== 'production' && !nodeEnv) {
-      warnings.push('NODE_ENV not explicitly set, defaulting to development behavior');
+    if (nodeEnv !== "production" && !nodeEnv) {
+      warnings.push(
+        "NODE_ENV not explicitly set, defaulting to development behavior"
+      );
     }
 
     return {
       valid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -242,14 +264,14 @@ export class ConfigurationService {
     isProduction: boolean;
     isDevelopment: boolean;
   } {
-    const nodeEnv = process.env.NODE_ENV || 'development';
+    const nodeEnv = process.env.NODE_ENV || "development";
     const vercelEnv = process.env.VERCEL_ENV;
 
     return {
       nodeEnv,
       vercelEnv,
-      isProduction: nodeEnv === 'production',
-      isDevelopment: nodeEnv === 'development'
+      isProduction: nodeEnv === "production",
+      isDevelopment: nodeEnv === "development",
     };
   }
 
@@ -299,17 +321,17 @@ export class ConfigurationService {
     const env = this.getEnvironmentInfo();
 
     console.log(`🔧 Configuration validation for ${env.nodeEnv} environment:`);
-    
+
     if (validation.valid) {
-      console.log('✅ All required configurations are valid');
+      console.log("✅ All required configurations are valid");
     } else {
-      console.log('❌ Configuration errors found:');
-      validation.errors.forEach(error => console.log(`  - ${error}`));
+      console.log("❌ Configuration errors found:");
+      validation.errors.forEach((error) => console.log(`  - ${error}`));
     }
 
     if (validation.warnings.length > 0) {
-      console.log('⚠️ Configuration warnings:');
-      validation.warnings.forEach(warning => console.log(`  - ${warning}`));
+      console.log("⚠️ Configuration warnings:");
+      validation.warnings.forEach((warning) => console.log(`  - ${warning}`));
     }
   }
 }

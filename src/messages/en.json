@@ -103,7 +103,26 @@
     "instructions": "Instructions",
     "gettingStarted": "Getting Started",
     "createdDetail": "Created",
-    "lastEatenDetail": "Last eaten"
+    "lastEatenDetail": "Last eaten",
+    "imageUpload": {
+      "addPhoto": "Add Photo",
+      "changePhoto": "Change Photo",
+      "remove": "Remove",
+      "uploading": "Uploading...",
+      "removing": "Removing...",
+      "processingImage": "Processing image...",
+      "removingImage": "Removing image...",
+      "invalidFileType": "Invalid file type",
+      "fileTooLarge": "File too large",
+      "uploadFailed": "Upload failed",
+      "deleteFailed": "Delete failed",
+      "imageUploaded": "Image uploaded",
+      "imageUploadedDescription": "Recipe photo uploaded successfully!",
+      "imageRemoved": "Image removed",
+      "imageRemovedDescription": "Recipe photo removed successfully",
+      "editPhoto": "Edit Photo",
+      "cancel": "Cancel"
+    }
   },
   "recipeForm": {
     "title": "Title",

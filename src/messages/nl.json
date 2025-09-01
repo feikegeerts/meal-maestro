@@ -103,7 +103,26 @@
     "instructions": "Instructies",
     "gettingStarted": "Aan de slag",
     "createdDetail": "Aangemaakt",
-    "lastEatenDetail": "Laatst gegeten"
+    "lastEatenDetail": "Laatst gegeten",
+    "imageUpload": {
+      "addPhoto": "Foto Toevoegen",
+      "changePhoto": "Foto Wijzigen",
+      "remove": "Foto Verwijderen",
+      "uploading": "Uploaden...",
+      "removing": "Verwijderen...",
+      "processingImage": "Afbeelding verwerken...",
+      "removingImage": "Afbeelding verwijderen...",
+      "invalidFileType": "Ongeldig bestandstype",
+      "fileTooLarge": "Bestand te groot",
+      "uploadFailed": "Uploaden mislukt",
+      "deleteFailed": "Verwijderen mislukt",
+      "imageUploaded": "Afbeelding geüpload",
+      "imageUploadedDescription": "Receptfoto succesvol geüpload!",
+      "imageRemoved": "Afbeelding verwijderd",
+      "imageRemovedDescription": "Receptfoto succesvol verwijderd",
+      "editPhoto": "Foto Bewerken",
+      "cancel": "Annuleren"
+    }
   },
   "recipeForm": {
     "title": "Titel",

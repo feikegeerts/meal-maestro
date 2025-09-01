@@ -2,12 +2,13 @@
 
 ## Authentication & User Experience
 
-3. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
+1. [ ] Cost tracking of images, number of images, total storage mb, total storage costs.
+1. [ ] Mark as easten should also be able for a different date
+1. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 
 ## Advanced Recipe Features
 
 4. [ ] AI can use Semantic search using vector embeddings in the recipes
-5. [ ] Image upload and recipe photo management
 
 ## Performance & Infrastructure
 
@@ -25,5 +26,4 @@
 ## Marketing & Documentation
 
 16. [ ] SEO optimizations - Footer???
-17. [ ] Docs folder with some docs
-18. [ ] PWA options to allow installing of the app
+17. [ ] PWA options to allow installing of the app

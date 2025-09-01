@@ -150,6 +150,15 @@ export interface Recipe {
   occasions?: OccasionType[];
   characteristics?: CharacteristicType[];
   last_eaten?: string;
+  image_url?: string | null;
+  image_metadata?: {
+    originalSize: number;
+    compressedSize: number;
+    compressionRatio: number;
+    dimensions: { width: number; height: number };
+    format: string;
+    uploadedAt: string;
+  } | null;
   created_at?: string;
   updated_at?: string;
   user_id: string;

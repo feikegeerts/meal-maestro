@@ -349,6 +349,17 @@
     }
   }
 
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   .animate-pulse {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
@@ -359,6 +370,10 @@
 
   .animate-slideInRight {
     animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .animate-slideInUp {
+    animation: slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Responsive improvements */
@@ -416,5 +431,11 @@
   .prose ol li {
     display: list-item;
     margin: 0.5rem 0;
+  }
+
+  /* Touch target utility for mobile accessibility */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
   }
 }

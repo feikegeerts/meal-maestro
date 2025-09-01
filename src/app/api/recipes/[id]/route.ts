@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
 import { Recipe, RecipeIngredient } from "@/types/recipe";
+import { ImageService } from "@/lib/image-service";
 
 export async function GET(
   request: NextRequest,
@@ -247,6 +248,7 @@ export async function DELETE(
   }
 
   const { user, client: supabase } = authResult;
+  const imageService = new ImageService({ supabaseClient: supabase });
   
   try {
     const { id: recipeId } = await params;
@@ -258,18 +260,52 @@ export async function DELETE(
       );
     }
 
-    const { error } = await supabase
+    // First, get the recipe to check if it has an image
+    const { data: recipe, error: fetchError } = await supabase
+      .from('recipes')
+      .select('id, image_url')
+      .eq('id', recipeId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: 'Recipe not found' },
+          { status: 404 }
+        );
+      }
+      
+      console.error('Error fetching recipe for deletion:', fetchError);
+      return NextResponse.json(
+        { error: 'Failed to fetch recipe', details: fetchError.message },
+        { status: 500 }
+      );
+    }
+
+    // Delete the recipe from database first
+    const { error: deleteError } = await supabase
       .from('recipes')
       .delete()
       .eq('id', recipeId)
       .eq('user_id', user.id);
 
-    if (error) {
-      console.error('Error deleting recipe:', error);
+    if (deleteError) {
+      console.error('Error deleting recipe:', deleteError);
       return NextResponse.json(
-        { error: 'Failed to delete recipe', details: error.message },
+        { error: 'Failed to delete recipe', details: deleteError.message },
         { status: 500 }
       );
+    }
+
+    // Clean up image if it exists (best effort - don't fail the deletion if this fails)
+    if (recipe.image_url) {
+      const imageDeleteResult = await imageService.deleteRecipeImage(recipe.image_url, user.id);
+      
+      if (!imageDeleteResult.success) {
+        // Log the error but don't fail the recipe deletion
+        console.warn('Failed to delete recipe image during cleanup:', imageDeleteResult.error);
+      }
     }
 
     return NextResponse.json({ success: true });
