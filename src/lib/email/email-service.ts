@@ -71,6 +71,7 @@ export class EmailService {
     options?: {
       databaseLanguagePreference?: string;
       userMetadata?: Record<string, unknown>;
+      pageLocale?: string;
       acceptLanguageHeader?: string;
       deliveryOptions?: Partial<EmailDeliveryOptions>;
     }
@@ -81,6 +82,7 @@ export class EmailService {
       confirmationUrl,
       databaseLanguagePreference: options?.databaseLanguagePreference,
       userMetadata: options?.userMetadata,
+      pageLocale: options?.pageLocale,
       acceptLanguageHeader: options?.acceptLanguageHeader
     };
 
@@ -97,6 +99,7 @@ export class EmailService {
       displayName?: string;
       databaseLanguagePreference?: string;
       userMetadata?: Record<string, unknown>;
+      pageLocale?: string;
       acceptLanguageHeader?: string;
       deliveryOptions?: Partial<EmailDeliveryOptions>;
     }
@@ -107,6 +110,7 @@ export class EmailService {
       confirmationUrl,
       databaseLanguagePreference: options?.databaseLanguagePreference,
       userMetadata: options?.userMetadata,
+      pageLocale: options?.pageLocale,
       acceptLanguageHeader: options?.acceptLanguageHeader
     };
 

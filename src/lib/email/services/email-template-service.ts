@@ -58,6 +58,7 @@ export class EmailTemplateService {
       const detectedLocale = await this.localizationService.detectLanguageWithDatabase(
         data.userEmail,
         data.userMetadata,
+        data.pageLocale,
         data.acceptLanguageHeader
       );
 

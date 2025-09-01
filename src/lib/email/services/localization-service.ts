@@ -33,12 +33,14 @@ export class LocalizationService {
    * Detects user language from various sources with fallback chain:
    * 1. Database user_profiles.language_preference
    * 2. User metadata (from Supabase user object)
-   * 3. Accept-Language header
-   * 4. Fallback to English
+   * 3. Page locale (from the URL where user initiated the request)
+   * 4. Accept-Language header
+   * 5. Fallback to English
    */
   public detectLanguage(
     databaseLanguagePreference?: string,
-    userMetadata?: Record<string, unknown>, 
+    userMetadata?: Record<string, unknown>,
+    pageLocale?: string,
     acceptLanguageHeader?: string
   ): string {
     // Priority 1: Database language preference from user_profiles table
@@ -54,7 +56,12 @@ export class LocalizationService {
       }
     }
 
-    // Priority 3: Accept-Language header parsing
+    // Priority 3: Page locale (from the URL where user initiated the request)
+    if (pageLocale && this.supportedLocales.includes(pageLocale)) {
+      return pageLocale;
+    }
+
+    // Priority 4: Accept-Language header parsing
     if (acceptLanguageHeader) {
       const preferredLanguage = this.parseAcceptLanguageHeader(acceptLanguageHeader);
       if (preferredLanguage && this.supportedLocales.includes(preferredLanguage)) {
@@ -62,7 +69,7 @@ export class LocalizationService {
       }
     }
 
-    // Priority 4: Fallback to default
+    // Priority 5: Fallback to default
     return this.fallbackLocale;
   }
 
@@ -136,10 +143,11 @@ export class LocalizationService {
   public async detectLanguageWithDatabase(
     userEmail: string,
     userMetadata?: Record<string, unknown>,
+    pageLocale?: string,
     acceptLanguageHeader?: string
   ): Promise<string> {
     const databaseLanguagePreference = await this.getUserLanguagePreference(userEmail);
-    return this.detectLanguage(databaseLanguagePreference || undefined, userMetadata, acceptLanguageHeader);
+    return this.detectLanguage(databaseLanguagePreference || undefined, userMetadata, pageLocale, acceptLanguageHeader);
   }
 
   /**

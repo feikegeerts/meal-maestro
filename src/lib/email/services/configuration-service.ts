@@ -108,11 +108,10 @@ export class ConfigurationService {
       throw new Error('SUPABASE_WEBHOOK_SECRET environment variable is required');
     }
 
-    // Handle case where secret incorrectly includes v1, prefix
-    // Standard Webhooks expects raw secret, not prefixed version
+    // Supabase webhook secrets come with v1, prefix by default
+    // Standard Webhooks library expects raw secret, so remove the prefix
     if (secret.startsWith('v1,')) {
-      console.warn('⚠️ Webhook secret contains v1, prefix - removing it for proper verification');
-      secret = secret.substring(3); // Remove 'v1,'
+      secret = secret.substring(3);
     }
 
     // Validate webhook secret format and quality
