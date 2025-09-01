@@ -29,3 +29,4 @@
 18. [ ] Docs folder with some docs
 19. [ ] the first magic link email seems to be a registration mail so that needs a template
 20. [ ] PWA options to allow installing of the app
+21. [ ] create new user with magic link, even if the site is configured to dutch, the user receives a EN email for new users.
