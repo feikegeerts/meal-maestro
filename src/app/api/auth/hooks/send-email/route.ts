@@ -136,6 +136,7 @@ export async function POST(request: NextRequest) {
     if (debugMode) {
       console.log('🔍 [WEBHOOK DEBUG] Loading webhook configuration...');
       console.log(`🔍 [WEBHOOK DEBUG] SUPABASE_WEBHOOK_SECRET exists: ${!!process.env.SUPABASE_WEBHOOK_SECRET}`);
+      console.log(`🔍 [WEBHOOK DEBUG] Raw secret starts with: ${process.env.SUPABASE_WEBHOOK_SECRET?.substring(0, 4)}...`);
     }
     
     const configService = ConfigurationService.getInstance();
@@ -143,8 +144,8 @@ export async function POST(request: NextRequest) {
     webhookSecret = webhookConfig.secret;
     
     if (debugMode) {
-      console.log(`🔍 [WEBHOOK DEBUG] Webhook secret loaded successfully, length: ${webhookSecret.length}`);
-      console.log(`🔍 [WEBHOOK DEBUG] Webhook secret starts with: ${webhookSecret.substring(0, 4)}...`);
+      console.log(`🔍 [WEBHOOK DEBUG] Processed webhook secret loaded successfully, length: ${webhookSecret.length}`);
+      console.log(`🔍 [WEBHOOK DEBUG] Processed webhook secret starts with: ${webhookSecret.substring(0, 4)}...`);
     }
   } catch (error) {
     console.error('❌ Webhook configuration error:', error);
