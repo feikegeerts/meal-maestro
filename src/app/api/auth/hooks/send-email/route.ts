@@ -47,29 +47,13 @@ export async function POST(request: NextRequest) {
   // Log security-relevant information
   console.log(`🔐 Auth hook request [${environment}/${vercelEnv}] from IP: ${clientIP}, User-Agent: ${userAgent}`);
   
-  const debugMode = false;
-  
   let webhookSecret: string;
   try {
-    if (debugMode) {
-      console.log('🔍 [WEBHOOK DEBUG] Loading webhook configuration...');
-      console.log(`🔍 [WEBHOOK DEBUG] SUPABASE_WEBHOOK_SECRET exists: ${!!process.env.SUPABASE_WEBHOOK_SECRET}`);
-      console.log(`🔍 [WEBHOOK DEBUG] Raw secret starts with: ${process.env.SUPABASE_WEBHOOK_SECRET?.substring(0, 4)}...`);
-    }
-    
     const configService = ConfigurationService.getInstance();
     const webhookConfig = configService.getWebhookConfig();
     webhookSecret = webhookConfig.secret;
-    
-    if (debugMode) {
-      console.log(`🔍 [WEBHOOK DEBUG] Processed webhook secret loaded successfully, length: ${webhookSecret.length}`);
-      console.log(`🔍 [WEBHOOK DEBUG] Processed webhook secret starts with: ${webhookSecret.substring(0, 4)}...`);
-    }
   } catch (error) {
     console.error('❌ Webhook configuration error:', error);
-    if (debugMode) {
-      console.log('🔍 [WEBHOOK DEBUG] Available env vars:', Object.keys(process.env).filter(key => key.includes('WEBHOOK')));
-    }
     return NextResponse.json(
       { error: 'Webhook configuration error' },
       { status: 500 }
@@ -78,10 +62,6 @@ export async function POST(request: NextRequest) {
 
   // Get the raw body for signature verification
   const body = await request.text();
-  
-  if (debugMode) {
-    console.log(`🔍 [WEBHOOK DEBUG] Full webhook body: ${body}`);
-  }
   
   // Verify webhook signature using official standardwebhooks library
   // Ensure all required headers are present and not null
@@ -104,21 +84,10 @@ export async function POST(request: NextRequest) {
   };
 
   try {
-    if (debugMode) {
-      console.log('🔍 [WEBHOOK DEBUG] Verifying signature with official standardwebhooks library');
-      console.log(`🔍 [WEBHOOK DEBUG] Headers:`, headers);
-      console.log(`🔍 [WEBHOOK DEBUG] Secret: ${webhookSecret.substring(0, 10)}...`);
-    }
-    
     const wh = new Webhook(webhookSecret);
     const verifiedPayload = wh.verify(body, headers) as SupabaseAuthHookPayload;
     
     console.log(`✅ Webhook signature verified successfully using standardwebhooks library`);
-    
-    if (debugMode) {
-      console.log('🔍 [WEBHOOK DEBUG] Verified payload type:', typeof verifiedPayload);
-      console.log('🔍 [WEBHOOK DEBUG] Payload keys:', Object.keys(verifiedPayload));
-    }
   } catch (error) {
     console.error(`❌ Webhook signature verification failed from IP: ${clientIP}:`, error);
     return NextResponse.json(
@@ -157,8 +126,6 @@ export async function POST(request: NextRequest) {
     // Build confirmation URL
     const confirmationUrl = buildConfirmationUrl(payload);
     
-    // DEBUG: Log the generated confirmation URL
-    console.log('🔍 [URL DEBUG] Generated confirmation URL:', confirmationUrl);
     
     // Extract Accept-Language header if present
     const acceptLanguageHeader = request.headers.get('accept-language') || undefined;
@@ -173,9 +140,6 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // DEBUG: Log locale detection
-    console.log('🔍 [LOCALE DEBUG] Page URL from metadata:', pageUrl);
-    console.log('🔍 [LOCALE DEBUG] Detected page locale:', pageLocale);
     
     const languageContext = {
       userMetadata: payload.user.user_metadata,
@@ -247,11 +211,6 @@ function buildConfirmationUrl(payload: SupabaseAuthHookPayload): string {
   const originUrl = payload.user.user_metadata?.originUrl as string;
   const isLocalRequest = originUrl?.includes('localhost');
   
-  // DEBUG: Log localhost detection for troubleshooting
-  console.log('🔍 [LOCALHOST DEBUG] Full user metadata:', JSON.stringify(payload.user.user_metadata, null, 2));
-  console.log('🔍 [LOCALHOST DEBUG] Origin URL from metadata:', originUrl);
-  console.log('🔍 [LOCALHOST DEBUG] Is local request:', isLocalRequest);
-  
   const baseUrl = isLocalRequest
     ? originUrl // Use the exact origin URL passed from client
     : process.env.NODE_ENV === 'production'
@@ -261,9 +220,6 @@ function buildConfirmationUrl(payload: SupabaseAuthHookPayload): string {
     : process.env.VERCEL_URL 
     ? `https://${process.env.VERCEL_URL}`
     : 'http://localhost:3000';
-  
-  // DEBUG: Log selected base URL
-  console.log('🔍 [LOCALHOST DEBUG] Selected baseUrl:', baseUrl);
   
   // Build the callback URL with appropriate parameters
   const url = new URL('/auth/callback', baseUrl);

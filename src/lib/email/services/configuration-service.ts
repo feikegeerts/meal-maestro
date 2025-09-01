@@ -153,16 +153,6 @@ export class ConfigurationService {
       console.warn('⚠️ Webhook secret lacks alphanumeric characters');
     }
 
-    // Log secret quality info for debugging (safely)
-    const isProduction = process.env.NODE_ENV === 'production';
-    if (isProduction) {
-      console.log(`🔍 [WEBHOOK CONFIG] Secret length: ${secret.length}`);
-      console.log(`🔍 [WEBHOOK CONFIG] Has letters: ${hasLetter}`);
-      console.log(`🔍 [WEBHOOK CONFIG] Has numbers: ${hasNumber}`);
-      console.log(`🔍 [WEBHOOK CONFIG] Has symbols: ${hasSymbol}`);
-      console.log(`🔍 [WEBHOOK CONFIG] First 4 chars: ${secret.substring(0, 4)}`);
-      console.log(`🔍 [WEBHOOK CONFIG] Last 4 chars: ...${secret.substring(secret.length - 4)}`);
-    }
   }
 
   /**
