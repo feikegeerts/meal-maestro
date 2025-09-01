@@ -146,16 +146,32 @@ describe('RateLimitManager', () => {
 
   describe('escalating backoff', () => {
     it('should increase wait time with repeated errors', () => {
+      // Clear any existing rate limits to start fresh
+      rateLimitManager.clearRateLimit();
+      
       // Use a generic rate limit error that doesn't have specific time mentions
       const error = new Error('rate limit exceeded') as AuthError;
       
+      // First error - should get base wait time
       const firstResult = rateLimitManager.analyzeRateLimit(error);
-      const firstWaitTime = firstResult.waitTimeMs;
+      const baseWaitTime = 2 * 60 * 1000; // 2 minutes
+      
+      expect(firstResult.waitTimeMs).toBe(baseWaitTime);
+      
+      // Simulate that enough time has passed and we get another error
+      // Mock stored data with error count to test escalation
+      localStorageMock.setItem('supabase_email_rate_limit', JSON.stringify({
+        resetTime: Date.now() - 1000, // Expired 1 second ago
+        errorCount: 1, // One previous error
+        lastErrorTime: Date.now() - 2000
+      }));
       
       const secondResult = rateLimitManager.analyzeRateLimit(error);
-      const secondWaitTime = secondResult.waitTimeMs;
       
-      expect(secondWaitTime).toBeGreaterThanOrEqual(firstWaitTime);
+      // Should be escalated: base * 1.5^(errorCount=1) = 120000 * 1.5 = 180000
+      // But errorCount gets incremented, so it's actually base * 1.5^(errorCount+1)
+      // Let's just verify it's greater than the base time
+      expect(secondResult.waitTimeMs).toBeGreaterThan(baseWaitTime);
     });
     
     it('should use explicit time mentions when no prior rate limit exists', () => {
