@@ -236,18 +236,16 @@ export async function POST(request: NextRequest) {
 function buildConfirmationUrl(payload: SupabaseAuthHookPayload, request: NextRequest): string {
   const { email_data } = payload;
   
-  // Use our application URL, detecting localhost usage from the Referer header
-  // email_data.site_url is always production URL from Supabase config
-  const refererHeader = request.headers.get('referer');
-  const isLocalRequest = refererHeader && refererHeader.includes('localhost');
+  // Use originUrl from user metadata if available, otherwise fallback to environment detection
+  const originUrl = payload.user.user_metadata?.originUrl as string;
+  const isLocalRequest = originUrl?.includes('localhost');
   
   // DEBUG: Log localhost detection for troubleshooting
-  console.log('🔍 [LOCALHOST DEBUG] Referer header:', refererHeader);
+  console.log('🔍 [LOCALHOST DEBUG] Origin URL from metadata:', originUrl);
   console.log('🔍 [LOCALHOST DEBUG] Is local request:', isLocalRequest);
-  console.log('🔍 [LOCALHOST DEBUG] Available headers:', Object.fromEntries(request.headers.entries()));
   
   const baseUrl = isLocalRequest
-    ? 'http://localhost:3000'
+    ? originUrl // Use the exact origin URL passed from client
     : process.env.NODE_ENV === 'production'
     ? 'https://meal-maestro.com'
     : process.env.VERCEL_ENV === 'preview'
