@@ -28,7 +28,6 @@ export class EmailService {
     deliveryOptions?: Partial<EmailDeliveryOptions>
   ): Promise<EmailDeliveryResult> {
     try {
-      console.log(`🎯 Sending ${emailType} email to ${emailData.userEmail}`);
 
       // Step 1: Render the localized template
       const templateResult = await this.templateService.renderTemplate(emailType, emailData);
@@ -46,9 +45,7 @@ export class EmailService {
         ...deliveryOptions
       });
 
-      if (result.success) {
-        console.log(`✅ ${emailType} email sent successfully to ${emailData.userEmail}`);
-      } else {
+      if (!result.success) {
         console.error(`❌ Failed to send ${emailType} email to ${emailData.userEmail}:`, result.error);
       }
 

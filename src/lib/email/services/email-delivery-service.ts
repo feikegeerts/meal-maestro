@@ -36,7 +36,6 @@ export class EmailDeliveryService {
     options: EmailDeliveryOptions
   ): Promise<EmailDeliveryResult> {
     try {
-      console.log(`📧 Sending email to ${options.to} with subject: "${template.subject}"`);
       
       const result = await this.resend.emails.send({
         from: options.from || this.defaultFrom,
@@ -54,7 +53,6 @@ export class EmailDeliveryService {
         };
       }
 
-      console.log(`✅ Email sent successfully with ID: ${result.data?.id}`);
       return {
         success: true,
         messageId: result.data?.id

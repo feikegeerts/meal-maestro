@@ -1,7 +1,15 @@
 {
+  "common": {
+    "brandName": "Meal Maestro",
+    "brandEmoji": "🍽️",
+    "tagline": "Your AI-powered recipe companion",
+    "expiration": "This link will expire in 24 hours for security reasons.",
+    "supportEmail": "hello@meal-maestro.com",
+    "currentYear": "2025"
+  },
   "emails": {
     "magic-link": {
-      "subject": "Sign in to Meal Maestro",
+      "subject": "Sign in to {{brandName}}",
       "title": "Ready to cook something amazing?",
       "description": "Click the button below to sign in to your Meal Maestro account and start managing your recipes.",
       "cta": "Sign in to Meal Maestro",

@@ -118,29 +118,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Log headers for debugging
-  console.log('🔍 Webhook headers:', {
-    webhookId,
-    webhookTimestamp,
-    webhookSignature,
-    allHeaders: Object.fromEntries(request.headers.entries())
-  });
-
-  // Temporarily bypass signature verification for debugging
-  console.log('⚠️ TEMPORARILY BYPASSING SIGNATURE VERIFICATION FOR DEBUGGING');
-  
-  // if (!verifyStandardWebhook(body, webhookId, webhookTimestamp, webhookSignature, webhookSecret)) {
-  //   console.error(`❌ Invalid webhook signature from IP: ${clientIP}`);
-  //   return NextResponse.json(
-  //     { error: 'Invalid webhook signature' },
-  //     { status: 401 }
-  //   );
-  // }
-  
-  console.log(`✅ Webhook signature verified successfully from IP: ${clientIP}`);
+  // Verify webhook signature
+  if (!verifyStandardWebhook(body, webhookId, webhookTimestamp, webhookSignature, webhookSecret)) {
+    console.error(`❌ Invalid webhook signature from IP: ${clientIP}`);
+    return NextResponse.json(
+      { error: 'Invalid webhook signature' },
+      { status: 401 }
+    );
+  }
 
   try {
-    console.log('📦 Raw webhook body:', body);
     const payload: SupabaseAuthHookPayload = JSON.parse(body);
     
     // Map email_action_type to our email types
@@ -162,8 +149,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: 'Email action type not handled by custom hook' });
     }
     
-    console.log(`🎯 Supabase auth hook: ${emailActionType} → ${emailType} for ${payload.user.email}`);
-    console.log('📋 Full payload:', JSON.stringify(payload, null, 2));
+    console.log(`🎯 Processing ${emailActionType} → ${emailType} for ${payload.user.email}`);
 
     const emailService = new EmailService();
     const userEmail = payload.user.email;
@@ -200,14 +186,14 @@ export async function POST(request: NextRequest) {
     const processingTime = Date.now() - startTime;
 
     if (result.success) {
-      console.log(`✅ ${emailType} email sent successfully to ${userEmail} (ID: ${result.messageId}) in ${processingTime}ms`);
+      console.log(`✅ ${emailType} email sent to ${userEmail} (${result.messageId})`);
       return NextResponse.json({
         message: `${emailType} email sent successfully`,
         messageId: result.messageId,
         processingTimeMs: processingTime
       });
     } else {
-      console.error(`❌ Failed to send ${emailType} email to ${userEmail} after ${processingTime}ms:`, result.error);
+      console.error(`❌ Failed to send ${emailType} email to ${userEmail}:`, result.error);
       return NextResponse.json(
         { 
           error: result.error,

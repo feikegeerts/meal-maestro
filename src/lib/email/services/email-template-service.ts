@@ -63,6 +63,9 @@ export class EmailTemplateService {
 
       // Get localized content for this email type
       const localizedContent = this.localizationService.getEmailLocale(emailType, detectedLocale);
+      
+      // Get common localized strings
+      const commonStrings = this.localizationService.getCommonStrings(detectedLocale);
 
       const templateResult = this.getTemplate(emailType);
       if (!templateResult.success) {
@@ -76,11 +79,8 @@ export class EmailTemplateService {
         ...data,
         // Add localized content
         ...localizedContent,
-        // Add some common data that all templates can use
-        currentYear: new Date().getFullYear(),
-        brandName: 'Meal Maestro',
-        brandEmoji: '🍽️',
-        supportEmail: 'info@meal-maestro.com',
+        // Add localized common strings
+        ...commonStrings,
         locale: detectedLocale
       });
 

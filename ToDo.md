@@ -26,7 +26,8 @@
 
 16. [ ] SEO optimizations - Footer???
 17. [ ] Changelog page
-18. [ ] Localized email templates using vercel functions and sending emails from code using supabase auth hooks
+18. [x] Localized email templates using vercel functions and sending emails from code using supabase auth hooks
+        18.5 [ ] Clean up email logs and fix template localization to be fully scope
 19. [ ] Docs folder with some docs
 20. [ ] the first magic link email seems to be a registration mail so that needs a template
 21. [ ] PWA options to allow installing of the app

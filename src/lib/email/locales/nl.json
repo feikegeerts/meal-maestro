@@ -1,7 +1,15 @@
 {
+  "common": {
+    "brandName": "Meal Maestro",
+    "brandEmoji": "🍽️",
+    "tagline": "Jouw AI-aangedreven recepten assistent",
+    "expiration": "Deze link verloopt binnen 24 uur om veiligheidsredenen.",
+    "supportEmail": "hello@meal-maestro.com",
+    "currentYear": "2025"
+  },
   "emails": {
     "magic-link": {
-      "subject": "Inloggen bij Meal Maestro",
+      "subject": "Inloggen bij {{brandName}}",
       "title": "Klaar om iets lekkers te koken?",
       "description": "Klik op de knop hieronder om in te loggen bij je Meal Maestro account en begin met het beheren van je recepten.",
       "cta": "Inloggen bij Meal Maestro", 

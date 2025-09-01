@@ -4,6 +4,9 @@ import { UserProfileService } from '../../user-profile-service';
 import type { EmailLocale } from '../types/email-types';
 
 interface LocaleMessages {
+  common: {
+    [key: string]: string;
+  };
   emails: {
     [key: string]: EmailLocale;
   };
@@ -84,6 +87,24 @@ export class LocalizationService {
       throw new Error(`Email type "${emailType}" not found in any locale`);
     } catch (error) {
       throw new Error(`Failed to get email locale: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Gets common localized strings for a specific language
+   */
+  public getCommonStrings(locale: string): Record<string, string> {
+    try {
+      const messages = this.loadLocale(locale);
+      return messages.common;
+    } catch (error) {
+      // Fallback to English if locale loading fails
+      if (locale !== this.fallbackLocale) {
+        console.warn(`Failed to load common strings for locale "${locale}", falling back to ${this.fallbackLocale}`);
+        const fallbackMessages = this.loadLocale(this.fallbackLocale);
+        return fallbackMessages.common;
+      }
+      throw new Error(`Failed to get common strings: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

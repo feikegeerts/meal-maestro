@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign in to {{brandName}}</title>
+    <title>{{subject}}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1d2635; background-color: #fdfeff; margin: 0; padding: 20px;">
     <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); overflow: hidden;">
@@ -11,7 +11,7 @@
         <!-- Header -->
         <div style="background: linear-gradient(135deg, #059f3d 0%, #047a2f 100%); padding: 40px 30px; text-align: center;">
             <h1 style="color: #fdfeff; margin: 0; font-size: 28px; font-weight: 700;">{{brandEmoji}} {{brandName}}</h1>
-            <p style="color: #c5f5d6; margin: 8px 0 0 0; font-size: 16px;">Your AI-powered recipe companion</p>
+            <p style="color: #c5f5d6; margin: 8px 0 0 0; font-size: 16px;">{{tagline}}</p>
         </div>
 
         <!-- Content -->
@@ -31,7 +31,7 @@
             </div>
 
             <p style="color: #8693a6; font-size: 14px; margin: 24px 0 0 0; text-align: center;">
-                This link will expire in 24 hours for security reasons.
+                {{expiration}}
             </p>
         </div>
 
