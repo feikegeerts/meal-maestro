@@ -61,9 +61,15 @@ function verifyStandardWebhook(
     if (debugMode) {
       console.log(`🔍 [WEBHOOK DEBUG] Signed payload length: ${signedPayload.length} chars`);
       console.log(`🔍 [WEBHOOK DEBUG] Signed payload prefix: ${signedPayload.substring(0, 100)}...`);
+      console.log(`🔍 [WEBHOOK DEBUG] Full signed payload: ${signedPayload}`);
     }
     
     // Generate expected signature using HMAC-SHA256
+    if (debugMode) {
+      console.log(`🔍 [WEBHOOK DEBUG] HMAC secret being used (length ${secret.length}): ${secret.substring(0, 8)}...${secret.substring(secret.length - 8)}`);
+      console.log(`🔍 [WEBHOOK DEBUG] HMAC secret full: ${secret}`);
+    }
+    
     const expectedSignature = createHmac('sha256', secret)
       .update(signedPayload, 'utf8')
       .digest('base64');
@@ -160,6 +166,10 @@ export async function POST(request: NextRequest) {
 
   // Get the raw body for signature verification
   const body = await request.text();
+  
+  if (debugMode) {
+    console.log(`🔍 [WEBHOOK DEBUG] Full webhook body: ${body}`);
+  }
   
   // Always verify webhook signature for security (Standard Webhooks spec)
   if (!webhookId || !webhookTimestamp || !webhookSignature) {
