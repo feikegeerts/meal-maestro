@@ -17,11 +17,13 @@ export default function AuthCallback() {
       const urlParams = new URLSearchParams(window.location.search)
       const tokenHash = urlParams.get('token_hash')
       const type = urlParams.get('type')
+      const locale = urlParams.get('locale') || routing.defaultLocale
       
       if (tokenHash && type) {
         console.log('🔍 [AUTH CALLBACK] Processing PKCE flow with:', { 
           tokenHash: tokenHash.substring(0, 15) + '...', 
           type,
+          locale,
           url: window.location.href
         })
         try {
@@ -40,22 +42,22 @@ export default function AuthCallback() {
           
           if (error) {
             console.error('❌ OTP verification failed:', error)
-            router.push(`/${routing.defaultLocale}?error=invalid_link`)
+            router.push(`/${locale}?error=invalid_link`)
             return
           }
           
           if (data.session) {
             hasHandledAuth.current = true
             
-            // Always redirect to recipes page after successful authentication
-            const defaultRedirect = `/${routing.defaultLocale}/recipes`
+            // Redirect to recipes page with correct locale after successful authentication
+            const defaultRedirect = `/${locale}/recipes`
             console.log('🔍 [REDIRECT DEBUG] Redirecting to:', defaultRedirect)
             router.push(defaultRedirect)
             return
           }
         } catch (error) {
           console.error('Auth callback error:', error)
-          router.push(`/${routing.defaultLocale}?error=auth_error`)
+          router.push(`/${locale}?error=auth_error`)
           return
         }
       }
@@ -77,15 +79,15 @@ export default function AuthCallback() {
           if (event === 'SIGNED_IN' && session) {
             console.log('🔍 [AUTH STATE DEBUG] SIGNED_IN event, redirecting to recipes')
             hasHandledAuth.current = true
-            router.push(`/${routing.defaultLocale}/recipes`)
+            router.push(`/${locale}/recipes`)
           } else if (event === 'SIGNED_OUT') {
             console.log('🔍 [AUTH STATE DEBUG] SIGNED_OUT event')
             hasHandledAuth.current = true
-            router.push(`/${routing.defaultLocale}?error=auth_cancelled`)
+            router.push(`/${locale}?error=auth_cancelled`)
           } else if (event === 'INITIAL_SESSION' && !session) {
             console.log('🔍 [AUTH STATE DEBUG] INITIAL_SESSION with no session')
             hasHandledAuth.current = true
-            router.push(`/${routing.defaultLocale}?error=invalid_link`)
+            router.push(`/${locale}?error=invalid_link`)
           }
         }
       )
@@ -105,15 +107,18 @@ export default function AuthCallback() {
     // Fallback timeout in case auth state change doesn't fire
     const timeoutId = setTimeout(() => {
       if (!hasHandledAuth.current) {
+        const urlParams = new URLSearchParams(window.location.search)
+        const locale = urlParams.get('locale') || routing.defaultLocale
+        
         supabase.auth.getSession().then(({ data: { session } }) => {
           if (session && !hasHandledAuth.current) {
             hasHandledAuth.current = true
             
-            // Always redirect to recipes page on successful login
-            router.push(`/${routing.defaultLocale}/recipes`)
+            // Redirect to recipes page with correct locale on successful login
+            router.push(`/${locale}/recipes`)
           } else if (!hasHandledAuth.current) {
             hasHandledAuth.current = true
-            router.push(`/${routing.defaultLocale}?error=timeout`)
+            router.push(`/${locale}?error=timeout`)
           }
         })
       }
