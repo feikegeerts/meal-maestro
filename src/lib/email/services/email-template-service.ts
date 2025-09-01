@@ -75,17 +75,29 @@ export class EmailTemplateService {
         };
       }
 
-      const html = templateResult.data!({
+      // First process subject through Handlebars to handle variables like {{brandName}}
+      const initialContext = {
         ...data,
         // Add localized content
         ...localizedContent,
         // Add localized common strings
         ...commonStrings,
         locale: detectedLocale
-      });
+      };
+      
+      const subjectTemplate = Handlebars.compile(localizedContent.subject);
+      const processedSubject = subjectTemplate(initialContext);
+      
+      // Create the template context with processed subject
+      const templateContext = {
+        ...initialContext,
+        subject: processedSubject // Override subject with processed version
+      };
+
+      const html = templateResult.data!(templateContext);
 
       return ErrorHandler.success({
-        subject: localizedContent.subject,
+        subject: processedSubject,
         html
       });
     } catch (error) {

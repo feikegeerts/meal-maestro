@@ -61,7 +61,7 @@ describe('EmailTemplateService', () => {
       expect(template.html).toContain('https://example.com/auth/callback?token_hash&#x3D;abc123def456&amp;type&#x3D;magiclink');
       expect(template.html).toContain('Ready to cook something amazing?');
       expect(template.html).toContain('Sign in to Meal Maestro');
-      expect(template.html).toContain('info@meal-maestro.com');
+      expect(template.html).toContain('hello@meal-maestro.com');
       expect(template.html).toContain(new Date().getFullYear().toString());
     });
 
@@ -95,7 +95,7 @@ describe('EmailTemplateService', () => {
       expect(template.html).toContain('🍽️ Meal Maestro');
       expect(template.html).toContain('Klaar om iets lekkers te koken?');
       expect(template.html).toContain('Inloggen bij Meal Maestro');
-      expect(template.html).toContain('info@meal-maestro.com');
+      expect(template.html).toContain('hello@meal-maestro.com');
       expect(template.html).toContain(new Date().getFullYear().toString());
     });
 
