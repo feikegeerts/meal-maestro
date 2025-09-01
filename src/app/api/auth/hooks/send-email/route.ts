@@ -225,9 +225,10 @@ export async function POST(request: NextRequest) {
 function buildConfirmationUrl(payload: SupabaseAuthHookPayload): string {
   const { email_data } = payload;
   
-  // Use our application URL, not the Supabase site_url
-  // For local development, always use localhost
-  const baseUrl = process.env.NODE_ENV === 'development'
+  // Use our application URL, detecting localhost usage from the original site_url
+  const isLocalRequest = email_data.site_url && email_data.site_url.includes('localhost');
+  
+  const baseUrl = isLocalRequest
     ? 'http://localhost:3000'
     : process.env.NODE_ENV === 'production'
     ? 'https://meal-maestro.com'
