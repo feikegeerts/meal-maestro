@@ -13,28 +13,54 @@ The Meal Maestro email system provides localized, custom email templates for Sup
    - Combines template rendering and email delivery
    - Provides high-level methods: `sendMagicLinkEmail()`, `sendConfirmSignupEmail()`, `sendTestEmail()`
 
-2. **EmailTemplateService** (`/src/lib/email/services/EmailTemplateService.ts`)  
+2. **EmailTemplateService** (`/src/lib/email/services/email-template-service.ts`)  
    - Handlebars template rendering
    - Integrates with LocalizationService for dynamic language detection
    - Template caching for performance
 
-3. **LocalizationService** (`/src/lib/email/services/LocalizationService.ts`)
-   - 4-tier language detection fallback system:
-     1. Database `user_profiles.language_preference`
+3. **LocalizationService** (`/src/lib/email/services/localization-service.ts`)
+   - 5-tier language detection fallback system:
+     1. Database `user_profiles.language_preference` (via secure database function)
      2. User metadata (from Supabase user object)
-     3. Accept-Language header parsing
-     4. Fallback to English
-   - Uses secure database functions to bypass RLS without service role keys
+     3. Page locale (from the URL where user initiated the request)
+     4. Accept-Language header parsing
+     5. Fallback to English
+   - Uses UserProfileService which calls secure database function `get_user_language_preference()`
+   - No service role key required - uses anon key with SECURITY DEFINER function
 
-4. **EmailDeliveryService** (`/src/lib/email/services/EmailDeliveryService.ts`)
+4. **EmailDeliveryService** (`/src/lib/email/services/email-delivery-service.ts`)
    - Resend API integration
    - Rate limiting awareness
    - Comprehensive error handling
 
-5. **ConfigurationService** (`/src/lib/email/services/ConfigurationService.ts`)
-   - Email-specific configuration management
-   - Environment variable validation
-   - Centralized configuration for email services
+5. **UserProfileService** (`/src/lib/user-profile-service.ts`)
+   - Manages user profile operations using secure database functions
+   - Provides `getLanguagePreference()` method that calls `get_user_language_preference()` function
+   - Uses anon key with SECURITY DEFINER function for secure access without service role key
+
+## Database Function
+
+The email system uses a secure database function `get_user_language_preference()` to safely retrieve user language preferences without requiring service role keys:
+
+### Function Details
+- **Function Name**: `get_user_language_preference(user_email TEXT)`
+- **Returns**: `TEXT` (language preference or NULL)
+- **Security**: `SECURITY DEFINER` with input validation
+- **Permissions**: Granted to `anon` and `authenticated` roles
+- **Location**: `/supabase/migrations/20250831000000_add_secure_language_preference_function.sql`
+
+### Security Features
+- Input validation for email format and length
+- Basic email regex validation
+- Secure function execution with `SECURITY DEFINER`
+- Direct table access bypasses Row Level Security (RLS) safely
+
+### Usage
+The function is called via the UserProfileService using the anon key:
+```typescript
+const { data, error } = await this.supabase
+  .rpc('get_user_language_preference', { user_email: userEmail });
+```
 
 ## Supabase Auth Hook Integration
 
@@ -61,7 +87,6 @@ The Meal Maestro email system provides localized, custom email templates for Sup
 ```bash
 # Required for email system
 RESEND_API_KEY=re_your_resend_key
-SUPABASE_SERVICE_ROLE_KEY=sb_your_service_role_key
 SUPABASE_WEBHOOK_SECRET=your-webhook-secret
 
 # Public variables (already configured)
@@ -130,8 +155,9 @@ curl https://your-domain.com/api/auth/hooks/send-email
 Set these in your Vercel dashboard under Settings > Environment Variables:
 
 - `RESEND_API_KEY` - Your Resend API key  
-- `SUPABASE_SERVICE_ROLE_KEY` - Service role key (not anon key!)
 - `SUPABASE_WEBHOOK_SECRET` - Secure random string for webhook auth
+- `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anon key
 
 ### Production Checklist
 - [ ] Environment variables configured in Vercel
@@ -161,8 +187,8 @@ Set these in your Vercel dashboard under Settings > Environment Variables:
 ### Common Issues
 
 **Empty database results despite existing users**
-- Cause: Using anon key instead of service role key
-- Solution: Ensure `SUPABASE_SERVICE_ROLE_KEY` is set and used by LocalizationService
+- Cause: Database function `get_user_language_preference()` not properly configured or missing
+- Solution: Ensure the database migration for the secure function has been applied and function has proper permissions
 
 **Webhook authentication failures**
 - Cause: Missing or incorrect `SUPABASE_WEBHOOK_SECRET`
@@ -186,7 +212,8 @@ Set `NODE_ENV=development` to enable detailed logging including:
 ## Security
 
 - Webhook secret validation prevents unauthorized email sending
-- Service role key stored securely in environment variables
+- Database function uses SECURITY DEFINER with input validation for secure access
 - Rate limiting prevents email abuse
 - Input validation on all email addresses and URLs
 - No sensitive data logged in production
+- Uses anon key with secure database functions instead of service role key
