@@ -47,8 +47,7 @@ export async function POST(request: NextRequest) {
   // Log security-relevant information
   console.log(`🔐 Auth hook request [${environment}/${vercelEnv}] from IP: ${clientIP}, User-Agent: ${userAgent}`);
   
-  // TEMPORARY DEBUG LOGGING - Remove after fixing production issue
-  const debugMode = environment === 'production';
+  const debugMode = false;
   
   let webhookSecret: string;
   try {
@@ -227,7 +226,10 @@ function buildConfirmationUrl(payload: SupabaseAuthHookPayload): string {
   const { email_data } = payload;
   
   // Use our application URL, not the Supabase site_url
-  const baseUrl = process.env.NODE_ENV === 'production'
+  // For local development, always use localhost
+  const baseUrl = process.env.NODE_ENV === 'development'
+    ? 'http://localhost:3000'
+    : process.env.NODE_ENV === 'production'
     ? 'https://meal-maestro.com'
     : process.env.VERCEL_ENV === 'preview'
     ? 'https://preview.meal-maestro.com'
