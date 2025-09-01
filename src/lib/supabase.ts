@@ -52,6 +52,9 @@ export const auth = {
       options: {
         emailRedirectTo: redirectTo,
         shouldCreateUser: true, // Allow user creation but use magic link template
+        data: {
+          originUrl: window.location.origin, // Pass origin to webhook for URL generation
+        },
       },
     });
 
