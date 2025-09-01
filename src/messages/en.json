@@ -643,10 +643,8 @@
         "title": "Your Usage Costs",
         "yourCosts": "These costs are related to generating and storing your recipes.",
         "openai": "OpenAI API calls",
-        "photoStorage": "Photo storage",
         "calls": "Total calls",
         "tokens": "Total tokens",
-        "comingSoon": "Coming soon",
         "signInToSee": "Sign in to see your personal usage costs:"
       }
     },

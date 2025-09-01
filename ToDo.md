@@ -2,7 +2,7 @@
 
 ## Authentication & User Experience
 
-1. [ ] Cost tracking of images, number of images, total storage mb, total storage costs.
+1. The automatic redirect to /recipes is very anoying when you are on a different page. I think we do need redirect logic. This will interfere with the magic link functionality possible so that needs to be properly tested.
 1. [ ] Mark as easten should also be able for a different date
 1. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 

@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
       timeRange: (searchParams.get("timeRange") as "day" | "week" | "month") || "day",
     };
 
+    console.log("🔍 [AdminAPI] Processing admin stats request with query:", query);
+
     // If specific user requested, return their stats
     if (query.userId) {
       const userStats = await adminUsageService.getUserUsageStats(
@@ -57,6 +59,22 @@ export async function GET(request: NextRequest) {
 
     // Get total recipe count
     const totalRecipes = await adminUsageService.getTotalRecipeCount();
+
+    // Get image storage statistics (with error handling)
+    let imageStorageStats;
+    try {
+      imageStorageStats = await adminUsageService.getImageStorageStats();
+    } catch (error) {
+      console.error("🔴 [AdminAPI] Error fetching image storage stats:", error);
+      imageStorageStats = {
+        totalImages: 0,
+        totalStorageMB: 0,
+        totalStorageGB: 0,
+        totalStorageCost: 0,
+        usersWithImages: 0,
+        averageImagesPerUser: 0,
+      };
+    }
 
     // Get time-based usage data for charts
     const timeRangeData =
@@ -89,6 +107,14 @@ export async function GET(request: NextRequest) {
       0
     );
 
+    console.log("🔍 [AdminAPI] Calculated totals:", {
+      totalUsers,
+      totalRecipes,
+      totalCost,
+      totalTokens,
+      totalCalls
+    });
+
     // Identify outliers
     const outliers = allUsersStats.filter((stats) => stats.isOutlier);
 
@@ -111,6 +137,7 @@ export async function GET(request: NextRequest) {
         averageTokensPerUser: totalUsers > 0 ? totalTokens / totalUsers : 0,
         averageCallsPerUser: totalUsers > 0 ? totalCalls / totalUsers : 0,
       },
+      imageStorage: imageStorageStats,
       outliers: {
         count: outliers.length,
         users: outliers.map((stats) => ({
@@ -145,6 +172,8 @@ export async function GET(request: NextRequest) {
       },
     };
 
+    console.log("🔍 [AdminAPI] Returning summary data with keys:", Object.keys(summary));
+    
     return NextResponse.json({
       type: "summary",
       data: summary,
@@ -172,6 +201,14 @@ export interface AdminUsageStatsResponse {
       averageCostPerUser: number;
       averageTokensPerUser: number;
       averageCallsPerUser: number;
+    };
+    imageStorage?: {
+      totalImages: number;
+      totalStorageMB: number;
+      totalStorageGB: number;
+      totalStorageCost: number;
+      usersWithImages: number;
+      averageImagesPerUser: number;
     };
     outliers?: {
       count: number;

@@ -32,12 +32,12 @@ export function AdminChartsSection({ isAdmin }: AdminChartsSectionProps) {
   const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState(() => {
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const startDate = new Date(now);
+    startDate.setDate(now.getDate() - 30); // Look back 30 days
     
     return {
-      startDate: startOfMonth.toISOString().split('T')[0],
-      endDate: endOfMonth.toISOString().split('T')[0]
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: now.toISOString().split('T')[0]
     };
   });
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('day');

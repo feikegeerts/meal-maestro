@@ -24,6 +24,7 @@ import {
   Calendar,
   AlertTriangle,
   BookOpen,
+  Images,
 } from "lucide-react";
 import { AdminUsageStatsResponse } from "@/app/api/admin/usage-stats/route";
 import { AdminChartsSection } from "@/components/admin/admin-charts-section";
@@ -40,6 +41,15 @@ interface DashboardStats {
   averageCallsPerUser: number;
 }
 
+interface ImageStorageStats {
+  totalImages: number;
+  totalStorageMB: number;
+  totalStorageGB: number;
+  totalStorageCost: number;
+  usersWithImages: number;
+  averageImagesPerUser: number;
+}
+
 interface TopUser {
   userId: string;
   totalCost: number;
@@ -52,6 +62,7 @@ export default function AdminDashboard() {
   const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [imageStats, setImageStats] = useState<ImageStorageStats | null>(null);
   const [topUsersByCost, setTopUsersByCost] = useState<TopUser[]>([]);
   const [outliers, setOutliers] = useState<TopUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,15 +77,8 @@ export default function AdminDashboard() {
       setLoading(true);
       setError(null);
 
-      // Get overview stats for current month (for cards)
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-      const overviewParams = new URLSearchParams({
-        startDate: startOfMonth.toISOString().split("T")[0],
-        endDate: endOfMonth.toISOString().split("T")[0],
-      });
+      // Get overview stats for all time (no date range for overview cards)
+      const overviewParams = new URLSearchParams();
 
       const overviewResponse = await fetch(
         `/api/admin/usage-stats?${overviewParams}`
@@ -91,6 +95,19 @@ export default function AdminDashboard() {
 
       if (overviewData.type === "summary" && overviewData.data.overview) {
         setStats(overviewData.data.overview);
+        // Only set image stats if they exist, otherwise use fallback
+        if (overviewData.data.imageStorage) {
+          setImageStats(overviewData.data.imageStorage);
+        } else {
+          setImageStats({
+            totalImages: 0,
+            totalStorageMB: 0,
+            totalStorageGB: 0,
+            totalStorageCost: 0,
+            usersWithImages: 0,
+            averageImagesPerUser: 0,
+          });
+        }
         setTopUsersByCost(overviewData.data.topUsers?.byCost || []);
         setOutliers(overviewData.data.outliers?.users || []);
       }
@@ -171,6 +188,14 @@ export default function AdminDashboard() {
     return num.toString();
   };
 
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
   if (authLoading || adminLoading) {
     return <PageLoading />;
   }
@@ -189,8 +214,8 @@ export default function AdminDashboard() {
               <Skeleton className="h-10 w-32" />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-              {Array.from({ length: 5 }).map((_, i) => (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+              {Array.from({ length: 6 }).map((_, i) => (
                 <Card key={i}>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <Skeleton className="h-4 w-20" />
@@ -277,7 +302,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Overview Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -304,6 +329,23 @@ export default function AdminDashboard() {
                 <div className="text-2xl font-bold">{stats.totalRecipes}</div>
                 <p className="text-xs text-muted-foreground">
                   {t("recipesInDatabase")}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Image Storage
+                </CardTitle>
+                <Images className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {imageStats ? formatNumber(imageStats.totalImages) : '0'}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {imageStats ? formatFileSize(imageStats.totalStorageMB * 1024 * 1024) : '0 B'} • {imageStats ? formatCost(imageStats.totalStorageCost) : '$0.00'}
                 </p>
               </CardContent>
             </Card>

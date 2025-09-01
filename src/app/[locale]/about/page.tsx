@@ -329,14 +329,6 @@ export default function AboutPage() {
                               </div>
                             </div>
                           </div>
-                          <div className="flex justify-between items-center p-4 bg-info/10 dark:bg-info/10 rounded-xl border border-info/40 dark:border-info/40">
-                            <span className="text-sm text-slate-600 dark:text-slate-400">
-                              {t("costs.usage.photoStorage")}
-                            </span>
-                            <span className="text-sm font-medium text-info dark:text-info">
-                              {t("costs.usage.comingSoon")}
-                            </span>
-                          </div>
                         </div>
                       )}
                     </div>
@@ -350,14 +342,6 @@ export default function AboutPage() {
                           <div className="text-3xl font-bold text-slate-400 dark:text-slate-500">
                             $0.00
                           </div>
-                        </div>
-                        <div className="flex justify-between items-center p-4 bg-slate-100/60 dark:bg-slate-800/60 rounded-xl">
-                          <span className="text-sm text-slate-400 dark:text-slate-500">
-                            {t("costs.usage.photoStorage")}
-                          </span>
-                          <span className="text-sm font-medium text-info/60 dark:text-info/60">
-                            {t("costs.usage.comingSoon")}
-                          </span>
                         </div>
                       </div>
                     </div>

@@ -645,10 +645,8 @@
         "title": "Jouw Gebruikskosten",
         "yourCosts": "Deze kosten hebben te maken met het genereren en opslaan van jouw recepten.",
         "openai": "OpenAI API aanroepen",
-        "photoStorage": "Fotoopslag",
         "calls": "Totaal aanroepen",
         "tokens": "Totaal tokens",
-        "comingSoon": "Binnenkort",
         "signInToSee": "Log in om je persoonlijke gebruikskosten te zien:"
       }
     },

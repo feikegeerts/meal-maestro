@@ -32,6 +32,7 @@ interface ApiUsageRow {
 export class AdminUsageService {
   public async getTotalRecipeCount(): Promise<number> {
     try {
+      console.log("🔍 [AdminUsage] Fetching total recipe count...");
       const { count, error } = await supabaseAdmin
         .from("recipes")
         .select("*", { count: "exact", head: true });
@@ -41,6 +42,7 @@ export class AdminUsageService {
         return 0;
       }
 
+      console.log(`🔍 [AdminUsage] Total recipe count: ${count || 0}`);
       return count || 0;
     } catch (error) {
       console.error("🔴 [AdminUsage] Error in getTotalRecipeCount:", error);
@@ -53,6 +55,7 @@ export class AdminUsageService {
     endDate?: string
   ): Promise<UserUsageStats[]> {
     try {
+      console.log("🔍 [AdminUsage] Fetching all users usage stats...", { startDate, endDate });
       let query = supabaseAdmin
         .from("api_usage")
         .select("*")
@@ -71,6 +74,8 @@ export class AdminUsageService {
         console.error("🔴 [AdminUsage] Error fetching all users stats:", error);
         return [];
       }
+
+      console.log(`🔍 [AdminUsage] Found ${data?.length || 0} API usage records`);
 
       if (!data || data.length === 0) {
         return [];
@@ -99,6 +104,8 @@ export class AdminUsageService {
         });
       });
 
+      console.log(`🔍 [AdminUsage] Calculated stats for ${userStats.length} users`);
+
       // Sort by total cost (descending) and add ranks
       userStats.sort((a, b) => b.totalCost - a.totalCost);
       userStats.forEach((stats, index) => {
@@ -110,6 +117,8 @@ export class AdminUsageService {
         userStats.reduce((sum, s) => sum + s.totalCost, 0) / userStats.length;
       const avgTokens =
         userStats.reduce((sum, s) => sum + s.totalTokens, 0) / userStats.length;
+
+      console.log(`🔍 [AdminUsage] Average cost: ${avgCost.toFixed(4)}, Average tokens: ${avgTokens.toFixed(0)}`);
 
       userStats.forEach((stats) => {
         stats.isOutlier =
@@ -387,6 +396,86 @@ export class AdminUsageService {
     } catch (error) {
       console.error("🔴 [AdminUsage] Error in getModelUsageStats:", error);
       return [];
+    }
+  }
+
+  public async getImageStorageStats(): Promise<{
+    totalImages: number;
+    totalStorageMB: number;
+    totalStorageGB: number;
+    totalStorageCost: number;
+    usersWithImages: number;
+    averageImagesPerUser: number;
+  }> {
+    try {
+      console.log("🔍 [AdminUsage] Fetching image storage stats...");
+      const { data, error } = await supabaseAdmin
+        .from("recipes")
+        .select("user_id, image_url, image_metadata")
+        .not("image_url", "is", null);
+
+      if (error) {
+        console.error("🔴 [AdminUsage] Error fetching image storage stats:", error);
+        return {
+          totalImages: 0,
+          totalStorageMB: 0,
+          totalStorageGB: 0,
+          totalStorageCost: 0,
+          usersWithImages: 0,
+          averageImagesPerUser: 0,
+        };
+      }
+
+      console.log(`🔍 [AdminUsage] Found ${data?.length || 0} recipes with images`);
+
+      if (!data || data.length === 0) {
+        return {
+          totalImages: 0,
+          totalStorageMB: 0,
+          totalStorageGB: 0,
+          totalStorageCost: 0,
+          usersWithImages: 0,
+          averageImagesPerUser: 0,
+        };
+      }
+
+      const totalImages = data.length;
+      const uniqueUsers = new Set(data.map(recipe => recipe.user_id)).size;
+
+      // Calculate total storage from compressed sizes in metadata
+      let totalStorageBytes = 0;
+      data.forEach(recipe => {
+        if (recipe.image_metadata && recipe.image_metadata.compressedSize) {
+          totalStorageBytes += Number(recipe.image_metadata.compressedSize);
+        }
+      });
+
+      const totalStorageMB = totalStorageBytes / (1024 * 1024);
+      const totalStorageGB = totalStorageMB / 1024;
+      
+      // Supabase storage pricing: $0.021 per GB per month
+      const totalStorageCost = totalStorageGB * 0.021;
+
+      const averageImagesPerUser = uniqueUsers > 0 ? totalImages / uniqueUsers : 0;
+
+      return {
+        totalImages,
+        totalStorageMB,
+        totalStorageGB,
+        totalStorageCost,
+        usersWithImages: uniqueUsers,
+        averageImagesPerUser,
+      };
+    } catch (error) {
+      console.error("🔴 [AdminUsage] Error in getImageStorageStats:", error);
+      return {
+        totalImages: 0,
+        totalStorageMB: 0,
+        totalStorageGB: 0,
+        totalStorageCost: 0,
+        usersWithImages: 0,
+        averageImagesPerUser: 0,
+      };
     }
   }
 }
