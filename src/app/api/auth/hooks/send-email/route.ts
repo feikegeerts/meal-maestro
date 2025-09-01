@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHmac, timingSafeEqual } from 'crypto';
+import { Webhook } from 'standardwebhooks';
 import { ConfigurationService } from '../../../../../lib/email/services/configuration-service';
 import { EmailService } from '../../../../../lib/email/email-service';
 
@@ -28,94 +28,7 @@ interface SupabaseAuthHookPayload {
   };
 }
 
-// For development testing, you can use a test secret: 'test-webhook-secret-123'
-// Make sure to configure the real secret in production
-
-function verifyStandardWebhook(
-  body: string, 
-  webhookId: string,
-  webhookTimestamp: string,
-  webhookSignature: string,
-  secret: string
-): boolean {
-  try {
-    // TEMPORARY DEBUG LOGGING - Remove after fixing production issue
-    const isProduction = process.env.NODE_ENV === 'production';
-    const debugMode = isProduction; // Enable debug for production diagnosis
-    
-    if (debugMode) {
-      console.log('🔍 [WEBHOOK DEBUG] Starting signature verification');
-      console.log(`🔍 [WEBHOOK DEBUG] Environment: ${process.env.NODE_ENV}/${process.env.VERCEL_ENV}`);
-      console.log(`🔍 [WEBHOOK DEBUG] Webhook ID: ${webhookId}`);
-      console.log(`🔍 [WEBHOOK DEBUG] Webhook Timestamp: ${webhookTimestamp}`);
-      console.log(`🔍 [WEBHOOK DEBUG] Received Signature: ${webhookSignature}`);
-      console.log(`🔍 [WEBHOOK DEBUG] Body length: ${body.length} chars`);
-      console.log(`🔍 [WEBHOOK DEBUG] Secret configured: ${secret ? 'YES' : 'NO'}`);
-      console.log(`🔍 [WEBHOOK DEBUG] Secret length: ${secret.length} chars`);
-      console.log(`🔍 [WEBHOOK DEBUG] Secret prefix: ${secret.substring(0, 4)}...`);
-    }
-    
-    // Standard Webhooks format: webhookId.timestamp.body
-    const signedPayload = `${webhookId}.${webhookTimestamp}.${body}`;
-    
-    if (debugMode) {
-      console.log(`🔍 [WEBHOOK DEBUG] Signed payload length: ${signedPayload.length} chars`);
-      console.log(`🔍 [WEBHOOK DEBUG] Signed payload prefix: ${signedPayload.substring(0, 100)}...`);
-      console.log(`🔍 [WEBHOOK DEBUG] Full signed payload: ${signedPayload}`);
-    }
-    
-    // Generate expected signature using HMAC-SHA256
-    if (debugMode) {
-      console.log(`🔍 [WEBHOOK DEBUG] HMAC secret being used (length ${secret.length}): ${secret.substring(0, 8)}...${secret.substring(secret.length - 8)}`);
-      console.log(`🔍 [WEBHOOK DEBUG] HMAC secret full: ${secret}`);
-    }
-    
-    const expectedSignature = createHmac('sha256', secret)
-      .update(signedPayload, 'utf8')
-      .digest('base64');
-    
-    if (debugMode) {
-      console.log(`🔍 [WEBHOOK DEBUG] Expected signature: ${expectedSignature}`);
-    }
-    
-    // Extract signature from v1,base64signature format
-    if (!webhookSignature.startsWith('v1,')) {
-      console.error('❌ [WEBHOOK DEBUG] Invalid signature format - must start with v1,');
-      if (debugMode) {
-        console.log(`🔍 [WEBHOOK DEBUG] Signature format check failed. Received: ${webhookSignature.substring(0, 10)}...`);
-      }
-      return false;
-    }
-    
-    const signature = webhookSignature.substring(3); // Remove 'v1,'
-    
-    if (debugMode) {
-      console.log(`🔍 [WEBHOOK DEBUG] Extracted signature: ${signature}`);
-      console.log(`🔍 [WEBHOOK DEBUG] Signatures match: ${signature === expectedSignature ? 'YES' : 'NO'}`);
-    }
-    
-    // Use timing-safe comparison to prevent timing attacks
-    const sigBuffer = Buffer.from(signature, 'base64');
-    const expectedBuffer = Buffer.from(expectedSignature, 'base64');
-    
-    // Ensure buffers are same length before comparison
-    if (sigBuffer.length !== expectedBuffer.length) {
-      console.error(`❌ [WEBHOOK DEBUG] Signature length mismatch: received ${sigBuffer.length}, expected ${expectedBuffer.length}`);
-      return false;
-    }
-    
-    const isValid = timingSafeEqual(sigBuffer, expectedBuffer);
-    
-    if (debugMode) {
-      console.log(`🔍 [WEBHOOK DEBUG] Timing-safe comparison result: ${isValid ? 'VALID' : 'INVALID'}`);
-    }
-    
-    return isValid;
-  } catch (error) {
-    console.error('❌ [WEBHOOK DEBUG] Standard webhook verification error:', error);
-    return false;
-  }
-}
+// Using official standardwebhooks library for proper Supabase compatibility
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -171,7 +84,8 @@ export async function POST(request: NextRequest) {
     console.log(`🔍 [WEBHOOK DEBUG] Full webhook body: ${body}`);
   }
   
-  // Always verify webhook signature for security (Standard Webhooks spec)
+  // Verify webhook signature using official standardwebhooks library
+  // Ensure all required headers are present and not null
   if (!webhookId || !webhookTimestamp || !webhookSignature) {
     console.error(`❌ Missing required webhook headers from IP: ${clientIP}`, {
       hasId: !!webhookId,
@@ -184,9 +98,30 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Verify webhook signature
-  if (!verifyStandardWebhook(body, webhookId, webhookTimestamp, webhookSignature, webhookSecret)) {
-    console.error(`❌ Invalid webhook signature from IP: ${clientIP}`);
+  const headers = {
+    'webhook-id': webhookId,
+    'webhook-timestamp': webhookTimestamp,
+    'webhook-signature': webhookSignature
+  };
+
+  try {
+    if (debugMode) {
+      console.log('🔍 [WEBHOOK DEBUG] Verifying signature with official standardwebhooks library');
+      console.log(`🔍 [WEBHOOK DEBUG] Headers:`, headers);
+      console.log(`🔍 [WEBHOOK DEBUG] Secret: ${webhookSecret.substring(0, 10)}...`);
+    }
+    
+    const wh = new Webhook(webhookSecret);
+    const verifiedPayload = wh.verify(body, headers) as SupabaseAuthHookPayload;
+    
+    console.log(`✅ Webhook signature verified successfully using standardwebhooks library`);
+    
+    if (debugMode) {
+      console.log('🔍 [WEBHOOK DEBUG] Verified payload type:', typeof verifiedPayload);
+      console.log('🔍 [WEBHOOK DEBUG] Payload keys:', Object.keys(verifiedPayload));
+    }
+  } catch (error) {
+    console.error(`❌ Webhook signature verification failed from IP: ${clientIP}:`, error);
     return NextResponse.json(
       { error: 'Invalid webhook signature' },
       { status: 401 }
