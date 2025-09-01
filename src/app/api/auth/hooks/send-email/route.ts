@@ -227,10 +227,12 @@ function buildConfirmationUrl(payload: SupabaseAuthHookPayload): string {
   const { email_data } = payload;
   
   // Use our application URL, not the Supabase site_url
-  const baseUrl = process.env.VERCEL_URL 
-    ? `https://${process.env.VERCEL_URL}`
-    : process.env.NODE_ENV === 'production'
+  const baseUrl = process.env.NODE_ENV === 'production'
     ? 'https://meal-maestro.com'
+    : process.env.VERCEL_ENV === 'preview'
+    ? 'https://preview.meal-maestro.com'
+    : process.env.VERCEL_URL 
+    ? `https://${process.env.VERCEL_URL}`
     : 'http://localhost:3000';
   
   // Build the callback URL with appropriate parameters
