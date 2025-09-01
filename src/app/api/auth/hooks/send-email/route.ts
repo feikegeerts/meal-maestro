@@ -160,15 +160,19 @@ export async function POST(request: NextRequest) {
     // Extract Accept-Language header if present
     const acceptLanguageHeader = request.headers.get('accept-language') || undefined;
     
-    // Extract page locale from Referer header (e.g., /nl/login -> 'nl', /en/login -> 'en')
-    const refererHeader = request.headers.get('referer');
+    // Extract page locale from user metadata pageUrl (e.g., /nl/login -> 'nl', /en/login -> 'en')
+    const pageUrl = payload.user.user_metadata?.pageUrl as string;
     let pageLocale: string | undefined;
-    if (refererHeader) {
-      const refererMatch = refererHeader.match(/\/([a-z]{2})\/[^\/]*$/);
-      if (refererMatch && (refererMatch[1] === 'nl' || refererMatch[1] === 'en')) {
-        pageLocale = refererMatch[1];
+    if (pageUrl) {
+      const pageUrlMatch = pageUrl.match(/\/([a-z]{2})\/[^\/]*$/);
+      if (pageUrlMatch && (pageUrlMatch[1] === 'nl' || pageUrlMatch[1] === 'en')) {
+        pageLocale = pageUrlMatch[1];
       }
     }
+    
+    // DEBUG: Log locale detection
+    console.log('🔍 [LOCALE DEBUG] Page URL from metadata:', pageUrl);
+    console.log('🔍 [LOCALE DEBUG] Detected page locale:', pageLocale);
     
     const languageContext = {
       userMetadata: payload.user.user_metadata,
