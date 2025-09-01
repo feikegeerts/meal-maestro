@@ -241,6 +241,11 @@ function buildConfirmationUrl(payload: SupabaseAuthHookPayload, request: NextReq
   const refererHeader = request.headers.get('referer');
   const isLocalRequest = refererHeader && refererHeader.includes('localhost');
   
+  // DEBUG: Log localhost detection for troubleshooting
+  console.log('🔍 [LOCALHOST DEBUG] Referer header:', refererHeader);
+  console.log('🔍 [LOCALHOST DEBUG] Is local request:', isLocalRequest);
+  console.log('🔍 [LOCALHOST DEBUG] Available headers:', Object.fromEntries(request.headers.entries()));
+  
   const baseUrl = isLocalRequest
     ? 'http://localhost:3000'
     : process.env.NODE_ENV === 'production'
@@ -250,6 +255,9 @@ function buildConfirmationUrl(payload: SupabaseAuthHookPayload, request: NextReq
     : process.env.VERCEL_URL 
     ? `https://${process.env.VERCEL_URL}`
     : 'http://localhost:3000';
+  
+  // DEBUG: Log selected base URL
+  console.log('🔍 [LOCALHOST DEBUG] Selected baseUrl:', baseUrl);
   
   // Build the callback URL with appropriate parameters
   const url = new URL('/auth/callback', baseUrl);
