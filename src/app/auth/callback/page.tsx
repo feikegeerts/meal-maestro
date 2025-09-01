@@ -47,21 +47,10 @@ export default function AuthCallback() {
           if (data.session) {
             hasHandledAuth.current = true
             
-            // Check for redirect_to parameter
-            const redirectTo = urlParams.get('redirect_to')
-            console.log('🔍 [REDIRECT DEBUG] Attempting redirect:', {
-              redirectTo,
-              defaultRedirect: `/${routing.defaultLocale}/recipes`
-            })
-            
-            if (redirectTo) {
-              console.log('🔍 [REDIRECT DEBUG] Using redirectTo:', redirectTo)
-              router.push(redirectTo)
-            } else {
-              const defaultRedirect = `/${routing.defaultLocale}/recipes`
-              console.log('🔍 [REDIRECT DEBUG] Using default redirect:', defaultRedirect)
-              router.push(defaultRedirect)
-            }
+            // Always redirect to recipes page after successful authentication
+            const defaultRedirect = `/${routing.defaultLocale}/recipes`
+            console.log('🔍 [REDIRECT DEBUG] Redirecting to:', defaultRedirect)
+            router.push(defaultRedirect)
             return
           }
         } catch (error) {
