@@ -19,20 +19,28 @@ export default function AuthCallback() {
       const type = urlParams.get('type')
       
       if (tokenHash && type) {
+        console.log('🔍 [AUTH CALLBACK] Processing PKCE flow with:', { tokenHash: tokenHash.substring(0, 10) + '...', type })
         try {
           // Verify OTP for PKCE flow
           const { data, error } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
-            type: 'email'
+            type: type as 'signup' | 'magiclink' | 'recovery' | 'email'
+          })
+          
+          console.log('🔍 [AUTH CALLBACK] VerifyOTP result:', { 
+            hasSession: !!data?.session, 
+            hasUser: !!data?.user,
+            error: error?.message 
           })
           
           if (error) {
-            console.error('OTP verification failed:', error)
+            console.error('❌ OTP verification failed:', error)
             router.push(`/${routing.defaultLocale}?error=invalid_link`)
             return
           }
           
           if (data.session) {
+            console.log('✅ [AUTH CALLBACK] Session created, redirecting...')
             hasHandledAuth.current = true
             
             // Check for redirect_to parameter
@@ -43,12 +51,16 @@ export default function AuthCallback() {
               router.push(`/${routing.defaultLocale}/recipes`)
             }
             return
+          } else {
+            console.warn('⚠️ [AUTH CALLBACK] No session returned from verifyOtp')
           }
         } catch (error) {
-          console.error('Auth callback error:', error)
+          console.error('❌ Auth callback error:', error)
           router.push(`/${routing.defaultLocale}?error=auth_error`)
           return
         }
+      } else {
+        console.log('🔍 [AUTH CALLBACK] No token_hash/type found, using implicit flow')
       }
       
       // Set up auth state change listener for implicit flow
