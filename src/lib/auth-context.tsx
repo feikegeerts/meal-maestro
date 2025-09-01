@@ -286,15 +286,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const signInWithMagicLink = async (email: string) => {
-    setLoading(true);
+    // Don't set global loading state for magic link email sending
+    // The form component handles its own loading state
     try {
       const result = await auth.signInWithMagicLink(email);
       return result;
     } catch (error) {
       console.error("Error signing in with magic link:", error);
       return { data: null, error: error as AuthError };
-    } finally {
-      setLoading(false);
     }
   };
 
