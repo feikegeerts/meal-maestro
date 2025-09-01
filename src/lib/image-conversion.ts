@@ -30,7 +30,7 @@ export async function convertImage(
     height
   } = options;
 
-  let sharpInstance = sharp(inputBuffer);
+  let sharpInstance = sharp(inputBuffer).rotate();
 
   // Resize if dimensions provided
   if (width || height) {

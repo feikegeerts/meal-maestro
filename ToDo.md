@@ -27,3 +27,4 @@
 
 16. [ ] SEO optimizations - Footer???
 17. [ ] PWA options to allow installing of the app
+18. [ ] Add a tile view with the recipe photos next to the list view
