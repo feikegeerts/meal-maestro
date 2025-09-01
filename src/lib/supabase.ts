@@ -54,6 +54,7 @@ export const auth = {
         shouldCreateUser: true, // Allow user creation but use magic link template
         data: {
           originUrl: window.location.origin, // Pass origin to webhook for URL generation
+          pageUrl: window.location.href, // Pass full page URL for locale detection
         },
       },
     });
