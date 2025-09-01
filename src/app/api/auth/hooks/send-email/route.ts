@@ -157,6 +157,9 @@ export async function POST(request: NextRequest) {
     // Build confirmation URL
     const confirmationUrl = buildConfirmationUrl(payload);
     
+    // DEBUG: Log the generated confirmation URL
+    console.log('🔍 [URL DEBUG] Generated confirmation URL:', confirmationUrl);
+    
     // Extract Accept-Language header if present
     const acceptLanguageHeader = request.headers.get('accept-language') || undefined;
     
@@ -265,6 +268,16 @@ function buildConfirmationUrl(payload: SupabaseAuthHookPayload): string {
   // Build the callback URL with appropriate parameters
   const url = new URL('/auth/callback', baseUrl);
   
+  // Extract locale from pageUrl if available and add to callback URL
+  const pageUrl = payload.user.user_metadata?.pageUrl as string;
+  let detectedLocale = 'en'; // default fallback
+  if (pageUrl) {
+    const pageUrlMatch = pageUrl.match(/\/([a-z]{2})\/[^\/]*$/);
+    if (pageUrlMatch && (pageUrlMatch[1] === 'nl' || pageUrlMatch[1] === 'en')) {
+      detectedLocale = pageUrlMatch[1];
+    }
+  }
+  
   switch (email_data.email_action_type) {
     case 'magiclink':
       url.searchParams.set('token_hash', email_data.token_hash);
@@ -286,6 +299,9 @@ function buildConfirmationUrl(payload: SupabaseAuthHookPayload): string {
       url.searchParams.set('type', email_data.email_action_type);
       break;
   }
+  
+  // Add locale parameter for proper redirect
+  url.searchParams.set('locale', detectedLocale);
   
   // Don't add redirect_to - it causes infinite loops when pointing to callback URL
   // Magic links will always redirect to the recipes page after successful auth
