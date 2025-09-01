@@ -12,8 +12,46 @@ export default function AuthCallback() {
   const hasHandledAuth = useRef(false)
 
   useEffect(() => {
-    const handleAuthCallback = () => {
-      // Set up auth state change listener
+    const handleAuthCallback = async () => {
+      // Check for token_hash and type parameters (PKCE flow)
+      const urlParams = new URLSearchParams(window.location.search)
+      const tokenHash = urlParams.get('token_hash')
+      const type = urlParams.get('type')
+      
+      if (tokenHash && type) {
+        try {
+          // Verify OTP for PKCE flow
+          const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'email'
+          })
+          
+          if (error) {
+            console.error('OTP verification failed:', error)
+            router.push(`/${routing.defaultLocale}?error=invalid_link`)
+            return
+          }
+          
+          if (data.session) {
+            hasHandledAuth.current = true
+            
+            // Check for redirect_to parameter
+            const redirectTo = urlParams.get('redirect_to')
+            if (redirectTo) {
+              router.push(redirectTo)
+            } else {
+              router.push(`/${routing.defaultLocale}/recipes`)
+            }
+            return
+          }
+        } catch (error) {
+          console.error('Auth callback error:', error)
+          router.push(`/${routing.defaultLocale}?error=auth_error`)
+          return
+        }
+      }
+      
+      // Set up auth state change listener for implicit flow
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
           if (hasHandledAuth.current) return
@@ -33,13 +71,17 @@ export default function AuthCallback() {
         }
       )
 
-      // Cleanup subscription
+      // Return cleanup function
       return () => {
         subscription.unsubscribe()
       }
     }
 
-    const cleanup = handleAuthCallback()
+    // Handle auth callback and store cleanup function
+    let cleanup: (() => void) | undefined
+    handleAuthCallback().then((cleanupFn) => {
+      cleanup = cleanupFn
+    })
     
     // Fallback timeout in case auth state change doesn't fire
     const timeoutId = setTimeout(() => {
