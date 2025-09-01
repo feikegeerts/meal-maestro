@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
     const userEmail = payload.user.email;
     
     // Build confirmation URL
-    const confirmationUrl = buildConfirmationUrl(payload);
+    const confirmationUrl = buildConfirmationUrl(payload, request);
     
     // Extract Accept-Language header if present
     const acceptLanguageHeader = request.headers.get('accept-language') || undefined;
@@ -233,11 +233,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function buildConfirmationUrl(payload: SupabaseAuthHookPayload): string {
+function buildConfirmationUrl(payload: SupabaseAuthHookPayload, request: NextRequest): string {
   const { email_data } = payload;
   
-  // Use our application URL, detecting localhost usage from the original site_url
-  const isLocalRequest = email_data.site_url && email_data.site_url.includes('localhost');
+  // Use our application URL, detecting localhost usage from the Referer header
+  // email_data.site_url is always production URL from Supabase config
+  const refererHeader = request.headers.get('referer');
+  const isLocalRequest = refererHeader && refererHeader.includes('localhost');
   
   const baseUrl = isLocalRequest
     ? 'http://localhost:3000'
