@@ -108,7 +108,55 @@ export class ConfigurationService {
       throw new Error('SUPABASE_WEBHOOK_SECRET environment variable is required');
     }
 
+    // Validate webhook secret format and quality
+    this.validateWebhookSecret(secret);
+
     return { secret };
+  }
+
+  /**
+   * Validates webhook secret format and security properties
+   */
+  private validateWebhookSecret(secret: string): void {
+    // Check minimum length for security
+    if (secret.length < 32) {
+      console.warn('⚠️ Webhook secret is shorter than recommended 32 characters');
+    }
+
+    // Check for obvious weak secrets
+    const weakSecrets = ['test', 'secret', 'password', '123456', 'webhook'];
+    const lowerSecret = secret.toLowerCase();
+    for (const weak of weakSecrets) {
+      if (lowerSecret.includes(weak)) {
+        console.warn(`⚠️ Webhook secret contains potentially weak pattern: ${weak}`);
+        break;
+      }
+    }
+
+    // Check for whitespace issues
+    if (secret !== secret.trim()) {
+      throw new Error('Webhook secret contains leading or trailing whitespace');
+    }
+
+    // Check for basic entropy (should contain mix of characters)
+    const hasLetter = /[a-zA-Z]/.test(secret);
+    const hasNumber = /[0-9]/.test(secret);
+    const hasSymbol = /[^a-zA-Z0-9]/.test(secret);
+
+    if (!hasLetter && !hasNumber) {
+      console.warn('⚠️ Webhook secret lacks alphanumeric characters');
+    }
+
+    // Log secret quality info for debugging (safely)
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction) {
+      console.log(`🔍 [WEBHOOK CONFIG] Secret length: ${secret.length}`);
+      console.log(`🔍 [WEBHOOK CONFIG] Has letters: ${hasLetter}`);
+      console.log(`🔍 [WEBHOOK CONFIG] Has numbers: ${hasNumber}`);
+      console.log(`🔍 [WEBHOOK CONFIG] Has symbols: ${hasSymbol}`);
+      console.log(`🔍 [WEBHOOK CONFIG] First 4 chars: ${secret.substring(0, 4)}`);
+      console.log(`🔍 [WEBHOOK CONFIG] Last 4 chars: ...${secret.substring(secret.length - 4)}`);
+    }
   }
 
   /**

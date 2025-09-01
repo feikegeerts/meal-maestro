@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Mail, Loader2, Check } from 'lucide-react'
+import { Mail, Loader2, Check, Clock } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
+import { rateLimitManager } from '@/lib/rate-limit-utils'
 
 interface MagicLinkFormProps {
   className?: string
@@ -17,12 +18,44 @@ export function MagicLinkForm({ className }: MagicLinkFormProps) {
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
-  const [rateLimited, setRateLimited] = useState(false)
+  const [rateLimitInfo, setRateLimitInfo] = useState({ isRateLimited: false, waitTimeText: '', resetTime: 0 })
   const t = useTranslations('auth')
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   }
+
+  // Check for existing rate limits on component mount
+  useEffect(() => {
+    const currentRateLimit = rateLimitManager.getRemainingWaitTime()
+    if (currentRateLimit.isRateLimited) {
+      setRateLimitInfo({
+        isRateLimited: true,
+        waitTimeText: currentRateLimit.waitTimeText,
+        resetTime: currentRateLimit.resetTime
+      })
+    }
+  }, [])
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (!rateLimitInfo.isRateLimited) return
+
+    const interval = setInterval(() => {
+      const remaining = rateLimitManager.getRemainingWaitTime()
+      if (!remaining.isRateLimited) {
+        setRateLimitInfo({ isRateLimited: false, waitTimeText: '', resetTime: 0 })
+      } else {
+        setRateLimitInfo({
+          isRateLimited: true,
+          waitTimeText: remaining.waitTimeText,
+          resetTime: remaining.resetTime
+        })
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [rateLimitInfo.isRateLimited])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,8 +70,8 @@ export function MagicLinkForm({ className }: MagicLinkFormProps) {
       return
     }
 
-    if (rateLimited) {
-      toast.error(t('pleaseWaitBeforeRetrying'))
+    if (rateLimitInfo.isRateLimited) {
+      toast.error(`${t('pleaseWaitBeforeRetrying')} (${rateLimitInfo.waitTimeText})`)
       return
     }
 
@@ -49,38 +82,45 @@ export function MagicLinkForm({ className }: MagicLinkFormProps) {
       const { error } = await signInWithMagicLink(email.trim())
       
       if (error) {
-        const errorMessage = error.message || ''
+        const rateLimitResult = rateLimitManager.analyzeRateLimit(error)
         
-        if (errorMessage.includes('rate limit') || 
-            errorMessage.includes('60 seconds') || 
-            errorMessage.includes('security purposes') ||
-            errorMessage.includes('after') && errorMessage.includes('seconds')) {
-          toast.error(t('tooManyRequests'))
-          setRateLimited(true)
-          setTimeout(() => setRateLimited(false), 60000)
+        if (rateLimitResult.isRateLimited) {
+          setRateLimitInfo({
+            isRateLimited: true,
+            waitTimeText: rateLimitResult.waitTimeText,
+            resetTime: rateLimitResult.resetTime
+          })
+          toast.error(`${t('tooManyRequests')} Please wait ${rateLimitResult.waitTimeText}.`)
         } else {
           toast.error(error.message || t('failedToSendMagicLink'))
         }
       } else {
+        // Clear any existing rate limit on successful send
+        rateLimitManager.clearRateLimit()
+        setRateLimitInfo({ isRateLimited: false, waitTimeText: '', resetTime: 0 })
         setIsSuccess(true)
         setEmail('')
         toast.success(t('emailSent'))
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('unexpectedError')
-      
-      if (errorMessage.includes('rate limit') || 
-          errorMessage.includes('60 seconds') || 
-          errorMessage.includes('security purposes') ||
-          errorMessage.includes('after') && errorMessage.includes('seconds')) {
-        toast.error(t('tooManyRequests'))
-        setRateLimited(true)
-        setTimeout(() => setRateLimited(false), 60000)
-      } else {
-        toast.error(errorMessage)
-      }
-      
       console.error('Magic link request error:', err)
+      
+      if (err instanceof Error) {
+        const rateLimitResult = rateLimitManager.analyzeRateLimit(err)
+        
+        if (rateLimitResult.isRateLimited) {
+          setRateLimitInfo({
+            isRateLimited: true,
+            waitTimeText: rateLimitResult.waitTimeText,
+            resetTime: rateLimitResult.resetTime
+          })
+          toast.error(`${t('tooManyRequests')} Please wait ${rateLimitResult.waitTimeText}.`)
+        } else {
+          toast.error(err.message)
+        }
+      } else {
+        toast.error(t('unexpectedError'))
+      }
     } finally {
       setIsLoading(false)
     }
@@ -106,6 +146,15 @@ export function MagicLinkForm({ className }: MagicLinkFormProps) {
           onClick={() => {
             setIsSuccess(false)
             setEmail('')
+            // Check if we're still rate limited when going back
+            const currentRateLimit = rateLimitManager.getRemainingWaitTime()
+            if (currentRateLimit.isRateLimited) {
+              setRateLimitInfo({
+                isRateLimited: true,
+                waitTimeText: currentRateLimit.waitTimeText,
+                resetTime: currentRateLimit.resetTime
+              })
+            }
           }}
         >
           {t('sendAnotherEmail')}
@@ -126,7 +175,7 @@ export function MagicLinkForm({ className }: MagicLinkFormProps) {
             onChange={(e) => {
               setEmail(e.target.value)
             }}
-            disabled={isLoading || rateLimited}
+            disabled={isLoading || rateLimitInfo.isRateLimited}
             className="pl-10"
             autoComplete="email"
           />
@@ -135,7 +184,7 @@ export function MagicLinkForm({ className }: MagicLinkFormProps) {
 
       <Button
         type="submit"
-        disabled={isLoading || rateLimited || !email.trim() || !isValidEmail(email)}
+        disabled={isLoading || rateLimitInfo.isRateLimited || !email.trim() || !isValidEmail(email)}
         className="w-full"
       >
         {isLoading ? (
@@ -155,10 +204,15 @@ export function MagicLinkForm({ className }: MagicLinkFormProps) {
         <p>
           {t('magicLinkInfo')}
         </p>
-        {rateLimited && (
-          <p className="text-destructive mt-1">
-            {t('rateLimitMessage')}
-          </p>
+        {rateLimitInfo.isRateLimited && (
+          <div className="text-destructive mt-1 space-y-1">
+            <div className="flex items-center justify-center gap-1">
+              <Clock className="h-3 w-3" />
+              <p className="text-xs">
+                {t('rateLimitMessage')}: {rateLimitInfo.waitTimeText}
+              </p>
+            </div>
+          </div>
         )}
       </div>
     </form>

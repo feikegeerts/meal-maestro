@@ -60,8 +60,8 @@
     "emailSentDescription": "Check your email and click the link to sign in or create your account. The link will expire in 1 hour.",
     "sendAnotherEmail": "Send Another Email",
     "magicLinkInfo": "We'll send you a secure link to sign in or create an account without a password. Links expire after 1 hour.",
-    "tooManyRequests": "Too many requests. Please wait 60 seconds before trying again.",
-    "rateLimitMessage": "Rate limited. Please wait 60 seconds before trying again.",
+    "tooManyRequests": "Too many requests.",
+    "rateLimitMessage": "Rate limited",
     "pleaseWaitBeforeRetrying": "Please wait before requesting another magic link",
     "failedToSendMagicLink": "Failed to send magic link"
   },

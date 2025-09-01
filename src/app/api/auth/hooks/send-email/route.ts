@@ -39,21 +39,54 @@ function verifyStandardWebhook(
   secret: string
 ): boolean {
   try {
-    // Standard Webhooks format: timestamp.payload
+    // TEMPORARY DEBUG LOGGING - Remove after fixing production issue
+    const isProduction = process.env.NODE_ENV === 'production';
+    const debugMode = isProduction; // Enable debug for production diagnosis
+    
+    if (debugMode) {
+      console.log('🔍 [WEBHOOK DEBUG] Starting signature verification');
+      console.log(`🔍 [WEBHOOK DEBUG] Environment: ${process.env.NODE_ENV}/${process.env.VERCEL_ENV}`);
+      console.log(`🔍 [WEBHOOK DEBUG] Webhook ID: ${webhookId}`);
+      console.log(`🔍 [WEBHOOK DEBUG] Webhook Timestamp: ${webhookTimestamp}`);
+      console.log(`🔍 [WEBHOOK DEBUG] Received Signature: ${webhookSignature}`);
+      console.log(`🔍 [WEBHOOK DEBUG] Body length: ${body.length} chars`);
+      console.log(`🔍 [WEBHOOK DEBUG] Secret configured: ${secret ? 'YES' : 'NO'}`);
+      console.log(`🔍 [WEBHOOK DEBUG] Secret length: ${secret.length} chars`);
+      console.log(`🔍 [WEBHOOK DEBUG] Secret prefix: ${secret.substring(0, 4)}...`);
+    }
+    
+    // Standard Webhooks format: webhookId.timestamp.body
     const signedPayload = `${webhookId}.${webhookTimestamp}.${body}`;
+    
+    if (debugMode) {
+      console.log(`🔍 [WEBHOOK DEBUG] Signed payload length: ${signedPayload.length} chars`);
+      console.log(`🔍 [WEBHOOK DEBUG] Signed payload prefix: ${signedPayload.substring(0, 100)}...`);
+    }
     
     // Generate expected signature using HMAC-SHA256
     const expectedSignature = createHmac('sha256', secret)
       .update(signedPayload, 'utf8')
       .digest('base64');
     
+    if (debugMode) {
+      console.log(`🔍 [WEBHOOK DEBUG] Expected signature: ${expectedSignature}`);
+    }
+    
     // Extract signature from v1,base64signature format
     if (!webhookSignature.startsWith('v1,')) {
-      console.error('Invalid signature format - must start with v1,');
+      console.error('❌ [WEBHOOK DEBUG] Invalid signature format - must start with v1,');
+      if (debugMode) {
+        console.log(`🔍 [WEBHOOK DEBUG] Signature format check failed. Received: ${webhookSignature.substring(0, 10)}...`);
+      }
       return false;
     }
     
     const signature = webhookSignature.substring(3); // Remove 'v1,'
+    
+    if (debugMode) {
+      console.log(`🔍 [WEBHOOK DEBUG] Extracted signature: ${signature}`);
+      console.log(`🔍 [WEBHOOK DEBUG] Signatures match: ${signature === expectedSignature ? 'YES' : 'NO'}`);
+    }
     
     // Use timing-safe comparison to prevent timing attacks
     const sigBuffer = Buffer.from(signature, 'base64');
@@ -61,13 +94,19 @@ function verifyStandardWebhook(
     
     // Ensure buffers are same length before comparison
     if (sigBuffer.length !== expectedBuffer.length) {
-      console.error('Signature length mismatch');
+      console.error(`❌ [WEBHOOK DEBUG] Signature length mismatch: received ${sigBuffer.length}, expected ${expectedBuffer.length}`);
       return false;
     }
     
-    return timingSafeEqual(sigBuffer, expectedBuffer);
+    const isValid = timingSafeEqual(sigBuffer, expectedBuffer);
+    
+    if (debugMode) {
+      console.log(`🔍 [WEBHOOK DEBUG] Timing-safe comparison result: ${isValid ? 'VALID' : 'INVALID'}`);
+    }
+    
+    return isValid;
   } catch (error) {
-    console.error('Standard webhook verification error:', error);
+    console.error('❌ [WEBHOOK DEBUG] Standard webhook verification error:', error);
     return false;
   }
 }
@@ -89,13 +128,29 @@ export async function POST(request: NextRequest) {
   // Log security-relevant information
   console.log(`🔐 Auth hook request [${environment}/${vercelEnv}] from IP: ${clientIP}, User-Agent: ${userAgent}`);
   
+  // TEMPORARY DEBUG LOGGING - Remove after fixing production issue
+  const debugMode = environment === 'production';
+  
   let webhookSecret: string;
   try {
+    if (debugMode) {
+      console.log('🔍 [WEBHOOK DEBUG] Loading webhook configuration...');
+      console.log(`🔍 [WEBHOOK DEBUG] SUPABASE_WEBHOOK_SECRET exists: ${!!process.env.SUPABASE_WEBHOOK_SECRET}`);
+    }
+    
     const configService = ConfigurationService.getInstance();
     const webhookConfig = configService.getWebhookConfig();
     webhookSecret = webhookConfig.secret;
+    
+    if (debugMode) {
+      console.log(`🔍 [WEBHOOK DEBUG] Webhook secret loaded successfully, length: ${webhookSecret.length}`);
+      console.log(`🔍 [WEBHOOK DEBUG] Webhook secret starts with: ${webhookSecret.substring(0, 4)}...`);
+    }
   } catch (error) {
     console.error('❌ Webhook configuration error:', error);
+    if (debugMode) {
+      console.log('🔍 [WEBHOOK DEBUG] Available env vars:', Object.keys(process.env).filter(key => key.includes('WEBHOOK')));
+    }
     return NextResponse.json(
       { error: 'Webhook configuration error' },
       { status: 500 }
