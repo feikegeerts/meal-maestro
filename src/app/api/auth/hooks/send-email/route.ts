@@ -262,10 +262,8 @@ function buildConfirmationUrl(payload: SupabaseAuthHookPayload): string {
       break;
   }
   
-  // Add redirect_to if provided
-  if (email_data.redirect_to) {
-    url.searchParams.set('redirect_to', email_data.redirect_to);
-  }
+  // Don't add redirect_to - it causes infinite loops when pointing to callback URL
+  // Magic links will always redirect to the recipes page after successful auth
   
   return url.toString();
 }
