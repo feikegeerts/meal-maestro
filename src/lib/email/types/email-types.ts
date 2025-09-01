@@ -3,6 +3,7 @@ export interface BaseEmailData {
   locale: string;
   databaseLanguagePreference?: string;
   userMetadata?: Record<string, unknown>;
+  pageLocale?: string;
   acceptLanguageHeader?: string;
 }
 

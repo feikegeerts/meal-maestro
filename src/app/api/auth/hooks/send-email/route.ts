@@ -160,8 +160,19 @@ export async function POST(request: NextRequest) {
     // Extract Accept-Language header if present
     const acceptLanguageHeader = request.headers.get('accept-language') || undefined;
     
+    // Extract page locale from Referer header (e.g., /nl/login -> 'nl', /en/login -> 'en')
+    const refererHeader = request.headers.get('referer');
+    let pageLocale: string | undefined;
+    if (refererHeader) {
+      const refererMatch = refererHeader.match(/\/([a-z]{2})\/[^\/]*$/);
+      if (refererMatch && (refererMatch[1] === 'nl' || refererMatch[1] === 'en')) {
+        pageLocale = refererMatch[1];
+      }
+    }
+    
     const languageContext = {
       userMetadata: payload.user.user_metadata,
+      pageLocale,
       acceptLanguageHeader
     };
 
