@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
     const userEmail = payload.user.email;
     
     // Build confirmation URL
-    const confirmationUrl = buildConfirmationUrl(payload, request);
+    const confirmationUrl = buildConfirmationUrl(payload);
     
     // Extract Accept-Language header if present
     const acceptLanguageHeader = request.headers.get('accept-language') || undefined;
@@ -233,7 +233,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function buildConfirmationUrl(payload: SupabaseAuthHookPayload, request: NextRequest): string {
+function buildConfirmationUrl(payload: SupabaseAuthHookPayload): string {
   const { email_data } = payload;
   
   // Use originUrl from user metadata if available, otherwise fallback to environment detection
@@ -241,6 +241,7 @@ function buildConfirmationUrl(payload: SupabaseAuthHookPayload, request: NextReq
   const isLocalRequest = originUrl?.includes('localhost');
   
   // DEBUG: Log localhost detection for troubleshooting
+  console.log('🔍 [LOCALHOST DEBUG] Full user metadata:', JSON.stringify(payload.user.user_metadata, null, 2));
   console.log('🔍 [LOCALHOST DEBUG] Origin URL from metadata:', originUrl);
   console.log('🔍 [LOCALHOST DEBUG] Is local request:', isLocalRequest);
   
