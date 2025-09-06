@@ -22,8 +22,14 @@ export function InstructionsSection({
   const autoResizeTextarea = useCallback(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = "auto";
-      textarea.style.height = textarea.scrollHeight + "px";
+      const currentHeight = textarea.clientHeight;
+      const scrollHeight = textarea.scrollHeight;
+      
+      if (scrollHeight > currentHeight) {
+        textarea.style.height = scrollHeight + "px";
+      } else if (scrollHeight < currentHeight) {
+        textarea.style.height = Math.max(160, scrollHeight) + "px";
+      }
     }
   }, []);
 
@@ -47,7 +53,7 @@ export function InstructionsSection({
             value={description}
             onChange={(e) => handleDescriptionChange(e.target.value)}
             placeholder={t("descriptionPlaceholder")}
-            className="min-h-[160px] resize-none overflow-hidden text-sm sm:text-base"
+            className="min-h-[160px] max-h-[80vh] resize-none overflow-y-auto text-sm sm:text-base"
             disabled={loading}
           />
         </div>

@@ -2,8 +2,6 @@
 
 ## User Experience
 
-1. [ ] Printfunctie
-1. [ ] Input text area bij recept wijzigen. Typen werkt niet goed want de cursor verspringt steeds uit beeld.
 1. [ ] Drag en drop ingrediënten om te reorderen
 1. [ ] Input amount is niet restricted tot alleen ints. Mogen nu ook chars in dat is fout.
 1. [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
