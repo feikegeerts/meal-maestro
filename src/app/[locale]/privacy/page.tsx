@@ -116,7 +116,7 @@ export default function PrivacyPolicyPage() {
 
             <h3 className="text-xl font-semibold mb-3 mt-6">{t("sections.thirdPartyServices.otherServices.title")}</h3>
             <ul>
-              {t.raw("sections.thirdPartyServices.otherServices.services").map((service: any, index: number) => (
+              {t.raw("sections.thirdPartyServices.otherServices.services").map((service: { name: string; purpose: string }, index: number) => (
                 <li key={index}><strong>{service.name}:</strong> {service.purpose}</li>
               ))}
             </ul>
@@ -136,7 +136,7 @@ export default function PrivacyPolicyPage() {
           <section id="data-retention" className="mb-8">
             <h2 className="text-2xl font-bold text-foreground mb-4">5. {t("sections.dataRetention.title")}</h2>
             <ul>
-              {t.raw("sections.dataRetention.policies").map((policy: any, index: number) => (
+              {t.raw("sections.dataRetention.policies").map((policy: { type: string; retention: string }, index: number) => (
                 <li key={index}><strong>{policy.type}:</strong> {policy.retention}</li>
               ))}
             </ul>
@@ -147,7 +147,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-2xl font-bold text-foreground mb-4">6. {t("sections.yourRights.title")}</h2>
             <p>{t("sections.yourRights.intro")}</p>
             <ul>
-              {t.raw("sections.yourRights.rights").map((right: any, index: number) => (
+              {t.raw("sections.yourRights.rights").map((right: { name: string; description: string }, index: number) => (
                 <li key={index}><strong>{right.name}:</strong> {right.description}</li>
               ))}
             </ul>
@@ -158,7 +158,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-2xl font-bold text-foreground mb-4">7. {t("sections.cookies.title")}</h2>
             <p>{t("sections.cookies.intro")}</p>
             <ul>
-              {t.raw("sections.cookies.uses").map((use: any, index: number) => (
+              {t.raw("sections.cookies.uses").map((use: { name: string; purpose: string }, index: number) => (
                 <li key={index}><strong>{use.name}:</strong> {use.purpose}</li>
               ))}
             </ul>
