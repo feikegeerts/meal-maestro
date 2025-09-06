@@ -97,6 +97,7 @@
     "editDetail": "Edit",
     "deleting": "Deleting...",
     "deleteDetail": "Delete",
+    "printRecipe": "Print Recipe",
     "confirmDelete": "Are you sure you want to delete this recipe?",
     "failedToDelete": "Failed to delete recipe",
     "ingredients": "Ingredients",

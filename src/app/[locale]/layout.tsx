@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./print.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { RecipeProvider } from "@/contexts/recipe-context";
 import { MainNav } from "@/components/navigation/main-nav";

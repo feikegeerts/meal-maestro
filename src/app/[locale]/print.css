@@ -1,0 +1,201 @@
+/* Print styles for recipe pages */
+@media print {
+  /* Hide non-essential elements */
+  nav,
+  .print-hide,
+  button:not(.print-show),
+  .recipe-image-upload,
+  header,
+  footer {
+    display: none !important;
+  }
+  
+  /* Page setup */
+  @page {
+    margin: 0.5in;
+    size: letter;
+  }
+  
+  /* Clean layout for print */
+  body {
+    font-size: 9pt;
+    line-height: 1.2;
+    color: black;
+    background: white;
+  }
+  
+  /* Hide all card styling */
+  .card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  /* Remove card content padding */
+  .card > * {
+    padding: 0 !important;
+  }
+  
+  /* Compact header section */
+  .recipe-title, h1 {
+    font-size: 14pt;
+    font-weight: bold;
+    margin-bottom: 0.08in;
+    page-break-after: avoid;
+  }
+  
+  /* Compact hero image area */
+  .lg\:col-span-3 {
+    grid-column: span 2 !important;
+  }
+  
+  /* Adjust hero content width */
+  .lg\:col-span-2 {
+    grid-column: span 3 !important;
+  }
+  
+  /* Make recipe image compact for print */
+  .recipe-image-upload img {
+    max-height: 2in !important;
+    width: auto !important;
+    object-fit: contain !important;
+  }
+  
+  /* Hide image upload controls but show the actual image */
+  .recipe-image-upload button,
+  .recipe-image-upload .upload-controls {
+    display: none !important;
+  }
+  
+  /* Compact metadata and badges */
+  .badge, .text-muted-foreground {
+    font-size: 7pt;
+    margin: 0.02in;
+  }
+  
+  /* Hide action buttons and excessive metadata */
+  .flex.items-center.gap-2.flex-wrap.mt-6:has(button) {
+    display: none !important;
+  }
+  
+  /* Compact tags section */
+  .flex.flex-wrap.gap-2.mt-6:has(.badge) {
+    margin: 0.05in 0 !important;
+  }
+  
+  /* Hide created/last eaten metadata in print */
+  .grid.grid-cols-1.gap-3.text-sm.mt-8 {
+    display: none !important;
+  }
+  
+  /* Reorganize main content into compact layout */
+  .grid.grid-cols-1.lg\:grid-cols-7.gap-6 {
+    display: grid !important;
+    grid-template-columns: 2fr 3fr !important;
+    gap: 0.15in !important;
+    margin-top: 0.1in !important;
+  }
+  
+  /* Compact ingredients section */
+  .lg\:col-span-2.bg-primary\/10 {
+    background: transparent !important;
+    border: 1px solid #666 !important;
+    padding: 0.08in !important;
+    margin: 0 !important;
+    grid-column: 1 !important;
+  }
+  
+  /* Instructions take remaining space */
+  .lg\:col-span-5 {
+    grid-column: 2 !important;
+    margin: 0 !important;
+  }
+  
+  .ingredients-section h2, h2 {
+    font-size: 10pt;
+    font-weight: bold;
+    margin: 0 0 0.04in 0 !important;
+  }
+  
+  /* Ultra-compact ingredient grid */
+  .grid-cols-12 {
+    gap: 0.03in !important;
+  }
+  
+  .grid-cols-12 .text-sm {
+    font-size: 8pt;
+    line-height: 1.1;
+  }
+  
+  /* Hide serving size selector in print */
+  .mb-4:has(.serving-size-selector) {
+    display: none !important;
+  }
+  
+  /* Hide step circles in print - use numbered list instead */
+  .step-circle, .w-9.h-9 {
+    display: none !important;
+  }
+  
+  /* Compact step text */
+  .prose p, .text-base {
+    font-size: 8pt;
+    line-height: 1.2;
+    margin: 0.02in 0;
+  }
+  
+  /* Minimize all spacing */
+  .space-y-5 > * + *, 
+  .space-y-6 > * + *,
+  .gap-6,
+  .gap-4 {
+    margin-top: 0.05in !important;
+    gap: 0.05in !important;
+  }
+  
+  .mb-4, .mb-5, .mb-6, .mb-8,
+  .mt-4, .mt-5, .mt-6, .mt-8,
+  .py-6, .py-8,
+  .p-4, .px-8, .py-6, .px-12, .py-8 {
+    margin: 0.02in 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Instructions section compact */
+  .prose.prose-sm {
+    margin: 0 !important;
+  }
+  
+  .space-y-5 {
+    gap: 0.04in;
+  }
+  
+  /* Convert step layout to simple numbered list */
+  .flex.items-center.gap-4 {
+    display: list-item !important;
+    list-style-type: decimal !important;
+    list-style-position: outside !important;
+    margin: 0.03in 0 0.03in 0.2in !important;
+    gap: 0 !important;
+  }
+  
+  /* Instructions container as ordered list */
+  .space-y-5:has(.flex.items-center.gap-4) {
+    display: block !important;
+    counter-reset: step-counter !important;
+  }
+  
+  /* Remove all shadows, borders, and backgrounds */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  /* Make container full width */
+  .container, .max-w-4xl {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+}

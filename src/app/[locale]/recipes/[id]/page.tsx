@@ -26,6 +26,7 @@ import {
   CalendarDays,
   Tag,
   Plus,
+  Printer,
 } from "lucide-react";
 import { processInstructions } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -342,22 +343,27 @@ export default function RecipeDetailPage() {
                 </Button>
 
                 <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={!!actionLoading}
+                  onClick={() => window.print()}
+                  title={t("printRecipe")}
+                >
+                  <Printer className="h-4 w-4" />
+                </Button>
+
+                <Button
                   onClick={handleDelete}
                   disabled={!!actionLoading}
                   variant="ghost"
-                  size="default"
+                  size="icon"
                   className="text-destructive hover:text-destructive"
+                  title={t("deleteDetail")}
                 >
                   {actionLoading === "delete" ? (
-                    <>
-                      <span className="animate-spin mr-2">⏳</span>
-                      {t("deleting")}
-                    </>
+                    <span className="animate-spin">⏳</span>
                   ) : (
-                    <>
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      {t("deleteDetail")}
-                    </>
+                    <Trash2 className="h-4 w-4" />
                   )}
                 </Button>
               </div>
