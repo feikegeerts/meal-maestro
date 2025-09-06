@@ -3,7 +3,6 @@
 ## User Experience
 
 1. [ ] Drag en drop ingrediënten om te reorderen
-1. [ ] Input amount is niet restricted tot alleen ints. Mogen nu ook chars in dat is fout.
 1. [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
 1. [ ] Op mobiel staan de sort column buttons over elkaar omdat de columns te smal zijn.
 1. [ ] Het acties dropdown menu op de recipes list de knoppen erin zijn niet goed aligned.

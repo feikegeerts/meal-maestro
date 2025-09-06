@@ -357,33 +357,34 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
               <DropdownMenuItem
                 onClick={() => navigator.clipboard.writeText(recipe.id)}
+                className="justify-start"
               >
                 {t("copyId")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href={`/recipes/${recipe.id}`}>
+                <Link href={`/recipes/${recipe.id}`} className="flex items-center justify-start">
                   <Eye className="mr-2 h-4 w-4" />
                   {t("viewDetails")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={`/recipes/${recipe.id}/edit`}>
+                <Link href={`/recipes/${recipe.id}/edit`} className="flex items-center justify-start">
                   <Edit className="mr-2 h-4 w-4" />
                   {t("editRecipe")}
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleMarkAsEaten(recipe)}>
+              <DropdownMenuItem onClick={() => handleMarkAsEaten(recipe)} className="justify-start">
                 <Utensils className="mr-2 h-4 w-4" />
                 {t("markAsEaten")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-destructive"
+                className="text-destructive justify-start"
                 onClick={() => handleDeleteRecipe(recipe)}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
