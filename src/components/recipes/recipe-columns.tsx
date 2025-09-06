@@ -277,13 +277,15 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
       size: 120,
       header: ({ column }) => {
         return (
-          <div className="flex items-center">
-            <span className="font-semibold">{t("lastEaten")}</span>
+          <div className="flex items-center max-w-[100px] sm:max-w-none">
+            <span className="font-semibold truncate" title={t("lastEaten")}>
+              {t("lastEaten")}
+            </span>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              className="h-auto w-auto p-1 ml-1"
+              className="h-auto w-auto p-1 ml-1 flex-shrink-0"
             >
               <ArrowUpDown className="h-3 w-3" />
             </Button>
@@ -314,13 +316,15 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
       size: 110,
       header: ({ column }) => {
         return (
-          <div className="flex items-center">
-            <span className="font-semibold">{t("created")}</span>
+          <div className="flex items-center max-w-[90px] sm:max-w-none">
+            <span className="font-semibold truncate" title={t("created")}>
+              {t("created")}
+            </span>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              className="h-auto w-auto p-1 ml-1"
+              className="h-auto w-auto p-1 ml-1 flex-shrink-0"
             >
               <ArrowUpDown className="h-3 w-3" />
             </Button>
