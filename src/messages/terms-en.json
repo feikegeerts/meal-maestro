@@ -1,0 +1,225 @@
+{
+  "navigation": {
+    "backToMealMaestro": "Back to Meal Maestro"
+  },
+  "title": "Terms of Service",
+  "lastUpdated": "Last updated:",
+  "tableOfContents": {
+    "title": "Table of Contents",
+    "acceptance": "Acceptance of Terms",
+    "serviceDescription": "Service Description",
+    "userAccounts": "User Accounts",
+    "acceptableUse": "Acceptable Use Policy",
+    "contentOwnership": "Content and Intellectual Property",
+    "aiFeatures": "AI-Powered Features",
+    "serviceAvailability": "Service Availability",
+    "costTransparency": "Cost Transparency",
+    "limitationOfLiability": "Limitation of Liability",
+    "termination": "Termination",
+    "changesToTerms": "Changes to Terms",
+    "governingLaw": "Governing Law",
+    "contact": "Contact Information"
+  },
+  "sections": {
+    "acceptance": {
+      "title": "Acceptance of Terms",
+      "content": "By accessing or using Meal Maestro, you agree to be bound by these Terms of Service and our Privacy Policy. If you disagree with any part of these terms, you may not access or use our service.\n\nThese terms apply to all visitors, users, and others who access or use the service."
+    },
+    "serviceDescription": {
+      "title": "Service Description",
+      "intro": "Meal Maestro is an AI-powered recipe management system that allows users to:",
+      "features": [
+        "Store, organize, and manage personal recipe collections",
+        "Use AI-powered features for recipe processing and suggestions",
+        "Search and filter recipes using various criteria",
+        "Track costs associated with AI operations",
+        "Access recipes across multiple devices"
+      ],
+      "disclaimer": "The service is provided \"as is\" and we reserve the right to modify or discontinue any aspect of the service at any time."
+    },
+    "userAccounts": {
+      "title": "User Accounts",
+      "accountCreation": {
+        "title": "Account Creation",
+        "intro": "To use Meal Maestro, you must create an account using Google OAuth. You agree to:",
+        "requirements": [
+          "Provide accurate and complete information",
+          "Maintain the security of your account",
+          "Promptly update account information if it changes",
+          "Accept responsibility for all activities under your account"
+        ]
+      },
+      "accountResponsibilities": {
+        "title": "Account Responsibilities",
+        "intro": "You are responsible for:",
+        "responsibilities": [
+          "Safeguarding your Google account credentials",
+          "All content and activity associated with your account",
+          "Notifying us immediately of any unauthorized use",
+          "Ensuring your account information remains current"
+        ]
+      }
+    },
+    "acceptableUse": {
+      "title": "Acceptable Use Policy",
+      "permittedUse": {
+        "title": "Permitted Use",
+        "content": "You may use Meal Maestro for personal recipe management and related culinary activities."
+      },
+      "prohibitedActivities": {
+        "title": "Prohibited Activities",
+        "intro": "You may not:",
+        "activities": [
+          "Use the service for any illegal or unauthorized purpose",
+          "Share copyrighted recipes without proper attribution",
+          "Attempt to reverse engineer, hack, or compromise the service",
+          "Upload malicious code, viruses, or harmful content",
+          "Use the service to spam, harass, or abuse others",
+          "Attempt to circumvent usage limits or cost controls",
+          "Resell, redistribute, or commercialize the service without permission",
+          "Use automated tools to scrape or extract data",
+          "Impersonate others or create fake accounts"
+        ]
+      }
+    },
+    "contentOwnership": {
+      "title": "Content and Intellectual Property",
+      "yourContent": {
+        "title": "Your Content",
+        "intro": "You retain ownership of all recipes and content you upload to Meal Maestro. By using our service, you grant us a limited license to:",
+        "licenses": [
+          "Store and process your recipes for service functionality",
+          "Use AI services to enhance your recipe management experience",
+          "Backup and maintain your data for service reliability"
+        ]
+      },
+      "ourIntellectualProperty": {
+        "title": "Our Intellectual Property",
+        "intro": "The Meal Maestro service, including its design, features, and underlying technology, is owned by us and protected by intellectual property laws. You may not:",
+        "restrictions": [
+          "Copy, modify, or distribute our software or design elements",
+          "Use our trademarks or branding without permission",
+          "Create derivative works based on our service"
+        ]
+      },
+      "thirdPartyContent": {
+        "title": "Third-Party Content",
+        "content": "When sharing recipes from other sources, you are responsible for respecting copyright and attribution requirements."
+      }
+    },
+    "aiFeatures": {
+      "title": "AI-Powered Features",
+      "aiProcessing": {
+        "title": "AI Processing",
+        "intro": "Our AI features use OpenAI's services to process your recipe-related requests. You understand that:",
+        "understanding": [
+          "AI-generated content may not always be accurate or suitable",
+          "You should review and verify all AI suggestions before use",
+          "AI processing incurs costs that are tracked and displayed transparently",
+          "AI features may be subject to usage limits or availability constraints"
+        ]
+      },
+      "aiLimitations": {
+        "title": "AI Limitations",
+        "intro": "AI-powered features are provided for convenience and enhancement. We do not guarantee:",
+        "noGuarantees": [
+          "Accuracy of AI-generated recipe suggestions or modifications",
+          "Safety or suitability of AI-recommended ingredients or methods",
+          "Nutritional accuracy of AI-processed information",
+          "Continuous availability of AI features"
+        ]
+      }
+    },
+    "serviceAvailability": {
+      "title": "Service Availability",
+      "intro": "We strive to maintain high service availability, but we do not guarantee uninterrupted access. The service may be temporarily unavailable due to:",
+      "causes": [
+        "Scheduled maintenance and updates",
+        "Technical issues or system failures",
+        "Third-party service dependencies (Google, Supabase, OpenAI, Vercel)",
+        "Emergency security measures"
+      ],
+      "notice": "We will make reasonable efforts to provide advance notice of scheduled maintenance."
+    },
+    "costTransparency": {
+      "title": "Cost Transparency",
+      "intro": "Meal Maestro operates on a transparent cost model:",
+      "model": [
+        "The core service is free to use",
+        "AI features incur costs based on OpenAI usage",
+        "All AI-related costs are tracked and displayed to users",
+        "No hidden fees or subscription charges",
+        "Users can monitor their usage and associated costs in real-time"
+      ],
+      "disclaimer": "We reserve the right to implement usage limits or request contributions to cover operational costs if necessary."
+    },
+    "limitationOfLiability": {
+      "title": "Limitation of Liability",
+      "intro": "To the maximum extent permitted by law, Meal Maestro and its operators shall not be liable for:",
+      "limitations": [
+        "Any indirect, incidental, special, or consequential damages",
+        "Loss of data, recipes, or content",
+        "Service interruptions or downtime",
+        "Errors in AI-generated content or suggestions",
+        "Any harm resulting from following recipe suggestions or modifications",
+        "Costs incurred due to service usage"
+      ],
+      "totalLiability": "Our total liability for any claim related to the service is limited to the amount you have paid us in the past 12 months (which may be $0 for free users)."
+    },
+    "termination": {
+      "title": "Termination",
+      "terminationByYou": {
+        "title": "Termination by You",
+        "content": "You may terminate your account at any time by deleting your account through the service interface or contacting us directly."
+      },
+      "terminationByUs": {
+        "title": "Termination by Us",
+        "intro": "We may suspend or terminate your account if you:",
+        "reasons": [
+          "Violate these Terms of Service",
+          "Engage in prohibited activities",
+          "Abuse the service or its resources",
+          "Provide false information"
+        ]
+      },
+      "effectOfTermination": {
+        "title": "Effect of Termination",
+        "intro": "Upon termination:",
+        "effects": [
+          "Your access to the service will cease immediately",
+          "Your account data and recipes may be deleted",
+          "These terms will remain in effect for applicable provisions",
+          "You remain responsible for any costs incurred before termination"
+        ]
+      }
+    },
+    "changesToTerms": {
+      "title": "Changes to Terms",
+      "intro": "We may update these Terms of Service to reflect changes in our service or legal requirements. When we make changes:",
+      "process": [
+        "We will update the \"Last updated\" date",
+        "Significant changes will be communicated through the service",
+        "Continued use of the service constitutes acceptance of updated terms",
+        "If you disagree with changes, you may terminate your account"
+      ]
+    },
+    "governingLaw": {
+      "title": "Governing Law",
+      "intro": "These Terms of Service are governed by and construed in accordance with applicable laws. Any disputes arising from these terms or your use of the service will be resolved through:",
+      "resolution": [
+        "Good faith negotiation",
+        "Mediation if negotiation fails",
+        "Legal proceedings in appropriate jurisdiction if necessary"
+      ]
+    },
+    "contact": {
+      "title": "Contact Information",
+      "intro": "If you have questions about these Terms of Service, contact us:",
+      "email": "Email:",
+      "emailAddress": "info@meal-maestro.com"
+    }
+  },
+  "footer": {
+    "effective": "These terms are effective as of {date} and apply to all users of Meal Maestro."
+  }
+}

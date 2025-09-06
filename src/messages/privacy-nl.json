@@ -1,0 +1,222 @@
+{
+  "navigation": {
+    "backToMealMaestro": "Terug naar Meal Maestro"
+  },
+  "title": "Privacybeleid",
+  "lastUpdated": "Laatst bijgewerkt:",
+  "tableOfContents": {
+    "title": "Inhoudsopgave",
+    "informationWeCollect": "Informatie Die We Verzamelen",
+    "howWeUseInformation": "Hoe We Je Informatie Gebruiken",
+    "thirdPartyServices": "Services van Derden",
+    "dataSecurity": "Databeveiliging",
+    "dataRetention": "Databehoud",
+    "yourRights": "Jouw Rechten",
+    "cookies": "Cookies en Lokale Opslag",
+    "changes": "Wijzigingen aan Dit Beleid",
+    "contact": "Contact"
+  },
+  "sections": {
+    "informationWeCollect": {
+      "title": "Informatie Die We Verzamelen",
+      "accountInformation": {
+        "title": "Accountinformatie",
+        "intro": "Wanneer je een account aanmaakt via Google OAuth, verzamelen we:",
+        "data": [
+          "Je Google-emailadres",
+          "Je Google-profielnaam",
+          "Je Google-profielfoto (indien beschikbaar)",
+          "Unieke account-identificatoren voor authenticatie"
+        ]
+      },
+      "recipeData": {
+        "title": "Receptdata",
+        "intro": "Wanneer je onze receptbeheerfuncties gebruikt, slaan we op:",
+        "data": [
+          "Receptinhoud die je aanmaakt of importeert",
+          "Receptcategorieën en tags die je toewijst",
+          "Je receptzoek- en filtervoorkeuren",
+          "Receptwijzigingsgeschiedenis"
+        ]
+      },
+      "usageInformation": {
+        "title": "Gebruiksinformatie",
+        "intro": "We verzamelen automatisch:",
+        "data": [
+          "AI-interactielogs (prompts en antwoorden voor kostenbeheer)",
+          "Functiegebruik-analytics via Vercel Analytics",
+          "Prestatiestatistieken via Vercel Speed Insights",
+          "Foutenlogboeken voor debugging en serviceverbetering"
+        ]
+      }
+    },
+    "howWeUseInformation": {
+      "title": "Hoe We Je Informatie Gebruiken",
+      "intro": "We gebruiken je informatie om:",
+      "uses": [
+        "De Meal Maestro service te leveren en onderhouden",
+        "Je account te authenticeren en login-sessies te onderhouden",
+        "Je persoonlijke receptencollectie op te slaan en beheren",
+        "AI-aangedreven receptbewerkingen te verwerken met OpenAI",
+        "API-gebruikskosten bij te houden en kostentransparantie te bieden",
+        "Onze service te verbeteren door analytics en prestatiemonitoring",
+        "Essentiële servicecommunicatie te versturen (als e-mailfuncties zijn ingeschakeld)",
+        "Te voldoen aan wettelijke verplichtingen en misbruik te voorkomen"
+      ]
+    },
+    "thirdPartyServices": {
+      "title": "Services van Derden",
+      "googleOAuth": {
+        "title": "Google OAuth",
+        "content": "We gebruiken Google OAuth voor authenticatie. Google's privacybeleid is van toepassing op data die wordt verzameld tijdens het authenticatieproces. We vragen alleen toegang tot basisprofielinformatie (email, naam, profielfoto)."
+      },
+      "supabase": {
+        "title": "Supabase (Database & Auth)",
+        "content": "Je receptdata en accountinformatie worden veilig opgeslagen in Supabase's cloud database-infrastructuur. Supabase opereert onder hun privacybeleid en onderhoudt SOC 2-compliance."
+      },
+      "openai": {
+        "title": "OpenAI",
+        "intro": "Wanneer je AI-functies gebruikt, worden je receptgerelateerde prompts naar OpenAI gestuurd voor verwerking. We:",
+        "practices": [
+          "Sturen alleen receptgerelateerde inhoud, nooit persoonlijke informatie",
+          "Slaan geen gesprekken op op OpenAI's servers",
+          "Houden gebruik bij voor kostenmonitoring en transparantie",
+          "OpenAI's datagebruiksbeleid is van toepassing op deze interacties"
+        ]
+      },
+      "vercel": {
+        "title": "Vercel (Hosting & Analytics)",
+        "intro": "Onze applicatie wordt gehost op Vercel, wat biedt:",
+        "services": [
+          "Webanalytics (anonieme gebruiksstatistieken)",
+          "Prestatiemonitoring (Core Web Vitals)",
+          "Foutbeheer en logging"
+        ]
+      },
+      "otherServices": {
+        "title": "Andere Services",
+        "services": [
+          {
+            "name": "CloudFlare",
+            "purpose": "DNS en beveiligingsservices"
+          },
+          {
+            "name": "TransIP",
+            "purpose": "Domeinregistratie"
+          },
+          {
+            "name": "Resend",
+            "purpose": "E-mailservice (wanneer e-mailfuncties actief zijn)"
+          }
+        ]
+      }
+    },
+    "dataSecurity": {
+      "title": "Databeveiliging",
+      "intro": "We implementeren passende beveiligingsmaatregelen om je informatie te beschermen:",
+      "measures": [
+        "Alle data wordt verzonden via HTTPS-versleuteling",
+        "Database-toegang is beveiligd met Row Level Security (RLS) beleid",
+        "Authenticatie wordt afgehandeld via veilige OAuth-flows",
+        "API-sleutels en geheimen worden veilig opgeslagen en regelmatig geroteerd",
+        "Toegang tot gebruikersdata is beperkt tot essentiële servicebewerkingen"
+      ],
+      "disclaimer": "Echter, geen internettransmissie of elektronische opslagmethode is 100% veilig. We kunnen geen absolute beveiliging van je informatie garanderen."
+    },
+    "dataRetention": {
+      "title": "Databehoud",
+      "policies": [
+        {
+          "type": "Accountdata",
+          "retention": "Behouden zolang je account actief is"
+        },
+        {
+          "type": "Receptdata",
+          "retention": "Behouden totdat je individuele recepten of je account verwijdert"
+        },
+        {
+          "type": "Gebruikslogs",
+          "retention": "Behouden tot 90 dagen voor kostenbeheer en analytics"
+        },
+        {
+          "type": "Foutenlogs",
+          "retention": "Behouden tot 30 dagen voor debuggingdoeleinden"
+        }
+      ],
+      "accountDeletion": "Wanneer je je account verwijdert, verwijderen we je persoonlijke data en recepten. Gebruiks- en kostenbeheerdata kunnen in geanonimiseerde vorm behouden blijven voor operationele doeleinden."
+    },
+    "yourRights": {
+      "title": "Jouw Rechten",
+      "intro": "Je hebt het recht op:",
+      "rights": [
+        {
+          "name": "Toegang",
+          "description": "Alle persoonlijke data bekijken die we over je hebben"
+        },
+        {
+          "name": "Correctie",
+          "description": "Onjuiste informatie bijwerken of corrigeren"
+        },
+        {
+          "name": "Verwijdering",
+          "description": "Verwijdering van je account en persoonlijke data aanvragen"
+        },
+        {
+          "name": "Portabiliteit",
+          "description": "Je receptdata exporteren in een standaardformaat"
+        },
+        {
+          "name": "Beperking",
+          "description": "Beperken hoe we je informatie verwerken"
+        },
+        {
+          "name": "Bezwaar",
+          "description": "Bezwaar maken tegen bepaalde typen verwerking"
+        }
+      ],
+      "contact": "Om deze rechten uit te oefenen, neem contact met ons op via de onderstaande informatie. We reageren binnen 30 dagen."
+    },
+    "cookies": {
+      "title": "Cookies en Lokale Opslag",
+      "intro": "We gebruiken cookies en lokale opslag voor:",
+      "uses": [
+        {
+          "name": "Authenticatie",
+          "purpose": "Je login-sessie onderhouden"
+        },
+        {
+          "name": "Voorkeuren",
+          "purpose": "Je thema- en taalvoorkeuren opslaan"
+        },
+        {
+          "name": "Analytics",
+          "purpose": "Anonieme gebruiksstatistieken (via Vercel Analytics)"
+        },
+        {
+          "name": "Functionaliteit",
+          "purpose": "Je receptfilters en zoekvoorkeuren onthouden"
+        }
+      ],
+      "control": "Je kunt cookies beheren via je browserinstellingen, maar sommige functies werken mogelijk niet goed als cookies zijn uitgeschakeld."
+    },
+    "changes": {
+      "title": "Wijzigingen aan Dit Beleid",
+      "intro": "We kunnen dit privacybeleid incidenteel bijwerken om wijzigingen in onze praktijken weer te geven of om juridische redenen. Wanneer we belangrijke wijzigingen aanbrengen, zullen we:",
+      "process": [
+        "De \"Laatst bijgewerkt\" datum bovenaan deze pagina bijwerken",
+        "Gebruikers op de hoogte stellen via de applicatie-interface",
+        "Voor grote wijzigingen, voorafgaande kennisgeving geven via email (als e-mailfuncties actief zijn)"
+      ],
+      "acceptance": "Voortgezet gebruik van Meal Maestro na beleidswijzigingen vormt acceptatie van het bijgewerkte beleid."
+    },
+    "contact": {
+      "title": "Contact",
+      "intro": "Als je vragen hebt over dit privacybeleid of je rechten wilt uitoefenen, neem contact met ons op:",
+      "email": "E-mail:",
+      "emailAddress": "info@meal-maestro.com"
+    }
+  },
+  "footer": {
+    "effective": "Dit privacybeleid is van kracht vanaf {date} en is van toepassing op alle gebruikers van Meal Maestro."
+  }
+}

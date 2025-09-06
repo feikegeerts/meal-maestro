@@ -1,0 +1,225 @@
+{
+  "navigation": {
+    "backToMealMaestro": "Terug naar Meal Maestro"
+  },
+  "title": "Gebruiksvoorwaarden",
+  "lastUpdated": "Laatst bijgewerkt:",
+  "tableOfContents": {
+    "title": "Inhoudsopgave",
+    "acceptance": "Acceptatie van Voorwaarden",
+    "serviceDescription": "Servicebeschrijving",
+    "userAccounts": "Gebruikersaccounts",
+    "acceptableUse": "Acceptabel Gebruiksbeleid",
+    "contentOwnership": "Inhoud en Intellectueel Eigendom",
+    "aiFeatures": "AI-Functies",
+    "serviceAvailability": "Servicebeschikbaarheid",
+    "costTransparency": "Kostentransparantie",
+    "limitationOfLiability": "Beperking van Aansprakelijkheid",
+    "termination": "Beëindiging",
+    "changesToTerms": "Wijzigingen in Voorwaarden",
+    "governingLaw": "Toepasselijk Recht",
+    "contact": "Contactinformatie"
+  },
+  "sections": {
+    "acceptance": {
+      "title": "Acceptatie van Voorwaarden",
+      "content": "Door Meal Maestro te gebruiken, ga je akkoord met deze Gebruiksvoorwaarden en ons Privacybeleid. Als je het niet eens bent met onderdelen van deze voorwaarden, mag je onze service niet gebruiken.\n\nDeze voorwaarden zijn van toepassing op alle bezoekers en gebruikers van de service."
+    },
+    "serviceDescription": {
+      "title": "Servicebeschrijving",
+      "intro": "Meal Maestro is een AI-aangedreven receptenbeheersysteem waarmee gebruikers kunnen:",
+      "features": [
+        "Persoonlijke receptencollecties opslaan, organiseren en beheren",
+        "AI-functies gebruiken voor receptverwerking en suggesties",
+        "Recepten zoeken en filteren met verschillende criteria",
+        "Kosten bijhouden die verbonden zijn aan AI-bewerkingen",
+        "Recepten openen op meerdere apparaten"
+      ],
+      "disclaimer": "De service wordt geleverd \"zoals ze is\" en we behouden ons het recht voor om elk aspect van de service op elk moment te wijzigen of stop te zetten."
+    },
+    "userAccounts": {
+      "title": "Gebruikersaccounts",
+      "accountCreation": {
+        "title": "Account Aanmaken",
+        "intro": "Om Meal Maestro te gebruiken, moet je een account aanmaken via Google OAuth. Je gaat akkoord om:",
+        "requirements": [
+          "Accurate en volledige informatie te verstrekken",
+          "De beveiliging van je account te onderhouden",
+          "Accountinformatie direct bij te werken als deze verandert",
+          "Verantwoordelijkheid te accepteren voor alle activiteiten onder je account"
+        ]
+      },
+      "accountResponsibilities": {
+        "title": "Accountverantwoordelijkheden",
+        "intro": "Je bent verantwoordelijk voor:",
+        "responsibilities": [
+          "Het veiligstellen van je Google-accountgegevens",
+          "Alle inhoud en activiteit gekoppeld aan je account",
+          "Ons onmiddellijk op de hoogte stellen van ongeautoriseerd gebruik",
+          "Ervoor zorgen dat je accountinformatie actueel blijft"
+        ]
+      }
+    },
+    "acceptableUse": {
+      "title": "Acceptabel Gebruiksbeleid",
+      "permittedUse": {
+        "title": "Toegestaan Gebruik",
+        "content": "Je mag Meal Maestro gebruiken voor persoonlijk receptenbeheer en gerelateerde culinaire activiteiten."
+      },
+      "prohibitedActivities": {
+        "title": "Verboden Activiteiten",
+        "intro": "Je mag niet:",
+        "activities": [
+          "De service gebruiken voor illegale of ongeautoriseerde doeleinden",
+          "Auteursrechtelijk beschermde recepten delen zonder juiste vermelding",
+          "Proberen de service te reverse-engineeren, hacken of compromitteren",
+          "Kwaadaardige code, virussen of schadelijke inhoud uploaden",
+          "De service gebruiken om te spammen, lastig te vallen of misbruik te maken",
+          "Proberen gebruikslimieten of kostencontroles te omzeilen",
+          "De service doorverkopen, heruitgeven of commercialiseren zonder toestemming",
+          "Geautomatiseerde tools gebruiken om data te scrapen of extraheren",
+          "Anderen imiteren of valse accounts aanmaken"
+        ]
+      }
+    },
+    "contentOwnership": {
+      "title": "Inhoud en Intellectueel Eigendom",
+      "yourContent": {
+        "title": "Jouw Inhoud",
+        "intro": "Je behoudt het eigendom van alle recepten en inhoud die je naar Meal Maestro uploadt. Door onze service te gebruiken, geef je ons een beperkte licentie om:",
+        "licenses": [
+          "Je recepten op te slaan en te verwerken voor servicefunctionaliteit",
+          "AI-services te gebruiken om je receptenbeheerervaring te verbeteren",
+          "Back-ups te maken en je data te onderhouden voor servicereliabiliteit"
+        ]
+      },
+      "ourIntellectualProperty": {
+        "title": "Ons Intellectueel Eigendom",
+        "intro": "De Meal Maestro service, inclusief ontwerp, functies en onderliggende technologie, is ons eigendom en beschermd door intellectuele eigendomswetten. Je mag niet:",
+        "restrictions": [
+          "Onze software of ontwerpelementen kopiëren, wijzigen of distribueren",
+          "Onze handelsmerken of branding gebruiken zonder toestemming",
+          "Afgeleide werken maken gebaseerd op onze service"
+        ]
+      },
+      "thirdPartyContent": {
+        "title": "Inhoud van Derden",
+        "content": "Bij het delen van recepten uit andere bronnen ben je verantwoordelijk voor het respecteren van auteursrecht- en vermeldingsvereisten."
+      }
+    },
+    "aiFeatures": {
+      "title": "AI-Functies",
+      "aiProcessing": {
+        "title": "AI-Verwerking",
+        "intro": "Onze AI-functies gebruiken OpenAI's services om je receptgerelateerde verzoeken te verwerken. Je begrijpt dat:",
+        "understanding": [
+          "AI-gegenereerde inhoud niet altijd accuraat of geschikt kan zijn",
+          "Je alle AI-suggesties moet beoordelen en verifiëren voor gebruik",
+          "AI-verwerking kosten met zich meebrengt die transparant worden bijgehouden en weergegeven",
+          "AI-functies onderhevig kunnen zijn aan gebruikslimieten of beschikbaarheidsbeperkingen"
+        ]
+      },
+      "aiLimitations": {
+        "title": "AI-Beperkingen",
+        "intro": "AI-functies worden geleverd voor gemak en verbetering. We garanderen niet:",
+        "noGuarantees": [
+          "Accuraatheid van AI-gegenereerde receptsuggesties of wijzigingen",
+          "Veiligheid of geschiktheid van AI-aanbevolen ingrediënten of methoden",
+          "Voedingswaarde-accuraatheid van AI-verwerkte informatie",
+          "Continue beschikbaarheid van AI-functies"
+        ]
+      }
+    },
+    "serviceAvailability": {
+      "title": "Servicebeschikbaarheid",
+      "intro": "We streven naar hoge servicebeschikbaarheid, maar garanderen geen ononderbroken toegang. De service kan tijdelijk niet beschikbaar zijn vanwege:",
+      "causes": [
+        "Gepland onderhoud en updates",
+        "Technische problemen of systeemuitval",
+        "Afhankelijkheden van externe services (Google, Supabase, OpenAI, Vercel)",
+        "Noodveiligheidsmaatregelen"
+      ],
+      "notice": "We zullen redelijke inspanningen leveren om voorafgaande kennisgeving te geven van gepland onderhoud."
+    },
+    "costTransparency": {
+      "title": "Kostentransparantie",
+      "intro": "Meal Maestro werkt met een transparant kostenmodel:",
+      "model": [
+        "De kernservice is gratis te gebruiken",
+        "AI-functies brengen kosten met zich mee gebaseerd op OpenAI-gebruik",
+        "Alle AI-gerelateerde kosten worden bijgehouden en aan gebruikers getoond",
+        "Geen verborgen kosten of abonnementskosten",
+        "Gebruikers kunnen hun gebruik en bijbehorende kosten realtime monitoren"
+      ],
+      "disclaimer": "We behouden ons het recht voor om gebruikslimieten in te voeren of bijdragen te vragen om operationele kosten te dekken indien nodig."
+    },
+    "limitationOfLiability": {
+      "title": "Beperking van Aansprakelijkheid",
+      "intro": "Voor zover maximaal toegestaan door de wet zijn Meal Maestro en haar exploitanten niet aansprakelijk voor:",
+      "limitations": [
+        "Enige indirecte, incidentele, speciale of gevolgschade",
+        "Verlies van data, recepten of inhoud",
+        "Service-onderbrekingen of downtime",
+        "Fouten in AI-gegenereerde inhoud of suggesties",
+        "Schade als gevolg van het volgen van receptsuggesties of wijzigingen",
+        "Kosten ontstaan door servicegebruik"
+      ],
+      "totalLiability": "Onze totale aansprakelijkheid voor enige claim gerelateerd aan de service is beperkt tot het bedrag dat je ons hebt betaald in de afgelopen 12 maanden (wat €0 kan zijn voor gratis gebruikers)."
+    },
+    "termination": {
+      "title": "Beëindiging",
+      "terminationByYou": {
+        "title": "Beëindiging door Jou",
+        "content": "Je kunt je account op elk moment beëindigen door je account te verwijderen via de service-interface of door direct contact met ons op te nemen."
+      },
+      "terminationByUs": {
+        "title": "Beëindiging door Ons",
+        "intro": "We kunnen je account opschorten of beëindigen als je:",
+        "reasons": [
+          "Deze Gebruiksvoorwaarden schendt",
+          "Deelneemt aan verboden activiteiten",
+          "De service of haar bronnen misbruikt",
+          "Valse informatie verstrekt"
+        ]
+      },
+      "effectOfTermination": {
+        "title": "Gevolg van Beëindiging",
+        "intro": "Bij beëindiging:",
+        "effects": [
+          "Zal je toegang tot de service onmiddellijk stoppen",
+          "Kunnen je accountdata en recepten worden verwijderd",
+          "Blijven deze voorwaarden van kracht voor toepasselijke bepalingen",
+          "Blijf je verantwoordelijk voor kosten ontstaan voor beëindiging"
+        ]
+      }
+    },
+    "changesToTerms": {
+      "title": "Wijzigingen in Voorwaarden",
+      "intro": "We kunnen deze Gebruiksvoorwaarden bijwerken om wijzigingen in onze service of wettelijke vereisten te weerspiegelen. Wanneer we wijzigingen aanbrengen:",
+      "process": [
+        "Zullen we de \"Laatst bijgewerkt\" datum bijwerken",
+        "Zullen belangrijke wijzigingen via de service worden gecommuniceerd",
+        "Vormt voortgezet gebruik van de service acceptatie van bijgewerkte voorwaarden",
+        "Als je het niet eens bent met wijzigingen, kun je je account beëindigen"
+      ]
+    },
+    "governingLaw": {
+      "title": "Toepasselijk Recht",
+      "intro": "Deze Gebruiksvoorwaarden worden beheerst door en uitgelegd in overeenstemming met toepasselijke wetten. Geschillen die voortvloeien uit deze voorwaarden of je gebruik van de service worden opgelost via:",
+      "resolution": [
+        "Onderhandeling te goeder trouw",
+        "Mediation als onderhandeling faalt",
+        "Gerechtelijke procedures in de juiste rechtsmacht indien nodig"
+      ]
+    },
+    "contact": {
+      "title": "Contactinformatie",
+      "intro": "Als je vragen hebt over deze Gebruiksvoorwaarden, neem contact met ons op:",
+      "email": "E-mail:",
+      "emailAddress": "info@meal-maestro.com"
+    }
+  },
+  "footer": {
+    "effective": "Deze voorwaarden zijn van kracht vanaf {date} en zijn van toepassing op alle gebruikers van Meal Maestro."
+  }
+}

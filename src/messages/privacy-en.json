@@ -1,0 +1,222 @@
+{
+  "navigation": {
+    "backToMealMaestro": "Back to Meal Maestro"
+  },
+  "title": "Privacy Policy",
+  "lastUpdated": "Last updated:",
+  "tableOfContents": {
+    "title": "Table of Contents",
+    "informationWeCollect": "Information We Collect",
+    "howWeUseInformation": "How We Use Your Information",
+    "thirdPartyServices": "Third-Party Services",
+    "dataSecurity": "Data Security",
+    "dataRetention": "Data Retention",
+    "yourRights": "Your Rights",
+    "cookies": "Cookies and Local Storage",
+    "changes": "Changes to This Policy",
+    "contact": "Contact Us"
+  },
+  "sections": {
+    "informationWeCollect": {
+      "title": "Information We Collect",
+      "accountInformation": {
+        "title": "Account Information",
+        "intro": "When you create an account using Google OAuth, we collect:",
+        "data": [
+          "Your Google email address",
+          "Your Google profile name",
+          "Your Google profile picture (if provided)",
+          "Unique account identifiers for authentication"
+        ]
+      },
+      "recipeData": {
+        "title": "Recipe Data",
+        "intro": "When you use our recipe management features, we store:",
+        "data": [
+          "Recipe content you create or import",
+          "Recipe categories and tags you assign",
+          "Your recipe search and filtering preferences",
+          "Recipe modification history"
+        ]
+      },
+      "usageInformation": {
+        "title": "Usage Information",
+        "intro": "We automatically collect:",
+        "data": [
+          "AI interaction logs (prompts and responses for cost tracking)",
+          "Feature usage analytics through Vercel Analytics",
+          "Performance metrics through Vercel Speed Insights",
+          "Error logs for debugging and service improvement"
+        ]
+      }
+    },
+    "howWeUseInformation": {
+      "title": "How We Use Your Information",
+      "intro": "We use your information to:",
+      "uses": [
+        "Provide and maintain the Meal Maestro service",
+        "Authenticate your account and maintain login sessions",
+        "Store and manage your personal recipe collection",
+        "Process AI-powered recipe operations using OpenAI",
+        "Track API usage costs and provide cost transparency",
+        "Improve our service through analytics and performance monitoring",
+        "Send essential service communications (if email features are enabled)",
+        "Comply with legal obligations and prevent abuse"
+      ]
+    },
+    "thirdPartyServices": {
+      "title": "Third-Party Services",
+      "googleOAuth": {
+        "title": "Google OAuth",
+        "content": "We use Google OAuth for authentication. Google's privacy policy applies to data collected during the authentication process. We only request access to basic profile information (email, name, profile picture)."
+      },
+      "supabase": {
+        "title": "Supabase (Database & Auth)",
+        "content": "Your recipe data and account information are stored securely in Supabase's cloud database infrastructure. Supabase operates under their privacy policy and maintains SOC 2 compliance."
+      },
+      "openai": {
+        "title": "OpenAI",
+        "intro": "When you use AI features, your recipe-related prompts are sent to OpenAI for processing. We:",
+        "practices": [
+          "Only send recipe-related content, never personal information",
+          "Do not store conversations on OpenAI's servers",
+          "Track usage for cost monitoring and transparency",
+          "OpenAI's data usage policy applies to these interactions"
+        ]
+      },
+      "vercel": {
+        "title": "Vercel (Hosting & Analytics)",
+        "intro": "Our application is hosted on Vercel, which provides:",
+        "services": [
+          "Web analytics (anonymous usage statistics)",
+          "Performance monitoring (Core Web Vitals)",
+          "Error tracking and logging"
+        ]
+      },
+      "otherServices": {
+        "title": "Other Services",
+        "services": [
+          {
+            "name": "CloudFlare",
+            "purpose": "DNS and security services"
+          },
+          {
+            "name": "TransIP",
+            "purpose": "Domain registration"
+          },
+          {
+            "name": "Resend",
+            "purpose": "Email service (when email features are active)"
+          }
+        ]
+      }
+    },
+    "dataSecurity": {
+      "title": "Data Security",
+      "intro": "We implement appropriate security measures to protect your information:",
+      "measures": [
+        "All data is transmitted using HTTPS encryption",
+        "Database access is secured with Row Level Security (RLS) policies",
+        "Authentication is handled through secure OAuth flows",
+        "API keys and secrets are stored securely and rotated regularly",
+        "Access to user data is limited to essential service operations"
+      ],
+      "disclaimer": "However, no internet transmission or electronic storage method is 100% secure. We cannot guarantee absolute security of your information."
+    },
+    "dataRetention": {
+      "title": "Data Retention",
+      "policies": [
+        {
+          "type": "Account Data",
+          "retention": "Retained while your account is active"
+        },
+        {
+          "type": "Recipe Data",
+          "retention": "Retained until you delete individual recipes or your account"
+        },
+        {
+          "type": "Usage Logs",
+          "retention": "Retained for up to 90 days for cost tracking and analytics"
+        },
+        {
+          "type": "Error Logs",
+          "retention": "Retained for up to 30 days for debugging purposes"
+        }
+      ],
+      "accountDeletion": "When you delete your account, we remove your personal data and recipes. Usage and cost tracking data may be retained in anonymized form for operational purposes."
+    },
+    "yourRights": {
+      "title": "Your Rights",
+      "intro": "You have the right to:",
+      "rights": [
+        {
+          "name": "Access",
+          "description": "View all personal data we hold about you"
+        },
+        {
+          "name": "Correction",
+          "description": "Update or correct inaccurate information"
+        },
+        {
+          "name": "Deletion",
+          "description": "Request deletion of your account and personal data"
+        },
+        {
+          "name": "Portability",
+          "description": "Export your recipe data in a standard format"
+        },
+        {
+          "name": "Restriction",
+          "description": "Limit how we process your information"
+        },
+        {
+          "name": "Objection",
+          "description": "Object to certain types of processing"
+        }
+      ],
+      "contact": "To exercise these rights, contact us using the information provided below. We will respond within 30 days."
+    },
+    "cookies": {
+      "title": "Cookies and Local Storage",
+      "intro": "We use cookies and local storage for:",
+      "uses": [
+        {
+          "name": "Authentication",
+          "purpose": "Maintaining your login session"
+        },
+        {
+          "name": "Preferences",
+          "purpose": "Storing your theme and language preferences"
+        },
+        {
+          "name": "Analytics",
+          "purpose": "Anonymous usage statistics (via Vercel Analytics)"
+        },
+        {
+          "name": "Functionality",
+          "purpose": "Remembering your recipe filters and search preferences"
+        }
+      ],
+      "control": "You can control cookies through your browser settings, but some features may not work properly if cookies are disabled."
+    },
+    "changes": {
+      "title": "Changes to This Policy",
+      "intro": "We may update this privacy policy occasionally to reflect changes in our practices or for legal reasons. When we make significant changes, we will:",
+      "process": [
+        "Update the \"Last updated\" date at the top of this page",
+        "Notify users through the application interface",
+        "For major changes, provide advance notice via email (if email features are active)"
+      ],
+      "acceptance": "Continued use of Meal Maestro after policy changes constitutes acceptance of the updated policy."
+    },
+    "contact": {
+      "title": "Contact Us",
+      "intro": "If you have questions about this privacy policy or want to exercise your rights, contact us:",
+      "email": "Email:",
+      "emailAddress": "info@meal-maestro.com"
+    }
+  },
+  "footer": {
+    "effective": "This privacy policy is effective as of {date} and applies to all users of Meal Maestro."
+  }
+}
