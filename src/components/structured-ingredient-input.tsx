@@ -155,8 +155,17 @@ function StructuredIngredientInputComponent({
                       onChange={(e) =>
                         handleAmountChange(ingredient.id, e.target.value)
                       }
+                      onKeyPress={(e) => {
+                        // Only allow numbers, decimal point, and comma
+                        const char = String.fromCharCode(e.which);
+                        if (!/[0-9.,]/.test(char)) {
+                          e.preventDefault();
+                        }
+                      }}
                       disabled={disabled}
                       className="text-center h-9 text-sm"
+                      pattern="[0-9]*[.,]?[0-9]*"
+                      inputMode="decimal"
                     />
                   </div>
 
@@ -254,8 +263,17 @@ function StructuredIngredientInputComponent({
                         onChange={(e) =>
                           handleAmountChange(ingredient.id, e.target.value)
                         }
+                        onKeyPress={(e) => {
+                          // Only allow numbers, decimal point, and comma
+                          const char = String.fromCharCode(e.which);
+                          if (!/[0-9.,]/.test(char)) {
+                            e.preventDefault();
+                          }
+                        }}
                         disabled={disabled}
                         className="text-center h-9 text-sm px-3 py-1"
+                        pattern="[0-9]*[.,]?[0-9]*"
+                        inputMode="decimal"
                       />
                     </div>
                     <div className="w-20">
