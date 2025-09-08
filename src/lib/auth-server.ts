@@ -23,7 +23,6 @@ export async function getAuthenticatedUser(): Promise<AuthUser | null> {
   try {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get('sb-access-token')?.value;
-    const refreshToken = cookieStore.get('sb-refresh-token')?.value;
 
     if (!accessToken) {
       return null;
@@ -34,72 +33,11 @@ export async function getAuthenticatedUser(): Promise<AuthUser | null> {
     const { data: { user }, error } = await supabase.auth.getUser(accessToken);
 
     if (error || !user) {
-      if (refreshToken) {
-        try {
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
-            refresh_token: refreshToken
-          });
-
-          if (refreshError) {
-            // Handle "Already Used" error gracefully - another process may have refreshed
-            if (refreshError.message?.includes("Already Used")) {
-              console.debug('Refresh token already used by another process');
-              // Clear the cookies since they're stale
-              cookieStore.delete('sb-access-token');
-              cookieStore.delete('sb-refresh-token');
-              return null;
-            }
-            
-            console.error('Token refresh failed:', refreshError.message, refreshError.status);
-            // Clear invalid cookies
-            cookieStore.delete('sb-access-token');
-            cookieStore.delete('sb-refresh-token');
-            return null;
-          }
-
-          if (!refreshData.session || !refreshData.session.user) {
-            console.error('Token refresh returned no session or user');
-            // Clear invalid cookies
-            cookieStore.delete('sb-access-token');
-            cookieStore.delete('sb-refresh-token');
-            return null;
-          }
-
-          // Update cookies with new tokens
-          const isProduction = process.env.NODE_ENV === 'production';
-          
-          // Always update access token
-          cookieStore.set('sb-access-token', refreshData.session.access_token, {
-            path: '/',
-            maxAge: refreshData.session.expires_in || 3600,
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: 'lax'
-          });
-
-          // Update refresh token if provided (Supabase may rotate it)
-          if (refreshData.session.refresh_token) {
-            cookieStore.set('sb-refresh-token', refreshData.session.refresh_token, {
-              path: '/',
-              maxAge: 60 * 60 * 24 * 7, // 7 days
-              httpOnly: true,
-              secure: isProduction,
-              sameSite: 'lax'
-            });
-          }
-
-          return {
-            id: refreshData.session.user.id,
-            email: refreshData.session.user.email
-          };
-        } catch (refreshError) {
-          console.error('Token refresh exception:', refreshError);
-          // Clear invalid cookies
-          cookieStore.delete('sb-access-token');
-          cookieStore.delete('sb-refresh-token');
-          return null;
-        }
-      }
+      // Token is invalid/expired - clear stale cookies and return null
+      // Let client-side handle the refresh to avoid race conditions
+      console.debug('Server-side token validation failed, clearing stale cookies:', error?.message);
+      cookieStore.delete('sb-access-token');
+      cookieStore.delete('sb-refresh-token');
       return null;
     }
 

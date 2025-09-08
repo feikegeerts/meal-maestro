@@ -85,109 +85,57 @@ describe('auth-server', () => {
       expect(mockSupabase.auth.getUser).toHaveBeenCalledWith('valid-token');
     });
 
-    it('should attempt refresh when access token is invalid', async () => {
-      const mockUser = { id: 'user-123', email: 'test@example.com' };
-      const mockRefreshSession = {
-        access_token: 'new-access-token',
-        refresh_token: 'new-refresh-token',
-        expires_in: 3600,
-        user: mockUser
-      };
-      
+    it('should return null and clear cookies when access token is invalid', async () => {
       mockCookieStore.get.mockImplementation((key: string) => {
         if (key === 'sb-access-token') return { value: 'expired-token' };
         if (key === 'sb-refresh-token') return { value: 'refresh-token' };
         return undefined;
       });
       
-      // First call fails (expired token)
+      // Token validation fails (expired token)
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: null },
         error: { message: 'Token expired' }
       });
-      
-      // Refresh succeeds
-      mockSupabase.auth.refreshSession.mockResolvedValue({
-        data: { session: mockRefreshSession },
-        error: null
-      });
 
       const result = await getAuthenticatedUser();
 
-      expect(result).toEqual({
-        id: mockUser.id,
-        email: mockUser.email
-      });
+      expect(result).toBeNull();
       
-      expect(mockSupabase.auth.refreshSession).toHaveBeenCalledWith({
-        refresh_token: 'refresh-token'
-      });
+      // Should NOT attempt refresh (client-side responsibility)
+      expect(mockSupabase.auth.refreshSession).not.toHaveBeenCalled();
       
-      // Should update cookies
-      expect(mockCookieStore.set).toHaveBeenCalledWith(
-        'sb-access-token',
-        'new-access-token',
-        expect.objectContaining({
-          path: '/',
-          maxAge: 3600,
-          httpOnly: true,
-          sameSite: 'lax'
-        })
-      );
-      
-      expect(mockCookieStore.set).toHaveBeenCalledWith(
-        'sb-refresh-token',
-        'new-refresh-token',
-        expect.objectContaining({
-          path: '/',
-          maxAge: 60 * 60 * 24 * 7,
-          httpOnly: true,
-          sameSite: 'lax'
-        })
-      );
+      // Should clear stale cookies
+      expect(mockCookieStore.delete).toHaveBeenCalledWith('sb-access-token');
+      expect(mockCookieStore.delete).toHaveBeenCalledWith('sb-refresh-token');
     });
 
-    it('should clear cookies when refresh fails', async () => {
+    it('should clear cookies immediately when token validation fails', async () => {
       mockCookieStore.get.mockImplementation((key: string) => {
         if (key === 'sb-access-token') return { value: 'expired-token' };
         if (key === 'sb-refresh-token') return { value: 'invalid-refresh-token' };
         return undefined;
       });
       
-      // First call fails (expired token)
+      // Token validation fails (expired token)
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: null },
         error: { message: 'Token expired' }
-      });
-      
-      // Refresh fails
-      mockSupabase.auth.refreshSession.mockResolvedValue({
-        data: { session: null },
-        error: { message: 'Refresh Token Not Found', status: 400 }
       });
 
       const result = await getAuthenticatedUser();
 
       expect(result).toBeNull();
       
-      expect(mockSupabase.auth.refreshSession).toHaveBeenCalledWith({
-        refresh_token: 'invalid-refresh-token'
-      });
+      // Should NOT attempt refresh (server no longer does this)
+      expect(mockSupabase.auth.refreshSession).not.toHaveBeenCalled();
       
-      // Should clear cookies
+      // Should clear cookies immediately
       expect(mockCookieStore.delete).toHaveBeenCalledWith('sb-access-token');
       expect(mockCookieStore.delete).toHaveBeenCalledWith('sb-refresh-token');
     });
 
-    it('should handle refresh session without new refresh token', async () => {
-      const mockUser = { id: 'user-123', email: 'test@example.com' };
-      const mockRefreshSession = {
-        access_token: 'new-access-token',
-        refresh_token: null, // No new refresh token
-        expires_in: 3600,
-        user: mockUser
-      };
-      
+    it('should not attempt refresh - client-side responsibility', async () => {
       mockCookieStore.get.mockImplementation((key: string) => {
         if (key === 'sb-access-token') return { value: 'expired-token' };
         if (key === 'sb-refresh-token') return { value: 'refresh-token' };
@@ -198,57 +146,37 @@ describe('auth-server', () => {
         data: { user: null },
         error: { message: 'Token expired' }
       });
-      
-      mockSupabase.auth.refreshSession.mockResolvedValue({
-        data: { session: mockRefreshSession },
-        error: null
-      });
-
-      const result = await getAuthenticatedUser();
-
-      expect(result).toEqual({
-        id: mockUser.id,
-        email: mockUser.email
-      });
-      
-      // Should update access token
-      expect(mockCookieStore.set).toHaveBeenCalledWith(
-        'sb-access-token',
-        'new-access-token',
-        expect.objectContaining({
-          path: '/',
-          maxAge: 3600,
-          httpOnly: true,
-          sameSite: 'lax'
-        })
-      );
-      
-      // Should not update refresh token
-      expect(mockCookieStore.set).not.toHaveBeenCalledWith(
-        'sb-refresh-token',
-        expect.anything(),
-        expect.anything()
-      );
-    });
-
-    it('should handle refresh session throwing exception', async () => {
-      mockCookieStore.get.mockImplementation((key: string) => {
-        if (key === 'sb-access-token') return { value: 'expired-token' };
-        if (key === 'sb-refresh-token') return { value: 'refresh-token' };
-        return undefined;
-      });
-      
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: { message: 'Token expired' }
-      });
-      
-      // Refresh throws exception
-      mockSupabase.auth.refreshSession.mockRejectedValue(new Error('Network error'));
 
       const result = await getAuthenticatedUser();
 
       expect(result).toBeNull();
+      
+      // Server no longer attempts refresh - this is client-side responsibility
+      expect(mockSupabase.auth.refreshSession).not.toHaveBeenCalled();
+      
+      // Should clear stale cookies so client can handle refresh
+      expect(mockCookieStore.delete).toHaveBeenCalledWith('sb-access-token');
+      expect(mockCookieStore.delete).toHaveBeenCalledWith('sb-refresh-token');
+    });
+
+    it('should handle auth errors gracefully', async () => {
+      mockCookieStore.get.mockImplementation((key: string) => {
+        if (key === 'sb-access-token') return { value: 'expired-token' };
+        if (key === 'sb-refresh-token') return { value: 'refresh-token' };
+        return undefined;
+      });
+      
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: null },
+        error: { message: 'Token expired' }
+      });
+
+      const result = await getAuthenticatedUser();
+
+      expect(result).toBeNull();
+      
+      // Should NOT attempt refresh
+      expect(mockSupabase.auth.refreshSession).not.toHaveBeenCalled();
       
       // Should clear cookies
       expect(mockCookieStore.delete).toHaveBeenCalledWith('sb-access-token');

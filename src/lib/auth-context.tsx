@@ -43,12 +43,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Global refresh lock to prevent concurrent refresh attempts
   const refreshLockRef = useRef<Promise<boolean> | null>(null);
+  const lastRefreshAttempt = useRef<number>(0);
+  const REFRESH_COOLDOWN = 5000; // 5 second cooldown between refresh attempts
 
   // Safe refresh with global lock to prevent race conditions
   const performSafeRefresh = useCallback(async (): Promise<boolean> => {
+    const now = Date.now();
+    
     // If a refresh is already in progress, wait for it to complete
     if (refreshLockRef.current) {
       try {
+        console.debug("Waiting for existing refresh operation to complete");
         return await refreshLockRef.current;
       } catch (error) {
         console.error("Error waiting for existing refresh:", error);
@@ -56,29 +61,44 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     }
 
+    // Cooldown check to prevent rapid refresh attempts
+    if (now - lastRefreshAttempt.current < REFRESH_COOLDOWN) {
+      console.debug("Refresh cooldown active, skipping refresh attempt");
+      return false;
+    }
+
+    lastRefreshAttempt.current = now;
+
     // Start a new refresh operation
     const refreshPromise = async (): Promise<boolean> => {
       try {
+        console.debug("Starting token refresh operation");
         const { data: refreshData, error: refreshError } =
           await supabase.auth.refreshSession();
         
         if (refreshData.session && !refreshError) {
+          console.debug("Token refresh successful");
           await syncTokensWithServer(refreshData.session);
           return true;
         }
         
         // Handle specific "Already Used" error gracefully
         if (refreshError?.message?.includes("Already Used")) {
-          console.debug("Refresh token already used by another process");
+          console.debug("Refresh token already used by another process - checking current session");
           
           // Try to get the current session (another process may have refreshed it)
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          if (session && !sessionError) {
+            console.debug("Found valid session after 'Already Used' error - continuing with existing session");
+            // Session exists but may not be synced with server - sync it
+            await syncTokensWithServer(session);
             return true;
+          } else {
+            console.debug("No valid session found after 'Already Used' error");
           }
         }
         
-        console.error("Token refresh failed:", refreshError);
+        console.error("Token refresh failed:", refreshError?.message, refreshError?.status);
         return false;
       } catch (error) {
         console.error("Token refresh exception:", error);
@@ -125,6 +145,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Sync tokens with server for HTTP-only cookie auth
   const syncTokensWithServer = async (session: Session, retries = 3) => {
+    console.debug('Starting token sync with server');
+    
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         const response = await fetch("/api/auth/set-session", {
@@ -146,26 +168,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
           throw new Error("Token sync failed on server");
         }
 
+        console.debug('Token sync with server completed successfully');
         return;
       } catch (error) {
         console.error(
-          "Failed to sync tokens with server (attempt %d/%d):",
-          attempt,
-          retries,
+          `Failed to sync tokens with server (attempt ${attempt}/${retries}):`,
           error
         );
 
         if (attempt === retries) {
           console.error(
-            "All token sync attempts failed. Session may become invalid."
+            "All token sync attempts failed. Session may become invalid for server-side operations."
           );
           return;
         }
 
         // Exponential backoff: wait 1s, then 2s, then 4s
-        await new Promise((resolve) =>
-          setTimeout(resolve, Math.pow(2, attempt - 1) * 1000)
-        );
+        const delay = Math.pow(2, attempt - 1) * 1000;
+        console.debug(`Retrying token sync in ${delay}ms`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   };
