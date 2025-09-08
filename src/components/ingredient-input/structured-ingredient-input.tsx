@@ -62,37 +62,24 @@ function StructuredIngredientInputComponent({
         ) : (
           <SortableContext items={sortableIds} strategy={strategy}>
             {!isMobile ? (
-              /* Desktop Table Layout */
-              <div>
-                {/* Table Headers */}
-                <div className="flex gap-2 pb-2 mb-3 text-xs font-medium text-muted-foreground border-b">
-                  <div className="w-6 text-left"></div>
-                  <div className="w-8 text-left">#</div>
-                  <div className="w-20 text-left">{t("amountHeader")}</div>
-                  <div className="w-24 text-left">{t("unitHeader")}</div>
-                  <div className="flex-1 text-left">{t("ingredientHeader")}</div>
-                  <div className="w-32 text-left">{t("notesHeader")}</div>
-                  <div className="w-8 text-left"></div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  {ingredients.map((ingredient, index) => (
-                    <DesktopIngredientItem
-                      key={ingredient.id}
-                      ingredient={ingredient}
-                      index={index}
-                      disabled={disabled}
-                      onAmountChange={handleAmountChange}
-                      onUnitSelect={handleUnitSelect}
-                      onUpdate={updateIngredient}
-                      onRemove={removeIngredient}
-                      ingredientsLength={ingredients.length}
-                      t={t}
-                      tUnits={tUnits}
-                      getStepSizeForUnit={getStepSizeForUnit}
-                    />
-                  ))}
-                </div>
+              /* Desktop Card Layout */
+              <div className="flex flex-col gap-3">
+                {ingredients.map((ingredient, index) => (
+                  <DesktopIngredientItem
+                    key={ingredient.id}
+                    ingredient={ingredient}
+                    index={index}
+                    disabled={disabled}
+                    onAmountChange={handleAmountChange}
+                    onUnitSelect={handleUnitSelect}
+                    onUpdate={updateIngredient}
+                    onRemove={removeIngredient}
+                    ingredientsLength={ingredients.length}
+                    t={t}
+                    tUnits={tUnits}
+                    getStepSizeForUnit={getStepSizeForUnit}
+                  />
+                ))}
               </div>
             ) : (
               /* Mobile Layout - Compact List */

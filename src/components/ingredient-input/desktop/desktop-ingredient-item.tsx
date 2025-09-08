@@ -67,7 +67,7 @@ export function DesktopIngredientItem({
   };
 
   // Only log when transform starts (avoids spam)
-  const windowDebug = (window as unknown) as Window & { [key: string]: boolean };
+  const windowDebug = window as unknown as Window & { [key: string]: boolean };
   if (
     transform &&
     (transform.x !== 0 || transform.y !== 0) &&
@@ -90,114 +90,117 @@ export function DesktopIngredientItem({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex gap-2 items-center py-2 min-h-[2.5rem]"
+      className="bg-muted/30 rounded-lg p-4"
       {...attributes}
     >
-      {/* Drag Handle */}
-      <div className="w-6 flex justify-center">
-        <button
-          ref={setActivatorNodeRef}
-          {...listeners}
-          disabled={disabled}
-          className="p-1 hover:bg-muted rounded cursor-grab active:cursor-grabbing disabled:cursor-default disabled:hover:bg-transparent"
-          type="button"
-        >
-          <Grip className="h-4 w-4 text-muted-foreground" />
-        </button>
-      </div>
-
-      {/* Index */}
-      <div className="w-8 text-center text-sm text-muted-foreground">
-        {index + 1}
-      </div>
-
-      {/* Amount */}
-      <div className="w-20">
-        <Input
-          type="number"
-          step={getStepSizeForUnit(ingredient.unit).toString()}
-          min="0"
-          placeholder="0"
-          value={ingredient.amount || ""}
-          onChange={(e) => onAmountChange(ingredient.id, e.target.value)}
-          onKeyDown={(e) => {
-            const char = String.fromCharCode(e.which);
-            if (!/[0-9.,]/.test(char)) {
-              e.preventDefault();
-            }
-          }}
-          disabled={disabled}
-          className="text-center h-9 text-sm"
-          pattern="[0-9]*[.,]?[0-9]*"
-          inputMode="decimal"
-        />
-      </div>
-
-      {/* Unit */}
-      <div className="w-24">
-        <Select
-          value={ingredient.unit || "none"}
-          onValueChange={(value) => onUnitSelect(ingredient.id, value)}
-          disabled={disabled}
-        >
-          <SelectTrigger className="h-9 w-full text-sm">
-            <SelectValue placeholder="-" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">-</SelectItem>
-            {COOKING_UNITS.map((unit) => (
-              <SelectItem key={unit} value={unit}>
-                {tUnits(unit)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Ingredient Name */}
-      <div className="flex-1">
-        <Input
-          placeholder={t("ingredientNamePlaceholder")}
-          value={ingredient.name}
-          onChange={(e) =>
-            onUpdate(ingredient.id, {
-              name: e.target.value,
-            })
-          }
-          disabled={disabled}
-          className="h-9 text-sm"
-        />
-      </div>
-
-      {/* Notes */}
-      <div className="w-32">
-        <Input
-          placeholder={t("notesPlaceholder")}
-          value={ingredient.notes || ""}
-          onChange={(e) =>
-            onUpdate(ingredient.id, {
-              notes: e.target.value,
-            })
-          }
-          disabled={disabled}
-          className="h-9 text-sm"
-        />
-      </div>
-
-      {/* Remove Button */}
-      <div className="w-8 text-center">
-        {ingredientsLength > 1 && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onRemove(ingredient.id)}
+      <div className="flex items-start gap-3">
+        {/* Left side: Drag handle and index */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            ref={setActivatorNodeRef}
+            {...listeners}
             disabled={disabled}
-            className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+            className="p-1 hover:bg-muted rounded cursor-grab active:cursor-grabbing disabled:cursor-default disabled:hover:bg-transparent"
+            type="button"
           >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
+            <Grip className="h-4 w-4 text-muted-foreground" />
+          </button>
+          <div className="text-sm font-medium text-muted-foreground min-w-[1.5rem] text-center">
+            {index + 1}.
+          </div>
+        </div>
+
+        {/* Main content area */}
+        <div className="flex-1 space-y-3">
+          {/* Top row: Amount and Unit inline */}
+          <div className="flex items-center gap-2">
+            <div className="w-20">
+              <Input
+                type="number"
+                step={getStepSizeForUnit(ingredient.unit).toString()}
+                min="0"
+                placeholder="0"
+                value={ingredient.amount || ""}
+                onChange={(e) => onAmountChange(ingredient.id, e.target.value)}
+                onKeyDown={(e) => {
+                  const char = e.key;
+                  if (!/[0-9.,]/.test(char)) {
+                    e.preventDefault();
+                  }
+                }}
+                disabled={disabled}
+                className="text-center h-9 text-sm placeholder:text-muted-foreground/60"
+                pattern="[0-9]*[.,]?[0-9]*"
+                inputMode="decimal"
+              />
+            </div>
+            <div className="w-20">
+              <Select
+                value={ingredient.unit || "none"}
+                onValueChange={(value) => onUnitSelect(ingredient.id, value)}
+                disabled={disabled}
+              >
+                <SelectTrigger className="h-9 w-full text-sm">
+                  <SelectValue placeholder="-" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">-</SelectItem>
+                  {COOKING_UNITS.map((unit) => (
+                    <SelectItem key={unit} value={unit}>
+                      {tUnits(unit)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Bottom row: Ingredient name and Notes - responsive layout */}
+          <div className="flex flex-col lg:flex-row gap-2">
+            <div className="flex-1">
+              <Input
+                placeholder={t("ingredientNamePlaceholder")}
+                value={ingredient.name}
+                onChange={(e) =>
+                  onUpdate(ingredient.id, {
+                    name: e.target.value,
+                  })
+                }
+                disabled={disabled}
+                className="h-9 text-sm placeholder:text-muted-foreground/60"
+              />
+            </div>
+            <div className="lg:w-48">
+              <Input
+                placeholder={t("notesPlaceholder")}
+                value={ingredient.notes || ""}
+                onChange={(e) =>
+                  onUpdate(ingredient.id, {
+                    notes: e.target.value,
+                  })
+                }
+                disabled={disabled}
+                className="h-9 text-sm placeholder:text-muted-foreground/60"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Right side: Delete button */}
+        <div className="shrink-0">
+          {ingredientsLength > 1 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onRemove(ingredient.id)}
+              disabled={disabled}
+              className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
