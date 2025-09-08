@@ -274,7 +274,7 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
     },
     {
       accessorKey: "last_eaten",
-      size: 120,
+      size: 140,
       header: ({ column }) => {
         return (
           <div className="flex items-center max-w-[100px] sm:max-w-none">
@@ -313,7 +313,7 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
     },
     {
       accessorKey: "created_at",
-      size: 110,
+      size: 130,
       header: ({ column }) => {
         return (
           <div className="flex items-center max-w-[90px] sm:max-w-none">
