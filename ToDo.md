@@ -3,7 +3,7 @@
 ## User Experience
 
 1.  [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
-1.  [ ] The automatic redirect to /recipes is very anoying when you are on a different page. I think we do need redirect logic. This will interfere with the magic link functionality possible so that needs to be properly tested.
+1.  [ ] refresh token already used
 1.  [ ] Mark as easten should also be able for a different date
 1.  [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 

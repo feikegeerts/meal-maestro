@@ -1,4 +1,5 @@
 import { Recipe, RecipeSearchParams, RecipesResponse, RecipeInput } from "@/types/recipe";
+import { toDateOnlyISOString } from "@/lib/utils";
 
 export interface AuthenticatedFetchOptions extends RequestInit {
   maxRetries?: number;
@@ -181,8 +182,9 @@ export const recipeService = {
     return response.json();
   },
 
-  async markRecipeAsEaten(id: string): Promise<{ recipe: Recipe; success: boolean }> {
-    return this.updateRecipe(id, { last_eaten: new Date().toISOString() });
+  async markRecipeAsEaten(id: string, date?: Date): Promise<{ recipe: Recipe; success: boolean }> {
+    const dateToUse = toDateOnlyISOString(date);
+    return this.updateRecipe(id, { last_eaten: dateToUse });
   },
 
   async deleteRecipes(ids: string[]): Promise<{ success: boolean; deletedCount: number; deletedIds: string[] }> {
@@ -202,13 +204,14 @@ export const recipeService = {
     return response.json();
   },
 
-  async markRecipesAsEaten(ids: string[]): Promise<{ success: boolean; updatedCount: number; updatedIds: string[] }> {
+  async markRecipesAsEaten(ids: string[], date?: Date): Promise<{ success: boolean; updatedCount: number; updatedIds: string[] }> {
+    const dateToUse = toDateOnlyISOString(date);
     const response = await authenticatedFetch('/api/recipes', {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ ids, action: 'mark_as_eaten' })
+      body: JSON.stringify({ ids, action: 'mark_as_eaten', date: dateToUse })
     });
 
     if (!response.ok) {

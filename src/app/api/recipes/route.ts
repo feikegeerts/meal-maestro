@@ -320,9 +320,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (action === 'mark_as_eaten') {
+      const { date } = body;
+      const dateToUse = date || new Date().toISOString();
       const { data: updatedRecipes, error } = await supabase
         .from('recipes')
-        .update({ last_eaten: new Date().toISOString() })
+        .update({ last_eaten: dateToUse })
         .eq('user_id', user.id)
         .in('id', ids)
         .select('id');

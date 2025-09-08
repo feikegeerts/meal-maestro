@@ -5,6 +5,29 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * Converts a date to ISO string while preserving the selected date regardless of timezone.
+ * Sets the time to noon (12:00) local time to avoid timezone conversion issues.
+ * 
+ * @param date - The date to convert, or undefined to use current date
+ * @returns ISO string representation of the date at noon local time
+ */
+export function toDateOnlyISOString(date?: Date): string {
+  if (!date) {
+    return new Date().toISOString()
+  }
+  
+  // Create a new date at noon local time to avoid timezone conversion issues
+  const noonDate = new Date(
+    date.getFullYear(), 
+    date.getMonth(), 
+    date.getDate(), 
+    12, 0, 0
+  )
+  
+  return noonDate.toISOString()
+}
+
 
 export interface ProcessedInstructions {
   isStepFormat: boolean;

@@ -23,7 +23,7 @@ export default function RecipesPage() {
   const [recipesLoading, setRecipesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const t = useTranslations("recipes");
-  const columns = useRecipeColumns();
+  const { columns } = useRecipeColumns();
 
   useEffect(() => {
     if (!loading && !user) {

@@ -20,7 +20,6 @@ import {
   ArrowLeft,
   Edit,
   Trash2,
-  Utensils,
   Clock,
   Calendar,
   CalendarDays,
@@ -28,7 +27,7 @@ import {
   Plus,
   Printer,
 } from "lucide-react";
-import { processInstructions } from "@/lib/utils";
+import { processInstructions, toDateOnlyISOString } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useRecipeTranslations } from "@/messages";
 import {
@@ -38,6 +37,7 @@ import {
 import { normalizeIngredientUnit, formatFraction, pluralizeUnit } from "@/types/recipe";
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import { RecipeImageUpload } from "@/components/recipe-image-upload";
+import { MarkAsEatenSplitButton } from "@/components/recipes/mark-as-eaten-split-button";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
@@ -54,6 +54,7 @@ export default function RecipeDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [lastEatenRecentlyUpdated, setLastEatenRecentlyUpdated] = useState(false);
   const t = useTranslations("recipes");
   const tUnits = useTranslations("units");
   const tIngredientPlurals = useTranslations("ingredientPlurals");
@@ -151,20 +152,29 @@ export default function RecipeDetailPage() {
     return data.recipe;
   };
 
-  const handleMarkEaten = async () => {
+  const handleMarkEaten = async (date?: Date) => {
     if (!recipe) return;
 
-    setActionLoading("mark-eaten");
     try {
-      const now = new Date().toISOString();
-      const updatedRecipe = await updateRecipe({ last_eaten: now });
+      const dateToUse = toDateOnlyISOString(date);
+      const updatedRecipe = await updateRecipe({ last_eaten: dateToUse });
       setRecipe(updatedRecipe);
       setDisplayRecipe(updatedRecipe);
+      
+      // Trigger green fade animation
+      setLastEatenRecentlyUpdated(true);
+      setTimeout(() => setLastEatenRecentlyUpdated(false), 2000);
     } catch (error) {
       console.error("Error marking recipe as eaten:", error);
-    } finally {
-      setActionLoading(null);
     }
+  };
+
+  const handleMarkEatenToday = () => {
+    handleMarkEaten();
+  };
+
+  const handleMarkEatenOnDate = (date: Date) => {
+    handleMarkEaten(date);
   };
 
   const handleEdit = () => {
@@ -312,60 +322,53 @@ export default function RecipeDetailPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 flex-wrap mt-6">
-                <Button
-                  onClick={handleMarkEaten}
-                  disabled={!!actionLoading}
-                  variant="default"
-                  size="default"
-                >
-                  {actionLoading === "mark-eaten" ? (
-                    <>
-                      <span className="animate-spin mr-2">⏳</span>
-                      {t("marking")}
-                    </>
-                  ) : (
-                    <>
-                      <Utensils className="mr-2 h-4 w-4" />
-                      {t("markAsEatenDetail")}
-                    </>
-                  )}
-                </Button>
+              <div className="space-y-3 mt-6">
+                {/* Primary Action - First Row */}
+                <div className="flex items-center">
+                  <MarkAsEatenSplitButton
+                    onMarkAsEatenToday={handleMarkEatenToday}
+                    onMarkAsEatenOnDate={handleMarkEatenOnDate}
+                    disabled={!!actionLoading}
+                  />
+                </div>
 
-                <Button
-                  variant="outline"
-                  size="default"
-                  disabled={!!actionLoading}
-                  onClick={handleEdit}
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  {t("editDetail")}
-                </Button>
+                {/* Secondary Actions - Second Row */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="default"
+                    disabled={!!actionLoading}
+                    onClick={handleEdit}
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    {t("editDetail")}
+                  </Button>
 
-                <Button
-                  variant="outline"
-                  size="icon"
-                  disabled={!!actionLoading}
-                  onClick={() => window.print()}
-                  title={t("printRecipe")}
-                >
-                  <Printer className="h-4 w-4" />
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={!!actionLoading}
+                    onClick={() => window.print()}
+                    title={t("printRecipe")}
+                  >
+                    <Printer className="h-4 w-4" />
+                  </Button>
 
-                <Button
-                  onClick={handleDelete}
-                  disabled={!!actionLoading}
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive hover:text-destructive"
-                  title={t("deleteDetail")}
-                >
-                  {actionLoading === "delete" ? (
-                    <span className="animate-spin">⏳</span>
-                  ) : (
-                    <Trash2 className="h-4 w-4" />
-                  )}
-                </Button>
+                  <Button
+                    onClick={handleDelete}
+                    disabled={!!actionLoading}
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive"
+                    title={t("deleteDetail")}
+                  >
+                    {actionLoading === "delete" ? (
+                      <span className="animate-spin">⏳</span>
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
 
               {/* Tags */}
@@ -454,7 +457,9 @@ export default function RecipeDetailPage() {
                   <span className="text-muted-foreground">
                     {t("lastEatenDetail")}:
                   </span>
-                  <span className="font-medium">
+                  <span className={`font-medium transition-colors duration-2000 ${
+                    lastEatenRecentlyUpdated ? "text-green-600" : ""
+                  }`}>
                     {formatDateWithFallback(recipe.last_eaten, t("never"))}
                   </span>
                 </div>

@@ -50,7 +50,6 @@ import {
   ChevronRight,
   ChevronLast,
   Trash2,
-  Utensils,
   Loader2,
 } from "lucide-react";
 import { useRecipes } from "@/contexts/recipe-context";
@@ -59,6 +58,8 @@ import { toast } from "sonner";
 import { useTranslations } from 'next-intl';
 import { useRecipeTranslations } from '@/messages';
 import { CuisineType, DietType, CookingMethodType, DishType, ProteinType, OccasionType, CharacteristicType } from "@/types/recipe";
+import { DateSelectionDialog } from "@/components/ui/date-selection-dialog";
+import { Calendar } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -101,6 +102,8 @@ export function RecipeDataTable<TData, TValue>({
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [searchInput, setSearchInput] = React.useState("");
   const [bulkOperationLoading, setBulkOperationLoading] = React.useState(false);
+  const [dateDialogOpen, setDateDialogOpen] = React.useState(false);
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
   // Debounce the search input
   React.useEffect(() => {
@@ -267,15 +270,15 @@ export function RecipeDataTable<TData, TValue>({
     }
   };
 
-  const handleMarkAsEaten = async () => {
+  const handleMarkAsEaten = async (date?: Date) => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
-    const selectedIds = selectedRows.map(row => (row.original as Recipe).id);
+    const currentSelectedIds = selectedRows.map(row => (row.original as Recipe).id);
     
-    if (selectedIds.length === 0) return;
+    if (currentSelectedIds.length === 0) return;
 
     setBulkOperationLoading(true);
     try {
-      const result = await recipeService.markRecipesAsEaten(selectedIds);
+      const result = await recipeService.markRecipesAsEaten(currentSelectedIds, date);
       markRecipesAsEaten(result.updatedIds);
       setRowSelection({});
       const message = result.updatedCount === 1
@@ -288,6 +291,21 @@ export function RecipeDataTable<TData, TValue>({
     } finally {
       setBulkOperationLoading(false);
     }
+  };
+
+
+  const handleMarkAsEatenOnDate = () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const currentSelectedIds = selectedRows.map(row => (row.original as Recipe).id);
+    
+    if (currentSelectedIds.length === 0) return;
+    
+    setSelectedIds(currentSelectedIds);
+    setDateDialogOpen(true);
+  };
+
+  const handleDateSelection = (date: Date) => {
+    handleMarkAsEaten(date);
   };
 
   React.useEffect(() => {
@@ -439,15 +457,15 @@ export function RecipeDataTable<TData, TValue>({
           <Button 
             variant="outline" 
             size="sm"
-            onClick={handleMarkAsEaten}
+            onClick={handleMarkAsEatenOnDate}
             disabled={bulkOperationLoading}
           >
             {bulkOperationLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Utensils className="mr-2 h-4 w-4" />
+              <Calendar className="mr-2 h-4 w-4" />
             )}
-            {tTable('markAsEatenBulk')}
+            {tTable('markAsEatenOnDateBulk')}
           </Button>
         </div>
       )}
@@ -624,6 +642,14 @@ export function RecipeDataTable<TData, TValue>({
           </div>
         </div>
       </div>
+      
+      <DateSelectionDialog
+        open={dateDialogOpen}
+        onOpenChange={setDateDialogOpen}
+        onDateSelect={handleDateSelection}
+        title={tTable("selectBulkEatenDate")}
+        description={tTable("selectBulkDateDescription", { count: selectedIds.length })}
+      />
     </div>
   );
 }

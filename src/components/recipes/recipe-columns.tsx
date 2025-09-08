@@ -31,6 +31,7 @@ import {
   Edit,
   Utensils,
   Trash2,
+  Calendar,
 } from "lucide-react";
 import { Link } from "@/app/i18n/routing";
 import { useTranslations } from "next-intl";
@@ -38,29 +39,53 @@ import { useRecipeTranslations } from "@/messages";
 import { useLocalizedDateFormatter } from "@/lib/date-utils";
 import { useRecipes } from "@/contexts/recipe-context";
 import { recipeService } from "@/lib/recipe-service";
+import { toDateOnlyISOString } from "@/lib/utils";
 import { toast } from "sonner";
+import { DateSelectionPopover } from "@/components/ui/date-selection-popover";
+import * as React from "react";
 
-export function useRecipeColumns(): ColumnDef<Recipe>[] {
+interface RecipeColumnsResult {
+  columns: ColumnDef<Recipe>[];
+}
+
+export function useRecipeColumns(): RecipeColumnsResult {
   const t = useTranslations("recipeTable");
+  const tRecipes = useTranslations("recipes");
   const tA11y = useTranslations("accessibility");
   const tToast = useTranslations("toast");
   const { translateCategory, translateSeason, translateTag } =
     useRecipeTranslations();
   const { formatDateWithFallback } = useLocalizedDateFormatter();
   const { removeRecipe, updateRecipe } = useRecipes();
+  
+  const [recentlyUpdatedRecipes, setRecentlyUpdatedRecipes] = React.useState<Set<string>>(new Set());
 
-  const handleMarkAsEaten = async (recipe: Recipe) => {
+  const handleMarkAsEaten = async (recipe: Recipe, date?: Date) => {
     try {
-      const now = new Date().toISOString();
+      const dateToUse = toDateOnlyISOString(date);
       const updatedRecipe = await recipeService.updateRecipe(recipe.id, {
-        last_eaten: now,
+        last_eaten: dateToUse,
       });
       updateRecipe(recipe.id, updatedRecipe.recipe);
       toast.success(tToast("recipeMarkedEaten", { count: 1 }));
+      
+      // Trigger green fade animation
+      setRecentlyUpdatedRecipes(prev => new Set([...prev, recipe.id]));
+      setTimeout(() => {
+        setRecentlyUpdatedRecipes(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(recipe.id);
+          return newSet;
+        });
+      }, 2000);
     } catch (error) {
       console.error("Error marking recipe as eaten:", error);
       toast.error(tToast("markEatenError"));
     }
+  };
+
+  const handleMarkAsEatenOnDate = (recipe: Recipe) => (date: Date) => {
+    handleMarkAsEaten(recipe, date);
   };
 
   const handleDeleteRecipe = async (recipe: Recipe) => {
@@ -78,7 +103,7 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
     }
   };
 
-  return [
+  const columns: ColumnDef<Recipe>[] = [
     {
       id: "select",
       size: 30,
@@ -293,12 +318,19 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
         );
       },
       cell: ({ row }) => {
+        const recipe = row.original;
         const lastEaten = row.getValue("last_eaten") as string | undefined;
+        const isRecentlyUpdated = recentlyUpdatedRecipes.has(recipe.id);
+        
         if (!lastEaten) {
           return <span className="text-muted-foreground">{t("never")}</span>;
         }
         return (
-          <div className="text-sm">{formatDateWithFallback(lastEaten)}</div>
+          <div className={`text-sm transition-colors duration-2000 ${
+            isRecentlyUpdated ? "text-green-600" : ""
+          }`}>
+            {formatDateWithFallback(lastEaten)}
+          </div>
         );
       },
       sortingFn: (rowA, rowB, columnId) => {
@@ -384,8 +416,17 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleMarkAsEaten(recipe)} className="justify-start">
                 <Utensils className="mr-2 h-4 w-4" />
-                {t("markAsEaten")}
+                {t("markAsEatenToday")}
               </DropdownMenuItem>
+              <div className="px-2 py-1.5">
+                <DateSelectionPopover
+                  onDateSelect={handleMarkAsEatenOnDate(recipe)}
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start h-auto p-1.5 text-sm font-normal"
+                  triggerLabel={t("markAsEatenOnDate")}
+                />
+              </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive justify-start"
@@ -402,4 +443,8 @@ export function useRecipeColumns(): ColumnDef<Recipe>[] {
       enableHiding: false,
     },
   ];
+
+  return {
+    columns,
+  };
 }
