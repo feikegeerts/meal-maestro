@@ -3,7 +3,7 @@
 import { memo } from "react";
 import { RecipeIngredient, getStepSizeForUnit } from "@/types/recipe";
 import { useTranslations } from "next-intl";
-import { DndContext } from "@dnd-kit/core";
+import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext } from "@dnd-kit/sortable";
 
 // Hooks
@@ -47,6 +47,7 @@ function StructuredIngredientInputComponent({
     sortableIds,
     collisionDetection,
     strategy,
+    activeIngredient,
   } = useDragAndDrop({ ingredients, onChange });
 
   return (
@@ -107,6 +108,40 @@ function StructuredIngredientInputComponent({
 
         <AddIngredientButton onAdd={addIngredient} disabled={disabled} t={t} />
       </div>
+      
+      <DragOverlay>
+        {activeIngredient ? (
+          !isMobile ? (
+            <DesktopIngredientItem
+              ingredient={activeIngredient}
+              index={ingredients.findIndex(ing => ing.id === activeIngredient.id)}
+              disabled={false}
+              onAmountChange={() => {}}
+              onUnitSelect={() => {}}
+              onUpdate={() => {}}
+              onRemove={() => {}}
+              ingredientsLength={ingredients.length}
+              t={t}
+              tUnits={tUnits}
+              getStepSizeForUnit={getStepSizeForUnit}
+            />
+          ) : (
+            <MobileIngredientItem
+              ingredient={activeIngredient}
+              index={ingredients.findIndex(ing => ing.id === activeIngredient.id)}
+              disabled={false}
+              onAmountChange={() => {}}
+              onUnitSelect={() => {}}
+              onUpdate={() => {}}
+              onRemove={() => {}}
+              ingredientsLength={ingredients.length}
+              t={t}
+              tUnits={tUnits}
+              getStepSizeForUnit={getStepSizeForUnit}
+            />
+          )
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }

@@ -17,7 +17,6 @@
                 handleError
                 file:/Users/fgeerts/Documents/GitProjects/meal-maestro/.next/static/chunks/4294a_%40supabase_auth-js_dist_module_6a384352._.js (812:11)
 
-1.  [ ] Drag en drop ingrediënten om te reorderen
 1.  [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
 1.  [ ] The automatic redirect to /recipes is very anoying when you are on a different page. I think we do need redirect logic. This will interfere with the magic link functionality possible so that needs to be properly tested.
 1.  [ ] Mark as easten should also be able for a different date

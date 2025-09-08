@@ -1,7 +1,8 @@
 import { 
   useSensors,
   useSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   KeyboardSensor,
   DragStartEvent,
   DragEndEvent,
@@ -13,6 +14,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { RecipeIngredient } from "@/types/recipe";
+import { useState } from "react";
 
 interface UseDragAndDropProps {
   ingredients: RecipeIngredient[];
@@ -20,10 +22,18 @@ interface UseDragAndDropProps {
 }
 
 export function useDragAndDrop({ ingredients, onChange }: UseDragAndDropProps) {
+  const [activeIngredient, setActiveIngredient] = useState<RecipeIngredient | null>(null);
+
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
         distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 300,
+        tolerance: 8,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -35,6 +45,9 @@ export function useDragAndDrop({ ingredients, onChange }: UseDragAndDropProps) {
     console.log("🚀 DRAG START");
     console.log("Active ID:", event.active.id);
     console.log("Current ingredients:", ingredients.map((ing, idx) => ({ id: ing.id, name: ing.name, index: idx })));
+    
+    const ingredient = ingredients.find(ing => ing.id === event.active.id);
+    setActiveIngredient(ingredient || null);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -56,6 +69,8 @@ export function useDragAndDrop({ ingredients, onChange }: UseDragAndDropProps) {
         onChange(arrayMove(ingredients, oldIndex, newIndex));
       }
     }
+
+    setActiveIngredient(null);
   };
 
   const sortableIds = ingredients.map((ingredient) => ingredient.id);
@@ -69,5 +84,6 @@ export function useDragAndDrop({ ingredients, onChange }: UseDragAndDropProps) {
     sortableIds,
     collisionDetection: closestCenter,
     strategy: verticalListSortingStrategy,
+    activeIngredient,
   };
 }

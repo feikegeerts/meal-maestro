@@ -309,14 +309,10 @@ export function RecipeEditForm({
             </AlertDescription>
           </Alert>
         )}
-        <div className="flex gap-3 pt-4 border-t">
+        <div className="flex gap-3 pt-4 border-t justify-center">
           {standalone ? (
             <>
-              <Button
-                onClick={handleSave}
-                disabled={loading}
-                className="flex-1"
-              >
+              <Button onClick={handleSave} disabled={loading} className="">
                 {loading
                   ? t("saving")
                   : recipe.id
@@ -326,7 +322,7 @@ export function RecipeEditForm({
               <Button
                 variant="outline"
                 disabled={loading}
-                className="flex-1"
+                className=""
                 onClick={onCancel}
               >
                 {t("cancel")}
