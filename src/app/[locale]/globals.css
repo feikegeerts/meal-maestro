@@ -229,25 +229,31 @@
       0 4px 6px -4px oklch(0 0 0 / 0.1);
   }
 
-  /* Enhanced micro-animations and interactions */
-  button,
-  a,
-  [role="button"] {
+  /* Enhanced micro-animations and interactions - targeted approach */
+  /* Only apply to buttons that don't already have component styling */
+  button:not([data-slot]),
+  a:not([data-slot]) {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     line-height: 1.25;
+  }
+
+  /* Standard button styling for unstyled buttons only */
+  .btn-standard,
+  button:not([data-slot]):not([class*="h-"]):not([class*="size-"]) {
     height: 2.5rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
 
-  button:hover,
-  [role="button"]:hover {
+  /* Hover animations only for actual button components, not all role="button" */
+  .btn-standard:hover,
+  button:not([data-slot]):hover {
     transform: translateY(-1px);
   }
 
-  button:active,
-  [role="button"]:active {
+  .btn-standard:active,
+  button:not([data-slot]):active {
     transform: translateY(0);
     transition-duration: 0.1s;
   }
@@ -257,12 +263,6 @@
   textarea,
   select {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  input:focus,
-  textarea:focus,
-  select:focus {
-    transform: scale(1.01);
   }
 
   /* Badge and tag animations */
@@ -396,8 +396,8 @@
       padding-right: 1rem;
     }
 
-    button:hover,
-    [role="button"]:hover {
+    .btn-standard:hover,
+    button:not([data-slot]):hover {
       transform: none; /* Disable hover animations on mobile */
     }
 
@@ -407,7 +407,6 @@
       transform: none; /* Disable focus scaling on mobile */
     }
   }
-
 }
 
 @layer components {

@@ -2,11 +2,25 @@
 
 ## User Experience
 
-1. [ ] Drag en drop ingrediënten om te reorderen
-1. [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
-1. [ ] The automatic redirect to /recipes is very anoying when you are on a different page. I think we do need redirect logic. This will interfere with the magic link functionality possible so that needs to be properly tested.
-1. [ ] Mark as easten should also be able for a different date
-1. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
+1.  [ ] Refresh token logic seems to be broken, this might be due to multiple tabs being open. Actually when testing this some more this also happens with a single tab.
+        1/1
+        Next.js 15.4.4 (stale)Turbopack
+        Console AuthApiError
+
+                Invalid Refresh Token: Already Used
+
+                Call Stack 3
+                AuthError
+                file:/Users/fgeerts/Documents/GitProjects/meal-maestro/.next/static/chunks/4294a_%40supabase_auth-js_dist_module_6a384352._.js (79:9)
+                AuthApiError
+                file:/Users/fgeerts/Documents/GitProjects/meal-maestro/.next/static/chunks/4294a_%40supabase_auth-js_dist_module_6a384352._.js (91:9)
+                handleError
+                file:/Users/fgeerts/Documents/GitProjects/meal-maestro/.next/static/chunks/4294a_%40supabase_auth-js_dist_module_6a384352._.js (812:11)
+
+1.  [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
+1.  [ ] The automatic redirect to /recipes is very anoying when you are on a different page. I think we do need redirect logic. This will interfere with the magic link functionality possible so that needs to be properly tested.
+1.  [ ] Mark as easten should also be able for a different date
+1.  [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 
 ## Analytics & Monetization
 

@@ -2,7 +2,7 @@
 
 import { RecipeIngredient } from "@/types/recipe";
 import { Card, CardContent } from "@/components/ui/card";
-import { StructuredIngredientInput } from "@/components/structured-ingredient-input";
+import { StructuredIngredientInput } from "@/components/ingredient-input";
 import { useTranslations } from "next-intl";
 
 interface IngredientsSectionProps {
