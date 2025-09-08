@@ -90,7 +90,12 @@ export function MobileIngredientItem({
             ref={setActivatorNodeRef}
             {...listeners}
             disabled={disabled}
-            className="p-1 hover:bg-muted rounded cursor-grab active:cursor-grabbing disabled:cursor-default disabled:hover:bg-transparent touch-none"
+            className="p-1 hover:bg-muted rounded cursor-grab active:cursor-grabbing disabled:cursor-default disabled:hover:bg-transparent touch-none select-none"
+            style={{ 
+              touchAction: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none'
+            }}
             type="button"
           >
             <Grip className="h-3.5 w-3.5 text-muted-foreground" />

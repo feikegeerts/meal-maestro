@@ -100,7 +100,12 @@ export function DesktopIngredientItem({
             ref={setActivatorNodeRef}
             {...listeners}
             disabled={disabled}
-            className="p-1 hover:bg-muted rounded cursor-grab active:cursor-grabbing disabled:cursor-default disabled:hover:bg-transparent touch-none"
+            className="p-1 hover:bg-muted rounded cursor-grab active:cursor-grabbing disabled:cursor-default disabled:hover:bg-transparent touch-none select-none"
+            style={{ 
+              touchAction: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none'
+            }}
             type="button"
           >
             <Grip className="h-4 w-4 text-muted-foreground" />
