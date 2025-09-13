@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { X, Grip } from "lucide-react";
 import { RecipeIngredient, COOKING_UNITS } from "@/types/recipe";
+import { useNumericInput } from "../hooks/use-numeric-input";
 
 interface DesktopIngredientItemProps {
   ingredient: RecipeIngredient;
@@ -39,6 +40,12 @@ export function DesktopIngredientItem({
   tUnits,
   getStepSizeForUnit,
 }: DesktopIngredientItemProps) {
+  const numericInput = useNumericInput({
+    value: ingredient.amount,
+    onChange: (value) => onAmountChange(ingredient.id, value),
+    min: 0,
+    step: getStepSizeForUnit(ingredient.unit)
+  });
   const {
     attributes,
     listeners,
@@ -125,14 +132,10 @@ export function DesktopIngredientItem({
                 step={getStepSizeForUnit(ingredient.unit).toString()}
                 min="0"
                 placeholder="0"
-                value={ingredient.amount || ""}
-                onChange={(e) => onAmountChange(ingredient.id, e.target.value)}
-                onKeyDown={(e) => {
-                  const char = e.key;
-                  if (!/[0-9.,]/.test(char)) {
-                    e.preventDefault();
-                  }
-                }}
+                value={numericInput.value}
+                onChange={numericInput.onChange}
+                onKeyDown={numericInput.onKeyDown}
+                onBlur={numericInput.onBlur}
                 disabled={disabled}
                 className="text-center h-9 text-sm placeholder:text-muted-foreground/60"
                 pattern="[0-9]*[.,]?[0-9]*"

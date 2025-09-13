@@ -5,7 +5,7 @@ This document provides an exhaustive list of all implemented features in the Mea
 ## Authentication & Security Features
 
 - Google OAuth 2.0 PKCE authentication flow
-- Magic link passwordless authentication  
+- Magic link passwordless authentication
 - Email validation and formatting
 - Rate limiting protection (60-second cooldown on magic links)
 - Authentication context with global state management
@@ -34,7 +34,7 @@ This document provides an exhaustive list of all implemented features in the Mea
 - Edit recipe with comprehensive form interface
 - Delete recipe with confirmation
 - Bulk delete recipes with multi-select
-- Bulk mark recipes as "eaten" functionality
+- Bulk mark recipes as "eaten" functionality on a specific date
 - Advanced recipe search (full-text across title, description, ingredients)
 - Category filtering (breakfast, lunch, dinner, appetizer, main-course, side-dish, dessert, pastry, snack)
 - Season filtering (spring, summer, fall, winter, year-round)
@@ -59,6 +59,7 @@ This document provides an exhaustive list of all implemented features in the Mea
 - Recipe data validation and normalization
 - Recipe context management with global state
 - Recipe import from various sources (URL, AI, manual)
+- Drag and drop re-ordering of ingredients
 
 ## AI-Powered Features
 
@@ -126,5 +127,5 @@ This document provides an exhaustive list of all implemented features in the Mea
 
 **Total Features Implemented**: 90+ distinct capabilities
 
-*Last Updated: August 2025*  
-*Version: Based on codebase analysis*
+_Last Updated: August 2025_  
+_Version: Based on codebase analysis_

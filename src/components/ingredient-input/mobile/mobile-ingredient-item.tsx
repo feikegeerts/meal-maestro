@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { X, Grip } from "lucide-react";
 import { RecipeIngredient, COOKING_UNITS } from "@/types/recipe";
+import { useNumericInput } from "../hooks/use-numeric-input";
 
 interface MobileIngredientItemProps {
   ingredient: RecipeIngredient;
@@ -39,6 +40,12 @@ export function MobileIngredientItem({
   tUnits,
   getStepSizeForUnit,
 }: MobileIngredientItemProps) {
+  const numericInput = useNumericInput({
+    value: ingredient.amount,
+    onChange: (value) => onAmountChange(ingredient.id, value),
+    min: 0,
+    step: getStepSizeForUnit(ingredient.unit)
+  });
   const {
     attributes,
     listeners,
@@ -109,14 +116,10 @@ export function MobileIngredientItem({
               step={getStepSizeForUnit(ingredient.unit).toString()}
               min="0"
               placeholder="0"
-              value={ingredient.amount || ""}
-              onChange={(e) => onAmountChange(ingredient.id, e.target.value)}
-              onKeyDown={(e) => {
-                const char = String.fromCharCode(e.which);
-                if (!/[0-9.,]/.test(char)) {
-                  e.preventDefault();
-                }
-              }}
+              value={numericInput.value}
+              onChange={numericInput.onChange}
+              onKeyDown={numericInput.onKeyDown}
+              onBlur={numericInput.onBlur}
               disabled={disabled}
               className="text-center h-9 text-sm px-3 py-1"
               pattern="[0-9]*[.,]?[0-9]*"

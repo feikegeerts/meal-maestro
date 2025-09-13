@@ -3,8 +3,6 @@
 ## User Experience
 
 1.  [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
-1.  [ ] refresh token already used
-1.  [ ] Mark as easten should also be able for a different date
 1.  [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 
 ## Analytics & Monetization
@@ -25,9 +23,19 @@
 
 16. [ ] SEO optimizations - Footer???
 17. [ ] PWA options to allow installing of the app
-18. [ ] Add a tile view with the recipe photos next to the list view
 
 ## V2.0 feature requests
 
-Tiktok import
-Reference column to add the original link / place of the recipe
+1. [ ] A preference setting in the account that makes sure tbsp and tsp are not used but just ml and g is used.
+1. [ ] Tiktok import
+1. [ ] Extra columns
+   1. [ ] Reference column to add the original link / place of the recipe
+   1. [ ] Add calories
+   1. [ ] nutritional values
+   1. [ ] Bereidingstijd, totale tijd etc.
+   1. [ ] Add free form notes to the recipes, to for example keep track of when somebody ate this with whom
+   1. [ ] Add whine section
+1. [ ] Add a tile view with the recipe photos next to the list view
+1. [ ] Groccery shopping list
+1. [ ] Menu creator functionality that combines multiple recipes
+1. [ ] Recipe advice, add the chat functionality somewhere else and load all the recipes in context of that chat window to get advice on certain things
