@@ -46,23 +46,40 @@
     page-break-after: avoid;
   }
   
-  /* Compact hero image area */
+  /* Hero section layout: image left, content right */
+  .grid.grid-cols-1.lg\:grid-cols-5 {
+    display: grid !important;
+    grid-template-columns: 2.5in 1fr !important;
+    gap: 0.2in !important;
+    align-items: start !important;
+  }
+
+  /* Image container - left side */
   .lg\:col-span-3 {
-    grid-column: span 2 !important;
+    grid-column: 1 !important;
+    order: 1 !important;
   }
-  
-  /* Adjust hero content width */
+
+  /* Content container - right side */
   .lg\:col-span-2 {
-    grid-column: span 3 !important;
+    grid-column: 2 !important;
+    order: 2 !important;
   }
-  
+
   /* Make recipe image compact for print */
+  .recipe-image-upload {
+    display: block !important;
+  }
+
   .recipe-image-upload img {
     max-height: 2in !important;
-    width: auto !important;
+    max-width: 2.5in !important;
+    width: 100% !important;
     object-fit: contain !important;
+    display: block !important;
+    margin: 0 !important;
   }
-  
+
   /* Hide image upload controls but show the actual image */
   .recipe-image-upload button,
   .recipe-image-upload .upload-controls {
@@ -90,27 +107,37 @@
     display: none !important;
   }
   
-  /* Reorganize main content into compact layout */
-  .grid.grid-cols-1.lg\:grid-cols-7.gap-6 {
+  /* Force ingredients and instructions side-by-side */
+  .card .grid.grid-cols-1.lg\:grid-cols-7.gap-6 {
     display: grid !important;
-    grid-template-columns: 2fr 3fr !important;
-    gap: 0.15in !important;
+    grid-template-columns: 3in 1fr !important;
+    gap: 0.2in !important;
     margin-top: 0.1in !important;
   }
-  
-  /* Compact ingredients section */
-  .lg\:col-span-2.bg-primary\/10 {
+
+  /* FORCE ingredients to left column - maximum specificity */
+  .card .grid.grid-cols-1.lg\:grid-cols-7 .lg\:col-span-2.bg-primary\/10,
+  .card .grid.lg\:grid-cols-7 .lg\:col-span-2.bg-primary\/10,
+  .grid.lg\:grid-cols-7 .lg\:col-span-2.bg-primary\/10 {
     background: transparent !important;
     border: 1px solid #666 !important;
     padding: 0.08in !important;
     margin: 0 !important;
     grid-column: 1 !important;
+    order: -1 !important;
+    float: none !important;
+    width: auto !important;
   }
-  
-  /* Instructions take remaining space */
-  .lg\:col-span-5 {
+
+  /* FORCE instructions to right column - maximum specificity */
+  .card .grid.grid-cols-1.lg\:grid-cols-7 .lg\:col-span-5,
+  .card .grid.lg\:grid-cols-7 .lg\:col-span-5,
+  .grid.lg\:grid-cols-7 .lg\:col-span-5 {
     grid-column: 2 !important;
+    order: 1 !important;
     margin: 0 !important;
+    float: none !important;
+    width: auto !important;
   }
   
   .ingredients-section h2, h2 {
@@ -119,14 +146,25 @@
     margin: 0 0 0.04in 0 !important;
   }
   
-  /* Ultra-compact ingredient grid */
+  /* Ingredient grid with more space for amounts/units */
   .grid-cols-12 {
     gap: 0.03in !important;
+    grid-template-columns: 0.7in 1fr !important;
   }
-  
+
   .grid-cols-12 .text-sm {
     font-size: 8pt;
     line-height: 1.1;
+  }
+
+  /* Give more space to ingredient amounts and units */
+  .grid-cols-12 > *:first-child {
+    grid-column: 1 !important;
+    word-break: break-word !important;
+  }
+
+  .grid-cols-12 > *:last-child {
+    grid-column: 2 !important;
   }
   
   /* Hide serving size selector in print */
