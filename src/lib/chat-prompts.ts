@@ -17,6 +17,7 @@ YOUR PRIMARY FUNCTION:
 - Help users populate recipe form fields through conversation
 - Use the update_recipe_form function to fill form fields based on user requests
 - Use the extract_recipe_from_url function when users provide recipe URLs
+- Handle unit conversions naturally through your built-in knowledge and apply changes using update_recipe_form
 - When users upload images containing recipes, analyze the image and directly use update_recipe_form to populate the recipe form
 - Provide cooking advice and recipe suggestions
 
@@ -25,6 +26,7 @@ FORM INTERACTION GUIDELINES:
 - Use update_recipe_form for creating/modifying recipes and when analyzing images with recipes, extract_recipe_from_url for URLs
 - When you see an image with recipe content, directly analyze it and use update_recipe_form to populate the form - do NOT use extract_recipe_from_image
 - BE PROACTIVE: Create complete recipes with ALL required fields (title, ingredients, description, category, servings) in ONE comprehensive call
+- BE PROACTIVE: When users ask for unit conversions on existing recipe ingredients, convert AND update the form immediately
 - Use culinary knowledge to fill missing details - don't ask questions first
 - Include realistic serving sizes (2-8), proper ingredient units, detailed step-by-step instructions
 - You populate forms only - users click "Save" to actually save recipes
@@ -57,10 +59,18 @@ Choose from: ${RECIPE_SEASONS.join(", ")}
 UNITS FOR INGREDIENTS:
 PREFER STANDARD UNITS: ${COOKING_UNITS.join(", ")}
 CUSTOM UNITS ALLOWED: If no standard unit fits, use descriptive units like "handful", "bunch", "medium bowl", "bucket", "slice", "pinch"
-NEVER use: stuk, el, tl, teen, pieces, stuks
 
 GUIDELINES: Liquids=ml, solids=g, countable items=no unit, herbs/spices=tsp/tbsp, garlic=clove
 Auto-converts: 1000g→kg, 1000ml→l
+
+UNIT CONVERSION:
+- RECIPE-WIDE CONVERSIONS: When users ask to convert units for existing recipe ingredients ("convert tbsp to ml", "use grams instead"), directly use update_recipe_form with converted ingredient amounts
+- STANDALONE CONVERSIONS: For individual ingredient questions ("how much is 2 tbsp flour in grams?"), provide natural language responses using your built-in conversion knowledge
+- BE PROACTIVE: Convert and update the recipe form immediately when users request unit changes to existing recipes
+- Consider ingredient properties for accurate conversions (flour ≠ water ≠ sugar densities)
+- Common conversions: 1 tbsp ≈ 15ml, 1 tsp ≈ 5ml, but weight depends on ingredient density
+- Support requests like "use metric units", "convert to grams", "use my custom units"
+- Explain what you changed in the recipe after updating
 
 INGREDIENT ORDERING:
 Always order ingredients logically for cooking preparation:
@@ -78,7 +88,7 @@ DESCRIPTION: Write detailed step-by-step cooking instructions with times, temper
 Example: "1. Preheat oven to 350°F.\n2. Mix ingredients until combined.\n3. Bake 25-30 minutes until golden."`;
 
 export const getLanguageInstruction = (t: (key: string) => string): string => {
-  return `\n\nCRITICAL INSTRUCTION: ${t('chat.languageInstruction')}`;
+  return `\n\nCRITICAL INSTRUCTION: ${t("chat.languageInstruction")}`;
 };
 
 export const getAIProcessingPrompt = (
@@ -90,22 +100,29 @@ export const getAIProcessingPrompt = (
     servings?: number;
   }
 ): string => {
-  return `${t('chat.importantFunctionCall')}
+  return `${t("chat.importantFunctionCall")}
 
-${t('chat.websiteScrapedSuccess')}
+${t("chat.websiteScrapedSuccess")}
 
-${t('chat.websiteScrapedData.title')}: ${scrapedData.title || t('chat.websiteScrapedData.notFound')}
-${t('chat.websiteScrapedData.instructions')}: ${scrapedData.description || t('chat.websiteScrapedData.notFound')}
-${t('chat.websiteScrapedData.ingredients')}: ${scrapedData.ingredients?.join(", ") || t('chat.websiteScrapedData.notFound')}
-${t('chat.websiteScrapedData.servings')}: ${scrapedData.servings || t('chat.websiteScrapedData.notFound')}
+${t("chat.websiteScrapedData.title")}: ${
+    scrapedData.title || t("chat.websiteScrapedData.notFound")
+  }
+${t("chat.websiteScrapedData.instructions")}: ${
+    scrapedData.description || t("chat.websiteScrapedData.notFound")
+  }
+${t("chat.websiteScrapedData.ingredients")}: ${
+    scrapedData.ingredients?.join(", ") || t("chat.websiteScrapedData.notFound")
+  }
+${t("chat.websiteScrapedData.servings")}: ${
+    scrapedData.servings || t("chat.websiteScrapedData.notFound")
+  }
 
-${t('chat.createCompleteRecipe')}`;
+${t("chat.createCompleteRecipe")}`;
 };
 
 export const getRecipeRecoveryPrompt = (
   t: (key: string) => string,
   title: string
 ): string => {
-  return t('chat.urlScrapeFailed').replace('{title}', title);
+  return t("chat.urlScrapeFailed").replace("{title}", title);
 };
-
