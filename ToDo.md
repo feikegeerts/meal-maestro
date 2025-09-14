@@ -18,6 +18,7 @@
        12.1 [ ] - recipe-scraper.ts
 1. [ ] Write more tests
 1. [ ] Switch from handlebars to mustache.js so the build warnings go away
+1. [ ] Dev database setup so we can test database changes before pushing to the cloud
 
 ## Marketing & Documentation
 

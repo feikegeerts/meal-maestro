@@ -60,6 +60,8 @@ This document provides an exhaustive list of all implemented features in the Mea
 - Recipe context management with global state
 - Recipe import from various sources (URL, AI, manual)
 - Drag and drop re-ordering of ingredients
+- Custom units - user can add custom units for ingredient measurements
+- Print functionality - special print styling for good looking printable recipes
 
 ## AI-Powered Features
 

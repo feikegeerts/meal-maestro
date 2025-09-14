@@ -12,12 +12,14 @@ import {
 import { User, Session, AuthError, OAuthResponse } from "@supabase/supabase-js";
 import { auth, supabase } from "./supabase";
 import { profileService, UserProfile } from "./profile-service";
+import { tokenManager } from "./token-manager";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: UserProfile | null;
   loading: boolean;
+  authReady: boolean;
   signInWithGoogle: () => Promise<{
     data: OAuthResponse["data"] | null;
     error: AuthError | null;
@@ -40,187 +42,111 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
 
-  // Global refresh lock to prevent concurrent refresh attempts
-  const refreshLockRef = useRef<Promise<boolean> | null>(null);
-  const lastRefreshAttempt = useRef<number>(0);
-  const REFRESH_COOLDOWN = 5000; // 5 second cooldown between refresh attempts
+  // Initialization guards to prevent double mounting in development
+  const initializationRef = useRef<boolean>(false);
+  const mountedRef = useRef<boolean>(true);
 
-  // Safe refresh with global lock to prevent race conditions
-  const performSafeRefresh = useCallback(async (): Promise<boolean> => {
-    const now = Date.now();
-    
-    // If a refresh is already in progress, wait for it to complete
-    if (refreshLockRef.current) {
-      try {
-        console.debug("Waiting for existing refresh operation to complete");
-        return await refreshLockRef.current;
-      } catch (error) {
-        console.error("Error waiting for existing refresh:", error);
-        return false;
-      }
+  // Development logging helper
+  const logAuthEvent = useCallback((event: string, details?: unknown) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.debug(`[Auth] ${event}`, details || '');
     }
-
-    // Cooldown check to prevent rapid refresh attempts
-    if (now - lastRefreshAttempt.current < REFRESH_COOLDOWN) {
-      console.debug("Refresh cooldown active, skipping refresh attempt");
-      return false;
-    }
-
-    lastRefreshAttempt.current = now;
-
-    // Start a new refresh operation
-    const refreshPromise = async (): Promise<boolean> => {
-      try {
-        console.debug("Starting token refresh operation");
-        const { data: refreshData, error: refreshError } =
-          await supabase.auth.refreshSession();
-        
-        if (refreshData.session && !refreshError) {
-          console.debug("Token refresh successful");
-          await syncTokensWithServer(refreshData.session);
-          return true;
-        }
-        
-        // Handle specific "Already Used" error gracefully
-        if (refreshError?.message?.includes("Already Used")) {
-          console.debug("Refresh token already used by another process - checking current session");
-          
-          // Try to get the current session (another process may have refreshed it)
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-          if (session && !sessionError) {
-            console.debug("Found valid session after 'Already Used' error - continuing with existing session");
-            // Session exists but may not be synced with server - sync it
-            await syncTokensWithServer(session);
-            return true;
-          } else {
-            console.debug("No valid session found after 'Already Used' error");
-          }
-        }
-        
-        console.error("Token refresh failed:", refreshError?.message, refreshError?.status);
-        return false;
-      } catch (error) {
-        console.error("Token refresh exception:", error);
-        return false;
-      } finally {
-        // Clear the lock when done
-        refreshLockRef.current = null;
-      }
-    };
-
-    // Store the promise so other calls can wait for it
-    refreshLockRef.current = refreshPromise();
-    return await refreshLockRef.current;
   }, []);
 
-  // Session health monitoring with race condition protection
+  // Production-safe error logging
+  const logAuthError = useCallback((error: unknown, context: string) => {
+    if (process.env.NODE_ENV === 'production') {
+      // Log generic error info in production
+      console.error(`[Auth] ${context}: Authentication error`);
+    } else {
+      // Full error details in development
+      console.error(`[Auth] ${context}:`, error);
+    }
+  }, []);
+
+  // Session validation using TokenManager
   const validateSession = useCallback(async (): Promise<boolean> => {
     try {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
-
-      if (error || !session) {
-        return false;
-      }
-
-      // Check if token is close to expiring (within 5 minutes)
-      const expiresAt = session.expires_at;
-      const currentTime = Math.floor(Date.now() / 1000);
-      const timeUntilExpiry = expiresAt ? expiresAt - currentTime : 0;
-
-      if (timeUntilExpiry <= 300) {
-        // 5 minutes - proactively refresh
-        return await performSafeRefresh();
-      }
-
-      return true;
+      const session = await tokenManager.getValidSession();
+      return !!session;
     } catch (error) {
-      console.error("Session validation error:", error);
+      logAuthError(error, "Session validation error");
       return false;
     }
-  }, [performSafeRefresh]);
+  }, [logAuthError]);
 
-  // Sync tokens with server for HTTP-only cookie auth
-  const syncTokensWithServer = async (session: Session, retries = 3) => {
-    console.debug('Starting token sync with server');
-    
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      try {
-        const response = await fetch("/api/auth/set-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            access_token: session.access_token,
-            refresh_token: session.refresh_token,
-            expires_in: session.expires_in,
-          }),
-        });
+  // Fetch user profile safely
+  const fetchUserProfile = useCallback(async (userId: string, retryCount = 0): Promise<void> => {
+    if (!mountedRef.current) return;
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+    try {
+      const userProfile = await profileService.getUserProfile(userId);
+      if (mountedRef.current) {
+        setProfile(userProfile);
+      }
+    } catch (error) {
+      // For newly created users, the profile might not exist yet
+      logAuthEvent('Profile fetch failed', { userId, error: (error as Error).message });
 
-        const result = await response.json();
-        if (!result.success) {
-          throw new Error("Token sync failed on server");
-        }
-
-        console.debug('Token sync with server completed successfully');
-        return;
-      } catch (error) {
-        console.error(
-          `Failed to sync tokens with server (attempt ${attempt}/${retries}):`,
-          error
-        );
-
-        if (attempt === retries) {
-          console.error(
-            "All token sync attempts failed. Session may become invalid for server-side operations."
-          );
-          return;
-        }
-
-        // Exponential backoff: wait 1s, then 2s, then 4s
-        const delay = Math.pow(2, attempt - 1) * 1000;
-        console.debug(`Retrying token sync in ${delay}ms`);
-        await new Promise((resolve) => setTimeout(resolve, delay));
+      // Retry once after a delay for newly created users
+      if (retryCount === 0) {
+        setTimeout(() => {
+          if (mountedRef.current) {
+            fetchUserProfile(userId, 1);
+          }
+        }, 1000);
+      } else {
+        setProfile(null);
       }
     }
-  };
+  }, [logAuthEvent]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
+    // Prevent double initialization in development mode
+    if (initializationRef.current) {
+      logAuthEvent('Skipping duplicate auth initialization');
+      return;
+    }
+    initializationRef.current = true;
+
     // Get initial session
     const initializeAuth = async () => {
       try {
+        logAuthEvent('Starting auth initialization');
         const { session } = await auth.getCurrentSession();
+
+        if (!mountedRef.current) return;
+
         setSession(session);
         setUser(session?.user ?? null);
 
-        // Sync tokens with server for API access
+        // Use TokenManager to ensure tokens are properly synced
         if (session) {
-          await syncTokensWithServer(session);
+          logAuthEvent('Initial session found, validating with TokenManager');
+          await tokenManager.getValidSession();
         }
 
         // Fetch user profile if user exists
         if (session?.user) {
-          try {
-            const userProfile = await profileService.getUserProfile(
-              session.user.id
-            );
-            setProfile(userProfile);
-          } catch (error) {
-            // This is expected for newly created users as the profile trigger might not have completed yet
-            console.debug("Profile not found (might be newly created user):", error);
-            setProfile(null);
-          }
+          await fetchUserProfile(session.user.id);
         }
       } catch (error) {
-        console.error("Error getting initial session:", error);
+        logAuthError(error, "Error getting initial session");
       } finally {
-        setLoading(false);
+        if (mountedRef.current) {
+          setLoading(false);
+          setAuthReady(true);
+        }
       }
     };
 
@@ -230,15 +156,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       async (event, session: Session | null) => {
-        // Auth state change tracking can be enabled for debugging if needed
+        if (!mountedRef.current) return;
+
+        logAuthEvent('Auth state change', { event, hasSession: !!session });
 
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        setAuthReady(true);
 
-        // Sync tokens with server whenever session changes or is refreshed
+        // Use TokenManager for token sync
         if (session && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) {
-          await syncTokensWithServer(session);
+          await tokenManager.getValidSession();
         }
 
         // Handle signed out state - clear server cookies
@@ -246,43 +175,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
           try {
             await fetch("/api/auth/sign-out", { method: "POST" });
           } catch (error) {
-            console.error("Failed to clear server cookies on sign out:", error);
+            logAuthError(error, "Failed to clear server cookies on sign out");
           }
         }
 
-        if (session?.user) {
-          const fetchProfile = async () => {
-            try {
-              const userProfile = await profileService.getUserProfile(
-                session.user.id
-              );
-              setProfile(userProfile);
-            } catch (error) {
-              // For newly created users, the profile might not exist yet due to trigger timing
-              // This is normal and expected behavior, not an error
-              console.debug("Profile not found (might be newly created user):", error);
-              setProfile(null);
-            }
-          };
-
-          setTimeout(fetchProfile, 200);
-        } else {
+        if (session?.user && mountedRef.current) {
+          await fetchUserProfile(session.user.id);
+        } else if (mountedRef.current) {
           setProfile(null);
         }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchUserProfile, logAuthEvent, logAuthError]);
 
   // Separate effect for health check management
   useEffect(() => {
+    if (!authReady || !session || !user) {
+      return;
+    }
+
     let healthCheckInterval: NodeJS.Timeout | null = null;
 
-    if (process.env.NODE_ENV === "production" && session && user) {
+    if (process.env.NODE_ENV === "production") {
       healthCheckInterval = setInterval(async () => {
+        if (!mountedRef.current) return;
+
         const isValid = await validateSession();
-        if (!isValid) {
+        if (!isValid && mountedRef.current) {
           await signOut();
         }
       }, 10 * 60 * 1000); // Check every 10 minutes
@@ -293,7 +214,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         clearInterval(healthCheckInterval);
       }
     };
-  }, [session?.access_token, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [authReady, session?.access_token, user?.id, validateSession]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const signInWithGoogle = async () => {
     setLoading(true);
@@ -325,7 +246,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         await fetch("/api/auth/sign-out", { method: "POST" });
       } catch (cookieError) {
-        console.error("Failed to clear server cookies:", cookieError);
+        logAuthError(cookieError, "Failed to clear server cookies");
         // Continue with client-side sign out even if server cookies fail
       }
 
@@ -338,7 +259,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const result = await auth.signOut();
       return result;
     } catch (error) {
-      console.error("Error signing out:", error);
+      logAuthError(error, "Error signing out");
 
       // Even if sign out fails, clear local state
       setSession(null);
@@ -349,13 +270,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [logAuthError]);
 
   const value = {
     user,
     session,
     profile,
     loading,
+    authReady,
     signInWithGoogle,
     signInWithMagicLink,
     signOut,

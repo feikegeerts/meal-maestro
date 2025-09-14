@@ -225,13 +225,32 @@ const mockSupabaseClient = {
     }),
     getSession: jest.fn().mockImplementation(async () => {
       return {
-        data: { session: { access_token: "mock-token" } },
+        data: {
+          session: {
+            access_token: "mock-token",
+            user: { id: "test-user", email: "test@example.com" }
+          }
+        },
+        error: null,
+      };
+    }),
+    refreshSession: jest.fn().mockImplementation(async () => {
+      return {
+        data: {
+          session: {
+            access_token: "mock-refreshed-token",
+            user: { id: "test-user", email: "test@example.com" }
+          }
+        },
         error: null,
       };
     }),
     onAuthStateChange: jest.fn().mockImplementation((cb) => {
       if (cb)
-        cb({ event: "SIGNED_IN", session: { access_token: "mock-token" } });
+        cb("SIGNED_IN", {
+          access_token: "mock-token",
+          user: { id: "test-user", email: "test@example.com" }
+        });
       return {
         data: {
           subscription: {
@@ -290,7 +309,10 @@ const auth = {
     }
   }),
   getCurrentSession: jest.fn().mockResolvedValue({
-    session: { access_token: "mock-token" },
+    session: {
+      access_token: "mock-token",
+      user: { id: "test-user", email: "test@example.com" }
+    },
     error: null,
   }),
   onAuthStateChange: jest
