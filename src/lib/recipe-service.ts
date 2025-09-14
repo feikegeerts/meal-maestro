@@ -1,44 +1,57 @@
 import { Recipe, RecipeSearchParams, RecipesResponse, RecipeInput } from "@/types/recipe";
 import { toDateOnlyISOString } from "@/lib/utils";
-import { tokenManager } from "@/lib/token-manager";
 
 export interface AuthenticatedFetchOptions extends RequestInit {
-  skipAuth?: boolean;
+  maxRetries?: number;
 }
 
 export async function authenticatedFetch(
-  url: string,
+  url: string, 
   options: AuthenticatedFetchOptions = {}
 ): Promise<Response> {
-  const { skipAuth = false, ...fetchOptions } = options;
-
+  const { maxRetries = 1, ...fetchOptions } = options;
+  
   const requestOptions: RequestInit = {
     credentials: 'include',
     ...fetchOptions
   };
 
   let response = await fetch(url, requestOptions);
-
-  // If we get a 401 and auth is not skipped, try to refresh and retry
-  if (response.status === 401 && !skipAuth) {
+  
+  if (response.status === 401 && maxRetries > 0) {
     try {
-      console.debug('Received 401, attempting token refresh');
-      const session = await tokenManager.refreshSession();
-
+      const { supabase } = await import('./supabase');
+      
+      const { data: { session }, error } = await supabase.auth.refreshSession();
+      
+      if (error) {
+        console.error('Session refresh failed:', error);
+        return response;
+      }
+      
       if (session) {
-        console.debug('Token refresh successful, retrying request');
+        await fetch('/api/auth/set-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+            expires_in: session.expires_in
+          })
+        });
+        
         response = await fetch(url, {
           ...requestOptions,
-          skipAuth: true // Prevent infinite retry loop
+          maxRetries: maxRetries - 1
         } as AuthenticatedFetchOptions);
-      } else {
-        console.debug('Token refresh failed, returning original 401 response');
       }
     } catch (refreshError) {
       console.error('Error during auth refresh retry:', refreshError);
     }
   }
-
+  
   return response;
 }
 
