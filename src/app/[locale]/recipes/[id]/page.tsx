@@ -5,7 +5,6 @@ import { useRouter } from "@/app/i18n/routing";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useRecipes } from "@/contexts/recipe-context";
-import { useCustomUnits } from "@/hooks/use-custom-units";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -49,7 +48,6 @@ export default function RecipeDetailPage() {
     updateRecipe: updateRecipeInContext,
     removeRecipe,
   } = useRecipes();
-  useCustomUnits(); // Ensure context is initialized
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const { formatDateWithFallback } = useLocalizedDateFormatter();
   const [displayRecipe, setDisplayRecipe] = useState<Recipe | null>(null);

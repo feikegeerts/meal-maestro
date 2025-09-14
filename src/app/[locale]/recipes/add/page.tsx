@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "@/app/i18n/routing";
 import { useAuth } from "@/lib/auth-context";
 import { useRecipes } from "@/contexts/recipe-context";
+import { CustomUnitsProvider } from "@/contexts/custom-units-context";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageHeader } from "@/components/ui/page-header";
@@ -96,25 +97,27 @@ export default function AddRecipePage() {
   }
 
   return (
-    <PageWrapper>
-      <PageHeader
-        title={t('addNewRecipe')}
-        subtitle={t('createNewRecipe')}
-        backButtonText={t('backToRecipes')}
-        onBackClick={handleCancel}
-        className="mb-6"
-      />
+    <CustomUnitsProvider>
+      <PageWrapper>
+        <PageHeader
+          title={t('addNewRecipe')}
+          subtitle={t('createNewRecipe')}
+          backButtonText={t('backToRecipes')}
+          onBackClick={handleCancel}
+          className="mb-6"
+        />
 
-      {/* Two-column layout for desktop, single column for mobile */}
-      <RecipeEditForm
-        recipe={defaultRecipe}
-        onSave={handleSave}
-        loading={loading}
-        includeChat={true}
-        standalone={true}
-        onCancel={handleCancel}
-        layoutMode="two-column"
-      />
-    </PageWrapper>
+        {/* Two-column layout for desktop, single column for mobile */}
+        <RecipeEditForm
+          recipe={defaultRecipe}
+          onSave={handleSave}
+          loading={loading}
+          includeChat={true}
+          standalone={true}
+          onCancel={handleCancel}
+          layoutMode="two-column"
+        />
+      </PageWrapper>
+    </CustomUnitsProvider>
   );
 }

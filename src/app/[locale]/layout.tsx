@@ -2,7 +2,6 @@ import "./globals.css";
 import "./print.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { RecipeProvider } from "@/contexts/recipe-context";
-import { CustomUnitsProvider } from "@/contexts/custom-units-context";
 import { MainNav } from "@/components/navigation/main-nav";
 import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
@@ -48,18 +47,16 @@ export default async function LocaleLayout({
     >
       <NextIntlClientProvider messages={messages}>
         <AuthProvider>
-          <CustomUnitsProvider>
-            <RecipeProvider>
-              <div className="min-h-screen flex flex-col">
-                <MainNav />
-                <main className="flex-1">
-                  {children}
-                </main>
-                <Footer />
-              </div>
-              <Toaster richColors position="top-right" />
-            </RecipeProvider>
-          </CustomUnitsProvider>
+          <RecipeProvider>
+            <div className="min-h-screen flex flex-col">
+              <MainNav />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+            </div>
+            <Toaster richColors position="top-right" />
+          </RecipeProvider>
         </AuthProvider>
       </NextIntlClientProvider>
     </ThemeProvider>

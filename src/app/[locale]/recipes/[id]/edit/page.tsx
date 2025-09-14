@@ -5,6 +5,7 @@ import { useRouter } from "@/app/i18n/routing";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useRecipes } from "@/contexts/recipe-context";
+import { CustomUnitsProvider } from "@/contexts/custom-units-context";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -164,25 +165,27 @@ export default function EditRecipePage() {
   }
 
   return (
-    <PageWrapper>
-      <PageHeader
-        title={t("editRecipe")}
-        subtitle={t("updateRecipe", { title: recipe.title })}
-        recipe={recipe}
-        backButtonText={t("backToRecipe")}
-        onBackClick={handleCancel}
-        className="mb-6"
-      />
+    <CustomUnitsProvider>
+      <PageWrapper>
+        <PageHeader
+          title={t("editRecipe")}
+          subtitle={t("updateRecipe", { title: recipe.title })}
+          recipe={recipe}
+          backButtonText={t("backToRecipe")}
+          onBackClick={handleCancel}
+          className="mb-6"
+        />
 
-      {/* Form */}
-      <RecipeEditForm
-        recipe={recipe}
-        onSave={handleSave}
-        loading={saveLoading}
-        includeChat={false}
-        standalone={true}
-        onCancel={handleCancel}
-      />
-    </PageWrapper>
+        {/* Form */}
+        <RecipeEditForm
+          recipe={recipe}
+          onSave={handleSave}
+          loading={saveLoading}
+          includeChat={false}
+          standalone={true}
+          onCancel={handleCancel}
+        />
+      </PageWrapper>
+    </CustomUnitsProvider>
   );
 }
