@@ -463,6 +463,18 @@
     "clove": "teen",
     "cloves": "teentjes"
   },
+  "unitSelect": {
+    "custom": "eigen",
+    "deleteUnit": "Verwijder \"{unit}\"",
+    "addCustomUnit": "Eenheid toevoegen...",
+    "addCustomUnitTitle": "Eenheid Toevoegen",
+    "addCustomUnitDescription": "Maak een eigen eenheid voor je ingrediënten. Bijvoorbeeld: \"bos\", \"pot\", \"middelgrote kom\".",
+    "enterUnitName": "Voer naam eigen eenheid in...",
+    "cancel": "Annuleren",
+    "adding": "Toevoegen...",
+    "addUnit": "Eenheid Toevoegen",
+    "confirmDeleteUnit": "Weet je zeker dat je de eenheid \"{unit}\" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+  },
   "ingredientPlurals": {
     "ui": "uien",
     "tomaat": "tomaten",

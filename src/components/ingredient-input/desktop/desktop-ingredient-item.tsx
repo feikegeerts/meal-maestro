@@ -2,15 +2,9 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { UnitSelect } from "@/components/ui/unit-select";
 import { X, Grip } from "lucide-react";
-import { RecipeIngredient, COOKING_UNITS } from "@/types/recipe";
+import { RecipeIngredient } from "@/types/recipe";
 import { useNumericInput } from "../hooks/use-numeric-input";
 
 interface DesktopIngredientItemProps {
@@ -23,7 +17,6 @@ interface DesktopIngredientItemProps {
   onRemove: (id: string) => void;
   ingredientsLength: number;
   t: (key: string) => string;
-  tUnits: (key: string) => string;
   getStepSizeForUnit: (unit: string | null) => number;
 }
 
@@ -37,14 +30,13 @@ export function DesktopIngredientItem({
   onRemove,
   ingredientsLength,
   t,
-  tUnits,
   getStepSizeForUnit,
 }: DesktopIngredientItemProps) {
   const numericInput = useNumericInput({
     value: ingredient.amount,
     onChange: (value) => onAmountChange(ingredient.id, value),
     min: 0,
-    step: getStepSizeForUnit(ingredient.unit)
+    step: getStepSizeForUnit(ingredient.unit),
   });
   const {
     attributes,
@@ -108,10 +100,10 @@ export function DesktopIngredientItem({
             {...listeners}
             disabled={disabled}
             className="p-1 hover:bg-muted rounded cursor-grab active:cursor-grabbing disabled:cursor-default disabled:hover:bg-transparent touch-none select-none"
-            style={{ 
-              touchAction: 'none',
-              WebkitUserSelect: 'none',
-              WebkitTouchCallout: 'none'
+            style={{
+              touchAction: "none",
+              WebkitUserSelect: "none",
+              WebkitTouchCallout: "none",
             }}
             type="button"
           >
@@ -142,24 +134,14 @@ export function DesktopIngredientItem({
                 inputMode="decimal"
               />
             </div>
-            <div className="w-20">
-              <Select
-                value={ingredient.unit || "none"}
+            <div>
+              <UnitSelect
+                value={ingredient.unit}
                 onValueChange={(value) => onUnitSelect(ingredient.id, value)}
                 disabled={disabled}
-              >
-                <SelectTrigger className="h-9 w-full text-sm">
-                  <SelectValue placeholder="-" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">-</SelectItem>
-                  {COOKING_UNITS.map((unit) => (
-                    <SelectItem key={unit} value={unit}>
-                      {tUnits(unit)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                className="h-9 w-full text-sm"
+                placeholder="-"
+              />
             </div>
           </div>
 

@@ -5,6 +5,7 @@ import { useRouter } from "@/app/i18n/routing";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useRecipes } from "@/contexts/recipe-context";
+import { useCustomUnits } from "@/hooks/use-custom-units";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ export default function RecipeDetailPage() {
     updateRecipe: updateRecipeInContext,
     removeRecipe,
   } = useRecipes();
+  useCustomUnits(); // Ensure context is initialized
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const { formatDateWithFallback } = useLocalizedDateFormatter();
   const [displayRecipe, setDisplayRecipe] = useState<Recipe | null>(null);
@@ -520,7 +522,14 @@ export default function RecipeDetailPage() {
                       // Format amount text for the left column
                       amountText = formatFraction(finalAmount);
                       if (pluralizedUnit) {
-                        amountText += ` ${tUnits(pluralizedUnit) || pluralizedUnit}`;
+                        // Define standard units to avoid translation errors for custom units
+                        const standardUnits = ['g', 'kg', 'ml', 'l', 'tbsp', 'tsp', 'clove', 'cloves'];
+                        const isStandardUnit = standardUnits.includes(pluralizedUnit);
+
+                        const translatedUnit = isStandardUnit
+                          ? (tUnits(pluralizedUnit) || pluralizedUnit) // Only translate standard units
+                          : pluralizedUnit; // Custom units are displayed as-is
+                        amountText += ` ${translatedUnit}`;
                       }
                       
                       // Apply ingredient name pluralization/singularization based on the final amount

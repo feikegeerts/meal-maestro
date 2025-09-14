@@ -29,7 +29,6 @@ function StructuredIngredientInputComponent({
   disabled = false,
 }: StructuredIngredientInputProps) {
   const t = useTranslations("ingredientInput");
-  const tUnits = useTranslations("units");
 
   // Custom hooks
   const { isMobile } = useResponsiveLayout();
@@ -77,7 +76,6 @@ function StructuredIngredientInputComponent({
                     onRemove={removeIngredient}
                     ingredientsLength={ingredients.length}
                     t={t}
-                    tUnits={tUnits}
                     getStepSizeForUnit={getStepSizeForUnit}
                   />
                 ))}
@@ -97,7 +95,6 @@ function StructuredIngredientInputComponent({
                     onRemove={removeIngredient}
                     ingredientsLength={ingredients.length}
                     t={t}
-                    tUnits={tUnits}
                     getStepSizeForUnit={getStepSizeForUnit}
                   />
                 ))}
@@ -122,7 +119,6 @@ function StructuredIngredientInputComponent({
               onRemove={() => {}}
               ingredientsLength={ingredients.length}
               t={t}
-              tUnits={tUnits}
               getStepSizeForUnit={getStepSizeForUnit}
             />
           ) : (
@@ -136,7 +132,6 @@ function StructuredIngredientInputComponent({
               onRemove={() => {}}
               ingredientsLength={ingredients.length}
               t={t}
-              tUnits={tUnits}
               getStepSizeForUnit={getStepSizeForUnit}
             />
           )

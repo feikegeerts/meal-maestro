@@ -462,6 +462,18 @@
     "clove": "clove",
     "cloves": "cloves"
   },
+  "unitSelect": {
+    "custom": "custom",
+    "deleteUnit": "Delete \"{unit}\"",
+    "addCustomUnit": "Add custom unit...",
+    "addCustomUnitTitle": "Add Custom Unit",
+    "addCustomUnitDescription": "Create a custom unit for your ingredients. For example: \"handful\", \"pot\", \"medium bowl\".",
+    "enterUnitName": "Enter custom unit name...",
+    "cancel": "Cancel",
+    "adding": "Adding...",
+    "addUnit": "Add Unit",
+    "confirmDeleteUnit": "Are you sure you want to delete the unit \"{unit}\"? This action cannot be undone."
+  },
   "ingredientPlurals": {
     "onion": "onions",
     "tomato": "tomatoes",

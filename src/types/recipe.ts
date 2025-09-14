@@ -364,7 +364,12 @@ export function smartVolumeConversion(amount: number, unit: string): SmartUnitRe
 
 export function normalizeIngredientUnit(amount: number | null, unit: string | null): SmartUnitResult | null {
   if (amount === null || unit === null) return null;
-  
+
+  // Only apply smart conversions to standard units
+  if (!isStandardUnit(unit)) {
+    return { amount, unit };
+  }
+
   // Apply smart conversions based on unit type
   if (unit === 'g' || unit === 'kg') {
     return smartWeightConversion(amount, unit);
@@ -372,8 +377,8 @@ export function normalizeIngredientUnit(amount: number | null, unit: string | nu
   if (unit === 'ml' || unit === 'l') {
     return smartVolumeConversion(amount, unit);
   }
-  
-  // Return as-is for non-convertible units
+
+  // Return as-is for non-convertible standard units
   return { amount, unit };
 }
 
@@ -479,8 +484,8 @@ export function formatIngredientDisplay(ingredient: RecipeIngredient): string {
 }
 
 
-// Smart cooking units for dropdown (7 total)
-export const COOKING_UNITS = [
+// Standard cooking units that support smart conversions (7 total)
+export const STANDARD_COOKING_UNITS = [
   'g',
   'kg',
   'ml',
@@ -489,6 +494,9 @@ export const COOKING_UNITS = [
   'tsp',
   'clove'
 ];
+
+// Legacy export for backward compatibility
+export const COOKING_UNITS = STANDARD_COOKING_UNITS;
 
 // Unit-based step sizes for quantity inputs
 const UNIT_STEP_CONFIG: Record<string, number> = {
@@ -517,7 +525,49 @@ export function getStepSizeForUnit(unit: string | null): number {
   if (!unit) {
     return 1; // Default step for unitless ingredients
   }
-  
-  return UNIT_STEP_CONFIG[unit] || 1; // Default to 1 for unknown units
+
+  return UNIT_STEP_CONFIG[unit] || 1; // Default to 1 for unknown/custom units
+}
+
+/**
+ * Checks if a unit is a standard unit that supports smart conversions
+ * @param unit - The unit to check
+ * @returns True if it's a standard unit
+ */
+export function isStandardUnit(unit: string | null): boolean {
+  if (!unit) return false;
+  return STANDARD_COOKING_UNITS.includes(unit);
+}
+
+/**
+ * Interface for custom units from the database
+ */
+export interface CustomUnit {
+  id: string;
+  user_id: string;
+  unit_name: string;
+  created_at: string;
+}
+
+/**
+ * Interface for the complete unit system including standard + custom units
+ */
+export interface UnitSystem {
+  standard: string[];
+  custom: string[];
+  all: string[];
+}
+
+/**
+ * Creates a unit system object from standard units and custom units
+ * @param customUnits - Array of custom unit names
+ * @returns UnitSystem object
+ */
+export function createUnitSystem(customUnits: string[] = []): UnitSystem {
+  const standard = [...STANDARD_COOKING_UNITS];
+  const custom = [...customUnits];
+  const all = [...standard, ...custom];
+
+  return { standard, custom, all };
 }
 

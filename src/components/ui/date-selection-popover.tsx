@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Calendar, Check, X } from "lucide-react";
-import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";

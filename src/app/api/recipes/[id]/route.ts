@@ -139,48 +139,13 @@ export async function PUT(
         }
       }
       
-      // Normalize ingredient amounts and units
-      const normalizedIngredients = ingredients.map(ingredient => {
-        let normalizedUnit = ingredient.unit;
-        
-        // Convert common non-standard units to standard ones or remove them
-        if (typeof normalizedUnit === 'string') {
-          switch (normalizedUnit.toLowerCase()) {
-            case 'el':
-            case 'eetlepel':
-              normalizedUnit = 'tbsp';
-              break;
-            case 'tl':
-            case 'theelepel':
-              normalizedUnit = 'tsp';
-              break;
-            case 'teen':
-            case 'teentje':
-            case 'teentjes':
-              normalizedUnit = 'clove'; // Convert Dutch garlic clove unit to English
-              break;
-            case 'stuk':
-            case 'stuks':
-            case 'units.stuk':
-            case 'pieces':
-              normalizedUnit = null; // Remove unit for countable items
-              break;
-            default:
-              // Keep valid units, set invalid ones to null
-              const validUnits = ['g', 'kg', 'ml', 'l', 'tbsp', 'tsp', 'clove'];
-              if (!validUnits.includes(normalizedUnit) && normalizedUnit !== 'naar smaak' && normalizedUnit !== 'to taste') {
-                normalizedUnit = null;
-              }
-          }
-        }
-        
-        return {
-          ...ingredient,
-          amount: ingredient.amount === 0 ? null : ingredient.amount,
-          unit: normalizedUnit
-        };
-      });
-      updateData.ingredients = normalizedIngredients;
+      // We'll normalize ingredient amounts and units after fetching user's custom units
+      // to properly validate both standard and custom units
+      updateData.ingredients = ingredients.map(ingredient => ({
+        ...ingredient,
+        amount: ingredient.amount === 0 ? null : ingredient.amount,
+        unit: ingredient.unit
+      }));
     }
     if (servings !== undefined) {
       const servingsNum = parseInt(servings);

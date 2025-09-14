@@ -193,23 +193,23 @@ export function RecipeEditForm({
           {standalone ? (
             <>
               <Button
+                variant="outline"
+                disabled={loading}
+                className="flex-1 order-1"
+                onClick={onCancel}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
                 onClick={handleSave}
                 disabled={loading}
-                className="flex-1"
+                className="flex-1 order-2"
               >
                 {loading
                   ? t("saving")
                   : recipe.id
                   ? t("saveChanges")
                   : t("createRecipe")}
-              </Button>
-              <Button
-                variant="outline"
-                disabled={loading}
-                className="flex-1"
-                onClick={onCancel}
-              >
-                {t("cancel")}
               </Button>
             </>
           ) : (
@@ -221,6 +221,11 @@ export function RecipeEditForm({
                   aria-hidden="true"
                 />
               </SheetClose>
+              <SheetClose asChild>
+                <Button variant="outline" disabled={loading} className="flex-1">
+                  {t("cancel")}
+                </Button>
+              </SheetClose>
               <Button
                 onClick={handleSave}
                 disabled={loading}
@@ -228,11 +233,6 @@ export function RecipeEditForm({
               >
                 {loading ? t("saving") : t("saveChanges")}
               </Button>
-              <SheetClose asChild>
-                <Button variant="outline" disabled={loading} className="flex-1">
-                  {t("cancel")}
-                </Button>
-              </SheetClose>
             </>
           )}
         </div>
@@ -312,13 +312,6 @@ export function RecipeEditForm({
         <div className="flex gap-3 pt-4 border-t justify-center">
           {standalone ? (
             <>
-              <Button onClick={handleSave} disabled={loading} className="">
-                {loading
-                  ? t("saving")
-                  : recipe.id
-                  ? t("saveChanges")
-                  : t("createRecipe")}
-              </Button>
               <Button
                 variant="outline"
                 disabled={loading}
@@ -326,6 +319,13 @@ export function RecipeEditForm({
                 onClick={onCancel}
               >
                 {t("cancel")}
+              </Button>
+              <Button onClick={handleSave} disabled={loading} className="">
+                {loading
+                  ? t("saving")
+                  : recipe.id
+                  ? t("saveChanges")
+                  : t("createRecipe")}
               </Button>
             </>
           ) : (
@@ -337,6 +337,11 @@ export function RecipeEditForm({
                   aria-hidden="true"
                 />
               </SheetClose>
+              <SheetClose asChild>
+                <Button variant="outline" disabled={loading} className="flex-1">
+                  {t("cancel")}
+                </Button>
+              </SheetClose>
               <Button
                 onClick={handleSave}
                 disabled={loading}
@@ -344,11 +349,6 @@ export function RecipeEditForm({
               >
                 {loading ? t("saving") : t("saveChanges")}
               </Button>
-              <SheetClose asChild>
-                <Button variant="outline" disabled={loading} className="flex-1">
-                  {t("cancel")}
-                </Button>
-              </SheetClose>
             </>
           )}
         </div>

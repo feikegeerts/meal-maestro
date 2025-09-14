@@ -55,7 +55,8 @@ SEASONS:
 Choose from: ${RECIPE_SEASONS.join(", ")}
 
 UNITS FOR INGREDIENTS:
-ONLY use: ${COOKING_UNITS.join(", ")}
+PREFER STANDARD UNITS: ${COOKING_UNITS.join(", ")}
+CUSTOM UNITS ALLOWED: If no standard unit fits, use descriptive units like "handful", "bunch", "medium bowl", "bucket", "slice", "pinch"
 NEVER use: stuk, el, tl, teen, pieces, stuks
 
 GUIDELINES: Liquids=ml, solids=g, countable items=no unit, herbs/spices=tsp/tbsp, garlic=clove

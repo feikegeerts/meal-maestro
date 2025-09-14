@@ -1,4 +1,4 @@
-import { 
+import {
   useSensors,
   useSensor,
   MouseSensor,
@@ -8,7 +8,7 @@ import {
   DragEndEvent,
   closestCenter,
 } from "@dnd-kit/core";
-import { 
+import {
   sortableKeyboardCoordinates,
   arrayMove,
   verticalListSortingStrategy,
@@ -22,7 +22,8 @@ interface UseDragAndDropProps {
 }
 
 export function useDragAndDrop({ ingredients, onChange }: UseDragAndDropProps) {
-  const [activeIngredient, setActiveIngredient] = useState<RecipeIngredient | null>(null);
+  const [activeIngredient, setActiveIngredient] =
+    useState<RecipeIngredient | null>(null);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -44,9 +45,16 @@ export function useDragAndDrop({ ingredients, onChange }: UseDragAndDropProps) {
   const handleDragStart = (event: DragStartEvent) => {
     console.log("🚀 DRAG START");
     console.log("Active ID:", event.active.id);
-    console.log("Current ingredients:", ingredients.map((ing, idx) => ({ id: ing.id, name: ing.name, index: idx })));
-    
-    const ingredient = ingredients.find(ing => ing.id === event.active.id);
+    console.log(
+      "Current ingredients:",
+      ingredients.map((ing, idx) => ({
+        id: ing.id,
+        name: ing.name,
+        index: idx,
+      }))
+    );
+
+    const ingredient = ingredients.find((ing) => ing.id === event.active.id);
     setActiveIngredient(ingredient || null);
   };
 
@@ -59,13 +67,22 @@ export function useDragAndDrop({ ingredients, onChange }: UseDragAndDropProps) {
     console.log("Over exists:", !!over);
 
     if (active.id !== over?.id && over) {
-      const oldIndex = ingredients.findIndex((ingredient) => ingredient.id === active.id);
-      const newIndex = ingredients.findIndex((ingredient) => ingredient.id === over.id);
+      const oldIndex = ingredients.findIndex(
+        (ingredient) => ingredient.id === active.id
+      );
+      const newIndex = ingredients.findIndex(
+        (ingredient) => ingredient.id === over.id
+      );
 
       console.log("📍 INDICES: old =", oldIndex, "new =", newIndex);
 
       if (oldIndex !== -1 && newIndex !== -1) {
-        console.log("✅ MOVING:", ingredients[oldIndex]?.name, "to position", newIndex);
+        console.log(
+          "✅ MOVING:",
+          ingredients[oldIndex]?.name,
+          "to position",
+          newIndex
+        );
         onChange(arrayMove(ingredients, oldIndex, newIndex));
       }
     }
@@ -74,8 +91,6 @@ export function useDragAndDrop({ ingredients, onChange }: UseDragAndDropProps) {
   };
 
   const sortableIds = ingredients.map((ingredient) => ingredient.id);
-  
-  console.log("🔧 SORTABLE CONTEXT IDS:", sortableIds);
 
   return {
     sensors,

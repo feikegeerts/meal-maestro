@@ -31,7 +31,6 @@ import {
   Edit,
   Utensils,
   Trash2,
-  Calendar,
 } from "lucide-react";
 import { Link } from "@/app/i18n/routing";
 import { useTranslations } from "next-intl";
@@ -50,7 +49,7 @@ interface RecipeColumnsResult {
 
 export function useRecipeColumns(): RecipeColumnsResult {
   const t = useTranslations("recipeTable");
-  const tRecipes = useTranslations("recipes");
+  useTranslations("recipes"); // Available for future use
   const tA11y = useTranslations("accessibility");
   const tToast = useTranslations("toast");
   const { translateCategory, translateSeason, translateTag } =
