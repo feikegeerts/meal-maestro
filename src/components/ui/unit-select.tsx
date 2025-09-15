@@ -103,7 +103,7 @@ export function UnitSelect({
           ))}
           {isCustomUnit && (
             <SelectItem key={value} value={value}>
-              <span>{value}</span>
+              <span className="font-medium">{value}</span>
             </SelectItem>
           )}
         </SelectContent>
@@ -150,7 +150,7 @@ export function UnitSelect({
                     }
                   }}
                 >
-                  {unit.unit_name}
+                  <span className="font-medium">{unit.unit_name}</span>
                   <button
                     type="button"
                     data-delete-button
@@ -167,7 +167,7 @@ export function UnitSelect({
                       }
                     }}
                     disabled={deletingUnit === unit.id}
-                    className="absolute right-8 top-1/2 -translate-y-1/2 h-4 w-4 p-3 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity rounded flex items-center justify-center shrink-0 z-10"
+                    className="absolute right-8 top-1/2 -translate-y-1/2 h-4 w-4 p-3 opacity-0 group-hover:opacity-100 hover:bg-destructive/40 hover:text-destructive transition-opacity rounded flex items-center justify-center shrink-0 z-10"
                   >
                     {deletingUnit === unit.id ? (
                       <div className="h-2 w-2 animate-spin rounded-full border border-current border-t-transparent" />
