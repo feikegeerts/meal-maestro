@@ -23,7 +23,7 @@ interface ScrapeResponse {
     cuisine?: string;
     image?: string;
     url?: string;
-    source: "json-ld" | "meta-tags" | "html-parsing";
+    source: "json-ld" | "meta-tags" | "html-parsing" | "text-extraction";
     domainDescription?: string;
   };
   error?: string;
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         ...scrapeResult.data,
-        source: scrapeResult.source as "json-ld" | "meta-tags" | "html-parsing",
+        source: scrapeResult.source as "json-ld" | "meta-tags" | "html-parsing" | "text-extraction",
         url: normalizedUrl,
         domainDescription: UrlDetector.getDomainDescription(normalizedUrl),
       },
