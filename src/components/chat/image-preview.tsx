@@ -44,16 +44,16 @@ export function ImagePreview({ file, onRemove, onProcessed, className = "" }: Im
 
   if (!imageUrl) {
     return (
-      <div className="flex items-center justify-center w-full h-32 bg-gray-100 rounded-lg animate-pulse">
-        <span className="text-sm text-gray-500">Loading image...</span>
+      <div className="flex items-center justify-center w-full h-32 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse">
+        <span className="text-sm text-gray-500 dark:text-gray-400">Loading image...</span>
       </div>
     );
   }
 
   return (
-    <div className={`relative bg-white border rounded-lg p-2 ${className}`}>
+    <div className={`relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 ${className}`}>
       {/* Image preview */}
-      <div className="relative overflow-hidden rounded-lg bg-gray-50">
+      <div className="relative overflow-hidden rounded-lg bg-gray-50 dark:bg-gray-700">
         <Image
           src={imageUrl}
           alt="Recipe image preview"
@@ -89,7 +89,7 @@ export function ImagePreview({ file, onRemove, onProcessed, className = "" }: Im
       </div>
       
       {/* File info */}
-      <div className="mt-2 text-xs text-gray-600">
+      <div className="mt-2 text-xs text-gray-600 dark:text-gray-300">
         <div className="truncate font-medium">{file.name}</div>
         <div className="flex justify-between">
           <span>{formatFileSize(file.size)}</span>
