@@ -3,8 +3,7 @@
 ## User Experience
 
 1. [ ] Expand us-traditional unit preference to include cups, fl oz, oz, lb units by adding them to database schema and unit dropdown. We need to think about whether to always show this us just based on user preference to prevent the unit list from coming too long.
-1. [ ] Sometimes the AI with a photo times out when gpt is very slow to respond. This timeout should be processed.
-1. [ ] after photo upload you can't see that photo in the chat history. this is because the chat context doesn't have that photo in it and that's what we display. So we need to think about how to fix that.
+1. [ ] Sometimes the AI with a photo times out when gpt is very slow to respond. This timeout should be processed. We do currently retry it after the timeout, maybe this is ok?
 1. [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
 1. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 

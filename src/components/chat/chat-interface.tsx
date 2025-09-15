@@ -315,13 +315,14 @@ export function ChatInterface({
 
       const data: ChatResponse = await response.json();
 
-      // Update messages with full conversation history from response
-      // Ensure all messages have timestamps
-      const messagesWithTimestamps = data.conversation_history.map((msg) => ({
-        ...msg,
-        timestamp: msg.timestamp || new Date().toISOString(),
-      }));
-      setMessages(messagesWithTimestamps);
+      // Instead of overwriting messages, just append the assistant's response
+      // This preserves the user's message with its image URL
+      const assistantResponse = {
+        role: "assistant" as const,
+        content: data.response || "",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, assistantResponse]);
 
       // Check if AI updated the form (either through direct update or URL extraction)
       if (data.function_call && onRecipeGenerated) {
