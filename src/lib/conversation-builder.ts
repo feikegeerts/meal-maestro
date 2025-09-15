@@ -119,9 +119,9 @@ export class ConversationBuilder {
     if (this.customUnits && this.customUnits.length > 0) {
       // Keep prompt concise; truncate to first 25 (same limit as schema) if longer
       const limited = this.customUnits.slice(0, 25);
-      systemPrompt += `\nCustom ingredient units available (use exactly as defined; do not invent new ones): ${limited.join(
+      systemPrompt += `\nUser-defined ingredient units available: ${limited.join(
         ", "
-      )}`;
+      )}. Use these units when they are appropriate for the ingredient (e.g., "pak" for packaged items, "jar" for jarred goods).`;
     }
     systemPrompt += getLanguageInstruction(this.t.bind(this));
     messages.push({ role: "system", content: systemPrompt });
