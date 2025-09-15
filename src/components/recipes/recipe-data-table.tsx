@@ -57,7 +57,7 @@ import { recipeService } from "@/lib/recipe-service";
 import { toast } from "sonner";
 import { useTranslations } from 'next-intl';
 import { useRecipeTranslations } from '@/messages';
-import { CuisineType, DietType, CookingMethodType, DishType, ProteinType, OccasionType, CharacteristicType } from "@/types/recipe";
+import { CuisineType, DietType, CookingMethodType, DishType, ProteinType, OccasionType, CharacteristicType, RecipeCategory, RecipeSeason } from "@/types/recipe";
 import { DateSelectionDialog } from "@/components/ui/date-selection-dialog";
 import { Calendar } from "lucide-react";
 
@@ -78,7 +78,7 @@ export function RecipeDataTable<TData, TValue>({
   const tTable = useTranslations('recipeTable');
   const tCategories = useTranslations('categories');
   const tSeasons = useTranslations('seasons');
-  const { translateTag } = useRecipeTranslations();
+  const { translateTag, translateCategory, translateSeason } = useRecipeTranslations();
   
   const getColumnDisplayName = (columnId: string): string => {
     switch (columnId) {
@@ -140,13 +140,25 @@ export function RecipeDataTable<TData, TValue>({
       const title = row.getValue("title") as string;
       if (title?.toLowerCase().includes(searchValue)) return true;
 
-      // Search in category
+      // Search in category (both raw and translated values)
       const category = row.getValue("category") as string;
       if (category?.toLowerCase().includes(searchValue)) return true;
 
-      // Search in season
+      // Also search in translated category value
+      if (category) {
+        const translatedCategory = translateCategory(category as RecipeCategory);
+        if (translatedCategory?.toLowerCase().includes(searchValue)) return true;
+      }
+
+      // Search in season (both raw and translated values)
       const season = row.getValue("season") as string;
       if (season?.toLowerCase().includes(searchValue)) return true;
+
+      // Also search in translated season value
+      if (season) {
+        const translatedSeason = translateSeason(season as RecipeSeason);
+        if (translatedSeason?.toLowerCase().includes(searchValue)) return true;
+      }
 
       // Search in categorized tags (both raw and translated values)
       const allTags = [
