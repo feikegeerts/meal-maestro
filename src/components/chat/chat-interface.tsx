@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { UnitPreferenceSetting } from "@/components/settings/unit-preference-setting";
 import { ChatMessage } from "./chat-message";
 import { ImageUploadButton } from "./image-upload-button";
 import { ImagePreview } from "./image-preview";
@@ -15,6 +21,7 @@ import {
   ChevronDown,
   ChevronUp,
   MessageSquare,
+  Settings,
 } from "lucide-react";
 import { Recipe } from "@/types/recipe";
 import { useTranslations, useLocale } from "next-intl";
@@ -370,15 +377,34 @@ export function ChatInterface({
             />
             {t("assistantTitle")}
           </CardTitle>
-          {!isDesktopSidebar && (
-            <Button variant="ghost" size="sm">
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {/* Unit Preference Settings */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  title={t("unitPreferencesSettings") || "Unit preferences"}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="end">
+                <UnitPreferenceSetting />
+              </PopoverContent>
+            </Popover>
+            {!isDesktopSidebar && (
+              <Button variant="ghost" size="sm">
+                {isExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
 

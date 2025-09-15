@@ -18,6 +18,9 @@ This document provides an exhaustive list of all implemented features in the Mea
 - API route protection with authentication middleware
 - Role-based access control (user/admin roles)
 - User profile creation and management
+- User unit system preferences (precise-metric, traditional-metric, us-traditional, mixed)
+- Unit preference settings in account management
+- AI-powered unit conversion respecting user preferences
 - GDPR-compliant account deletion with confirmation sentence
 - Complete data removal (recipes, feedback, profiles)
 - Audit trail with deletion tracking
@@ -54,6 +57,7 @@ This document provides an exhaustive list of all implemented features in the Mea
 - Serving size scaling with smart unit conversion
 - Smart ingredient scaling with unit conversion (g/kg, ml/l, tbsp/tsp)
 - Recipe scaling calculations with proper fraction display
+- User-configurable unit system preferences for consistent recipe display
 - Structured ingredient system with amounts, units, and notes
 - Comprehensive tag system with 9 main categories
 - Recipe data validation and normalization
@@ -86,6 +90,8 @@ This document provides an exhaustive list of all implemented features in the Mea
 - Error recovery with AI-generated fallbacks
 - Smart extraction failure handling with title-based generation
 - Multi-language AI support (English/Dutch)
+- AI respects user unit system preferences (precise metric, traditional metric, US traditional, mixed)
+- Dynamic unit conversion in AI responses based on user preferences
 - Sophisticated prompt engineering with culinary expertise
 - Ingredient ordering intelligence (proteins → vegetables → seasonings)
 - Context-aware loading messages
@@ -125,7 +131,7 @@ This document provides an exhaustive list of all implemented features in the Mea
 
 ---
 
-**Total Features Implemented**: 90+ distinct capabilities
+**Total Features Implemented**: 95+ distinct capabilities
 
 _Last Updated: August 2025_  
 _Version: Based on codebase analysis_

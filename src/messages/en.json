@@ -394,6 +394,7 @@
   },
   "chat": {
     "assistantTitle": "AI Recipe Assistant",
+    "unitPreferencesSettings": "Unit preferences",
     "thinking": "AI is thinking...",
     "inputPlaceholder": "Type your message...",
     "loading": {
@@ -739,6 +740,31 @@
       "description": "Your account details and sign-in information",
       "email": "Email Address",
       "provider": "Sign-in Method"
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Customize your Meal Maestro experience",
+      "unitPreference": {
+        "title": "Unit System",
+        "updateSuccess": "Unit preference updated successfully",
+        "updateError": "Failed to update unit preference",
+        "preciseMetric": {
+          "title": "Precise Metric",
+          "description": "Only weight (g, kg) and volume (ml, l). Converts spoons to ml for maximum precision."
+        },
+        "traditionalMetric": {
+          "title": "Traditional Metric",
+          "description": "Metric system with measuring spoons (g, kg, ml, l, tsp, tbsp). Good balance of precision and practicality."
+        },
+        "usTraditional": {
+          "title": "US Traditional",
+          "description": "US measurements (cups, oz, lb, tbsp, tsp, fl oz). Traditional American recipe format."
+        },
+        "mixed": {
+          "title": "Mixed (No Conversion)",
+          "description": "Keep original units from recipes. No automatic conversions."
+        }
+      }
     },
     "dangerZone": {
       "title": "Danger Zone",

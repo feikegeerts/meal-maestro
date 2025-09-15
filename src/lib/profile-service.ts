@@ -6,6 +6,8 @@ export interface UserProfile {
   display_name: string | null;
   avatar_url: string | null;
   role: 'user' | 'admin';
+  language_preference?: string;
+  unit_system_preference?: string;
   created_at: string;
   updated_at: string;
 }
@@ -96,7 +98,7 @@ export const profileService = {
 
   async updateUserProfile(
     userId: string,
-    updates: Partial<Pick<UserProfile, "display_name" | "avatar_url">>
+    updates: Partial<Pick<UserProfile, "display_name" | "avatar_url" | "language_preference" | "unit_system_preference">>
   ): Promise<UserProfile | null> {
     try {
       const { data, error } = await supabase

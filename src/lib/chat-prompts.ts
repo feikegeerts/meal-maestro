@@ -91,6 +91,42 @@ export const getLanguageInstruction = (t: (key: string) => string): string => {
   return `\n\nCRITICAL INSTRUCTION: ${t("chat.languageInstruction")}`;
 };
 
+export const getUnitPreferenceInstruction = (unitPreference: string): string => {
+  switch (unitPreference) {
+    case 'precise-metric':
+      return `\n\nUNIT PREFERENCE: The user prefers PRECISE METRIC units only. Always use:
+- Weight: g, kg (never use tbsp, tsp for measured ingredients - convert to grams based on ingredient density)
+- Volume: ml, l (convert tbsp→ml, tsp→ml, cups→ml)
+- Example: Instead of "2 tbsp flour" use "15g flour", instead of "1 tsp salt" use "5ml salt" or "3g salt"
+- Be precise and scientific with measurements for maximum accuracy`;
+
+    case 'traditional-metric':
+      return `\n\nUNIT PREFERENCE: The user prefers TRADITIONAL METRIC units. Use:
+- Weight: g, kg for solids
+- Volume: ml, l for liquids, but tsp/tbsp are acceptable for small amounts
+- This is the balanced approach - practical but metric-focused
+- Example: "250g flour", "500ml milk", "2 tbsp olive oil", "1 tsp salt"`;
+
+    case 'us-traditional':
+      return `\n\nUNIT PREFERENCE: The user prefers US TRADITIONAL units. Always use:
+- Weight: oz, lb (convert metric weights)
+- Volume: cups, fl oz, tbsp, tsp (convert ml/l to US measurements)
+- Example: "2 cups flour", "1 cup milk", "2 tbsp olive oil", "1 tsp salt", "8 oz cheese"
+- Use American-style measurements throughout`;
+
+    case 'mixed':
+      return `\n\nUNIT PREFERENCE: The user prefers NO UNIT CONVERSIONS. Keep original units from sources:
+- If recipe source uses metric, keep metric
+- If recipe source uses imperial, keep imperial
+- Don't convert between systems unless specifically requested
+- Maintain authenticity of original recipes`;
+
+    default:
+      // Default to traditional-metric if preference is unknown
+      return `\n\nUNIT PREFERENCE: Using traditional metric units (g, kg, ml, l, tsp, tbsp).`;
+  }
+};
+
 export const getAIProcessingPrompt = (
   t: (key: string) => string,
   scrapedData: {

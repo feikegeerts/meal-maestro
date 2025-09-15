@@ -27,6 +27,7 @@ interface AuthContextType {
     error: AuthError | null;
   }>;
   signOut: () => Promise<{ error: AuthError | null }>;
+  updateProfile: (updates: Partial<Pick<UserProfile, "display_name" | "avatar_url" | "language_preference" | "unit_system_preference">>) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -351,6 +352,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
+  const updateProfile = useCallback(async (updates: Partial<Pick<UserProfile, "display_name" | "avatar_url" | "language_preference" | "unit_system_preference">>) => {
+    if (!user?.id) return false;
+
+    try {
+      const updatedProfile = await profileService.updateUserProfile(user.id, updates);
+      if (updatedProfile) {
+        setProfile(updatedProfile);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      return false;
+    }
+  }, [user?.id]);
+
   const value = {
     user,
     session,
@@ -359,6 +376,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signInWithGoogle,
     signInWithMagicLink,
     signOut,
+    updateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

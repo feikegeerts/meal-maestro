@@ -395,6 +395,7 @@
   },
   "chat": {
     "assistantTitle": "AI Recept Assistent",
+    "unitPreferencesSettings": "Meeteenheid voorkeuren",
     "thinking": "AI is aan het denken...",
     "inputPlaceholder": "Typ je bericht...",
     "loading": {
@@ -741,6 +742,31 @@
       "description": "Je accountgegevens en aanmeldingsinformatie",
       "email": "E-mailadres",
       "provider": "Aanmeldingsmethode"
+    },
+    "settings": {
+      "title": "Instellingen",
+      "description": "Pas je Meal Maestro ervaring aan",
+      "unitPreference": {
+        "title": "Eenheidssysteem",
+        "updateSuccess": "Eenheidsvoorkeur succesvol bijgewerkt",
+        "updateError": "Bijwerken van eenheidsvoorkeur mislukt",
+        "preciseMetric": {
+          "title": "Precisie Metrisch",
+          "description": "Alleen gewicht (g, kg) en volume (ml, l). Converteert lepels naar ml voor maximale precisie."
+        },
+        "traditionalMetric": {
+          "title": "Traditioneel Metrisch",
+          "description": "Metrisch systeem met maatlepels (g, kg, ml, l, tl, el). Goede balans tussen precisie en praktisch gebruik."
+        },
+        "usTraditional": {
+          "title": "VS Traditioneel",
+          "description": "Amerikaanse maten (cups, oz, lb, tbsp, tsp, fl oz). Traditioneel Amerikaans receptformaat."
+        },
+        "mixed": {
+          "title": "Gemixed (Geen Conversie)",
+          "description": "Behoud oorspronkelijke eenheden van recepten. Geen automatische conversies."
+        }
+      }
     },
     "dangerZone": {
       "title": "Gevaren Zone",

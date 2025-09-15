@@ -13,8 +13,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Settings, Trash2, AlertTriangle, Shield } from "lucide-react";
+import { Settings, Trash2, AlertTriangle, Shield, Cog } from "lucide-react";
 import { DeleteAccountModal } from "@/components/settings/delete-account-modal";
+import { LanguagePreferenceSetting } from "@/components/settings/language-preference-setting";
+import { ThemeMenu } from "@/components/theme-menu";
+import { UnitPreferenceSetting } from "@/components/settings/unit-preference-setting";
 
 export default function AccountPage() {
   const t = useTranslations("account");
@@ -72,6 +75,24 @@ export default function AccountPage() {
                   </p>
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Cog className="h-5 w-5" />
+              {t("settings.title")}
+            </CardTitle>
+            <CardDescription>{t("settings.description")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-8">
+              <LanguagePreferenceSetting />
+              <ThemeMenu variant="buttons" />
+              <UnitPreferenceSetting />
             </div>
           </CardContent>
         </Card>

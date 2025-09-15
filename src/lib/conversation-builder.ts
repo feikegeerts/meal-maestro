@@ -1,5 +1,5 @@
 import { OpenAI } from "openai";
-import { SYSTEM_PROMPT, getLanguageInstruction } from "./chat-prompts";
+import { SYSTEM_PROMPT, getLanguageInstruction, getUnitPreferenceInstruction } from "./chat-prompts";
 import enMessages from "../messages/en.json";
 import nlMessages from "../messages/nl.json";
 
@@ -40,10 +40,12 @@ export interface ChatContext {
 
 export class ConversationBuilder {
   private locale: string;
+  private unitPreference?: string;
   private messages: Record<string, unknown>;
-  
-  constructor(locale: string) {
+
+  constructor(locale: string, unitPreference?: string) {
     this.locale = locale;
+    this.unitPreference = unitPreference;
     this.messages = this.loadMessages(locale);
   }
   
@@ -103,8 +105,11 @@ export class ConversationBuilder {
   ): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
     
-    // Add system prompt with language instruction
-    const systemPrompt = SYSTEM_PROMPT + getLanguageInstruction(this.t.bind(this));
+    // Add system prompt with language and unit preference instructions
+    let systemPrompt = SYSTEM_PROMPT + getLanguageInstruction(this.t.bind(this));
+    if (this.unitPreference) {
+      systemPrompt += getUnitPreferenceInstruction(this.unitPreference);
+    }
     messages.push({ role: "system", content: systemPrompt });
     
     // Add form state context if provided

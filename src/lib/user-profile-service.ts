@@ -7,6 +7,7 @@ export interface UserProfile {
   display_name?: string;
   avatar_url?: string;
   language_preference?: string;
+  unit_system_preference?: string;
   created_at: string;
   updated_at: string;
 }
@@ -123,46 +124,6 @@ export class UserProfileService {
     }
   }
 
-  /**
-   * Updates user language preference
-   * Requires authentication context
-   */
-  async updateLanguagePreference(userId: string, languagePreference: string): Promise<ServiceResult<boolean>> {
-    try {
-      if (!this.isValidLanguage(languagePreference)) {
-        throw new ApplicationError(
-          ErrorCode.VALIDATION_ERROR,
-          `Invalid language preference: ${languagePreference}`,
-          'UserProfileService',
-          'updateLanguagePreference',
-          { userId, languagePreference, supportedLanguages: this.getSupportedLanguages() }
-        );
-      }
-
-      const { error } = await this.supabase
-        .from('user_profiles')
-        .update({ 
-          language_preference: languagePreference,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
-
-      if (error) {
-        throw new ApplicationError(
-          ErrorCode.DATABASE_ERROR,
-          `Database error: ${error.message}`,
-          'UserProfileService',
-          'updateLanguagePreference',
-          { userId, languagePreference },
-          error
-        );
-      }
-
-      return ErrorHandler.success(true);
-    } catch (error) {
-      return ErrorHandler.handleError(error, 'UserProfileService', 'updateLanguagePreference');
-    }
-  }
 
   /**
    * Creates or updates user profile
@@ -188,6 +149,7 @@ export class UserProfileService {
           display_name: profile.display_name,
           avatar_url: profile.avatar_url,
           language_preference: profile.language_preference,
+          unit_system_preference: profile.unit_system_preference,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'id'
@@ -218,20 +180,6 @@ export class UserProfileService {
     return emailRegex.test(email) && email.length <= 320;
   }
 
-  /**
-   * Validates language preference
-   */
-  private isValidLanguage(language: string): boolean {
-    const supportedLanguages = ['en', 'nl'];
-    return supportedLanguages.includes(language);
-  }
-
-  /**
-   * Gets supported languages
-   */
-  getSupportedLanguages(): string[] {
-    return ['en', 'nl'];
-  }
 
   /**
    * Validates service configuration

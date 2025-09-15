@@ -3,7 +3,7 @@
 ## User Experience
 
 1. [x] Chat should be able to call a unit conversion function to convert TBSP or TSP to ml, g or whatever the user wants.
-       [ ] Now the tbsp or tsp or ml or g should be an account setting so that users can get a certain default behavior from the chat.
+       [x] Now the tbsp or tsp or ml or g should be an account setting so that users can get a certain default behavior from the chat.
 1. [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
 1. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 
@@ -20,6 +20,15 @@
        12.1 [ ] - recipe-scraper.ts
 1. [ ] Write more tests
 1. [ ] Switch from handlebars to mustache.js so the build warnings go away
+1. [ ] Fix inconsistent profile data architecture:
+   - PROBLEM: Two profile services with different auth patterns
+     * `profile-service.ts` (client-side, uses authenticated session) ✅ works
+     * `user-profile-service.ts` (server-side, uses anon client) ❌ fails RLS
+   - SOLUTION OPTIONS:
+     1. Always pass authenticated client from API routes (current approach)
+     2. Create secure database functions with SECURITY DEFINER (like get_user_language_preference)
+     3. Consolidate into single profile service with conditional auth client
+   - IMPACT: Currently chat system had to be patched, other server-side profile queries may fail
 
 ## Marketing & Documentation
 
@@ -28,7 +37,7 @@
 
 ## V2.0 feature requests
 
-1. [ ] A preference setting in the account that makes sure tbsp and tsp are not used but just ml and g is used.
+1. [x] A preference setting in the account that makes sure tbsp and tsp are not used but just ml and g is used.
 1. [ ] Tiktok import
 1. [ ] Extra columns
    1. [ ] Reference column to add the original link / place of the recipe

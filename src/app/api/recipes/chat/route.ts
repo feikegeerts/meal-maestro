@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
-  const { user } = authResult;
+  const { user, client: supabase } = authResult;
 
   try {
     const body: ChatRequest = await request.json();
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     const userLocale = RecipeChatService.detectLocale(request, locale);
 
     // Create chat service and process message
-    const chatService = new RecipeChatService(user.id, userLocale);
+    const chatService = new RecipeChatService(user.id, userLocale, supabase);
     const result = await chatService.processMessage({
       message,
       conversation_history,

@@ -3,6 +3,7 @@ import { usageTrackingService } from "./usage-tracking-service";
 import { ConversationBuilder, ChatMessage, ChatContext } from "./conversation-builder";
 import { FunctionCallProcessor, FunctionCallResult } from "./function-call-processor";
 import { ChatResponseFormatter, ChatResponse } from "./chat-response-formatter";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface ChatRequest {
   message: string;
@@ -15,20 +16,49 @@ export interface ChatRequest {
 export class RecipeChatService {
   private userId: string;
   private locale: string;
-  private conversationBuilder: ConversationBuilder;
+  private supabaseClient?: SupabaseClient;
+  private conversationBuilder?: ConversationBuilder;
   private functionCallProcessor: FunctionCallProcessor;
   private responseFormatter: ChatResponseFormatter;
   private messages: Record<string, unknown>;
-  
-  constructor(userId: string, locale: string = 'en') {
+
+  constructor(userId: string, locale: string = 'en', supabaseClient?: SupabaseClient) {
     this.userId = userId;
     this.locale = locale;
-    this.conversationBuilder = new ConversationBuilder(locale);
+    this.supabaseClient = supabaseClient;
     this.functionCallProcessor = new FunctionCallProcessor(locale);
     this.responseFormatter = new ChatResponseFormatter(locale);
     this.messages = this.loadMessages(locale);
   }
   
+  private async initializeConversationBuilder(): Promise<void> {
+    if (this.conversationBuilder) {
+      return; // Already initialized
+    }
+
+    let unitPreference = 'traditional-metric'; // Default
+
+    // Fetch user's unit preference using authenticated client if available
+    if (this.supabaseClient) {
+      try {
+        const { data: profile, error } = await this.supabaseClient
+          .from('user_profiles')
+          .select('unit_system_preference')
+          .eq('id', this.userId)
+          .maybeSingle();
+
+
+        if (!error && profile) {
+          unitPreference = profile.unit_system_preference || 'traditional-metric';
+        }
+      } catch {
+        // Silently fall back to default if profile fetch fails
+      }
+    }
+
+    this.conversationBuilder = new ConversationBuilder(this.locale, unitPreference);
+  }
+
   private loadMessages(locale: string): Record<string, unknown> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -116,13 +146,20 @@ export class RecipeChatService {
   
   async processMessage(request: ChatRequest): Promise<ChatResponse> {
     const { message, conversation_history = [], images, context } = request;
-    
+
+    // Initialize conversation builder with user preferences
+    await this.initializeConversationBuilder();
+
     // Require either a message or images
     if ((!message || message.trim().length === 0) && (!images || images.length === 0)) {
       throw new Error("Message or images are required");
     }
     
     // Build conversation messages with optional images
+    if (!this.conversationBuilder) {
+      throw new Error("Failed to initialize conversation builder");
+    }
+
     const chatMessages = this.conversationBuilder.buildMessages(
       message,
       conversation_history,
