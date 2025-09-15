@@ -45,11 +45,13 @@ export interface ChatContext {
 export class ConversationBuilder {
   private locale: string;
   private unitPreference?: string;
+  private customUnits?: string[];
   private messages: Record<string, unknown>;
 
-  constructor(locale: string, unitPreference?: string) {
+  constructor(locale: string, unitPreference?: string, customUnits?: string[]) {
     this.locale = locale;
     this.unitPreference = unitPreference;
+    this.customUnits = customUnits;
     this.messages = this.loadMessages(locale);
   }
 
@@ -113,6 +115,13 @@ export class ConversationBuilder {
     let systemPrompt = SYSTEM_PROMPT;
     if (this.unitPreference) {
       systemPrompt += getUnitPreferenceInstruction(this.unitPreference);
+    }
+    if (this.customUnits && this.customUnits.length > 0) {
+      // Keep prompt concise; truncate to first 25 (same limit as schema) if longer
+      const limited = this.customUnits.slice(0, 25);
+      systemPrompt += `\nCustom ingredient units available (use exactly as defined; do not invent new ones): ${limited.join(
+        ", "
+      )}`;
     }
     systemPrompt += getLanguageInstruction(this.t.bind(this));
     messages.push({ role: "system", content: systemPrompt });

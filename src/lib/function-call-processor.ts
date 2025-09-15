@@ -1,5 +1,10 @@
 import { OpenAI } from "openai";
-import { updateRecipeForm, extractRecipeFromUrl, createRecipeFormFunction, extractRecipeFromUrlFunction } from "./recipe-functions";
+import {
+  updateRecipeForm,
+  extractRecipeFromUrl,
+  createRecipeFormFunction,
+  extractRecipeFromUrlFunction,
+} from "./recipe-functions";
 import { createChatCompletion } from "./openai-service";
 import { getAIProcessingPrompt, getRecipeRecoveryPrompt } from "./chat-prompts";
 import { FormUpdate } from "./conversation-builder";
@@ -21,18 +26,23 @@ export interface URLExtractionResult {
 export class FunctionCallProcessor {
   private locale: string;
   private unitPreference?: string;
+  private customUnits?: string[];
   private messages: Record<string, unknown>;
 
-  constructor(locale: string, unitPreference?: string) {
+  constructor(locale: string, unitPreference?: string, customUnits?: string[]) {
     this.locale = locale;
     this.unitPreference = unitPreference;
+    this.customUnits = customUnits;
     this.messages = this.loadMessages(locale);
   }
-  
+
   private loadMessages(locale: string): Record<string, unknown> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const messages = require(`../messages/${locale}.json`) as Record<string, unknown>;
+      const messages = require(`../messages/${locale}.json`) as Record<
+        string,
+        unknown
+      >;
       const safeMessages = Object.create(null);
       for (const key in messages) {
         if (Object.prototype.hasOwnProperty.call(messages, key)) {
@@ -42,7 +52,10 @@ export class FunctionCallProcessor {
       return safeMessages;
     } catch {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const messages = require(`../messages/en.json`) as Record<string, unknown>;
+      const messages = require(`../messages/en.json`) as Record<
+        string,
+        unknown
+      >;
       const safeMessages = Object.create(null);
       for (const key in messages) {
         if (Object.prototype.hasOwnProperty.call(messages, key)) {
@@ -52,25 +65,25 @@ export class FunctionCallProcessor {
       return safeMessages;
     }
   }
-  
+
   private t(key: string): string {
-    const keys = key.split('.');
+    const keys = key.split(".");
     let value: unknown = this.messages;
 
     for (const k of keys) {
       // Skip dangerous keys that could lead to prototype pollution
-      if (k === '__proto__' || k === 'constructor' || k === 'prototype') {
+      if (k === "__proto__" || k === "constructor" || k === "prototype") {
         continue;
       }
-      
+
       if (
         value &&
-        typeof value === 'object' &&
+        typeof value === "object" &&
         value !== null &&
         Object.hasOwn(value, k)
       ) {
         // Use a safe property access that avoids prototype pollution
-        const safeValue = (value as Record<string, unknown>);
+        const safeValue = value as Record<string, unknown>;
         const descriptor = Object.getOwnPropertyDescriptor(safeValue, k);
         if (descriptor && descriptor.value !== undefined) {
           value = descriptor.value;
@@ -82,94 +95,123 @@ export class FunctionCallProcessor {
       }
     }
 
-    return typeof value === 'string' ? value : key;
+    return typeof value === "string" ? value : key;
   }
-  
-  static getAvailableFunctions(unitPreference?: string): OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"] {
-    return [createRecipeFormFunction(unitPreference), extractRecipeFromUrlFunction];
+
+  static getAvailableFunctions(
+    unitPreference?: string,
+    customUnits?: string[]
+  ): OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"] {
+    return [
+      createRecipeFormFunction(unitPreference, customUnits),
+      extractRecipeFromUrlFunction,
+    ];
   }
 
   getAvailableFunctionsForInstance(): OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"] {
-    return FunctionCallProcessor.getAvailableFunctions(this.unitPreference);
+    return FunctionCallProcessor.getAvailableFunctions(
+      this.unitPreference,
+      this.customUnits
+    );
   }
-  
+
   async processFunctionCall(
     toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall,
     chatMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
     originalResponseContent?: string | null,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _userMessage?: string
-  ): Promise<{ functionResult: FunctionCallResult; responseContent: string | null }> {
+  ): Promise<{
+    functionResult: FunctionCallResult;
+    responseContent: string | null;
+  }> {
     if (toolCall.type !== "function") {
       throw new Error("Invalid tool call type");
     }
-    
+
     const functionName = toolCall.function.name;
     const functionArgs = JSON.parse(toolCall.function.arguments);
-    
+
     switch (functionName) {
       case "update_recipe_form":
-        return this.handleRecipeFormUpdate(functionArgs, originalResponseContent);
-        
+        return this.handleRecipeFormUpdate(
+          functionArgs,
+          originalResponseContent
+        );
+
       case "extract_recipe_from_url":
         return this.handleUrlExtraction(functionArgs, chatMessages);
-        
+
       default:
         throw new Error(`Unknown function: ${functionName}`);
     }
   }
-  
+
   private async handleRecipeFormUpdate(
-    args: unknown, 
+    args: unknown,
     originalResponseContent?: string | null
-  ): Promise<{ functionResult: FunctionCallResult; responseContent: string | null }> {
+  ): Promise<{
+    functionResult: FunctionCallResult;
+    responseContent: string | null;
+  }> {
     try {
       const result = await updateRecipeForm(args as Record<string, unknown>);
-      
+
       // Use the original AI response content if it exists (from two-call pattern or initial response)
       // Only provide minimal fallback if absolutely necessary
       let finalResponseContent = originalResponseContent;
-      
+
       if (!originalResponseContent) {
         // Simple template for basic recipe requests
         const parsedArgs = args as Record<string, unknown>;
-        const recipeTitle = parsedArgs.title as string || 'recept';
-        
-        finalResponseContent = this.locale === 'nl' 
-          ? `Perfect! Ik heb het ${recipeTitle} recept voor je gemaakt. Je kunt de ingrediënten en bereidingswijze nu bekijken en aanpassen naar wens.`
-          : `Perfect! I've created the ${recipeTitle} recipe for you. You can now review and adjust the ingredients and instructions as needed.`;
+        const recipeTitle = (parsedArgs.title as string) || "recept";
+
+        finalResponseContent =
+          this.locale === "nl"
+            ? `Perfect! Ik heb het ${recipeTitle} recept voor je gemaakt. Je kunt de ingrediënten en bereidingswijze nu bekijken en aanpassen naar wens.`
+            : `Perfect! I've created the ${recipeTitle} recipe for you. You can now review and adjust the ingredients and instructions as needed.`;
       }
-      
+
       return {
         functionResult: {
           function: "update_recipe_form",
           result,
         },
-        responseContent: finalResponseContent || null
+        responseContent: finalResponseContent || null,
       };
     } catch (error) {
-      console.error("🔴 [FunctionCallProcessor] Recipe form update error:", error);
-      const finalResponseContent = originalResponseContent || (this.locale === 'nl' 
-        ? 'Er is een fout opgetreden bij het verwerken van het recept.'
-        : 'There was an error processing the recipe.');
-      
+      console.error(
+        "🔴 [FunctionCallProcessor] Recipe form update error:",
+        error
+      );
+      const finalResponseContent =
+        originalResponseContent ||
+        (this.locale === "nl"
+          ? "Er is een fout opgetreden bij het verwerken van het recept."
+          : "There was an error processing the recipe.");
+
       return {
         functionResult: {
           function: "update_recipe_form",
           error: error instanceof Error ? error.message : "Unknown error",
         },
-        responseContent: finalResponseContent
+        responseContent: finalResponseContent,
       };
     }
   }
-  
+
   private async handleUrlExtraction(
     args: unknown,
     chatMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]
-  ): Promise<{ functionResult: FunctionCallResult; responseContent: string | null }> {
+  ): Promise<{
+    functionResult: FunctionCallResult;
+    responseContent: string | null;
+  }> {
     try {
-      const result = await extractRecipeFromUrl(args as Record<string, unknown>) as URLExtractionResult;
-      
+      const result = (await extractRecipeFromUrl(
+        args as Record<string, unknown>
+      )) as URLExtractionResult;
+
       if (result.success && result.formUpdate) {
         return this.processSuccessfulExtraction(result, chatMessages);
       } else {
@@ -182,15 +224,18 @@ export class FunctionCallProcessor {
           function: "extract_recipe_from_url",
           error: error instanceof Error ? error.message : "Unknown error",
         },
-        responseContent: null
+        responseContent: null,
       };
     }
   }
-  
+
   private async processSuccessfulExtraction(
     urlResult: URLExtractionResult,
     chatMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]
-  ): Promise<{ functionResult: FunctionCallResult; responseContent: string | null }> {
+  ): Promise<{
+    functionResult: FunctionCallResult;
+    responseContent: string | null;
+  }> {
     const scrapedData = urlResult.formUpdate as {
       title?: string;
       description?: string;
@@ -198,117 +243,159 @@ export class FunctionCallProcessor {
       servings?: number;
       category?: string;
     };
-    
-    const aiProcessingPrompt = getAIProcessingPrompt(this.t.bind(this), scrapedData);
-    
-    const processingMessages = [...chatMessages, {
-      role: "user" as const,
-      content: aiProcessingPrompt
-    }];
-    
+
+    const aiProcessingPrompt = getAIProcessingPrompt(
+      this.t.bind(this),
+      scrapedData
+    );
+
+    const processingMessages = [
+      ...chatMessages,
+      {
+        role: "user" as const,
+        content: aiProcessingPrompt,
+      },
+    ];
+
     const { completion } = await createChatCompletion(
       processingMessages,
       this.getAvailableFunctionsForInstance()
     );
-    
+
     if (completion.choices[0].message.tool_calls) {
       const processingTool = completion.choices[0].message.tool_calls[0];
-      if (processingTool.type === "function" && processingTool.function.name === "update_recipe_form") {
+      if (
+        processingTool.type === "function" &&
+        processingTool.function.name === "update_recipe_form"
+      ) {
         const processingResult = await updateRecipeForm(
           JSON.parse(processingTool.function.arguments)
         );
-        
-        const responseContent = completion.choices[0].message.content ||
-          (this.locale === 'nl' ? 'Recept succesvol verwerkt!' : 'Recipe processed successfully!');
-        
+
+        const responseContent =
+          completion.choices[0].message.content ||
+          (this.locale === "nl"
+            ? "Recept succesvol verwerkt!"
+            : "Recipe processed successfully!");
+
         return {
           functionResult: {
             function: processingTool.function.name,
             result: processingResult,
           },
-          responseContent
+          responseContent,
         };
       }
     }
-    
+
     // Fallback if AI doesn't make function call
-    const translations = (await import(`@/messages/${this.locale}.json`)).default;
+    const translations = (await import(`@/messages/${this.locale}.json`))
+      .default;
     return {
       functionResult: {
         function: "extract_recipe_from_url",
         result: urlResult,
       },
-      responseContent: completion.choices[0].message.content || translations.chat.extractionProcessingError
+      responseContent:
+        completion.choices[0].message.content ||
+        translations.chat.extractionProcessingError,
     };
   }
-  
+
   private async handleExtractionFailure(
     urlResult: URLExtractionResult,
     chatMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]
-  ): Promise<{ functionResult: FunctionCallResult; responseContent: string | null }> {
+  ): Promise<{
+    functionResult: FunctionCallResult;
+    responseContent: string | null;
+  }> {
     // Smart error recovery: if we have a title, generate a recipe with AI
     if (urlResult.formUpdate?.title) {
       try {
-        const aiRecipePrompt = getRecipeRecoveryPrompt(this.t.bind(this), urlResult.formUpdate.title);
-        
-        const followUpMessages = [...chatMessages, {
-          role: "user" as const,
-          content: aiRecipePrompt
-        }];
-        
+        const aiRecipePrompt = getRecipeRecoveryPrompt(
+          this.t.bind(this),
+          urlResult.formUpdate.title
+        );
+
+        const followUpMessages = [
+          ...chatMessages,
+          {
+            role: "user" as const,
+            content: aiRecipePrompt,
+          },
+        ];
+
         const { completion } = await createChatCompletion(
           followUpMessages,
           this.getAvailableFunctionsForInstance()
         );
-        
+
         if (completion.choices[0].message.tool_calls) {
           const recipeTool = completion.choices[0].message.tool_calls[0];
-          if (recipeTool.type === "function" && recipeTool.function.name === "update_recipe_form") {
+          if (
+            recipeTool.type === "function" &&
+            recipeTool.function.name === "update_recipe_form"
+          ) {
             const recipeResult = await updateRecipeForm(
               JSON.parse(recipeTool.function.arguments)
             );
-            
-            const translations = (await import(`@/messages/${this.locale}.json`)).default;
-            const responseContent = completion.choices[0].message.content ||
-              translations.chat.recipeCreatedFromTitle.replace('{title}', urlResult.formUpdate.title || '');
-            
+
+            const translations = (
+              await import(`@/messages/${this.locale}.json`)
+            ).default;
+            const responseContent =
+              completion.choices[0].message.content ||
+              translations.chat.recipeCreatedFromTitle.replace(
+                "{title}",
+                urlResult.formUpdate.title || ""
+              );
+
             return {
               functionResult: {
                 function: recipeTool.function.name,
                 result: recipeResult,
               },
-              responseContent
+              responseContent,
             };
           }
         }
-        
-        throw new Error('AI did not generate recipe as expected');
+
+        throw new Error("AI did not generate recipe as expected");
       } catch (error) {
-        console.error('🔴 [FunctionCallProcessor] Smart error recovery failed:', error);
-        
-        const translations = (await import(`@/messages/${this.locale}.json`)).default;
+        console.error(
+          "🔴 [FunctionCallProcessor] Smart error recovery failed:",
+          error
+        );
+
+        const translations = (await import(`@/messages/${this.locale}.json`))
+          .default;
         return {
           functionResult: {
             function: "extract_recipe_from_url",
             result: urlResult,
           },
-          responseContent: translations.chat.titleExtractedOnly.replace('{title}', urlResult.formUpdate.title || '')
+          responseContent: translations.chat.titleExtractedOnly.replace(
+            "{title}",
+            urlResult.formUpdate.title || ""
+          ),
         };
       }
     }
-    
+
     // Fallback for when we couldn't extract anything useful
-    const translations = (await import(`@/messages/${this.locale}.json`)).default;
-    const baseError = urlResult.source === 'blocked'
-      ? translations.chat.websiteBlocked
-      : translations.chat.noRecipeFound;
-    
+    const translations = (await import(`@/messages/${this.locale}.json`))
+      .default;
+    const baseError =
+      urlResult.source === "blocked"
+        ? translations.chat.websiteBlocked
+        : translations.chat.noRecipeFound;
+
     return {
       functionResult: {
         function: "extract_recipe_from_url",
         result: urlResult,
       },
-      responseContent: `${baseError}. ${translations.chat.tryManualCopy}`
+      responseContent: `${baseError}. ${translations.chat.tryManualCopy}`,
     };
   }
 }

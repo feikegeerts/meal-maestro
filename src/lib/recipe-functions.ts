@@ -87,11 +87,50 @@ function getAmountDescription(unitPreference?: string): string {
 }
 
 // Dynamic function generator based on unit preference
+// Limit to avoid excessive token usage in OpenAI tool schema
+const CUSTOM_UNIT_LIMIT = 25;
+
 export function createRecipeFormFunction(
-  unitPreference?: string
+  unitPreference?: string,
+  customUnits?: string[]
 ): OpenAI.Chat.Completions.ChatCompletionTool {
-  const allowedUnits = getAllowedUnits(unitPreference);
-  const unitDescription = getUnitDescription(unitPreference);
+  const allowedUnitsBase = getAllowedUnits(unitPreference);
+  let filteredCustom: string[] = [];
+
+  if (Array.isArray(customUnits) && customUnits.length > 0) {
+    const seen = new Set(allowedUnitsBase.map((u) => u.toLowerCase()));
+    filteredCustom = customUnits
+      .filter((u) => typeof u === "string")
+      .map((u) => u.trim())
+      .filter((u) => u.length > 0 && u.length <= 20) // Stricter length limit
+      .filter((u) => /^[a-zA-Z0-9\s\-.]+$/.test(u))
+      .map((u) => u.replace(/[^a-zA-Z0-9\s\-.]/g, '')) // Sanitize: remove any unsafe chars
+      .filter((u) => u.length > 0) // Re-filter after sanitization
+      .filter((u) => {
+        const lower = u.toLowerCase();
+        // Security: Block dangerous keywords and duplicates
+        if (seen.has(lower)) return false;
+        if (
+          lower === "__proto__" ||
+          lower === "constructor" ||
+          lower === "prototype" ||
+          lower.includes("script") ||
+          lower.includes("function") ||
+          lower.includes("eval")
+        )
+          return false;
+        seen.add(lower);
+        return true;
+      })
+      .slice(0, CUSTOM_UNIT_LIMIT);
+  }
+
+  const allowedUnits = [...allowedUnitsBase, ...filteredCustom];
+  const unitDescription =
+    getUnitDescription(unitPreference) +
+    (filteredCustom.length
+      ? ` Custom user units available: ${filteredCustom.join(", ")}.`
+      : "");
   const ingredientDescription = getIngredientDescription(unitPreference);
   const amountDescription = getAmountDescription(unitPreference);
 
