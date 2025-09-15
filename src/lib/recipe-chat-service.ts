@@ -18,15 +18,15 @@ export class RecipeChatService {
   private locale: string;
   private supabaseClient?: SupabaseClient;
   private conversationBuilder?: ConversationBuilder;
-  private functionCallProcessor: FunctionCallProcessor;
+  private functionCallProcessor?: FunctionCallProcessor;
   private responseFormatter: ChatResponseFormatter;
   private messages: Record<string, unknown>;
+  private unitPreference?: string;
 
   constructor(userId: string, locale: string = 'en', supabaseClient?: SupabaseClient) {
     this.userId = userId;
     this.locale = locale;
     this.supabaseClient = supabaseClient;
-    this.functionCallProcessor = new FunctionCallProcessor(locale);
     this.responseFormatter = new ChatResponseFormatter(locale);
     this.messages = this.loadMessages(locale);
   }
@@ -56,7 +56,9 @@ export class RecipeChatService {
       }
     }
 
+    this.unitPreference = unitPreference;
     this.conversationBuilder = new ConversationBuilder(this.locale, unitPreference);
+    this.functionCallProcessor = new FunctionCallProcessor(this.locale, unitPreference);
   }
 
   private loadMessages(locale: string): Record<string, unknown> {
@@ -170,7 +172,7 @@ export class RecipeChatService {
     // Create completion with function calling and usage tracking
     const { completion, usage } = await createChatCompletion(
       chatMessages,
-      FunctionCallProcessor.getAvailableFunctions()
+      FunctionCallProcessor.getAvailableFunctions(this.unitPreference)
     );
     
     // Log usage for cost tracking and outlier detection
@@ -216,6 +218,10 @@ export class RecipeChatService {
         }
       }
       
+      if (!this.functionCallProcessor) {
+        throw new Error("Function call processor not initialized");
+      }
+
       const functionCallResult = await this.functionCallProcessor.processFunctionCall(
         toolCall,
         chatMessages,

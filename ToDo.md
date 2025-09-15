@@ -4,6 +4,9 @@
 
 1. [x] Chat should be able to call a unit conversion function to convert TBSP or TSP to ml, g or whatever the user wants.
        [x] Now the tbsp or tsp or ml or g should be an account setting so that users can get a certain default behavior from the chat.
+1. [ ] Expand us-traditional unit preference to include cups, fl oz, oz, lb units by adding them to database schema and unit dropdown
+1. [ ] Sometimes the AI with a photo times out when gpt is very slow to respond. This timeout should be processed.
+1. [ ] after photo upload you can't see that photo in the chat history. this is because the chat context doesn't have that photo in it and that's what we display. So we need to think about how to fix that.
 1. [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
 1. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 
@@ -22,8 +25,8 @@
 1. [ ] Switch from handlebars to mustache.js so the build warnings go away
 1. [ ] Fix inconsistent profile data architecture:
    - PROBLEM: Two profile services with different auth patterns
-     * `profile-service.ts` (client-side, uses authenticated session) ✅ works
-     * `user-profile-service.ts` (server-side, uses anon client) ❌ fails RLS
+     - `profile-service.ts` (client-side, uses authenticated session) ✅ works
+     - `user-profile-service.ts` (server-side, uses anon client) ❌ fails RLS
    - SOLUTION OPTIONS:
      1. Always pass authenticated client from API routes (current approach)
      2. Create secure database functions with SECURITY DEFINER (like get_user_language_preference)

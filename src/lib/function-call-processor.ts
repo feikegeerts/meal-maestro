@@ -1,5 +1,5 @@
 import { OpenAI } from "openai";
-import { updateRecipeForm, extractRecipeFromUrl, recipeFormFunction, extractRecipeFromUrlFunction } from "./recipe-functions";
+import { updateRecipeForm, extractRecipeFromUrl, createRecipeFormFunction, extractRecipeFromUrlFunction } from "./recipe-functions";
 import { createChatCompletion } from "./openai-service";
 import { getAIProcessingPrompt, getRecipeRecoveryPrompt } from "./chat-prompts";
 import { FormUpdate } from "./conversation-builder";
@@ -20,10 +20,12 @@ export interface URLExtractionResult {
 
 export class FunctionCallProcessor {
   private locale: string;
+  private unitPreference?: string;
   private messages: Record<string, unknown>;
-  
-  constructor(locale: string) {
+
+  constructor(locale: string, unitPreference?: string) {
     this.locale = locale;
+    this.unitPreference = unitPreference;
     this.messages = this.loadMessages(locale);
   }
   
@@ -83,8 +85,12 @@ export class FunctionCallProcessor {
     return typeof value === 'string' ? value : key;
   }
   
-  static getAvailableFunctions(): OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"] {
-    return [recipeFormFunction, extractRecipeFromUrlFunction];
+  static getAvailableFunctions(unitPreference?: string): OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"] {
+    return [createRecipeFormFunction(unitPreference), extractRecipeFromUrlFunction];
+  }
+
+  getAvailableFunctionsForInstance(): OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"] {
+    return FunctionCallProcessor.getAvailableFunctions(this.unitPreference);
   }
   
   async processFunctionCall(
@@ -202,7 +208,7 @@ export class FunctionCallProcessor {
     
     const { completion } = await createChatCompletion(
       processingMessages,
-      FunctionCallProcessor.getAvailableFunctions()
+      this.getAvailableFunctionsForInstance()
     );
     
     if (completion.choices[0].message.tool_calls) {
@@ -252,7 +258,7 @@ export class FunctionCallProcessor {
         
         const { completion } = await createChatCompletion(
           followUpMessages,
-          FunctionCallProcessor.getAvailableFunctions()
+          this.getAvailableFunctionsForInstance()
         );
         
         if (completion.choices[0].message.tool_calls) {

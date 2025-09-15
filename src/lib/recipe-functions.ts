@@ -1,7 +1,7 @@
 import { OpenAI } from 'openai';
-import { 
-  RecipeCategory, 
-  RecipeSeason, 
+import {
+  RecipeCategory,
+  RecipeSeason,
   CuisineType,
   DietType,
   CookingMethodType,
@@ -16,119 +16,183 @@ import {
   isValidProteinType,
   isValidOccasionType,
   isValidCharacteristicType,
-  COOKING_UNITS 
+  COOKING_UNITS
 } from '@/types/recipe';
 import { RecipeScraper } from '@/lib/recipe-scraper';
 import { UrlDetector } from '@/lib/url-detector';
 
-// OpenAI function definition for recipe form assistance
-export const recipeFormFunction: OpenAI.Chat.Completions.ChatCompletionTool = {
-  type: 'function',
-  function: {
-    name: 'update_recipe_form',
-    description: 'Update the current recipe form with complete recipe data. When creating a new recipe, provide ALL fields including title, ingredients, detailed cooking instructions, category, servings, and tags in a SINGLE function call.',
-    parameters: {
-      type: 'object',
-      properties: {
-        title: { 
-          type: 'string', 
-          description: 'Recipe title or name' 
-        },
-        ingredients: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              name: { type: 'string', description: 'Ingredient name' },
-              amount: { type: 'number', description: 'Amount (can be null for "to taste")' },
-              unit: { 
-                type: 'string', 
-                enum: COOKING_UNITS,
-                description: 'Unit of measurement - REQUIRED for most ingredients. Choose appropriate unit: tbsp/tsp for liquids and dry goods, cloves for individual items, g/kg for weight. Only use null for "to taste" items.' 
+// Unit preference mappings (constrained to database-supported units)
+const UNIT_PREFERENCE_MAPPINGS = {
+  'precise-metric': ['g', 'kg', 'ml', 'l', 'clove'],
+  'traditional-metric': ['g', 'kg', 'ml', 'l', 'tsp', 'tbsp', 'clove'],
+  'us-traditional': ['tbsp', 'tsp', 'clove'], // Only US units that exist in database
+  'mixed': COOKING_UNITS
+} as const;
+
+// Get allowed units based on preference
+export function getAllowedUnits(unitPreference?: string): string[] {
+  if (!unitPreference || !UNIT_PREFERENCE_MAPPINGS[unitPreference as keyof typeof UNIT_PREFERENCE_MAPPINGS]) {
+    return COOKING_UNITS;
+  }
+  return [...UNIT_PREFERENCE_MAPPINGS[unitPreference as keyof typeof UNIT_PREFERENCE_MAPPINGS]];
+}
+
+// Get unit description based on preference
+function getUnitDescription(unitPreference?: string): string {
+  switch (unitPreference) {
+    case 'precise-metric':
+      return 'Unit selection: Liquids → ml, Powders/granules → g, Whole items (2 zucchinis, 3 eggs) → null. Convert tbsp/tsp measurements.';
+    case 'traditional-metric':
+      return 'Unit of measurement - Use metric units: g, kg, ml, l preferred. Small amounts can use tsp/tbsp.';
+    case 'us-traditional':
+      return 'Unit of measurement - Use US volume units: tbsp, tsp preferred. Note: cups, oz, lb not supported - use tablespoons/teaspoons.';
+    case 'mixed':
+    default:
+      return 'Unit of measurement - Choose appropriate unit based on ingredient type and source.';
+  }
+}
+
+// Get ingredient description based on preference
+function getIngredientDescription(unitPreference?: string): string {
+  switch (unitPreference) {
+    case 'precise-metric':
+      return 'List of structured ingredients with precise metric measurements. MANDATORY: Convert ALL tbsp/tsp amounts - liquids to ml (1 tbsp = 15ml), solids to g using density. NEVER leave amounts as "1" when converting from original recipe.';
+    case 'traditional-metric':
+      return 'List of structured ingredients with metric units preferred. Use g, kg, ml, l for most ingredients. Small amounts can use tsp/tbsp.';
+    case 'us-traditional':
+      return 'List of structured ingredients with US volume measurements. Use tbsp, tsp as appropriate. Note: cups, oz, lb not supported.';
+    case 'mixed':
+    default:
+      return 'List of structured ingredients with proper amounts and units. Choose appropriate units based on ingredient type.';
+  }
+}
+
+// Get amount description based on preference
+function getAmountDescription(unitPreference?: string): string {
+  switch (unitPreference) {
+    case 'precise-metric':
+      return 'Amount - CRITICAL: Calculate actual converted amount, never leave as "1". Example: if original was "1 tbsp oil", use 15 not 1.';
+    default:
+      return 'Amount (can be null for "to taste")';
+  }
+}
+
+// Dynamic function generator based on unit preference
+export function createRecipeFormFunction(unitPreference?: string): OpenAI.Chat.Completions.ChatCompletionTool {
+  const allowedUnits = getAllowedUnits(unitPreference);
+  const unitDescription = getUnitDescription(unitPreference);
+  const ingredientDescription = getIngredientDescription(unitPreference);
+  const amountDescription = getAmountDescription(unitPreference);
+
+  return {
+    type: 'function',
+    function: {
+      name: 'update_recipe_form',
+      description: 'Update the current recipe form with complete recipe data. When creating a new recipe, provide ALL fields including title, ingredients, detailed cooking instructions, category, servings, and tags in a SINGLE function call.',
+      parameters: {
+        type: 'object',
+        properties: {
+          title: {
+            type: 'string',
+            description: 'Recipe title or name'
+          },
+          ingredients: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string', description: 'Ingredient name' },
+                amount: { type: 'number', description: amountDescription },
+                unit: {
+                  type: 'string',
+                  enum: allowedUnits,
+                  description: unitDescription
+                },
+                notes: { type: 'string', description: 'Additional notes (optional)' }
               },
-              notes: { type: 'string', description: 'Additional notes (optional)' }
+              required: ['name']
             },
-            required: ['name']
+            description: ingredientDescription
           },
-          description: 'List of structured ingredients with proper amounts and units. IMPORTANT: Always provide appropriate units for ingredients (tbsp, tsp, cloves, g, etc.). Only omit units for "to taste" items.'
-        },
-        servings: {
-          type: 'number',
-          description: 'Number of servings this recipe makes',
-          minimum: 1,
-          maximum: 100
-        },
-        description: {
-          type: 'string',
-          description: 'REQUIRED: Detailed step-by-step cooking instructions with times, temperatures, and specific techniques. Must be comprehensive cooking directions, not just a brief summary.'
-        },
-        category: {
-          type: 'string',
-          description: 'Recipe category',
-          enum: Object.values(RecipeCategory)
-        },
-        cuisine: {
-          type: 'string',
-          enum: Object.values(CuisineType),
-          description: 'Optional cuisine type - single value describing the primary culinary tradition'
-        },
-        diet_types: {
-          type: 'array',
-          items: { 
+          servings: {
+            type: 'number',
+            description: 'Number of servings this recipe makes',
+            minimum: 1,
+            maximum: 100
+          },
+          description: {
             type: 'string',
-            enum: Object.values(DietType)
+            description: 'REQUIRED: Detailed step-by-step cooking instructions with times, temperatures, and specific techniques. Must be comprehensive cooking directions, not just a brief summary.'
           },
-          description: 'Optional dietary requirements/restrictions - multiple values allowed'
-        },
-        cooking_methods: {
-          type: 'array',
-          items: { 
+          category: {
             type: 'string',
-            enum: Object.values(CookingMethodType)
+            description: 'Recipe category',
+            enum: Object.values(RecipeCategory)
           },
-          description: 'Optional cooking methods used - multiple values allowed'
-        },
-        dish_types: {
-          type: 'array',
-          items: { 
+          cuisine: {
             type: 'string',
-            enum: Object.values(DishType)
+            enum: Object.values(CuisineType),
+            description: 'Optional cuisine type - single value describing the primary culinary tradition'
           },
-          description: 'Optional dish/meal types - multiple values allowed'
-        },
-        proteins: {
-          type: 'array',
-          items: { 
+          diet_types: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: Object.values(DietType)
+            },
+            description: 'Optional dietary requirements/restrictions - multiple values allowed'
+          },
+          cooking_methods: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: Object.values(CookingMethodType)
+            },
+            description: 'Optional cooking methods used - multiple values allowed'
+          },
+          dish_types: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: Object.values(DishType)
+            },
+            description: 'Optional dish/meal types - multiple values allowed'
+          },
+          proteins: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: Object.values(ProteinType)
+            },
+            description: 'Optional protein sources in the recipe - multiple values allowed'
+          },
+          occasions: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: Object.values(OccasionType)
+            },
+            description: 'Optional occasions suitable for this recipe - multiple values allowed'
+          },
+          characteristics: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: Object.values(CharacteristicType)
+            },
+            description: 'Optional recipe characteristics like easy, quick, budget, etc. - multiple values allowed'
+          },
+          season: {
             type: 'string',
-            enum: Object.values(ProteinType)
-          },
-          description: 'Optional protein sources in the recipe - multiple values allowed'
-        },
-        occasions: {
-          type: 'array',
-          items: { 
-            type: 'string',
-            enum: Object.values(OccasionType)
-          },
-          description: 'Optional occasions suitable for this recipe - multiple values allowed'
-        },
-        characteristics: {
-          type: 'array',
-          items: { 
-            type: 'string',
-            enum: Object.values(CharacteristicType)
-          },
-          description: 'Optional recipe characteristics like easy, quick, budget, etc. - multiple values allowed'
-        },
-        season: {
-          type: 'string',
-          description: 'Optional seasonal relevance',
-          enum: Object.values(RecipeSeason)
+            description: 'Optional seasonal relevance',
+            enum: Object.values(RecipeSeason)
+          }
         }
       }
     }
-  }
-};
+  };
+}
+
 
 // OpenAI function definition for URL recipe extraction
 export const extractRecipeFromUrlFunction: OpenAI.Chat.Completions.ChatCompletionTool = {
