@@ -29,6 +29,7 @@ export enum ErrorCode {
   // External service errors
   EXTERNAL_API_ERROR = 'EXTERNAL_API_ERROR',
   NETWORK_ERROR = 'NETWORK_ERROR',
+  TIMEOUT_ERROR = 'TIMEOUT_ERROR',
   
   // General errors
   UNKNOWN_ERROR = 'UNKNOWN_ERROR',
@@ -208,6 +209,7 @@ export class ErrorHandler {
     const retryableCodes = [
       ErrorCode.NETWORK_ERROR,
       ErrorCode.EXTERNAL_API_ERROR,
+      ErrorCode.TIMEOUT_ERROR,
       ErrorCode.DATABASE_ERROR // In some cases
     ];
 

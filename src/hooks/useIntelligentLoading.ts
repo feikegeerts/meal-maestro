@@ -29,25 +29,36 @@ export function useIntelligentLoading({ t }: UseIntelligentLoadingOptions) {
     let loadingSequence: LoadingSequence[] = [];
     
     if (hasImage) {
-      // Image processing sequence (total ~13 seconds based on timing data)
+      // Image processing sequence with timeout warning (total ~45+ seconds)
       loadingSequence = [
         { message: t("loading.analyzingImage"), duration: 2000 },
         { message: t("loading.understandingContent"), duration: 4000 },
         { message: t("loading.processingWithAI"), duration: 7000 },
+        { message: t("loading.expectingDelay"), duration: 8000 }, // Show delay expectation at ~13 seconds
+        { message: t("loading.finalizingRecipe"), duration: 7000 },
+        { message: t("loading.almostDone"), duration: 17000 }, // Gets us to ~45 seconds
+        { message: t("loading.takingLonger"), duration: 10000 }, // Timeout warning phase
       ];
     } else if (hasUrl) {
-      // URL processing sequence (total ~8 seconds based on timing data)
+      // URL processing sequence with timeout warning (total ~45+ seconds)
       loadingSequence = [
         { message: t("loading.checkingURL"), duration: 500 },
         { message: t("loading.extractingRecipe"), duration: 2000 },
         { message: t("loading.processingIngredients"), duration: 5500 },
+        { message: t("loading.expectingDelay"), duration: 12000 },
+        { message: t("loading.finalizingRecipe"), duration: 15000 },
+        { message: t("loading.almostDone"), duration: 10000 }, // Gets us to ~45 seconds
+        { message: t("loading.takingLonger"), duration: 10000 }, // Timeout warning phase
       ];
     } else {
-      // Text-only processing sequence (total ~10 seconds based on timing data)
+      // Text-only processing sequence with timeout warning (total ~45+ seconds)
       loadingSequence = [
         { message: t("loading.processingRequest"), duration: 3000 },
         { message: t("loading.thinkingAboutRecipe"), duration: 4000 },
-        { message: t("loading.finalizingResponse"), duration: 3000 },
+        { message: t("loading.finalizingResponse"), duration: 8000 },
+        { message: t("loading.optimizingIngredients"), duration: 12000 },
+        { message: t("loading.addingDetails"), duration: 18000 }, // Gets us to ~45 seconds
+        { message: t("loading.takingLonger"), duration: 10000 }, // Timeout warning phase
       ];
     }
 

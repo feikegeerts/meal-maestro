@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
 import { RecipeChatService } from "@/lib/recipe-chat-service";
 import { ChatResponseFormatter } from "@/lib/chat-response-formatter";
+import { OpenAITimeoutError } from "@/lib/openai-service";
 
 interface ChatRequest {
   message: string;
@@ -96,6 +97,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error("Chat API error:", error);
+
+    // Handle timeout errors specifically
+    if (error instanceof OpenAITimeoutError) {
+      return NextResponse.json(
+        {
+          error: "Request timeout",
+          message: error.message,
+          code: "TIMEOUT_ERROR",
+          isRetryable: true
+        },
+        {
+          status: 422, // Unprocessable Entity - won't trigger browser auto-retry
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+    }
 
     if (error instanceof Error) {
       const responseFormatter = new ChatResponseFormatter('en'); // Default to English for errors

@@ -1,4 +1,5 @@
 import { OpenAI } from "openai";
+import { ApplicationError, ErrorCode } from "@/lib/types/error-types";
 
 export interface OpenAIUsageData {
   model: string;
@@ -10,6 +11,21 @@ export interface OpenAIUsageData {
 export interface OpenAICompletionWithUsage {
   completion: OpenAI.Chat.Completions.ChatCompletion;
   usage: OpenAIUsageData;
+}
+
+export class OpenAITimeoutError extends ApplicationError {
+  public readonly isRetryable = true;
+
+  constructor(message: string = "OpenAI request timed out - please try again") {
+    super(
+      ErrorCode.TIMEOUT_ERROR,
+      message,
+      "OpenAI",
+      "createChatCompletion"
+    );
+    this.name = "OpenAITimeoutError";
+    Object.setPrototypeOf(this, OpenAITimeoutError.prototype);
+  }
 }
 
 // OpenAI Configuration
@@ -109,7 +125,7 @@ export async function createChatCompletion(
     });
 
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("OpenAI request timeout")), 55000); // 55 second timeout (5s buffer before Vercel 60s limit)
+      setTimeout(() => reject(new OpenAITimeoutError()), 55000); // 55 second timeout (5s buffer before Vercel 60s limit)
     });
 
     const completion = await Promise.race([completionPromise, timeoutPromise]) as OpenAI.Chat.Completions.ChatCompletion;
@@ -132,12 +148,17 @@ export async function createChatCompletion(
     };
   } catch (error) {
     console.error("🔴 [OpenAI] API error:", error);
-    
+
     // Handle timeout errors specifically
-    if (error instanceof Error && error.message.includes("timeout")) {
-      throw new Error("Request timeout - please try again with a shorter message");
+    if (error instanceof OpenAITimeoutError) {
+      throw error; // Pass through our structured timeout error
     }
-    
+
+    // Handle other timeout-like errors
+    if (error instanceof Error && error.message.includes("timeout")) {
+      throw new OpenAITimeoutError("OpenAI request timed out - please try again");
+    }
+
     throw error;
   }
 }

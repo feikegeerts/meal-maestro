@@ -22,6 +22,7 @@ import {
   ChevronUp,
   MessageSquare,
   Settings,
+  RotateCcw,
 } from "lucide-react";
 import { Recipe } from "@/types/recipe";
 import { useTranslations, useLocale } from "next-intl";
@@ -46,6 +47,39 @@ interface ChatResponse {
   response: string;
   conversation_history: ChatMessage[];
   function_call?: FunctionCall;
+}
+
+interface RequestContext {
+  current_form_state?: {
+    title?: string;
+    ingredients?: Array<{
+      id: string;
+      name: string;
+      amount?: number | null;
+      unit?: string | null;
+      notes?: string;
+    }>;
+    servings?: number;
+    description?: string;
+    category?: string;
+    tags?: string[];
+    season?: string;
+  };
+  selected_recipe?: {
+    id: string;
+    title: string;
+    category: string;
+    season?: string;
+    cuisine?: string;
+    diet_types?: string[];
+    cooking_methods?: string[];
+    dish_types?: string[];
+    proteins?: string[];
+    occasions?: string[];
+    characteristics?: string[];
+    ingredients: string[];
+    description: string;
+  };
 }
 
 interface ChatInterfaceProps {
@@ -88,6 +122,13 @@ export function ChatInterface({
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isTimeoutError, setIsTimeoutError] = useState(false);
+  const [retryData, setRetryData] = useState<{
+    message: string;
+    imageFile: File | null;
+    compressedImageData: string | null;
+    context: RequestContext;
+  } | null>(null);
   const [isExpanded, setIsExpanded] = useState(isDesktopSidebar ? true : false);
 
   // Image compression state and actions
@@ -157,15 +198,171 @@ export function ChatInterface({
     setError(null);
   }, [clearImage, clearError]);
 
+  // Clear all error states
+  const clearAllErrors = useCallback(() => {
+    clearError();
+    setError(null);
+    setIsTimeoutError(false);
+    setRetryData(null);
+  }, [clearError]);
+
   // Convert file to base64 for API
-  const fileToBase64 = (file: File): Promise<string> => {
+  const fileToBase64 = useCallback((file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (error) => reject(error);
     });
-  };
+  }, []);
+
+  // Execute message (used by both sendMessage and retry)
+  const executeMessage = useCallback(async (
+    userMessage: string,
+    imageToProcess: File | null,
+    compressedImageForApi: string | null,
+    requestContext: RequestContext
+  ) => {
+    setIsLoading(true);
+    clearAllErrors();
+
+    // Start intelligent loading sequence
+    startIntelligentLoading(userMessage, !!imageToProcess);
+
+    // Create image URL for display if we have an image
+    let imageUrlForDisplay: string | undefined;
+    if (imageToProcess) {
+      imageUrlForDisplay = URL.createObjectURL(imageToProcess);
+    }
+
+    // Add user message to chat
+    const newMessages = [
+      ...messages,
+      {
+        role: "user" as const,
+        content: userMessage, // This will be empty string if no text was provided
+        timestamp: new Date().toISOString(),
+        imageUrl: imageUrlForDisplay,
+      },
+    ];
+    setMessages(newMessages);
+
+    try {
+      // Use compressed image data if available, otherwise convert original
+      let imageData: string | undefined;
+      if (imageToProcess) {
+        if (compressedImageForApi) {
+          imageData = compressedImageForApi;
+        } else {
+          // Fallback to original file if compression failed
+          imageData = await fileToBase64(imageToProcess);
+        }
+      }
+
+      const requestBody = {
+        message: userMessage || (imageToProcess ? "" : ""),
+        locale: locale,
+        conversation_history: messages,
+        ...(imageData && { images: [imageData] }),
+        context: requestContext,
+      };
+
+      const response = await fetch("/api/recipes/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+
+        // Check if this is a timeout error (422 status or timeout code)
+        if (response.status === 422 || errorData.code === "TIMEOUT_ERROR") {
+          const timeoutError = new Error(errorData.message || "Request timed out");
+          timeoutError.name = "TimeoutError";
+          throw timeoutError;
+        }
+
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Type the data as ChatResponse now that we know it's a successful response
+      const chatData = data as ChatResponse;
+
+      // Instead of overwriting messages, just append the assistant's response
+      // This preserves the user's message with its image URL
+      const assistantResponse = {
+        role: "assistant" as const,
+        content: chatData.response || "",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, assistantResponse]);
+
+      // Check if AI updated the form (either through direct update or URL extraction)
+      if (chatData.function_call && onRecipeGenerated) {
+        if (chatData.function_call.function === "update_recipe_form") {
+          const result = chatData.function_call.result as {
+            formUpdate?: unknown;
+            success?: boolean;
+          };
+          if (result?.formUpdate) {
+            onRecipeGenerated(result.formUpdate);
+          }
+        } else if (chatData.function_call.function === "extract_recipe_from_url") {
+          const result = chatData.function_call.result as {
+            formUpdate?: unknown;
+            success?: boolean;
+            error?: string;
+          };
+          if (result?.formUpdate) {
+            onRecipeGenerated(result.formUpdate);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Chat error:", err);
+
+      // Check if this is a timeout error
+      const isTimeout = err instanceof Error &&
+        (err.name === "TimeoutError" ||
+         err.message.includes("timeout") ||
+         err.message.includes("TIMEOUT_ERROR"));
+
+      if (isTimeout) {
+        setIsTimeoutError(true);
+        setError(t("timeoutError"));
+
+        // Store retry data
+        setRetryData({
+          message: userMessage,
+          imageFile: imageToProcess,
+          compressedImageData: compressedImageForApi,
+          context: requestContext,
+        });
+      } else {
+        setError(err instanceof Error ? err.message : "Failed to send message");
+      }
+    } finally {
+      setIsLoading(false);
+      stopIntelligentLoading();
+    }
+  }, [messages, locale, onRecipeGenerated, startIntelligentLoading, stopIntelligentLoading, clearAllErrors, fileToBase64, t]);
+
+  // Retry last request
+  const handleRetry = useCallback(async () => {
+    if (!retryData || isLoading) return;
+
+    // Restore the retry data
+    const { message, imageFile, compressedImageData, context } = retryData;
+
+    // Execute the retry with the same parameters
+    await executeMessage(message, imageFile, compressedImageData, context);
+  }, [retryData, isLoading, executeMessage]);
 
   // Handle drag and drop
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -226,132 +423,42 @@ export function ChatInterface({
     const userMessage = inputMessage.trim();
     const imageToProcess = selectedImage;
     const compressedImageForApi = compressedImageData;
+
+    // Clear form
     setInputMessage("");
     clearImage();
-    clearError();
-    setError(null);
-    setIsLoading(true);
-
-    // Start intelligent loading sequence
-    startIntelligentLoading(userMessage, !!imageToProcess);
 
     // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
 
-    // Create image URL for display if we have an image
-    let imageUrlForDisplay: string | undefined;
-    if (imageToProcess) {
-      imageUrlForDisplay = URL.createObjectURL(imageToProcess);
-    }
-
-    // Add user message to chat
-    const newMessages = [
-      ...messages,
-      {
-        role: "user" as const,
-        content: userMessage, // This will be empty string if no text was provided
-        timestamp: new Date().toISOString(),
-        imageUrl: imageUrlForDisplay,
-      },
-    ];
-    setMessages(newMessages);
-
-    try {
-      // Use compressed image data if available, otherwise convert original
-      let imageData: string | undefined;
-      if (imageToProcess) {
-        if (compressedImageForApi) {
-          imageData = compressedImageForApi;
-        } else {
-          // Fallback to original file if compression failed
-          imageData = await fileToBase64(imageToProcess);
-        }
-      }
-
-      const requestBody = {
-        message: userMessage || (imageToProcess ? "" : ""),
-        locale: locale,
-        conversation_history: messages,
-        ...(imageData && { images: [imageData] }),
-        context: {
-          ...(currentFormState && { current_form_state: currentFormState }),
-          ...(selectedRecipe && {
-            selected_recipe: {
-              id: selectedRecipe.id,
-              title: selectedRecipe.title,
-              category: selectedRecipe.category,
-              season: selectedRecipe.season,
-              cuisine: selectedRecipe.cuisine,
-              diet_types: selectedRecipe.diet_types,
-              cooking_methods: selectedRecipe.cooking_methods,
-              dish_types: selectedRecipe.dish_types,
-              proteins: selectedRecipe.proteins,
-              occasions: selectedRecipe.occasions,
-              characteristics: selectedRecipe.characteristics,
-              ingredients: selectedRecipe.ingredients.map((ing) =>
-                `${ing.amount || ""} ${ing.unit || ""} ${ing.name}`.trim()
-              ),
-              description: selectedRecipe.description,
-            },
-          }),
+    // Build context
+    const context = {
+      ...(currentFormState && { current_form_state: currentFormState }),
+      ...(selectedRecipe && {
+        selected_recipe: {
+          id: selectedRecipe.id,
+          title: selectedRecipe.title,
+          category: selectedRecipe.category,
+          season: selectedRecipe.season,
+          cuisine: selectedRecipe.cuisine,
+          diet_types: selectedRecipe.diet_types,
+          cooking_methods: selectedRecipe.cooking_methods,
+          dish_types: selectedRecipe.dish_types,
+          proteins: selectedRecipe.proteins,
+          occasions: selectedRecipe.occasions,
+          characteristics: selectedRecipe.characteristics,
+          ingredients: selectedRecipe.ingredients.map((ing) =>
+            `${ing.amount || ""} ${ing.unit || ""} ${ing.name}`.trim()
+          ),
+          description: selectedRecipe.description,
         },
-      };
+      }),
+    };
 
-      const response = await fetch("/api/recipes/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
-
-      const data: ChatResponse = await response.json();
-
-      // Instead of overwriting messages, just append the assistant's response
-      // This preserves the user's message with its image URL
-      const assistantResponse = {
-        role: "assistant" as const,
-        content: data.response || "",
-        timestamp: new Date().toISOString(),
-      };
-      setMessages(prev => [...prev, assistantResponse]);
-
-      // Check if AI updated the form (either through direct update or URL extraction)
-      if (data.function_call && onRecipeGenerated) {
-        if (data.function_call.function === "update_recipe_form") {
-          const result = data.function_call.result as {
-            formUpdate?: unknown;
-            success?: boolean;
-          };
-          if (result?.formUpdate) {
-            onRecipeGenerated(result.formUpdate);
-          }
-        } else if (data.function_call.function === "extract_recipe_from_url") {
-          const result = data.function_call.result as {
-            formUpdate?: unknown;
-            success?: boolean;
-            error?: string;
-          };
-          if (result?.formUpdate) {
-            onRecipeGenerated(result.formUpdate);
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Chat error:", err);
-      setError(err instanceof Error ? err.message : "Failed to send message");
-    } finally {
-      setIsLoading(false);
-      stopIntelligentLoading();
-    }
+    // Execute the message
+    await executeMessage(userMessage, imageToProcess, compressedImageForApi, context);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -453,15 +560,40 @@ export function ChatInterface({
               onDrop={handleDrop}
             >
               {error && (
-                <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded p-2 mb-3 flex items-center justify-between">
-                  <span>{error}</span>
-                  <button
-                    onClick={() => setError(null)}
-                    className="text-destructive hover:text-destructive/80 ml-2"
-                    aria-label="Dismiss error"
-                  >
-                    ×
-                  </button>
+                <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded p-2 mb-3">
+                  <div className="flex items-center justify-between">
+                    <span>{error}</span>
+                    <button
+                      onClick={clearAllErrors}
+                      className="text-destructive hover:text-destructive/80 ml-2"
+                      aria-label="Dismiss error"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  {isTimeoutError && retryData && (
+                    <div className="mt-2 pt-2 border-t border-destructive/20">
+                      <Button
+                        onClick={handleRetry}
+                        disabled={isLoading}
+                        size="sm"
+                        variant="outline"
+                        className="text-xs border-destructive/30 hover:border-destructive/50"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                            {t("retrying")}
+                          </>
+                        ) : (
+                          <>
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            {t("tryAgain")}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 
