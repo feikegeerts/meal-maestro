@@ -100,7 +100,7 @@ export const getUnitPreferenceInstruction = (
       return `\nUser prefers traditional metric units: g, kg, ml, l preferred, tsp/tbsp acceptable for small amounts.`;
 
     case "us-traditional":
-      return `\nUser prefers US volume units: tbsp, tsp (cups, oz, lb not supported in database).`;
+      return `\nUser prefers US traditional units: cups, fl oz, oz, lb, tbsp, tsp. Use standard imperial measurements.`;
 
     case "mixed":
       return `\nUser prefers original units from sources - don't convert unless specifically requested.`;

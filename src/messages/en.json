@@ -461,7 +461,11 @@
     "tbsp": "tbsp",
     "tsp": "tsp",
     "clove": "clove",
-    "cloves": "cloves"
+    "cloves": "cloves",
+    "cup": "cup",
+    "fl oz": "fl oz",
+    "oz": "oz",
+    "lb": "lb"
   },
   "unitSelect": {
     "custom": "custom",

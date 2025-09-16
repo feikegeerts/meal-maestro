@@ -462,7 +462,11 @@
     "tbsp": "el",
     "tsp": "tl",
     "clove": "teen",
-    "cloves": "teentjes"
+    "cloves": "teentjes",
+    "cup": "cup",
+    "fl oz": "fl oz",
+    "oz": "oz",
+    "lb": "pond"
   },
   "unitSelect": {
     "custom": "eigen",

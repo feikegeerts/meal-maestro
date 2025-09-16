@@ -362,6 +362,38 @@ export function smartVolumeConversion(amount: number, unit: string): SmartUnitRe
   return { amount, unit };
 }
 
+export function smartImperialWeightConversion(amount: number, unit: string): SmartUnitResult {
+  if (unit === 'oz' && amount >= 16) {
+    return {
+      amount: amount / 16,
+      unit: 'lb'
+    };
+  }
+  if (unit === 'lb' && amount < 1) {
+    return {
+      amount: amount * 16,
+      unit: 'oz'
+    };
+  }
+  return { amount, unit };
+}
+
+export function smartImperialVolumeConversion(amount: number, unit: string): SmartUnitResult {
+  if (unit === 'fl oz' && amount >= 8) {
+    return {
+      amount: amount / 8,
+      unit: 'cup'
+    };
+  }
+  if (unit === 'cup' && amount < 1) {
+    return {
+      amount: amount * 8,
+      unit: 'fl oz'
+    };
+  }
+  return { amount, unit };
+}
+
 export function normalizeIngredientUnit(amount: number | null, unit: string | null): SmartUnitResult | null {
   if (amount === null || unit === null) return null;
 
@@ -376,6 +408,12 @@ export function normalizeIngredientUnit(amount: number | null, unit: string | nu
   }
   if (unit === 'ml' || unit === 'l') {
     return smartVolumeConversion(amount, unit);
+  }
+  if (unit === 'oz' || unit === 'lb') {
+    return smartImperialWeightConversion(amount, unit);
+  }
+  if (unit === 'fl oz' || unit === 'cup') {
+    return smartImperialVolumeConversion(amount, unit);
   }
 
   // Return as-is for non-convertible standard units
@@ -408,7 +446,7 @@ export function formatFraction(num: number): string {
 
 export function pluralizeUnit(unit: string | null, amount: number): string | null {
   if (!unit) return null;
-  
+
   const singularToPlural: Record<string, string> = {
     'tbsp': 'tbsp',
     'tsp': 'tsp',
@@ -416,16 +454,20 @@ export function pluralizeUnit(unit: string | null, amount: number): string | nul
     'kg': 'kg',
     'ml': 'ml',
     'l': 'l',
-    'clove': 'cloves'
+    'clove': 'cloves',
+    'cup': 'cups',
+    'fl oz': 'fl oz',
+    'oz': 'oz',
+    'lb': 'lbs'
   };
-  
+
   if (amount === 1) {
-    const singularForm = Object.keys(singularToPlural).find(key => 
+    const singularForm = Object.keys(singularToPlural).find(key =>
       singularToPlural[key] === unit
     );
     return singularForm || unit;
   }
-  
+
   return singularToPlural[unit] || unit;
 }
 
@@ -484,7 +526,7 @@ export function formatIngredientDisplay(ingredient: RecipeIngredient): string {
 }
 
 
-// Standard cooking units that support smart conversions (7 total)
+// Standard cooking units that support smart conversions (11 total)
 export const STANDARD_COOKING_UNITS = [
   'g',
   'kg',
@@ -492,7 +534,11 @@ export const STANDARD_COOKING_UNITS = [
   'l',
   'tbsp',
   'tsp',
-  'clove'
+  'clove',
+  'cup',
+  'fl oz',
+  'oz',
+  'lb'
 ];
 
 // Legacy export for backward compatibility
@@ -503,17 +549,23 @@ const UNIT_STEP_CONFIG: Record<string, number> = {
   // Large volume units - maintain current behavior
   'ml': 25,
   'l': 0.25,
-  
-  // Weight units - reasonable increments  
+
+  // Weight units - reasonable increments
   'g': 25,
   'kg': 0.25,
-  
+
   // Small volume units - smaller increments
   'tbsp': 0.5,
   'tsp': 0.25,
-  
+
   // Discrete/count units - step of 1
-  'clove': 1
+  'clove': 1,
+
+  // US Imperial units
+  'cup': 0.25,
+  'fl oz': 0.5,
+  'oz': 0.25,
+  'lb': 0.25
 };
 
 /**

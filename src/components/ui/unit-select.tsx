@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCustomUnits } from "@/hooks/use-custom-units";
 // Standard cooking units - could be derived from translation keys in the future
-const STANDARD_COOKING_UNITS = ["g", "kg", "ml", "l", "tbsp", "tsp", "clove"];
+const STANDARD_COOKING_UNITS = ["g", "kg", "ml", "l", "tbsp", "tsp", "clove", "cup", "fl oz", "oz", "lb"];
 
 interface UnitSelectProps {
   value: string | null;
