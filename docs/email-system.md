@@ -33,10 +33,11 @@ The Meal Maestro email system provides localized, custom email templates for Sup
    - Rate limiting awareness
    - Comprehensive error handling
 
-5. **UserProfileService** (`/src/lib/user-profile-service.ts`)
-   - Manages user profile operations using secure database functions
+5. **ProfileSecureService** (`/src/lib/profile-secure-service.ts`)
+   - Secure service dedicated to database function operations requiring anon client access
    - Provides `getLanguagePreference()` method that calls `get_user_language_preference()` function
-   - Uses anon key with SECURITY DEFINER function for secure access without service role key
+   - Uses anon key ONLY with SECURITY DEFINER functions - NO direct table access
+   - Used exclusively by email system and other server-side services for language preferences
 
 ## Database Function
 

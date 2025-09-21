@@ -2,7 +2,6 @@
 
 ## User Experience
 
-1. [ ] Sometimes the AI with a photo times out when gpt is very slow to respond. This timeout should be handled without a silent retry, maybe by showing a different message to the user. We arleady have a rotating message system in the chat window as sort of a loader. We do currently retry it after the timeout, maybe this is ok? But the timeout for 55 sec sometimes doesn't seems to be enough. What options do we have?
 1. [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
 1. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 
@@ -36,7 +35,6 @@
 
 ## V2.0 feature requests
 
-1. [x] A preference setting in the account that makes sure tbsp and tsp are not used but just ml and g is used.
 1. [ ] Tiktok import
 1. [ ] Extra columns
    1. [ ] Reference column to add the original link / place of the recipe

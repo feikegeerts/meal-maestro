@@ -1,18 +1,23 @@
-import { supabase } from "./supabase";
+/**
+ * Client-side Profile Service
+ *
+ * Simple, lightweight service for frontend profile operations.
+ * Uses global authenticated session - no server-side details exposed.
+ *
+ * SECURITY:
+ * - Only contains client-side operations
+ * - Uses global authenticated session (RLS applies)
+ * - No complex error handling or server patterns
+ * - Minimal bundle impact
+ */
 
-export interface UserProfile {
-  id: string;
-  email: string | null;
-  display_name: string | null;
-  avatar_url: string | null;
-  role: 'user' | 'admin';
-  language_preference?: string;
-  unit_system_preference?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { supabase } from "./supabase";
+import type { UserProfile, ProfileUpdatePayload } from "./profile-types";
 
 export const profileService = {
+  /**
+   * Gets user profile for authenticated user
+   */
   async getUserProfile(userId: string, retryCount = 0): Promise<UserProfile | null> {
     try {
       const { data, error } = await supabase
@@ -23,9 +28,8 @@ export const profileService = {
 
       if (error) {
         // For newly created users, the profile might not exist yet
-        // This is expected when the database trigger hasn't completed
         if (error.code === 'PGRST116') {
-          // No rows returned - try to create the profile for existing users
+          // Try to create the profile for existing users
           if (retryCount === 0) {
             console.debug("User profile not found, attempting to create profile for user:", userId);
             const createdProfile = await this.createMissingProfile(userId);
@@ -33,11 +37,11 @@ export const profileService = {
               return createdProfile;
             }
           }
-          
+
           // Retry up to 3 times for new users
           if (retryCount < 3) {
             console.debug("User profile not found, retrying (%d/3):", retryCount + 1, userId);
-            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Progressive delay
+            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
             return this.getUserProfile(userId, retryCount + 1);
           } else {
             console.debug("User profile not found after retries - likely a newly created user:", userId);
@@ -48,7 +52,6 @@ export const profileService = {
         return null;
       }
 
-      // Supabase returns a single object or null
       return data || null;
     } catch (error) {
       console.error("Unexpected error fetching user profile:", error);
@@ -56,19 +59,21 @@ export const profileService = {
     }
   },
 
+  /**
+   * Creates missing profile for authenticated users
+   */
   async createMissingProfile(userId: string): Promise<UserProfile | null> {
     try {
-      // Get user info from auth.users
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user || user.id !== userId) {
         console.error("Cannot create profile: user not authenticated or ID mismatch");
         return null;
       }
 
-      const displayName = user.user_metadata?.display_name || 
-                         user.user_metadata?.full_name || 
-                         user.email?.split('@')[0] || 
+      const displayName = user.user_metadata?.display_name ||
+                         user.user_metadata?.full_name ||
+                         user.email?.split('@')[0] ||
                          'User';
 
       const { data, error } = await supabase
@@ -96,10 +101,10 @@ export const profileService = {
     }
   },
 
-  async updateUserProfile(
-    userId: string,
-    updates: Partial<Pick<UserProfile, "display_name" | "avatar_url" | "language_preference" | "unit_system_preference">>
-  ): Promise<UserProfile | null> {
+  /**
+   * Updates user profile for authenticated user
+   */
+  async updateUserProfile(userId: string, updates: ProfileUpdatePayload): Promise<UserProfile | null> {
     try {
       const { data, error } = await supabase
         .from("user_profiles")
@@ -113,7 +118,6 @@ export const profileService = {
         return null;
       }
 
-      // Supabase returns a single object or null
       return data || null;
     } catch (error) {
       console.error("Unexpected error updating user profile:", error);

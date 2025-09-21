@@ -11,7 +11,8 @@ import {
 } from "react";
 import { User, Session, AuthError, OAuthResponse } from "@supabase/supabase-js";
 import { auth, supabase } from "./supabase";
-import { profileService, UserProfile } from "./profile-service";
+import { profileService } from "./profile-service";
+import type { UserProfile, ProfileUpdatePayload } from "./profile-types";
 
 interface AuthContextType {
   user: User | null;
@@ -27,7 +28,7 @@ interface AuthContextType {
     error: AuthError | null;
   }>;
   signOut: () => Promise<{ error: AuthError | null }>;
-  updateProfile: (updates: Partial<Pick<UserProfile, "display_name" | "avatar_url" | "language_preference" | "unit_system_preference">>) => Promise<boolean>;
+  updateProfile: (updates: ProfileUpdatePayload) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,11 +51,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Safe refresh with global lock to prevent race conditions
   const performSafeRefresh = useCallback(async (): Promise<boolean> => {
     const now = Date.now();
-    
+
     // If a refresh is already in progress, wait for it to complete
     if (refreshLockRef.current) {
       try {
-        console.debug("Waiting for existing refresh operation to complete");
         return await refreshLockRef.current;
       } catch (error) {
         console.error("Error waiting for existing refresh:", error);
@@ -64,7 +64,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Cooldown check to prevent rapid refresh attempts
     if (now - lastRefreshAttempt.current < REFRESH_COOLDOWN) {
-      console.debug("Refresh cooldown active, skipping refresh attempt");
       return false;
     }
 
@@ -73,33 +72,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Start a new refresh operation
     const refreshPromise = async (): Promise<boolean> => {
       try {
-        console.debug("Starting token refresh operation");
         const { data: refreshData, error: refreshError } =
           await supabase.auth.refreshSession();
-        
+
         if (refreshData.session && !refreshError) {
-          console.debug("Token refresh successful");
           await syncTokensWithServer(refreshData.session);
           return true;
         }
-        
+
         // Handle specific "Already Used" error gracefully
         if (refreshError?.message?.includes("Already Used")) {
-          console.debug("Refresh token already used by another process - checking current session");
-          
           // Try to get the current session (another process may have refreshed it)
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          const {
+            data: { session },
+            error: sessionError,
+          } = await supabase.auth.getSession();
           if (session && !sessionError) {
-            console.debug("Found valid session after 'Already Used' error - continuing with existing session");
             // Session exists but may not be synced with server - sync it
             await syncTokensWithServer(session);
             return true;
-          } else {
-            console.debug("No valid session found after 'Already Used' error");
           }
         }
-        
-        console.error("Token refresh failed:", refreshError?.message, refreshError?.status);
+
+        console.error(
+          "Token refresh failed:",
+          refreshError?.message,
+          refreshError?.status
+        );
         return false;
       } catch (error) {
         console.error("Token refresh exception:", error);
@@ -146,8 +145,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Sync tokens with server for HTTP-only cookie auth
   const syncTokensWithServer = async (session: Session, retries = 3) => {
-    console.debug('Starting token sync with server');
-    
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         const response = await fetch("/api/auth/set-session", {
@@ -169,7 +166,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
           throw new Error("Token sync failed on server");
         }
 
-        console.debug('Token sync with server completed successfully');
         return;
       } catch (error) {
         console.error(
@@ -186,7 +182,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         // Exponential backoff: wait 1s, then 2s, then 4s
         const delay = Math.pow(2, attempt - 1) * 1000;
-        console.debug(`Retrying token sync in ${delay}ms`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
@@ -214,7 +209,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setProfile(userProfile);
           } catch (error) {
             // This is expected for newly created users as the profile trigger might not have completed yet
-            console.debug("Profile not found (might be newly created user):", error);
             setProfile(null);
           }
         }
@@ -231,8 +225,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       async (event, session: Session | null) => {
-        // Auth state change tracking can be enabled for debugging if needed
-
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -261,7 +253,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
             } catch (error) {
               // For newly created users, the profile might not exist yet due to trigger timing
               // This is normal and expected behavior, not an error
-              console.debug("Profile not found (might be newly created user):", error);
               setProfile(null);
             }
           };
@@ -352,21 +343,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  const updateProfile = useCallback(async (updates: Partial<Pick<UserProfile, "display_name" | "avatar_url" | "language_preference" | "unit_system_preference">>) => {
-    if (!user?.id) return false;
+  const updateProfile = useCallback(
+    async (updates: ProfileUpdatePayload) => {
+      if (!user?.id) return false;
 
-    try {
-      const updatedProfile = await profileService.updateUserProfile(user.id, updates);
-      if (updatedProfile) {
-        setProfile(updatedProfile);
-        return true;
+      try {
+        const updatedProfile = await profileService.updateUserProfile(
+          user.id,
+          updates
+        );
+        if (updatedProfile) {
+          setProfile(updatedProfile);
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error updating profile:", error);
+        return false;
       }
-      return false;
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      return false;
-    }
-  }, [user?.id]);
+    },
+    [user?.id]
+  );
 
   const value = {
     user,

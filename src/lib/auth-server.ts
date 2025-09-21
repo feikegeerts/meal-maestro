@@ -8,7 +8,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing Supabase environment variables");
 }
 
-export type UserRole = 'user' | 'admin';
+export type UserRole = "user" | "admin";
 
 export interface AuthUser {
   id: string;
@@ -22,31 +22,33 @@ export interface AuthUserWithRole extends AuthUser {
 export async function getAuthenticatedUser(): Promise<AuthUser | null> {
   try {
     const cookieStore = await cookies();
-    const accessToken = cookieStore.get('sb-access-token')?.value;
+    const accessToken = cookieStore.get("sb-access-token")?.value;
 
     if (!accessToken) {
       return null;
     }
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
-    
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(accessToken);
 
     if (error || !user) {
       // Token is invalid/expired - clear stale cookies and return null
       // Let client-side handle the refresh to avoid race conditions
-      console.debug('Server-side token validation failed, clearing stale cookies:', error?.message);
-      cookieStore.delete('sb-access-token');
-      cookieStore.delete('sb-refresh-token');
+      cookieStore.delete("sb-access-token");
+      cookieStore.delete("sb-refresh-token");
       return null;
     }
 
     return {
       id: user.id,
-      email: user.email
+      email: user.email,
     };
   } catch (error) {
-    console.error('Error getting authenticated user:', error);
+    console.error("Error getting authenticated user:", error);
     return null;
   }
 }
@@ -58,38 +60,38 @@ export async function createAuthenticatedClient() {
   }
 
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get('sb-access-token')?.value;
-  const refreshToken = cookieStore.get('sb-refresh-token')?.value;
+  const accessToken = cookieStore.get("sb-access-token")?.value;
+  const refreshToken = cookieStore.get("sb-refresh-token")?.value;
 
   if (!accessToken) {
     return null;
   }
 
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
-  
+
   await supabase.auth.setSession({
     access_token: accessToken,
-    refresh_token: refreshToken || ''
+    refresh_token: refreshToken || "",
   });
 
   return {
     client: supabase,
-    user
+    user,
   };
 }
 
 export async function requireAuth() {
   const authResult = await createAuthenticatedClient();
-  
+
   if (!authResult) {
     return new Response(
-      JSON.stringify({ 
-        error: 'Authentication required',
-        code: 'UNAUTHORIZED'
+      JSON.stringify({
+        error: "Authentication required",
+        code: "UNAUTHORIZED",
       }),
-      { 
+      {
         status: 401,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
       }
     );
   }
@@ -99,7 +101,7 @@ export async function requireAuth() {
 
 export async function getAuthenticatedUserWithRole(): Promise<AuthUserWithRole | null> {
   const authResult = await createAuthenticatedClient();
-  
+
   if (!authResult) {
     return null;
   }
@@ -108,43 +110,43 @@ export async function getAuthenticatedUserWithRole(): Promise<AuthUserWithRole |
 
   try {
     const { data: profile, error } = await client
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
+      .from("user_profiles")
+      .select("role")
+      .eq("id", user.id)
       .single();
 
     if (error || !profile) {
-      console.error('Error fetching user profile:', error);
+      console.error("Error fetching user profile:", error);
       return null;
     }
 
     return {
       ...user,
-      role: profile.role as UserRole
+      role: profile.role as UserRole,
     };
   } catch (error) {
-    console.error('Error in getAuthenticatedUserWithRole:', error);
+    console.error("Error in getAuthenticatedUserWithRole:", error);
     return null;
   }
 }
 
 export async function isUserAdmin(): Promise<boolean> {
   const userWithRole = await getAuthenticatedUserWithRole();
-  return userWithRole?.role === 'admin';
+  return userWithRole?.role === "admin";
 }
 
 export async function requireAdmin() {
   const authResult = await createAuthenticatedClient();
-  
+
   if (!authResult) {
     return new Response(
-      JSON.stringify({ 
-        error: 'Authentication required',
-        code: 'UNAUTHORIZED'
+      JSON.stringify({
+        error: "Authentication required",
+        code: "UNAUTHORIZED",
       }),
-      { 
+      {
         status: 401,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
       }
     );
   }
@@ -153,34 +155,34 @@ export async function requireAdmin() {
 
   try {
     const { data: profile, error } = await client
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
+      .from("user_profiles")
+      .select("role")
+      .eq("id", user.id)
       .single();
 
     if (error || !profile) {
-      console.error('Error fetching user profile for admin check:', error);
+      console.error("Error fetching user profile for admin check:", error);
       return new Response(
-        JSON.stringify({ 
-          error: 'Failed to verify permissions',
-          code: 'FORBIDDEN'
+        JSON.stringify({
+          error: "Failed to verify permissions",
+          code: "FORBIDDEN",
         }),
-        { 
+        {
           status: 403,
-          headers: { 'Content-Type': 'application/json' }
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
 
-    if (profile.role !== 'admin') {
+    if (profile.role !== "admin") {
       return new Response(
-        JSON.stringify({ 
-          error: 'Admin access required',
-          code: 'FORBIDDEN'
+        JSON.stringify({
+          error: "Admin access required",
+          code: "FORBIDDEN",
         }),
-        { 
+        {
           status: 403,
-          headers: { 'Content-Type': 'application/json' }
+          headers: { "Content-Type": "application/json" },
         }
       );
     }
@@ -189,19 +191,19 @@ export async function requireAdmin() {
       client,
       user: {
         ...user,
-        role: profile.role as UserRole
-      }
+        role: profile.role as UserRole,
+      },
     };
   } catch (error) {
-    console.error('Error in requireAdmin:', error);
+    console.error("Error in requireAdmin:", error);
     return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error during admin verification',
-        code: 'INTERNAL_ERROR'
+      JSON.stringify({
+        error: "Internal server error during admin verification",
+        code: "INTERNAL_ERROR",
       }),
-      { 
+      {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
       }
     );
   }

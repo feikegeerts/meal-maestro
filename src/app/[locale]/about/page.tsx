@@ -167,7 +167,11 @@ export default function AboutPage() {
             <div className="space-y-6">
               <div className="flex items-center justify-center gap-4 mb-12">
                 <div className="p-3 bg-primary/20 rounded-2xl backdrop-blur-sm border border-primary/20">
-                  <ChefHatIcon className="h-12 w-12 text-primary" width={48} height={48} />
+                  <ChefHatIcon
+                    className="h-12 w-12 text-primary"
+                    width={48}
+                    height={48}
+                  />
                 </div>
                 <h1 className="text-5xl md:text-6xl font-bold text-foreground">
                   {t("title")}
@@ -508,7 +512,7 @@ export default function AboutPage() {
                         </span>
                       </div>
                       <div className="text-3xl font-bold text-purple dark:text-purple mb-1">
-                        €120
+                        €140
                       </div>
                       <div className="text-xs text-purple/80 dark:text-purple/80">
                         {t("costs.development.oneTime")}

@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Bot, User } from "lucide-react";
-import { UserProfile } from "@/lib/profile-service";
+import type { UserProfile } from "@/lib/profile-types";
 import Image from "next/image";
 
 interface ChatMessageProps {
