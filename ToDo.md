@@ -3,7 +3,7 @@
 ## User Experience
 
 1. [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
-1. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
+1. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.Ocom/en-gb/features/
 
 ## Analytics & Monetization
 
