@@ -1,19 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 24 24" fill="none">
-  <circle cx="12" cy="12" r="12" fill="oklch(0.92 0.008 240)" />
+  <circle cx="12" cy="12" r="12" fill="#3e8343" />
 
   <g transform="translate(12,12) scale(0.8) translate(-12,-12)">
     <path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z" 
-          stroke="#3e8343" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+          stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
     <path d="M7 17h10" 
-          stroke="#3e8343" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
 
     <path d="M9.5 8c.6 1.8 1.3 2.3 3 2.8-1.8.6-2.4 1.1-3 2.8-.6-1.8-1.3-2.3-3-2.8 1.8-.6 2.4-1.1 3-2.8Z" 
-          fill="#3e8343" />
+          fill="white" />
 
     <path d="M13.5 7l.5 1.2 1.1.5-1.1.5-.5 1.2-.5-1.2-1.1-.5 1.1-.5.5-1.2Z" 
-          fill="#3e8343" />
+          fill="white" />
 
     <path d="M14 11l.4.9.9.4-.9.4-.4.9-.4-.9-.9-.4.9-.4.4-.9Z" 
-          fill="#3e8343" />
+          fill="white" />
   </g>
 </svg>
