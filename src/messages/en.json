@@ -18,6 +18,32 @@
     "edit": "Edit",
     "addRecipe": "Add Recipe"
   },
+  "pwa": {
+    "installBanner": {
+      "title": "Add to your home screen for quick access",
+      "description": "Get faster access to your recipes",
+      "dismiss": "Dismiss",
+      "installButton": "Install App",
+      "showHowButton": "Show Me How",
+      "gotIt": "Got it!"
+    },
+    "installInstructions": {
+      "title": "Add to Home Screen",
+      "description": "Follow these steps to add Meal Maestro to your home screen:",
+      "step1": {
+        "title": "Tap the Share button",
+        "description": "Located at the bottom of your browser"
+      },
+      "step2": {
+        "title": "Scroll down and tap \"Add to Home Screen\"",
+        "description": "You may need to scroll to find this option"
+      },
+      "step3": {
+        "title": "Tap \"Add\" to confirm",
+        "description": "Meal Maestro will appear on your home screen"
+      }
+    }
+  },
   "theme": {
     "theme": "Theme",
     "light": "Light",

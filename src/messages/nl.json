@@ -18,6 +18,32 @@
     "edit": "Bewerken",
     "addRecipe": "Recept Toevoegen"
   },
+  "pwa": {
+    "installBanner": {
+      "title": "Voeg toe aan je startscherm voor snelle toegang",
+      "description": "Krijg snellere toegang tot je recepten",
+      "dismiss": "Sluiten",
+      "installButton": "App Installeren",
+      "showHowButton": "Laat Zien Hoe",
+      "gotIt": "Begrepen!"
+    },
+    "installInstructions": {
+      "title": "Toevoegen aan Startscherm",
+      "description": "Volg deze stappen om Meal Maestro aan je startscherm toe te voegen:",
+      "step1": {
+        "title": "Tik op de Deel knop",
+        "description": "Onderaan je browser"
+      },
+      "step2": {
+        "title": "Scroll naar beneden en tik op \"Zet op beginscherm\"",
+        "description": "Je moet mogelijk scrollen om deze optie te vinden"
+      },
+      "step3": {
+        "title": "Tik op \"Voeg toe\" om te bevestigen",
+        "description": "Meal Maestro verschijnt op je startscherm"
+      }
+    }
+  },
   "theme": {
     "theme": "Thema",
     "light": "Licht",
