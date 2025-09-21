@@ -14,6 +14,7 @@ export function LocalizedSEOHead({ pageKey }: LocalizedSEOHeadProps) {
   const t = useTranslations("seo");
 
   const baseUrl = "https://meal-maestro.com";
+  // For localized pages, the canonical should include the locale
   const canonicalUrl = `${baseUrl}${pathname}`;
 
   // Get localized content

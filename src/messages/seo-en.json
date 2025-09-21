@@ -21,18 +21,21 @@
   "login": {
     "title": "Sign In to Meal Maestro",
     "description": "Sign in to your Meal Maestro account to access your AI-powered recipe management system. Secure login with Google OAuth.",
+    "keywords": "meal maestro login, recipe app sign in, Google OAuth login, recipe management account",
     "ogTitle": "Sign In to Meal Maestro",
     "ogDescription": "Access your AI-powered recipe management system. Secure login with Google OAuth."
   },
   "terms": {
     "title": "Terms of Service - Meal Maestro",
     "description": "Read the terms of service for Meal Maestro, the AI-powered recipe management app. Understand your rights and responsibilities when using our platform.",
+    "keywords": "meal maestro terms of service, recipe app terms, user agreement, cooking app legal terms",
     "ogTitle": "Terms of Service - Meal Maestro",
     "ogDescription": "Terms of service for the AI-powered recipe management app."
   },
   "privacy": {
     "title": "Privacy Policy - Meal Maestro",
     "description": "Learn how Meal Maestro protects your privacy. Our comprehensive privacy policy explains how we collect, use, and safeguard your recipe data.",
+    "keywords": "meal maestro privacy policy, recipe app privacy, data protection, GDPR compliance, cooking app privacy",
     "ogTitle": "Privacy Policy - Meal Maestro",
     "ogDescription": "Learn how Meal Maestro protects your privacy and recipe data."
   },

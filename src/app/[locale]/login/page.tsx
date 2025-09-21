@@ -10,6 +10,7 @@ import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import { useTranslations } from 'next-intl';
+import { LocalizedSEOHead } from "@/components/seo/localized-seo-head";
 
 function LoginContent() {
   const router = useRouter();
@@ -68,7 +69,10 @@ function LoginContent() {
   }
 
   return (
-    <PageWrapper>
+    <>
+      <LocalizedSEOHead pageKey="login" />
+
+      <PageWrapper>
       <div className="container mx-auto px-4 py-8 md:py-16">
         <div className="max-w-md mx-auto md:max-w-2xl">
           {/* Header */}
@@ -130,8 +134,9 @@ function LoginContent() {
             </div>
           </div>
         </div>
-      </div>
-    </PageWrapper>
+        </div>
+      </PageWrapper>
+    </>
   );
 }
 

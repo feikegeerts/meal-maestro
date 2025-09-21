@@ -19,10 +19,6 @@
 1. [ ] Write more tests
 1. [ ] Switch from handlebars to mustache.js so the build warnings go away
 
-## Marketing & Documentation
-
-16. [ ] SEO optimizations - Footer???
-
 ## V2.0 feature requests
 
 1. [ ] Tiktok import

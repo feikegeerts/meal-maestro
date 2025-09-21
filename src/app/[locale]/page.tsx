@@ -10,10 +10,13 @@ import { User, LogOut, BookOpen } from "lucide-react";
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import Image from "next/image";
 import { useTranslations } from 'next-intl';
+import { LocalizedSEOHead } from "@/components/seo/localized-seo-head";
+import { LocalizedJsonLdSchema, useLocalizedSchemas } from "@/components/seo/localized-json-ld-schema";
 
 function HomeContent() {
   const { user, profile, loading, signOut } = useAuth();
   const t = useTranslations('home');
+  const { organizationSchema, softwareApplicationSchema } = useLocalizedSchemas();
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -27,8 +30,14 @@ function HomeContent() {
   }
 
   return (
-    <PageWrapper>
-      <div className="container mx-auto px-4 py-8 md:py-16">
+    <>
+      <LocalizedSEOHead pageKey="homepage" />
+
+      <LocalizedJsonLdSchema schema={organizationSchema} />
+      <LocalizedJsonLdSchema schema={softwareApplicationSchema} />
+
+      <PageWrapper>
+        <div className="container mx-auto px-4 py-8 md:py-16">
         {/* Hero Section */}
         <div className="text-center">
           <div className="flex items-center justify-center mb-6">
@@ -104,8 +113,9 @@ function HomeContent() {
             )}
           </div>
         </div>
-      </div>
-    </PageWrapper>
+        </div>
+      </PageWrapper>
+    </>
   );
 }
 

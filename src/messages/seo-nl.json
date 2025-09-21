@@ -21,18 +21,21 @@
   "login": {
     "title": "Inloggen bij Meal Maestro",
     "description": "Log in op je Meal Maestro account om toegang te krijgen tot je AI-aangedreven receptbeheersysteem. Veilig inloggen met Google OAuth.",
+    "keywords": "meal maestro inloggen, recept app aanmelden, Google OAuth login, receptbeheer account",
     "ogTitle": "Inloggen bij Meal Maestro",
     "ogDescription": "Krijg toegang tot je AI-aangedreven receptbeheersysteem. Veilig inloggen met Google OAuth."
   },
   "terms": {
     "title": "Gebruiksvoorwaarden - Meal Maestro",
     "description": "Lees de gebruiksvoorwaarden van Meal Maestro, de AI-aangedreven receptbeheer app. Begrijp je rechten en verantwoordelijkheden bij het gebruik van ons platform.",
+    "keywords": "meal maestro gebruiksvoorwaarden, recept app voorwaarden, gebruikersovereenkomst, kook app juridische voorwaarden",
     "ogTitle": "Gebruiksvoorwaarden - Meal Maestro",
     "ogDescription": "Gebruiksvoorwaarden voor de AI-aangedreven receptbeheer app."
   },
   "privacy": {
     "title": "Privacybeleid - Meal Maestro",
     "description": "Leer hoe Meal Maestro je privacy beschermt. Ons uitgebreide privacybeleid legt uit hoe we je receptgegevens verzamelen, gebruiken en beschermen.",
+    "keywords": "meal maestro privacybeleid, recept app privacy, gegevensbescherming, AVG compliance, kook app privacy",
     "ogTitle": "Privacybeleid - Meal Maestro",
     "ogDescription": "Leer hoe Meal Maestro je privacy en receptgegevens beschermt."
   },

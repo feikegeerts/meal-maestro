@@ -35,7 +35,6 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.json",
   alternates: {
-    canonical: "https://meal-maestro.com",
     languages: {
       en: "https://meal-maestro.com/en",
       nl: "https://meal-maestro.com/nl",

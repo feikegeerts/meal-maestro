@@ -4,11 +4,15 @@ import { ChefHat, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/app/i18n/routing";
 import { useTranslations } from "next-intl";
+import { LocalizedSEOHead } from "@/components/seo/localized-seo-head";
 
 export default function TermsOfServicePage() {
   const t = useTranslations("terms");
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <LocalizedSEOHead pageKey="terms" />
+
+      <div className="min-h-screen bg-background">
       {/* Navigation Header */}
       <div className="border-b">
         <div className="container mx-auto px-4 py-4 max-w-4xl">
@@ -241,7 +245,8 @@ export default function TermsOfServicePage() {
             </p>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
