@@ -22,7 +22,9 @@ export const metadata: Metadata = {
   description: "AI-powered recipe management system",
   icons: {
     icon: "/chef-hat-sparkle.svg",
+    apple: "/icon-192x192.png",
   },
+  manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {

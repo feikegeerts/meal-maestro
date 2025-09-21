@@ -207,7 +207,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               session.user.id
             );
             setProfile(userProfile);
-          } catch (error) {
+          } catch {
             // This is expected for newly created users as the profile trigger might not have completed yet
             setProfile(null);
           }
@@ -250,7 +250,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 session.user.id
               );
               setProfile(userProfile);
-            } catch (error) {
+            } catch {
               // For newly created users, the profile might not exist yet due to trigger timing
               // This is normal and expected behavior, not an error
               setProfile(null);

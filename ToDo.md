@@ -18,20 +18,10 @@
        12.1 [ ] - recipe-scraper.ts
 1. [ ] Write more tests
 1. [ ] Switch from handlebars to mustache.js so the build warnings go away
-1. [ ] Fix inconsistent profile data architecture:
-   - PROBLEM: Two profile services with different auth patterns
-     - `profile-service.ts` (client-side, uses authenticated session) ✅ works
-     - `user-profile-service.ts` (server-side, uses anon client) ❌ fails RLS
-   - SOLUTION OPTIONS:
-     1. Always pass authenticated client from API routes (current approach)
-     2. Create secure database functions with SECURITY DEFINER (like get_user_language_preference)
-     3. Consolidate into single profile service with conditional auth client
-   - IMPACT: Currently chat system had to be patched, other server-side profile queries may fail
 
 ## Marketing & Documentation
 
 16. [ ] SEO optimizations - Footer???
-17. [ ] PWA options to allow installing of the app
 
 ## V2.0 feature requests
 
