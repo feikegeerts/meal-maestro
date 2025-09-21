@@ -2,7 +2,7 @@
   <!-- Background with padding -->
   <rect width="512" height="512" fill="transparent" />
   <!-- Main circle with proper iOS padding -->
-  <circle cx="256" cy="256" r="220" fill="#2B8A4A" />
+  <circle cx="256" cy="256" r="220" fill="#3e8343" />
 
   <!-- Chef hat and sparkles scaled much larger and centered -->
   <g transform="translate(256,256) scale(14) translate(-12,-12)">
