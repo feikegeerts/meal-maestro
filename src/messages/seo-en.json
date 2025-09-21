@@ -1,0 +1,55 @@
+{
+  "global": {
+    "siteName": "Meal Maestro",
+    "tagline": "AI-Powered Recipe Management App",
+    "description": "Organize, discover, and manage your recipes with AI-powered natural language processing. Privacy-focused recipe management app with no ads or subscriptions.",
+    "keywords": "recipe management, AI recipe organizer, digital cookbook, meal planning, cooking app, recipe collection, food management"
+  },
+  "homepage": {
+    "title": "Meal Maestro - AI-Powered Recipe Management App",
+    "description": "Organize, discover, and manage your recipes with AI-powered natural language processing. Privacy-focused recipe management app with no ads or subscriptions.",
+    "ogTitle": "Meal Maestro - AI-Powered Recipe Management App",
+    "ogDescription": "Privacy-focused AI recipe management app. Organize your recipes with natural language processing. No ads, no subscriptions."
+  },
+  "about": {
+    "title": "About Meal Maestro - AI-Powered Recipe Management App",
+    "description": "Learn about Meal Maestro, the privacy-focused AI recipe management app that helps you organize, discover, and manage your recipes with natural language processing. No ads, no subscriptions.",
+    "keywords": "recipe management app, AI recipe organizer, digital cookbook, meal planning software, cooking app, recipe collection, food management, kitchen organization",
+    "ogTitle": "About Meal Maestro - AI-Powered Recipe Management",
+    "ogDescription": "Privacy-focused AI recipe management app. Organize your recipes with natural language processing. No ads, no subscriptions, your data stays private."
+  },
+  "login": {
+    "title": "Sign In to Meal Maestro",
+    "description": "Sign in to your Meal Maestro account to access your AI-powered recipe management system. Secure login with Google OAuth.",
+    "ogTitle": "Sign In to Meal Maestro",
+    "ogDescription": "Access your AI-powered recipe management system. Secure login with Google OAuth."
+  },
+  "terms": {
+    "title": "Terms of Service - Meal Maestro",
+    "description": "Read the terms of service for Meal Maestro, the AI-powered recipe management app. Understand your rights and responsibilities when using our platform.",
+    "ogTitle": "Terms of Service - Meal Maestro",
+    "ogDescription": "Terms of service for the AI-powered recipe management app."
+  },
+  "privacy": {
+    "title": "Privacy Policy - Meal Maestro",
+    "description": "Learn how Meal Maestro protects your privacy. Our comprehensive privacy policy explains how we collect, use, and safeguard your recipe data.",
+    "ogTitle": "Privacy Policy - Meal Maestro",
+    "ogDescription": "Learn how Meal Maestro protects your privacy and recipe data."
+  },
+  "schema": {
+    "organization": {
+      "description": "AI-powered recipe management app that helps you organize, discover, and manage your recipes with natural language processing."
+    },
+    "softwareApplication": {
+      "description": "AI-powered recipe management app that helps you organize, discover, and manage your recipes with natural language processing. Privacy-focused with no ads or subscriptions.",
+      "featureList": [
+        "AI-powered recipe processing",
+        "Natural language recipe management",
+        "Recipe organization and search",
+        "Ingredient management",
+        "Privacy-focused design",
+        "No ads or subscriptions"
+      ]
+    }
+  }
+}

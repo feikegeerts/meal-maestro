@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /login
+Allow: /terms
+Allow: /privacy
+
+# Block private user areas
+Disallow: /recipes
+Disallow: /account
+Disallow: /admin
+Disallow: /auth/callback
+
+# Sitemap location
+Sitemap: https://meal-maestro.com/sitemap.xml

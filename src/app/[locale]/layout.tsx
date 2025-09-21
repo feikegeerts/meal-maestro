@@ -12,6 +12,7 @@ import { routing } from '../i18n/routing';
 import { setRequestLocale } from 'next-intl/server';
 import { ThemeProvider } from '@/components/theme-provider';
 import { PWAInstallBanner } from '@/components/pwa/install-banner';
+import { LocalizedWebsiteSchema } from '@/components/seo/localized-website-schema';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({locale}));
@@ -58,6 +59,7 @@ export default async function LocaleLayout({
             </div>
             <Toaster richColors position="top-right" />
             <PWAInstallBanner />
+            <LocalizedWebsiteSchema />
           </RecipeProvider>
         </AuthProvider>
       </NextIntlClientProvider>

@@ -3,7 +3,6 @@
 ## User Experience
 
 1. [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
-1. [ ] Patch notes, just use the the latest commit message and put it somewhere with a husky precommit hook. the site can then show the latest few version updates. Husky can automatically update when there is a new version an grab the latest commit messages that belong to that version
 1. [ ] Main page should have AI less prominent and focus more on the recipe management and ease of adding recipes. Also use this as inspiration: https://popsa.com/en-gb/features/
 
 ## Analytics & Monetization
@@ -38,3 +37,4 @@
 1. [ ] Groccery shopping list
 1. [ ] Menu creator functionality that combines multiple recipes
 1. [ ] Recipe advice, add the chat functionality somewhere else and load all the recipes in context of that chat window to get advice on certain things
+1. [ ] Patch notes, just use the the latest commit message and put it somewhere with a husky precommit hook. the site can then show the latest few version updates. Husky can automatically update when there is a new version an grab the latest commit messages that belong to that version

@@ -26,6 +26,8 @@ import { useAuth } from "@/lib/auth-context";
 import { useUserCosts } from "@/lib/hooks/use-user-costs";
 import { toast } from "sonner";
 import { FeedbackModal } from "@/components/feedback/feedback-modal";
+import { LocalizedSEOHead } from "@/components/seo/localized-seo-head";
+import { LocalizedJsonLdSchema, useLocalizedSchemas } from "@/components/seo/localized-json-ld-schema";
 
 export default function AboutPage() {
   const t = useTranslations("about");
@@ -36,6 +38,7 @@ export default function AboutPage() {
   });
   const { version } = getAppVersion();
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const { organizationSchema, softwareApplicationSchema } = useLocalizedSchemas();
 
   const values = [
     {
@@ -104,8 +107,14 @@ export default function AboutPage() {
   };
 
   return (
-    <div className="relative min-h-screen">
-      <style jsx>{`
+    <>
+      <LocalizedSEOHead pageKey="about" />
+
+      <LocalizedJsonLdSchema schema={organizationSchema} />
+      <LocalizedJsonLdSchema schema={softwareApplicationSchema} />
+
+      <div className="relative min-h-screen">
+        <style jsx>{`
         @keyframes fade-in-up {
           from {
             opacity: 0;
@@ -647,6 +656,8 @@ export default function AboutPage() {
         open={feedbackModalOpen}
         onOpenChange={setFeedbackModalOpen}
       />
-    </div>
+
+      </div>
+    </>
   );
 }

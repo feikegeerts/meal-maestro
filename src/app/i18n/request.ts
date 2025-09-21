@@ -10,11 +10,12 @@ export default getRequestConfig(async ({ requestLocale }) => {
     locale = routing.defaultLocale;
   }
 
-  // Load main messages and legal content messages
-  const [mainMessages, termsMessages, privacyMessages] = await Promise.all([
+  // Load main messages, legal content messages, and SEO messages
+  const [mainMessages, termsMessages, privacyMessages, seoMessages] = await Promise.all([
     import(`../../messages/${locale}.json`),
     import(`../../messages/terms-${locale}.json`),
-    import(`../../messages/privacy-${locale}.json`)
+    import(`../../messages/privacy-${locale}.json`),
+    import(`../../messages/seo-${locale}.json`)
   ]);
 
   return {
@@ -22,7 +23,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
     messages: {
       ...mainMessages.default,
       terms: termsMessages.default,
-      privacy: privacyMessages.default
+      privacy: privacyMessages.default,
+      seo: seoMessages.default
     }
   };
 });

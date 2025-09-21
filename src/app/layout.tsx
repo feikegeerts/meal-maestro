@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Analytics } from '@vercel/analytics/next';
-import { SpeedInsights } from '@vercel/speed-insights/next';
-import { routing } from './i18n/routing';
-import { setRequestLocale } from 'next-intl/server';
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { routing } from "./i18n/routing";
+import { setRequestLocale } from "next-intl/server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,13 +18,57 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Meal Maestro",
-  description: "AI-powered recipe management system",
+  title: {
+    default: "Meal Maestro - AI-Powered Recipe Management App",
+    template: "%s | Meal Maestro",
+  },
+  description:
+    "Organize, discover, and manage your recipes with AI-powered natural language processing. Privacy-focused recipe management app with no ads or subscriptions.",
+  keywords:
+    "recipe management, AI recipe organizer, digital cookbook, meal planning, cooking app, recipe collection, food management, receptbeheer, AI receptorganisator, digitaal kookboek, maaltijdplanning, kook app",
+  authors: [{ name: "Meal Maestro" }],
+  creator: "Meal Maestro",
+  publisher: "Meal Maestro",
   icons: {
     icon: "/chef-hat-sparkle.svg",
     apple: "/icon-192x192.png",
   },
   manifest: "/manifest.json",
+  alternates: {
+    canonical: "https://meal-maestro.com",
+    languages: {
+      en: "https://meal-maestro.com/en",
+      nl: "https://meal-maestro.com/nl",
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://meal-maestro.com",
+    siteName: "Meal Maestro",
+    title: "Meal Maestro - AI-Powered Recipe Management App",
+    description:
+      "Privacy-focused AI recipe management app. Organize your recipes with natural language processing. No ads, no subscriptions.",
+    images: [
+      {
+        url: "https://meal-maestro.com/icon-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "Meal Maestro App Icon",
+      },
+    ],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 export const viewport: Viewport = {
@@ -35,24 +79,26 @@ export const viewport: Viewport = {
 };
 
 export function generateStaticParams() {
-  return routing.locales.map((locale) => ({locale}));
+  return routing.locales.map((locale) => ({ locale }));
 }
 
 export default async function RootLayout({
   children,
-  params
+  params,
 }: {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  
+
   // Enable static rendering
   setRequestLocale(locale);
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         {children}
         <Analytics />
         <SpeedInsights />
