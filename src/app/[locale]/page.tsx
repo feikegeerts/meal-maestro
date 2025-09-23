@@ -1,5 +1,6 @@
 "use client";
 
+import "./homepage.css";
 import { Suspense } from "react";
 import { Link } from "@/app/i18n/routing";
 import { useAuth } from "@/lib/auth-context";
@@ -18,11 +19,11 @@ import {
   Utensils,
 } from "lucide-react";
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
-import { CinematicContainer } from "@/components/ui/cinematic-container";
 import {
   ScrollAnimation,
   FloatingElement,
 } from "@/components/ui/scroll-animations";
+import { VideoDemo } from "@/components/ui/video-demo";
 import Image from "next/image";
 import { LocalizedSEOHead } from "@/components/seo/localized-seo-head";
 import {
@@ -54,7 +55,7 @@ function HomeContent() {
 
       <div className="min-h-screen">
         {/* Hero Section */}
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden hero-gradient animate-gradientShift">
+        <section className="relative min-h-screen flex items-center justify-center overflow-hidden hero-gradient animate-gradientShift liquid-glass-hero">
           {/* Video placeholder for future integration */}
           <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/10" />
 
@@ -71,9 +72,9 @@ function HomeContent() {
 
             <ScrollAnimation animation="textReveal" delay={0.2}>
               <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-foreground mb-6 tracking-tight">
-                Recipe Chaos
+                Recipe Organization
                 <br />
-                <span className="cinematic-text">Culinary Confidence</span>
+                <span className="cinematic-text">Made Easy</span>
               </h1>
             </ScrollAnimation>
 
@@ -96,7 +97,7 @@ function HomeContent() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                 {user ? (
                   <div className="flex flex-col items-center gap-6">
-                    <div className="flex items-center gap-4 glass-effect rounded-full px-6 py-3">
+                    <div className="flex items-center gap-4 liquid-glass-cta interactive-liquid rounded-full px-6 py-3">
                       <div className="bg-primary/20 rounded-full p-3">
                         {profile?.avatar_url ? (
                           <Image
@@ -128,7 +129,7 @@ function HomeContent() {
                         onClick={handleSignOut}
                         variant="outline"
                         size="lg"
-                        className="text-lg px-8 py-6 glass-effect hover:bg-muted/10"
+                        className="text-lg px-8 py-6 liquid-glass-cta"
                       >
                         <LogOut className="mr-2 h-5 w-5" />
                         Sign Out
@@ -150,7 +151,7 @@ function HomeContent() {
                       <Button
                         variant="outline"
                         size="lg"
-                        className="text-lg px-8 py-6 glass-effect hover:bg-muted/10"
+                        className="text-lg px-8 py-6 liquid-glass-cta"
                       >
                         Learn More
                       </Button>
@@ -172,8 +173,8 @@ function HomeContent() {
         {/* Collection Section */}
         <section className="section-padding bg-gradient-to-b from-background to-muted/20">
           <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-12 gap-16 items-center">
-              <div className="lg:col-span-5 space-y-8">
+            <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-start">
+              <div className="lg:col-span-7 space-y-8">
                 <ScrollAnimation animation="fadeIn" delay={0.1}>
                   <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
                     Collect Recipes
@@ -184,16 +185,16 @@ function HomeContent() {
 
                 <ScrollAnimation animation="fadeIn" delay={0.3}>
                   <p className="text-xl text-muted-foreground leading-relaxed">
-                    Import recipes from any website, extract them from photos,
-                    or create them from scratch. Our AI understands your content
-                    and organizes it perfectly.
+                    Import existing recipes from any source. Extract recipes from
+                    websites instantly or digitize your handwritten cookbook pages
+                    and recipe cards with AI-powered recognition.
                   </p>
                 </ScrollAnimation>
 
                 <div className="space-y-4">
                   {/* Inverted: neutral circle, colored icon (primary) */}
                   <ScrollAnimation animation="slideUp" delay={0.4}>
-                    <div className="flex items-center gap-4 p-4 rounded-lg glass-effect card-hover">
+                    <div className="flex items-center gap-4 p-4 rounded-lg liquid-glass-card interactive-liquid">
                       <div className="bg-muted rounded-full p-3">
                         <Download className="h-6 w-6 text-primary" />
                       </div>
@@ -208,29 +209,28 @@ function HomeContent() {
                   </ScrollAnimation>
 
                   <ScrollAnimation animation="slideUp" delay={0.5}>
-                    <div className="flex items-center gap-4 p-4 rounded-lg glass-effect card-hover">
+                    <div className="flex items-center gap-4 p-4 rounded-lg liquid-glass-card interactive-liquid">
                       <div className="bg-muted rounded-full p-3">
                         <Camera className="h-6 w-6 text-primary" />
                       </div>
                       <div>
-                        <h3 className="font-semibold mb-1">Photo Extract</h3>
+                        <h3 className="font-semibold mb-1">Recipe Photos</h3>
                         <p className="text-sm text-muted-foreground">
-                          Snap photos of recipe cards or cookbook pages
+                          Photograph handwritten recipes, cookbook pages, or recipe cards
                         </p>
                       </div>
                     </div>
                   </ScrollAnimation>
 
                   <ScrollAnimation animation="slideUp" delay={0.6}>
-                    <div className="flex items-center gap-4 p-4 rounded-lg glass-effect card-hover">
+                    <div className="flex items-center gap-4 p-4 rounded-lg liquid-glass-card interactive-liquid">
                       <div className="bg-muted rounded-full p-3">
-                        <Bot className="h-6 w-6 text-primary" />
+                        <BookOpen className="h-6 w-6 text-primary" />
                       </div>
                       <div>
-                        <h3 className="font-semibold mb-1">AI Creation</h3>
+                        <h3 className="font-semibold mb-1">Copy & Paste</h3>
                         <p className="text-sm text-muted-foreground">
-                          Describe what you want to cook and AI creates the
-                          recipe
+                          Copy recipe text from any source and paste it directly
                         </p>
                       </div>
                     </div>
@@ -238,22 +238,11 @@ function HomeContent() {
                 </div>
               </div>
 
-              <div className="lg:col-span-7">
+              <div className="lg:col-span-5">
                 <ScrollAnimation animation="fadeIn" delay={0.2}>
-                  <CinematicContainer
-                    variant="video"
-                    className="shadow-2xl"
-                    placeholder={
-                      <div className="text-center">
-                        <ChefHatIcon className="h-16 w-16 text-primary/50 mx-auto mb-4" />
-                        <p className="text-muted-foreground">
-                          Recipe Collection Demo
-                        </p>
-                        <p className="text-sm text-muted-foreground/70 mt-2">
-                          Video placeholder for import demonstration
-                        </p>
-                      </div>
-                    }
+                  <VideoDemo
+                    // videoSrc="/videos/recipe-import-demo.mp4"
+                    // posterSrc="/videos/recipe-import-poster.jpg"
                   />
                 </ScrollAnimation>
               </div>
@@ -261,30 +250,97 @@ function HomeContent() {
           </div>
         </section>
 
-        {/* Organization Section */}
+        {/* AI Assistant Section */}
         <section className="section-padding bg-gradient-to-b from-muted/20 to-background">
           <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-12 gap-16 items-center">
-              <div className="order-2 lg:order-1 lg:col-span-7">
+            <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-start">
+              <div className="order-2 lg:order-1 lg:col-span-5">
                 <ScrollAnimation animation="fadeIn" delay={0.2}>
-                  <CinematicContainer
-                    variant="demo"
-                    className="shadow-2xl"
-                    placeholder={
-                      <div className="text-center">
-                        <Filter className="h-16 w-16 text-accent/50 mx-auto mb-4" />
-                        <p className="text-muted-foreground">
-                          Interactive Filter Demo
-                        </p>
-                        <p className="text-sm text-muted-foreground/70 mt-2">
-                          Live filtering demonstration placeholder
-                        </p>
-                      </div>
-                    }
+                  <VideoDemo
+                    // videoSrc="/videos/ai-chat-demo.mp4"
+                    // posterSrc="/videos/ai-chat-poster.jpg"
                   />
                 </ScrollAnimation>
               </div>
-              <div className="order-1 lg:order-2 lg:col-span-5 space-y-8">
+              <div className="order-1 lg:order-2 lg:col-span-7 space-y-8">
+                <ScrollAnimation animation="fadeIn" delay={0.1}>
+                  <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
+                    AI Recipe
+                    <br />
+                    <span className="cinematic-text">Assistant</span>
+                  </h2>
+                </ScrollAnimation>
+
+                <ScrollAnimation animation="fadeIn" delay={0.3}>
+                  <p className="text-xl text-muted-foreground leading-relaxed">
+                    Create original recipes through natural conversation. Brainstorm
+                    meal ideas, get cooking suggestions, or modify existing recipes
+                    with an AI that understands your preferences and dietary needs.
+                  </p>
+                </ScrollAnimation>
+
+                <div className="space-y-4">
+                  {/* Inverted: neutral circle, purple-colored icon */}
+                  <ScrollAnimation animation="slideUp" delay={0.4}>
+                    <div className="flex items-center gap-4 p-4 rounded-lg liquid-glass-card interactive-liquid">
+                      <div className="bg-muted rounded-full p-3">
+                        <Bot className="h-6 w-6 text-purple" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Recipe Brainstorming</p>
+                        <p className="text-sm text-muted-foreground">
+                          Chat with AI to develop new recipes based on your cravings and constraints
+                        </p>
+                      </div>
+                    </div>
+                  </ScrollAnimation>
+
+                  <ScrollAnimation animation="slideUp" delay={0.5}>
+                    <div className="flex items-center gap-4 p-4 rounded-lg liquid-glass-card interactive-liquid">
+                      <div className="bg-muted rounded-full p-3">
+                        <Camera className="h-6 w-6 text-purple" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Ingredient-Based Recipes</p>
+                        <p className="text-sm text-muted-foreground">
+                          Photograph your available ingredients and get personalized recipe suggestions
+                        </p>
+                      </div>
+                    </div>
+                  </ScrollAnimation>
+
+                  <ScrollAnimation animation="slideUp" delay={0.6}>
+                    <div className="flex items-center gap-4 p-4 rounded-lg liquid-glass-card interactive-liquid">
+                      <div className="bg-muted rounded-full p-3">
+                        <Utensils className="h-6 w-6 text-purple" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Recipe Modification</p>
+                        <p className="text-sm text-muted-foreground">
+                          Adapt existing recipes for dietary restrictions or ingredient substitutions
+                        </p>
+                      </div>
+                    </div>
+                  </ScrollAnimation>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Organization Section */}
+        <section className="section-padding bg-gradient-to-b from-background to-muted/20">
+          <div className="container mx-auto px-4">
+            <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-start">
+              <div className="lg:col-span-5 lg:order-2">
+                <ScrollAnimation animation="fadeIn" delay={0.2}>
+                  <VideoDemo
+                    // videoSrc="/videos/recipe-table-demo.mp4"
+                    // posterSrc="/videos/recipe-table-poster.jpg"
+                  />
+                </ScrollAnimation>
+              </div>
+              <div className="lg:col-span-7 lg:order-1 space-y-8">
                 <ScrollAnimation animation="fadeIn" delay={0.1}>
                   <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
                     Find Any Recipe
@@ -303,7 +359,7 @@ function HomeContent() {
 
                 <div className="space-y-4">
                   <ScrollAnimation animation="slideUp" delay={0.4}>
-                    <div className="flex items-center gap-4 p-4 rounded-lg glass-effect card-hover">
+                    <div className="flex items-center gap-4 p-4 rounded-lg liquid-glass-card interactive-liquid">
                       {/* Inverted: neutral circle, info-colored icon */}
                       <div className="bg-muted rounded-full p-3">
                         <Search
@@ -322,7 +378,7 @@ function HomeContent() {
                   </ScrollAnimation>
 
                   <ScrollAnimation animation="slideUp" delay={0.5}>
-                    <div className="flex items-center gap-4 p-4 rounded-lg glass-effect card-hover">
+                    <div className="flex items-center gap-4 p-4 rounded-lg liquid-glass-card interactive-liquid">
                       {/* Inverted: neutral circle, info-colored icon */}
                       <div className="bg-muted rounded-full p-3">
                         <Filter
@@ -346,10 +402,10 @@ function HomeContent() {
         </section>
 
         {/* Scaling Section */}
-        <section className="section-padding bg-gradient-to-b from-background to-muted/20">
+        <section className="section-padding bg-gradient-to-b from-muted/20 to-background">
           <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-12 gap-16 items-center">
-              <div className="lg:col-span-5 space-y-8">
+            <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-start">
+              <div className="lg:col-span-7 space-y-8">
                 <ScrollAnimation animation="fadeIn" delay={0.1}>
                   <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
                     Perfect Portions
@@ -368,7 +424,7 @@ function HomeContent() {
 
                 <div className="space-y-4">
                   <ScrollAnimation animation="slideUp" delay={0.4}>
-                    <div className="flex items-center gap-4 p-4 rounded-lg glass-effect card-hover">
+                    <div className="flex items-center gap-4 p-4 rounded-lg liquid-glass-card interactive-liquid">
                       {/* Inverted: neutral circle, warning-colored icon */}
                       <div className="bg-muted rounded-full p-3">
                         <Scale
@@ -387,7 +443,7 @@ function HomeContent() {
                   </ScrollAnimation>
 
                   <ScrollAnimation animation="slideUp" delay={0.5}>
-                    <div className="flex items-center gap-4 p-4 rounded-lg glass-effect card-hover">
+                    <div className="flex items-center gap-4 p-4 rounded-lg liquid-glass-card interactive-liquid">
                       {/* Inverted: neutral circle, warning-colored icon */}
                       <div className="bg-muted rounded-full p-3">
                         <Utensils
@@ -407,101 +463,13 @@ function HomeContent() {
                 </div>
               </div>
 
-              <div className="lg:col-span-7">
+              <div className="lg:col-span-5">
                 <ScrollAnimation animation="fadeIn" delay={0.2}>
-                  <CinematicContainer
-                    variant="demo"
-                    className="shadow-2xl"
-                    placeholder={
-                      <div className="text-center">
-                        <Scale className="h-16 w-16 text-secondary/50 mx-auto mb-4" />
-                        <p className="text-muted-foreground">
-                          Serving Size Calculator
-                        </p>
-                        <p className="text-sm text-muted-foreground/70 mt-2">
-                          Interactive scaling demonstration placeholder
-                        </p>
-                      </div>
-                    }
+                  <VideoDemo
+                    // videoSrc="/videos/recipe-scaling-demo.mp4"
+                    // posterSrc="/videos/recipe-scaling-poster.jpg"
                   />
                 </ScrollAnimation>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* AI Assistant Section */}
-        <section className="section-padding bg-gradient-to-b from-muted/20 to-background">
-          <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-12 gap-16 items-center">
-              <div className="order-2 lg:order-1 lg:col-span-7">
-                <ScrollAnimation animation="fadeIn" delay={0.2}>
-                  <CinematicContainer
-                    variant="demo"
-                    className="shadow-2xl"
-                    placeholder={
-                      <div className="text-center">
-                        <Bot className="h-16 w-16 text-purple/50 mx-auto mb-4" />
-                        <p className="text-muted-foreground">
-                          AI Chat Interface
-                        </p>
-                        <p className="text-sm text-muted-foreground/70 mt-2">
-                          Conversational recipe creation demo placeholder
-                        </p>
-                      </div>
-                    }
-                  />
-                </ScrollAnimation>
-              </div>
-              <div className="order-1 lg:order-2 lg:col-span-5 space-y-8">
-                <ScrollAnimation animation="fadeIn" delay={0.1}>
-                  <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
-                    AI Recipe
-                    <br />
-                    <span className="cinematic-text">Assistant</span>
-                  </h2>
-                </ScrollAnimation>
-
-                <ScrollAnimation animation="fadeIn" delay={0.3}>
-                  <p className="text-xl text-muted-foreground leading-relaxed">
-                    Create recipes through natural conversation. Upload photos
-                    of ingredients or describe what you want to cook. Our AI
-                    understands and creates structured recipes.
-                  </p>
-                </ScrollAnimation>
-
-                <div className="space-y-4">
-                  {/* Inverted: neutral circle, purple-colored icon */}
-                  <ScrollAnimation animation="slideUp" delay={0.4}>
-                    <div className="flex items-center gap-4 p-4 rounded-lg glass-effect card-hover">
-                      <div className="bg-muted rounded-full p-3">
-                        <Bot className="h-6 w-6 text-purple" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Natural Language Creation</p>
-                        <p className="text-sm text-muted-foreground">
-                          Describe what you want to cook and AI builds the
-                          recipe
-                        </p>
-                      </div>
-                    </div>
-                  </ScrollAnimation>
-
-                  <ScrollAnimation animation="slideUp" delay={0.5}>
-                    <div className="flex items-center gap-4 p-4 rounded-lg glass-effect card-hover">
-                      <div className="bg-muted rounded-full p-3">
-                        <Camera className="h-6 w-6 text-purple" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Multi-modal Chat</p>
-                        <p className="text-sm text-muted-foreground">
-                          Upload ingredient photos or recipe cards for instant
-                          processing
-                        </p>
-                      </div>
-                    </div>
-                  </ScrollAnimation>
-                </div>
               </div>
             </div>
           </div>

@@ -142,18 +142,18 @@ export function InteractiveDemo({
   const getVariantClasses = () => {
     switch (variant) {
       case "fullscreen":
-        return "h-96";
+        return "min-h-[32rem] max-h-[40rem]";
       case "detailed":
-        return "h-80";
+        return "min-h-[24rem] max-h-[36rem]";
       default:
-        return "h-64";
+        return "min-h-80 max-h-96";
     }
   };
 
   return (
     <div
       className={cn(
-        "group transition-all duration-300",
+        "group transition-all duration-300 w-full max-w-xl mx-auto",
         onClick && "cursor-pointer hover:scale-105",
         isActive && "ring-2 ring-primary ring-offset-2 ring-offset-background",
         className
@@ -163,7 +163,7 @@ export function InteractiveDemo({
       <CinematicContainer
         variant="demo"
         className={cn(
-          "glass-effect",
+          "glass-effect w-full",
           getVariantClasses(),
           isActive && "bg-primary/5"
         )}
@@ -186,20 +186,20 @@ export function InteractiveDemo({
 
           {(variant === "detailed" || variant === "fullscreen") && (
             <>
-              <div className="flex items-center p-6 border-b border-border/20">
+              <div className="flex items-center p-4 border-b border-border/20 flex-shrink-0">
                 {icon && (
-                  <div className="mr-4 text-primary">
+                  <div className="mr-3 text-primary">
                     {icon}
                   </div>
                 )}
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+                  <h3 className="text-base font-semibold text-foreground">{title}</h3>
                   {description && (
-                    <p className="text-sm text-muted-foreground">{description}</p>
+                    <p className="text-xs text-muted-foreground">{description}</p>
                   )}
                 </div>
               </div>
-              <div className="flex-1 p-6">
+              <div className="flex-1 p-4 overflow-y-auto">
                 {children}
               </div>
             </>

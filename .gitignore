@@ -39,3 +39,7 @@ next-env.d.ts
 
 # dotenvx
 .env.keys
+
+# PWA
+/public/sw.js
+/public/workbox-*.js

@@ -13,7 +13,7 @@ interface ScrollAnimationProps {
     | "slideRight"
     | "scaleIn"
     | "parallax"
-    | "textReveal"; // newly added variant
+    | "textReveal";
   delay?: number;
   duration?: number;
   offset?: number;
