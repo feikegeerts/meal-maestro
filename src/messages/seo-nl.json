@@ -1,56 +1,57 @@
 {
   "global": {
     "siteName": "Meal Maestro",
-    "tagline": "AI-Aangedreven Receptbeheer App",
-    "description": "Organiseer, ontdek en beheer je recepten met AI-aangedreven natuurlijke taalverwerking. Privacy-gerichte receptbeheer app zonder advertenties of abonnementen.",
-    "keywords": "receptbeheer, AI receptorganisator, digitaal kookboek, maaltijdplanning, kook app, receptverzameling, voedselbeheer"
+    "tagline": "AI-gedreven receptenbeheer",
+    "description": "Organiseer, vind en beheer al je recepten met slimme AI die tekst begrijpt. Privacygericht: geen advertenties, geen abonnementen.",
+    "keywords": "recepten beheren, AI kookboek, digitaal kookboek, maaltijdplanning, recept app, recepten organiseren"
   },
   "homepage": {
-    "title": "Meal Maestro - AI-Aangedreven Receptbeheer App",
-    "description": "Organiseer, ontdek en beheer je recepten met AI-aangedreven natuurlijke taalverwerking. Privacy-gerichte receptbeheer app zonder advertenties of abonnementen.",
-    "ogTitle": "Meal Maestro - AI-Aangedreven Receptbeheer App",
-    "ogDescription": "Privacy-gerichte AI receptbeheer app. Organiseer je recepten met natuurlijke taalverwerking. Geen advertenties, geen abonnementen."
+    "title": "Meal Maestro – AI voor receptenbeheer",
+    "description": "Breng links, foto's en losse notities samen in één doorzoekbaar kookboek. Importeren, structureren en terugvinden met hulp van AI.",
+    "keywords": "AI recepten, slim kookboek, recepten importeren, recepten organiseren, maaltijdplanning",
+    "ogTitle": "Meal Maestro – Slim receptenbeheer met AI",
+    "ogDescription": "Privacyvriendelijk AI-receptenbeheer. Orden, vind en bewaar alles zonder advertenties of abonnementen."
   },
   "about": {
-    "title": "Over Meal Maestro - AI-Aangedreven Receptbeheer App",
-    "description": "Leer meer over Meal Maestro, de privacy-gerichte AI receptbeheer app die je helpt bij het organiseren, ontdekken en beheren van je recepten met natuurlijke taalverwerking. Geen advertenties, geen abonnementen.",
-    "keywords": "receptbeheer app, AI receptorganisator, digitaal kookboek, maaltijdplanning software, kook app, receptverzameling, voedselbeheer, keukenorganisatie",
-    "ogTitle": "Over Meal Maestro - AI-Aangedreven Receptbeheer",
-    "ogDescription": "Privacy-gerichte AI receptbeheer app. Organiseer je recepten met natuurlijke taalverwerking. Geen advertenties, geen abonnementen, jouw data blijft privé."
+    "title": "Over Meal Maestro – waarom deze app bestaat",
+    "description": "Visie en achtergrond: een praktische, privacyvriendelijke manier om recepten vast te leggen en terug te vinden met AI-hulp.",
+    "keywords": "over Meal Maestro, AI receptenbeheer, visie recept app, privacy kookboek",
+    "ogTitle": "Over Meal Maestro – achtergrond en visie",
+    "ogDescription": "Waarom Meal Maestro is gebouwd: eenvoudig, privacygericht receptenbeheer zonder ruis."
   },
   "login": {
-    "title": "Inloggen bij Meal Maestro",
-    "description": "Log in op je Meal Maestro account om toegang te krijgen tot je AI-aangedreven receptbeheersysteem. Veilig inloggen met Google OAuth.",
-    "keywords": "meal maestro inloggen, recept app aanmelden, Google OAuth login, receptbeheer account",
-    "ogTitle": "Inloggen bij Meal Maestro",
-    "ogDescription": "Krijg toegang tot je AI-aangedreven receptbeheersysteem. Veilig inloggen met Google OAuth."
+    "title": "Inloggen – Meal Maestro",
+    "description": "Meld je aan om je persoonlijke receptenbibliotheek te openen. Snel en veilig via Google.",
+    "keywords": "inloggen Meal Maestro, recepten app login, Google inloggen recepten",
+    "ogTitle": "Inloggen – Meal Maestro",
+    "ogDescription": "Toegang tot je AI-ondersteunde receptenbibliotheek. Veilig via Google."
   },
   "terms": {
-    "title": "Gebruiksvoorwaarden - Meal Maestro",
-    "description": "Lees de gebruiksvoorwaarden van Meal Maestro, de AI-aangedreven receptbeheer app. Begrijp je rechten en verantwoordelijkheden bij het gebruik van ons platform.",
-    "keywords": "meal maestro gebruiksvoorwaarden, recept app voorwaarden, gebruikersovereenkomst, kook app juridische voorwaarden",
-    "ogTitle": "Gebruiksvoorwaarden - Meal Maestro",
-    "ogDescription": "Gebruiksvoorwaarden voor de AI-aangedreven receptbeheer app."
+    "title": "Gebruiksvoorwaarden – Meal Maestro",
+    "description": "Lees de voorwaarden: gebruik, verantwoordelijkheden, beperkingen en rechten rondom de service.",
+    "keywords": "gebruiksvoorwaarden Meal Maestro, voorwaarden recept app, juridische informatie",
+    "ogTitle": "Gebruiksvoorwaarden – Meal Maestro",
+    "ogDescription": "Voorwaarden voor het gebruik van de Meal Maestro dienst."
   },
   "privacy": {
-    "title": "Privacybeleid - Meal Maestro",
-    "description": "Leer hoe Meal Maestro je privacy beschermt. Ons uitgebreide privacybeleid legt uit hoe we je receptgegevens verzamelen, gebruiken en beschermen.",
-    "keywords": "meal maestro privacybeleid, recept app privacy, gegevensbescherming, AVG compliance, kook app privacy",
-    "ogTitle": "Privacybeleid - Meal Maestro",
-    "ogDescription": "Leer hoe Meal Maestro je privacy en receptgegevens beschermt."
+    "title": "Privacybeleid – Meal Maestro",
+    "description": "Hoe we met je data omgaan: opslag, beveiliging, verwerking en jouw rechten.",
+    "keywords": "privacy Meal Maestro, data bescherming recepten, AVG recepten app",
+    "ogTitle": "Privacybeleid – Meal Maestro",
+    "ogDescription": "Inzicht in hoe jouw receptgegevens veilig blijven."
   },
   "schema": {
     "organization": {
-      "description": "AI-aangedreven receptbeheer app die je helpt bij het organiseren, ontdekken en beheren van je recepten met natuurlijke taalverwerking."
+      "description": "AI-gedreven platform voor het vastleggen, organiseren en terugvinden van recepten."
     },
     "softwareApplication": {
-      "description": "AI-aangedreven receptbeheer app die je helpt bij het organiseren, ontdekken en beheren van je recepten met natuurlijke taalverwerking. Privacy-gericht zonder advertenties of abonnementen.",
+      "description": "AI-gedreven receptenbeheer: importeren, structureren en zoeken zonder advertenties of abonnementen.",
       "featureList": [
-        "AI-aangedreven receptverwerking",
-        "Natuurlijke taal receptbeheer",
-        "Receptorganisatie en zoeken",
-        "Ingrediëntenbeheer",
-        "Privacy-gericht ontwerp",
+        "Automatische receptverwerking met AI",
+        "Slimme herkenning van ingrediënten en stappen",
+        "Snel terugvinden met filters & zoekfunctie",
+        "Overzichtelijk beheer van receptdata",
+        "Privacyvriendelijk ontwerp",
         "Geen advertenties of abonnementen"
       ]
     }
