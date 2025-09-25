@@ -245,9 +245,7 @@
     "gluten-free": "Glutenvrij",
     "lactose-free": "Lactosevrij",
     "high-protein": "Eiwitrijk",
-    "keto": "Keto",
-    "without-meat": "Zonder vlees",
-    "without-meat-fish": "Zonder vlees/vis"
+    "keto": "Keto"
   },
   "cookingMethods": {
     "baking": "Bakken",

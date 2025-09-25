@@ -2,7 +2,7 @@
 
 ## User Experience
 
-1. [ ] Tags nakijken. Sommige tags zijn dubbel wbt betekenis.
+1. [ ] there is all kinds of business logic in types/recipe.ts while that hsould just be the types. refactor the businuss logic into a different file as the types file. does that make sense to do or is it not a problem that these busininess logic functions are in the types folder.
 
 ## Analytics & Monetization
 

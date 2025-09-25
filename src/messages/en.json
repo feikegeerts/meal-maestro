@@ -244,9 +244,7 @@
     "gluten-free": "Gluten-free",
     "lactose-free": "Lactose-free",
     "high-protein": "High-protein",
-    "keto": "Keto",
-    "without-meat": "Without meat",
-    "without-meat-fish": "Without meat/fish"
+    "keto": "Keto"
   },
   "cookingMethods": {
     "baking": "Baking",
