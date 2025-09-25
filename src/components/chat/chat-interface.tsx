@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useIntelligentLoading } from "@/hooks/useIntelligentLoading";
+import { useIntelligentLoading } from "@/hooks/use-intelligent-loading";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +27,7 @@ import {
 import { Recipe } from "@/types/recipe";
 import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
-import { useImageCompression } from "@/hooks/useImageCompression";
+import { useImageCompression } from "@/hooks/use-image-compression";
 import { IMAGE_COMPRESSION_CONFIG } from "@/lib/image-compression-config";
 
 interface ChatMessage {
@@ -217,141 +217,160 @@ export function ChatInterface({
   }, []);
 
   // Execute message (used by both sendMessage and retry)
-  const executeMessage = useCallback(async (
-    userMessage: string,
-    imageToProcess: File | null,
-    compressedImageForApi: string | null,
-    requestContext: RequestContext
-  ) => {
-    setIsLoading(true);
-    clearAllErrors();
+  const executeMessage = useCallback(
+    async (
+      userMessage: string,
+      imageToProcess: File | null,
+      compressedImageForApi: string | null,
+      requestContext: RequestContext
+    ) => {
+      setIsLoading(true);
+      clearAllErrors();
 
-    // Start intelligent loading sequence
-    startIntelligentLoading(userMessage, !!imageToProcess);
+      // Start intelligent loading sequence
+      startIntelligentLoading(userMessage, !!imageToProcess);
 
-    // Create image URL for display if we have an image
-    let imageUrlForDisplay: string | undefined;
-    if (imageToProcess) {
-      imageUrlForDisplay = URL.createObjectURL(imageToProcess);
-    }
-
-    // Add user message to chat
-    const newMessages = [
-      ...messages,
-      {
-        role: "user" as const,
-        content: userMessage, // This will be empty string if no text was provided
-        timestamp: new Date().toISOString(),
-        imageUrl: imageUrlForDisplay,
-      },
-    ];
-    setMessages(newMessages);
-
-    try {
-      // Use compressed image data if available, otherwise convert original
-      let imageData: string | undefined;
+      // Create image URL for display if we have an image
+      let imageUrlForDisplay: string | undefined;
       if (imageToProcess) {
-        if (compressedImageForApi) {
-          imageData = compressedImageForApi;
-        } else {
-          // Fallback to original file if compression failed
-          imageData = await fileToBase64(imageToProcess);
-        }
+        imageUrlForDisplay = URL.createObjectURL(imageToProcess);
       }
 
-      const requestBody = {
-        message: userMessage || (imageToProcess ? "" : ""),
-        locale: locale,
-        conversation_history: messages,
-        ...(imageData && { images: [imageData] }),
-        context: requestContext,
-      };
-
-      const response = await fetch("/api/recipes/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      // Add user message to chat
+      const newMessages = [
+        ...messages,
+        {
+          role: "user" as const,
+          content: userMessage, // This will be empty string if no text was provided
+          timestamp: new Date().toISOString(),
+          imageUrl: imageUrlForDisplay,
         },
-        credentials: "include",
-        body: JSON.stringify(requestBody),
-      });
+      ];
+      setMessages(newMessages);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-
-        // Check if this is a timeout error (422 status or timeout code)
-        if (response.status === 422 || errorData.code === "TIMEOUT_ERROR") {
-          const timeoutError = new Error(errorData.message || "Request timed out");
-          timeoutError.name = "TimeoutError";
-          throw timeoutError;
-        }
-
-        throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      // Type the data as ChatResponse now that we know it's a successful response
-      const chatData = data as ChatResponse;
-
-      // Instead of overwriting messages, just append the assistant's response
-      // This preserves the user's message with its image URL
-      const assistantResponse = {
-        role: "assistant" as const,
-        content: chatData.response || "",
-        timestamp: new Date().toISOString(),
-      };
-      setMessages(prev => [...prev, assistantResponse]);
-
-      // Check if AI updated the form (either through direct update or URL extraction)
-      if (chatData.function_call && onRecipeGenerated) {
-        if (chatData.function_call.function === "update_recipe_form") {
-          const result = chatData.function_call.result as {
-            formUpdate?: unknown;
-            success?: boolean;
-          };
-          if (result?.formUpdate) {
-            onRecipeGenerated(result.formUpdate);
-          }
-        } else if (chatData.function_call.function === "extract_recipe_from_url") {
-          const result = chatData.function_call.result as {
-            formUpdate?: unknown;
-            success?: boolean;
-            error?: string;
-          };
-          if (result?.formUpdate) {
-            onRecipeGenerated(result.formUpdate);
+      try {
+        // Use compressed image data if available, otherwise convert original
+        let imageData: string | undefined;
+        if (imageToProcess) {
+          if (compressedImageForApi) {
+            imageData = compressedImageForApi;
+          } else {
+            // Fallback to original file if compression failed
+            imageData = await fileToBase64(imageToProcess);
           }
         }
-      }
-    } catch (err) {
-      console.error("Chat error:", err);
 
-      // Check if this is a timeout error
-      const isTimeout = err instanceof Error &&
-        (err.name === "TimeoutError" ||
-         err.message.includes("timeout") ||
-         err.message.includes("TIMEOUT_ERROR"));
-
-      if (isTimeout) {
-        setIsTimeoutError(true);
-        setError(t("timeoutError"));
-
-        // Store retry data
-        setRetryData({
-          message: userMessage,
-          imageFile: imageToProcess,
-          compressedImageData: compressedImageForApi,
+        const requestBody = {
+          message: userMessage || (imageToProcess ? "" : ""),
+          locale: locale,
+          conversation_history: messages,
+          ...(imageData && { images: [imageData] }),
           context: requestContext,
+        };
+
+        const response = await fetch("/api/recipes/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(requestBody),
         });
-      } else {
-        setError(err instanceof Error ? err.message : "Failed to send message");
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+
+          // Check if this is a timeout error (422 status or timeout code)
+          if (response.status === 422 || errorData.code === "TIMEOUT_ERROR") {
+            const timeoutError = new Error(
+              errorData.message || "Request timed out"
+            );
+            timeoutError.name = "TimeoutError";
+            throw timeoutError;
+          }
+
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Type the data as ChatResponse now that we know it's a successful response
+        const chatData = data as ChatResponse;
+
+        // Instead of overwriting messages, just append the assistant's response
+        // This preserves the user's message with its image URL
+        const assistantResponse = {
+          role: "assistant" as const,
+          content: chatData.response || "",
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, assistantResponse]);
+
+        // Check if AI updated the form (either through direct update or URL extraction)
+        if (chatData.function_call && onRecipeGenerated) {
+          if (chatData.function_call.function === "update_recipe_form") {
+            const result = chatData.function_call.result as {
+              formUpdate?: unknown;
+              success?: boolean;
+            };
+            if (result?.formUpdate) {
+              onRecipeGenerated(result.formUpdate);
+            }
+          } else if (
+            chatData.function_call.function === "extract_recipe_from_url"
+          ) {
+            const result = chatData.function_call.result as {
+              formUpdate?: unknown;
+              success?: boolean;
+              error?: string;
+            };
+            if (result?.formUpdate) {
+              onRecipeGenerated(result.formUpdate);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Chat error:", err);
+
+        // Check if this is a timeout error
+        const isTimeout =
+          err instanceof Error &&
+          (err.name === "TimeoutError" ||
+            err.message.includes("timeout") ||
+            err.message.includes("TIMEOUT_ERROR"));
+
+        if (isTimeout) {
+          setIsTimeoutError(true);
+          setError(t("timeoutError"));
+
+          // Store retry data
+          setRetryData({
+            message: userMessage,
+            imageFile: imageToProcess,
+            compressedImageData: compressedImageForApi,
+            context: requestContext,
+          });
+        } else {
+          setError(
+            err instanceof Error ? err.message : "Failed to send message"
+          );
+        }
+      } finally {
+        setIsLoading(false);
+        stopIntelligentLoading();
       }
-    } finally {
-      setIsLoading(false);
-      stopIntelligentLoading();
-    }
-  }, [messages, locale, onRecipeGenerated, startIntelligentLoading, stopIntelligentLoading, clearAllErrors, fileToBase64, t]);
+    },
+    [
+      messages,
+      locale,
+      onRecipeGenerated,
+      startIntelligentLoading,
+      stopIntelligentLoading,
+      clearAllErrors,
+      fileToBase64,
+      t,
+    ]
+  );
 
   // Retry last request
   const handleRetry = useCallback(async () => {
@@ -458,7 +477,12 @@ export function ChatInterface({
     };
 
     // Execute the message
-    await executeMessage(userMessage, imageToProcess, compressedImageForApi, context);
+    await executeMessage(
+      userMessage,
+      imageToProcess,
+      compressedImageForApi,
+      context
+    );
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
