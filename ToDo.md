@@ -2,8 +2,6 @@
 
 ## User Experience
 
-1. [x] (DONE) business logic moved out of `types/recipe.ts` into `lib/recipe-utils.ts`. The `types/recipe.ts` file now only contains enums, interfaces and constant arrays. A backward-compatibility re-export block remains so existing imports keep working. Next step: gradually update imports to use `@/lib/recipe-utils` directly and eventually remove the re-export layer.
-
 ## Analytics & Monetization
 
 9. [ ] Metrics, what kind of metrics do we want, do we want to keep sending this to the admin dashbaord or think about something else?
