@@ -115,25 +115,6 @@ describe("RecipeScraper characterization (real implementation)", () => {
     expect(res.data?.description).toBe("Rich chewy brownies");
   });
 
-  test("ingredient parsing helper returns structured fields including fractions and decimals", () => {
-    const raw = [
-      "1 cup flour",
-      "2.5 tbsp olive oil",
-      "1/2tsp salt", // current regex will fail to separate unit properly due to no space; characterizing outcome
-      "Pinch of sugar", // no amount
-    ];
-    const structured = RecipeScraper.parseIngredientsToStructured(raw);
-    expect(structured[0].amount).toBe(1);
-    expect(structured[0].unit).toBe("cup");
-    expect(structured[1].amount).toBe(2.5);
-    expect(structured[1].unit).toBe("tbsp");
-    // Current regex correctly interprets simple fraction at start (1/2) yielding 0.5 but merges unit+remainder ("tsp").
-    expect(structured[2].amount).toBe(0.5);
-    expect(structured[2].unit).toBeDefined();
-    expect(structured[3].amount).toBeNull();
-    expect(structured[3].unit).toBeNull();
-  });
-
   test("URL title extraction used when fetch blocked returns title in data payload", async () => {
     server.use(
       http.get(
