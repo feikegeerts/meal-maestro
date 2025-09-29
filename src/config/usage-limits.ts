@@ -1,4 +1,4 @@
-export const MONTHLY_SPEND_CAP_USD = 0.5; // USD cap per user per calendar month
+export const MONTHLY_SPEND_CAP_USD = 0.25; // USD cap per user per calendar month
 export const WARNING_THRESHOLD_PERCENT = 0.8; // 80% warning threshold
 export const ALERT_RECIPIENTS = ["info@meal-maestro.com"] as const;
 export const RATE_LIMIT_ALERT_WINDOW_MINUTES = 15; // consolidate repeated rate-limit alerts
