@@ -5,7 +5,13 @@
 ## Quality & Compliance
 
 1. [ ] Write more tests
-1. [ ] Check for other very large complex files that might need a refactor.
+1. [ ] Add Jest suite for src/lib/date-utils.ts covering getDateLocaleFormat, formatDate, and formatDateWithFallback.
+1. [ ] Add Jest suite for src/lib/utils.ts covering processInstructions, splitIntoSteps, and toDateOnlyISOString.
+1. [ ] Expand src/lib/**tests**/recipe-utils.test.ts (or create it) to cover type guards and validateRecipeInput error paths.
+1. [ ] Add tests for getAllowedUnits, createRecipeFormFunction, and custom-unit handling in src/lib/recipe-functions.ts.
+1. [ ] Unit-test FunctionCallProcessor.processFunctionCall flows in src/lib/function-call-processor.ts with mocked OpenAI/Supabase interactions.
+1. [ ] Add coverage for prompt assembly in src/lib/conversation-builder.ts (unit preference, custom units, context messages).
+1. [ ] Add tests around spend/rate-limit alert logic in src/lib/usage-limit-service.ts with mocked Supabase RPCs and EmailDeliveryService.
 
 ## V2.0 feature requests
 

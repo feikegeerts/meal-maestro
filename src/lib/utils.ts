@@ -120,7 +120,7 @@ export function processInstructions(description: string): ProcessedInstructions 
   };
 }
 
-function splitIntoSteps(text: string): string[] {
+export function splitIntoSteps(text: string): string[] {
 
   // Try to split by common sentence endings followed by cooking actions
   const stepPattern = /([.!?])\s+(?=[A-Z])/g;
