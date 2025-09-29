@@ -1,4 +1,4 @@
-import * as Handlebars from 'handlebars';
+import Mustache from 'mustache';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { LocalizationService } from './localization-service';
@@ -6,7 +6,7 @@ import { ApplicationError, ErrorCode, ErrorHandler, type ServiceResult } from '.
 import type { EmailData, EmailTemplate, EmailType } from '../types/email-types';
 
 export class EmailTemplateService {
-  private compiledTemplates = new Map<string, HandlebarsTemplateDelegate>();
+  private templateCache = new Map<string, string>();
   private templatesPath: string;
   private localizationService: LocalizationService;
 
@@ -16,26 +16,18 @@ export class EmailTemplateService {
   ) {
     this.templatesPath = templatesPath || join(process.cwd(), 'src/lib/email/templates');
     this.localizationService = localizationService || new LocalizationService();
-    this.registerHelpers();
   }
 
-  private registerHelpers(): void {
-    // Helper for translations - will be enhanced in Phase 2
-    Handlebars.registerHelper('t', function(key: string) {
-      // Placeholder for now, will integrate with localization service
-      return key;
-    });
-  }
-
-  private getTemplate(templateKey: string): ServiceResult<HandlebarsTemplateDelegate> {
+  private getTemplate(templateKey: string): ServiceResult<string> {
     try {
-      if (!this.compiledTemplates.has(templateKey)) {
-        const templatePath = join(this.templatesPath, `${templateKey}.hbs`);
+      if (!this.templateCache.has(templateKey)) {
+        const templatePath = join(this.templatesPath, `${templateKey}.mustache`);
         const templateSource = readFileSync(templatePath, 'utf-8');
-        const compiledTemplate = Handlebars.compile(templateSource);
-        this.compiledTemplates.set(templateKey, compiledTemplate);
+        // Parse upfront so repeated renders are faster; Mustache caches internally too
+        Mustache.parse(templateSource);
+        this.templateCache.set(templateKey, templateSource);
       }
-      return ErrorHandler.success(this.compiledTemplates.get(templateKey)!);
+      return ErrorHandler.success(this.templateCache.get(templateKey)!);
     } catch (error) {
       return ErrorHandler.handleError(
         new ApplicationError(
@@ -43,7 +35,7 @@ export class EmailTemplateService {
           `Failed to load template "${templateKey}": ${error instanceof Error ? error.message : 'Unknown error'}`,
           'EmailTemplateService',
           'getTemplate',
-          { templateKey, templatePath: join(this.templatesPath, `${templateKey}.hbs`) },
+          { templateKey, templatePath: join(this.templatesPath, `${templateKey}.mustache`) },
           error instanceof Error ? error : undefined
         ),
         'EmailTemplateService',
@@ -76,7 +68,7 @@ export class EmailTemplateService {
         };
       }
 
-      // First process subject through Handlebars to handle variables like {{brandName}}
+      // Process subject through Mustache to handle variables like {{brandName}}
       const initialContext = {
         ...data,
         // Add localized content
@@ -86,8 +78,7 @@ export class EmailTemplateService {
         locale: detectedLocale
       };
       
-      const subjectTemplate = Handlebars.compile(localizedContent.subject);
-      const processedSubject = subjectTemplate(initialContext);
+      const processedSubject = Mustache.render(localizedContent.subject, initialContext);
       
       // Create the template context with processed subject
       const templateContext = {
@@ -95,7 +86,7 @@ export class EmailTemplateService {
         subject: processedSubject // Override subject with processed version
       };
 
-      const html = templateResult.data!(templateContext);
+      const html = Mustache.render(templateResult.data!, templateContext);
 
       return ErrorHandler.success({
         subject: processedSubject,
@@ -119,6 +110,7 @@ export class EmailTemplateService {
 
 
   public clearCache(): void {
-    this.compiledTemplates.clear();
+    this.templateCache.clear();
+    Mustache.clearCache();
   }
 }

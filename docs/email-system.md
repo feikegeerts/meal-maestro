@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Meal Maestro email system provides localized, custom email templates for Supabase authentication flows using Handlebars templating and the Resend email service.
+The Meal Maestro email system provides localized, custom email templates for Supabase authentication flows using Mustache templating and the Resend email service.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ The Meal Maestro email system provides localized, custom email templates for Sup
    - Provides high-level methods: `sendMagicLinkEmail()`, `sendConfirmSignupEmail()`, `sendTestEmail()`
 
 2. **EmailTemplateService** (`/src/lib/email/services/email-template-service.ts`)  
-   - Handlebars template rendering
+   - Mustache template rendering
    - Integrates with LocalizationService for dynamic language detection
    - Template caching for performance
 
@@ -98,8 +98,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 ## Templates
 
 ### Template Files
-- **Magic Link**: `/src/lib/email/templates/magic-link.hbs`
-- **Confirm Signup**: `/src/lib/email/templates/confirm-signup.hbs`
+- **Magic Link**: `/src/lib/email/templates/magic-link.mustache`
+- **Confirm Signup**: `/src/lib/email/templates/confirm-signup.mustache`
 
 ### Localization Files
 - **English**: `/src/lib/email/locales/en.json`

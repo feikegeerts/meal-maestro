@@ -58,9 +58,9 @@ describe("EmailTemplateService", () => {
 
       expect(template.subject).toBe("Sign in to Meal Maestro");
       expect(template.html).toContain("🍽️ Meal Maestro");
-      // Check for HTML-escaped URL (Handlebars properly escapes = to &#x3D; and & to &amp;)
+      // Check for HTML-escaped URL (Mustache escapes slashes and equals using HTML entities)
       expect(template.html).toContain(
-        "https://example.com/auth/callback?token_hash&#x3D;abc123def456&amp;type&#x3D;magiclink"
+        "https:&#x2F;&#x2F;example.com&#x2F;auth&#x2F;callback?token_hash&#x3D;abc123def456&amp;type&#x3D;magiclink"
       );
       expect(template.html).toContain("Ready to cook something amazing?");
       expect(template.html).toContain("Sign in to Meal Maestro");
