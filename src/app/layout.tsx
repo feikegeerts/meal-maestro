@@ -34,12 +34,6 @@ export const metadata: Metadata = {
     apple: "/icon-192x192.png",
   },
   manifest: "/manifest.json",
-  alternates: {
-    languages: {
-      en: "https://meal-maestro.com/en",
-      nl: "https://meal-maestro.com/nl",
-    },
-  },
   openGraph: {
     type: "website",
     locale: "en_US",

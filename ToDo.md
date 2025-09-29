@@ -1,16 +1,11 @@
 # Post-MVP Development Roadmap
 
-## User Experience
-
-- add meal maestro logo to all emails so it shows up in the email inbox of for example gmail.
-
-## Analytics & Monetization
-
-12. [ ] Add bunq.me donation link for mobile-friendly bank transfers
+1. [ ] Record videos for the homepage
 
 ## Quality & Compliance
 
 1. [ ] Write more tests
+1. [ ] Check for other very large complex files that might need a refactor.
 
 ## V2.0 feature requests
 
