@@ -92,6 +92,50 @@ export async function GET(request: NextRequest) {
       query.endDate
     );
 
+    const monthlySummaries = await adminUsageService.getMonthlyUsageSummary();
+
+    const monthlyUsage = (() => {
+      if (monthlySummaries.length === 0) {
+        return null;
+      }
+
+      const monthStart = monthlySummaries[0].monthStart;
+      const totals = monthlySummaries.reduce(
+        (acc, row) => {
+          acc.totalCost += row.totalCost;
+          acc.totalTokens += row.totalTokens;
+          acc.totalCalls += row.totalCalls;
+          if (row.limitEnforcedAt) {
+            acc.cappedUsers += 1;
+          } else if (row.warningEmailSentAt) {
+            acc.warningUsers += 1;
+          }
+          if (row.rateLimitEmailSentAt) {
+            acc.rateLimitAlerts += 1;
+          }
+          return acc;
+        },
+        {
+          totalCost: 0,
+          totalTokens: 0,
+          totalCalls: 0,
+          cappedUsers: 0,
+          warningUsers: 0,
+          rateLimitAlerts: 0,
+        }
+      );
+
+      const topMonthlyUsers = [...monthlySummaries]
+        .sort((a, b) => b.totalCost - a.totalCost)
+        .slice(0, 10);
+
+      return {
+        monthStart,
+        ...totals,
+        topUsers: topMonthlyUsers,
+      };
+    })();
+
     // Calculate overall statistics
     const totalUsers = allUsersStats.length;
     const totalCost = allUsersStats.reduce(
@@ -166,6 +210,7 @@ export async function GET(request: NextRequest) {
       },
       timeRange: timeRangeData,
       modelUsage: modelUsageStats,
+      monthlyUsage,
       dateRange: {
         start: query.startDate || "all",
         end: query.endDate || "all",
@@ -251,6 +296,26 @@ export interface AdminUsageStatsResponse {
       averageTokensPerCall: number;
       percentageOfTotal: number;
     }>;
+    monthlyUsage?: {
+      monthStart: string;
+      totalCost: number;
+      totalTokens: number;
+      totalCalls: number;
+      cappedUsers: number;
+      warningUsers: number;
+      rateLimitAlerts: number;
+      topUsers: Array<{
+        userId: string;
+        monthStart: string;
+        totalCost: number;
+        totalTokens: number;
+        totalCalls: number;
+        warningEmailSentAt: string | null;
+        limitEmailSentAt: string | null;
+        rateLimitEmailSentAt: string | null;
+        limitEnforcedAt: string | null;
+      }>;
+    };
     dateRange?: {
       start: string;
       end: string;

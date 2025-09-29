@@ -2,17 +2,15 @@
 
 ## User Experience
 
+- add meal maestro logo to all emails so it shows up in the email inbox of for example gmail.
+
 ## Analytics & Monetization
 
-9. [ ] Metrics, what kind of metrics do we want, do we want to keep sending this to the admin dashbaord or think about something else?
-10. [ ] Maximize the spend of a user in a given month, point them to the donate
-11. [ ] Add bunq.me donation link for mobile-friendly bank transfers
-12. [ ] Alerts on rate limit hits and openAI cost ??? Doesn't have to be in meal maestro
+12. [ ] Add bunq.me donation link for mobile-friendly bank transfers
 
 ## Quality & Compliance
 
 1. [ ] Write more tests
-1. [ ] Switch from handlebars to mustache.js so the build warnings go away
 
 ## V2.0 feature requests
 

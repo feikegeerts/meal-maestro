@@ -97,7 +97,12 @@ describe("/api/scrape-recipe API Security Tests", () => {
     });
 
     // Setup default successful usage tracking
-    mockUsageTrackingService.logUsage.mockResolvedValue({ success: true });
+    mockUsageTrackingService.logUsage.mockResolvedValue({
+      success: true,
+      cost: 0,
+      warningThresholdReached: false,
+      limitReached: false,
+    });
 
     // Setup Supabase client mock
     mockCreateClient.mockReturnValue(mockSupabaseClient);
@@ -166,7 +171,12 @@ describe("/api/scrape-recipe API Security Tests", () => {
         client: mockSupabaseClient,
         user: mockUser,
       });
-      mockUsageTrackingService.logUsage.mockResolvedValue({ success: true });
+      mockUsageTrackingService.logUsage.mockResolvedValue({
+        success: true,
+        cost: 0,
+        warningThresholdReached: false,
+        limitReached: false,
+      });
       mockCreateClient.mockReturnValue(mockSupabaseClient);
     });
 

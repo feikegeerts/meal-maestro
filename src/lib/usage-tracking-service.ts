@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { pricingService } from './pricing-service';
 import { type OpenAIUsageData } from './openai-service';
+import { usageLimitService } from './usage-limit-service';
 
 // Supabase client for usage logging
 const supabaseUrl = process.env.SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL!;
@@ -45,7 +46,17 @@ export class UsageTrackingService {
     endpoint: string,
     usage: OpenAIUsageData,
     tier: 'standard' | 'batch' | 'flex' | 'priority' = 'standard'
-  ): Promise<{ success: boolean; cost?: number; error?: string }> {
+  ): Promise<{
+    success: boolean;
+    cost?: number;
+    warningThresholdReached?: boolean;
+    limitReached?: boolean;
+    summary?: {
+      totalCost: number;
+      monthStart: string;
+    };
+    error?: string;
+  }> {
     try {
       // Calculate cost using the pricing service
       const costCalculation = pricingService.calculateCost(
@@ -76,16 +87,38 @@ export class UsageTrackingService {
         return { success: false, error: error.message };
       }
 
-      
-      return { 
-        success: true, 
-        cost: costCalculation.totalCost 
+      let warningThresholdReached = false;
+      let limitReached = false;
+
+      let summary;
+      try {
+        const result = await usageLimitService.recordUsageEvent(userId, usage, {
+          endpoint,
+          costUsd: costCalculation.totalCost,
+        });
+
+        warningThresholdReached = result.reachedWarning;
+        limitReached = result.reachedLimit;
+        summary = {
+          totalCost: result.summary.total_cost,
+          monthStart: result.summary.month_start,
+        };
+      } catch (aggregationError) {
+        console.error('🔴 [UsageTracking] Failed to aggregate monthly usage:', aggregationError);
+      }
+
+      return {
+        success: true,
+        cost: costCalculation.totalCost,
+        warningThresholdReached,
+        limitReached,
+        summary,
       };
 
     } catch (error) {
       console.error('🔴 [UsageTracking] Error logging usage:', error);
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: error instanceof Error ? error.message : 'Unknown error' 
       };
     }

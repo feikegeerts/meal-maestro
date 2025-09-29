@@ -57,12 +57,7 @@ WHERE diet_types IS NOT NULL AND diet_types @> ARRAY['without-meat-fish']::diet_
 
 -- 2. Detach column from enum type
 ALTER TABLE recipes
-  ALTER COLUMN diet_types TYPE text[] USING (
-    CASE
-      WHEN diet_types IS NULL THEN NULL
-      ELSE ARRAY(SELECT unnest(diet_types)::text)
-    END
-  );
+  ALTER COLUMN diet_types TYPE text[] USING diet_types::text[];
 
 -- 3. Drop old enum and recreate with reduced set
 DROP TYPE IF EXISTS diet_type;
@@ -77,12 +72,26 @@ CREATE TYPE diet_type AS ENUM (
 
 -- 4. Recast column back to enum[]
 ALTER TABLE recipes
-  ALTER COLUMN diet_types TYPE diet_type[] USING (
-    CASE
-      WHEN diet_types IS NULL THEN NULL
-      ELSE ARRAY(SELECT unnest(diet_types)::diet_type)
-    END
-  );
+  ADD COLUMN diet_types_new diet_type[];
+
+UPDATE recipes
+SET diet_types_new = CASE
+  WHEN diet_types IS NULL THEN NULL
+  ELSE (
+    SELECT array_agg(value::diet_type)
+    FROM unnest(diet_types) AS value
+  )
+END;
+
+ALTER TABLE recipes
+  DROP COLUMN diet_types;
+
+ALTER TABLE recipes
+  RENAME COLUMN diet_types_new TO diet_types;
+
+CREATE INDEX IF NOT EXISTS idx_recipes_diet_types ON recipes USING GIN(diet_types);
+
+COMMENT ON COLUMN recipes.diet_types IS 'Dietary requirements/types for the recipe (multiple values)';
 
 /* =============================================
    Recreate recipe_enum_values view

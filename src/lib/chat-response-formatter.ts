@@ -1,5 +1,6 @@
 import { ChatMessage } from "./conversation-builder";
 import { FunctionCallResult } from "./function-call-processor";
+import { MonthlySpendLimitError } from "./usage-limit-service";
 
 export interface ChatResponse {
   response: string;
@@ -48,6 +49,29 @@ export class ChatResponseFormatter {
       };
     }
     
+    if (error instanceof MonthlySpendLimitError) {
+      const now = new Date();
+      const resetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const locale = this.locale === 'nl' ? 'nl-NL' : this.locale;
+      const resetLabel = resetDate.toLocaleDateString(locale, {
+        month: 'long',
+        day: 'numeric',
+      });
+
+      if (this.locale === 'nl') {
+        return {
+          error:
+            `Je hebt de AI-limiet voor deze maand bereikt. De limiet wordt op ${resetLabel} automatisch vernieuwd.`,
+          status: 402,
+        };
+      }
+
+      return {
+        error: `You've reached this month's AI usage limit. It resets on ${resetLabel}.`,
+        status: 402,
+      };
+    }
+
     if (error.message.includes("quota") || error.message.includes("billing")) {
       return {
         error: "OpenAI quota exceeded. Please check your billing.",

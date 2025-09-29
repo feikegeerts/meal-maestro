@@ -478,6 +478,58 @@ export class AdminUsageService {
       };
     }
   }
+
+  public async getMonthlyUsageSummary(
+    monthStart?: string
+  ): Promise<
+    Array<{
+      userId: string;
+      monthStart: string;
+      totalCost: number;
+      totalTokens: number;
+      totalCalls: number;
+      warningEmailSentAt: string | null;
+      limitEmailSentAt: string | null;
+      rateLimitEmailSentAt: string | null;
+      limitEnforcedAt: string | null;
+    }>
+  > {
+    try {
+      const targetMonthStart =
+        monthStart || new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+          .toISOString()
+          .split('T')[0];
+
+      const { data, error } = await supabaseAdmin
+        .from('monthly_usage_summary')
+        .select('*')
+        .eq('month_start', targetMonthStart);
+
+      if (error) {
+        console.error('[AdminUsage] Error fetching monthly summary:', error);
+        return [];
+      }
+
+      if (!data) {
+        return [];
+      }
+
+      return data.map((row) => ({
+        userId: row.user_id,
+        monthStart: row.month_start,
+        totalCost: Number(row.total_cost || 0),
+        totalTokens: Number(row.total_tokens || 0),
+        totalCalls: Number(row.total_calls || 0),
+        warningEmailSentAt: row.warning_email_sent_at,
+        limitEmailSentAt: row.limit_email_sent_at,
+        rateLimitEmailSentAt: row.rate_limit_email_sent_at,
+        limitEnforcedAt: row.limit_enforced_at,
+      }));
+    } catch (error) {
+      console.error('[AdminUsage] Error in getMonthlyUsageSummary:', error);
+      return [];
+    }
+  }
 }
 
 export const adminUsageService = new AdminUsageService();

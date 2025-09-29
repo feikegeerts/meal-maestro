@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth-server";
 import { RecipeChatService } from "@/lib/recipe-chat-service";
 import { ChatResponseFormatter } from "@/lib/chat-response-formatter";
 import { OpenAITimeoutError } from "@/lib/openai-service";
+import { MonthlySpendLimitError, usageLimitService } from "@/lib/usage-limit-service";
 
 interface ChatRequest {
   message: string;
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { user, client: supabase } = authResult;
+  let detectedLocale: string | undefined;
 
   try {
     const body: ChatRequest = await request.json();
@@ -83,6 +85,7 @@ export async function POST(request: NextRequest) {
 
     // Detect user locale
     const userLocale = RecipeChatService.detectLocale(request, locale);
+    detectedLocale = userLocale;
 
     // Create chat service and process message
     const chatService = new RecipeChatService(user.id, userLocale, supabase);
@@ -116,9 +119,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (error instanceof MonthlySpendLimitError) {
+      const localeForFormatting = detectedLocale === 'nl' ? 'nl-NL' : 'en-US';
+      const now = new Date();
+      const resetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const resetLabel = resetDate.toLocaleDateString(localeForFormatting, {
+        month: 'long',
+        day: 'numeric',
+      });
+
+      const message = detectedLocale === 'nl'
+        ? `Je hebt de AI-limiet voor deze maand bereikt. De limiet wordt op ${resetLabel} automatisch vernieuwd.`
+        : `You've reached this month's AI usage limit. It resets on ${resetLabel}.`;
+
+      return NextResponse.json(
+        {
+          error: message,
+          message,
+          code: error.code,
+        },
+        { status: 402 }
+      );
+    }
+
     if (error instanceof Error) {
-      const responseFormatter = new ChatResponseFormatter('en'); // Default to English for errors
+      const responseFormatter = new ChatResponseFormatter(detectedLocale ?? 'en');
       const errorResponse = await responseFormatter.formatErrorResponse(error);
+
+      if (errorResponse.status === 429) {
+        await usageLimitService.recordRateLimitViolation(user.id, '/api/recipes/chat');
+      }
       return NextResponse.json(
         { error: errorResponse.error },
         { status: errorResponse.status }

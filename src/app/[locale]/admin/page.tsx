@@ -29,6 +29,7 @@ import {
 import { AdminUsageStatsResponse } from "@/app/api/admin/usage-stats/route";
 import { AdminChartsSection } from "@/components/admin/admin-charts-section";
 import { useTranslations } from "next-intl";
+import { MONTHLY_SPEND_CAP_USD } from "@/config/usage-limits";
 
 interface DashboardStats {
   totalUsers: number;
@@ -58,6 +59,25 @@ interface TopUser {
   rank?: number;
 }
 
+interface MonthlyUsageSummary {
+  monthStart: string;
+  totalCost: number;
+  totalTokens: number;
+  totalCalls: number;
+  cappedUsers: number;
+  warningUsers: number;
+  rateLimitAlerts: number;
+  topUsers: Array<{
+    userId: string;
+    totalCost: number;
+    totalTokens: number;
+    totalCalls: number;
+    limitEnforcedAt: string | null;
+    warningEmailSentAt: string | null;
+    rateLimitEmailSentAt: string | null;
+  }>;
+}
+
 export default function AdminDashboard() {
   const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -65,6 +85,7 @@ export default function AdminDashboard() {
   const [imageStats, setImageStats] = useState<ImageStorageStats | null>(null);
   const [topUsersByCost, setTopUsersByCost] = useState<TopUser[]>([]);
   const [outliers, setOutliers] = useState<TopUser[]>([]);
+  const [monthlyUsage, setMonthlyUsage] = useState<MonthlyUsageSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -110,6 +131,29 @@ export default function AdminDashboard() {
         }
         setTopUsersByCost(overviewData.data.topUsers?.byCost || []);
         setOutliers(overviewData.data.outliers?.users || []);
+        if (overviewData.data.monthlyUsage) {
+          const monthly = overviewData.data.monthlyUsage;
+          setMonthlyUsage({
+            monthStart: monthly.monthStart,
+            totalCost: monthly.totalCost,
+            totalTokens: monthly.totalTokens,
+            totalCalls: monthly.totalCalls,
+            cappedUsers: monthly.cappedUsers,
+            warningUsers: monthly.warningUsers,
+            rateLimitAlerts: monthly.rateLimitAlerts,
+            topUsers: monthly.topUsers.map((user) => ({
+              userId: user.userId,
+              totalCost: user.totalCost,
+              totalTokens: user.totalTokens,
+              totalCalls: user.totalCalls,
+              limitEnforcedAt: user.limitEnforcedAt,
+              warningEmailSentAt: user.warningEmailSentAt,
+              rateLimitEmailSentAt: user.rateLimitEmailSentAt,
+            })),
+          });
+        } else {
+          setMonthlyUsage(null);
+        }
       }
 
       setLastUpdated(new Date());
@@ -194,6 +238,18 @@ export default function AdminDashboard() {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const formatMonth = (monthStart: string): string => {
+    const date = new Date(monthStart);
+    if (Number.isNaN(date.getTime())) {
+      return monthStart;
+    }
+
+    return date.toLocaleDateString(undefined, {
+      month: 'long',
+      year: 'numeric',
+    });
   };
 
   if (authLoading || adminLoading) {
@@ -403,7 +459,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Top Users and Outliers */}
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {/* Top Users by Cost */}
             <Card>
               <CardHeader>
@@ -482,6 +538,62 @@ export default function AdminDashboard() {
                     </p>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Monthly Limit Watch */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Monthly limit watch</CardTitle>
+                <CardDescription>
+                  {monthlyUsage
+                    ? `${formatMonth(monthlyUsage.monthStart)} • ${monthlyUsage.cappedUsers} capped / ${monthlyUsage.warningUsers} warnings • Cap ${formatCost(MONTHLY_SPEND_CAP_USD)}`
+                    : 'No monthly usage data yet'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {monthlyUsage && monthlyUsage.topUsers.length > 0 ? (
+                  <div className="space-y-3">
+                    {monthlyUsage.topUsers.slice(0, 5).map((user) => {
+                      const status = user.limitEnforcedAt
+                        ? { label: 'Capped', variant: 'destructive' as const }
+                        : user.warningEmailSentAt
+                        ? { label: 'Warning', variant: 'secondary' as const }
+                        : user.rateLimitEmailSentAt
+                        ? { label: 'Rate limited', variant: 'outline' as const }
+                        : { label: 'Healthy', variant: 'outline' as const };
+
+                      return (
+                        <div
+                          key={user.userId}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={status.variant}>{status.label}</Badge>
+                            <span className="text-sm font-mono">
+                              {user.userId.slice(0, 8)}...
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-semibold">
+                              {formatCost(user.totalCost)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {formatNumber(user.totalTokens)} {t("tokens")}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <p className="text-xs text-muted-foreground">
+                      Rate-limit alerts: {monthlyUsage.rateLimitAlerts}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No monthly usage records yet
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>

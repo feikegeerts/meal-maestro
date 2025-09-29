@@ -53,7 +53,7 @@ An AI-powered recipe management system built with Next.js, Supabase, and OpenAI.
 - **User Authentication**: Google OAuth integration with Supabase Auth
 - **Recipe CRUD Operations**: Full recipe lifecycle management
 - **Advanced Search & Filtering**: Multi-criteria recipe discovery
-- **Cost Tracking**: OpenAI API usage monitoring and budget management
+- **Cost Tracking**: OpenAI API usage monitoring with per-user monthly caps and automated admin alerts
 - **Responsive Design**: Mobile-first UI with dark mode support
 
 ## Getting Started

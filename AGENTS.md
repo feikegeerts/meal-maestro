@@ -21,6 +21,7 @@ Supplementary frequently relevant files:
 - `src/lib/` – domain/business logic utilities
 - `src/contexts/` – React context providers
 - `supabase/migrations/` – database schema & evolution
+- `src/config/usage-limits.ts` – server-side AI spend thresholds & alert tuning
 
 When modifying or adding tests, also inspect:
 

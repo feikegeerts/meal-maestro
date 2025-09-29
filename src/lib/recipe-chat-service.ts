@@ -1,5 +1,7 @@
 import { createChatCompletion } from "./openai-service";
 import { usageTrackingService } from "./usage-tracking-service";
+import { usageLimitService, MonthlySpendLimitError } from "./usage-limit-service";
+import { MONTHLY_SPEND_CAP_USD } from "@/config/usage-limits";
 import {
   ConversationBuilder,
   ChatMessage,
@@ -174,7 +176,8 @@ export class RecipeChatService {
     this.functionCallProcessor = new FunctionCallProcessor(
       this.locale,
       unitPreference,
-      customUnits
+      customUnits,
+      () => usageLimitService.assertWithinMonthlyLimit(this.userId)
     );
   }
 
@@ -314,6 +317,8 @@ export class RecipeChatService {
     );
 
     // Create completion with function calling and usage tracking
+    await usageLimitService.assertWithinMonthlyLimit(this.userId);
+
     const { completion, usage } = await createChatCompletion(
       chatMessages,
       FunctionCallProcessor.getAvailableFunctions(
@@ -333,6 +338,11 @@ export class RecipeChatService {
       console.warn(
         "🟡 [RecipeChatService] Failed to log usage:",
         usageLog.error
+      );
+    } else if (usageLog.limitReached) {
+      throw new MonthlySpendLimitError(
+        MONTHLY_SPEND_CAP_USD,
+        usageLog.summary?.totalCost ?? usageLog.cost ?? MONTHLY_SPEND_CAP_USD
       );
     }
 
@@ -358,6 +368,8 @@ export class RecipeChatService {
               content: followUpPrompt,
             },
           ];
+
+          await usageLimitService.assertWithinMonthlyLimit(this.userId);
 
           const { completion: secondCompletion } = await createChatCompletion(
             followUpMessages,
@@ -409,6 +421,8 @@ export class RecipeChatService {
               content: followUpPrompt,
             },
           ];
+
+          await usageLimitService.assertWithinMonthlyLimit(this.userId);
 
           const { completion: secondCompletion } = await createChatCompletion(
             followUpMessages,

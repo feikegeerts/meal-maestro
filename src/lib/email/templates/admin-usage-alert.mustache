@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{subject}}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; background-color: #f9fafb; margin: 0; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); overflow: hidden;">
+
+    <div style="background: linear-gradient(135deg, #4b5563 0%, #111827 100%); padding: 32px 28px; text-align: center;">
+      <h1 style="color: #f9fafb; margin: 0; font-size: 26px; font-weight: 700;">{{brandEmoji}} {{brandName}}</h1>
+      <p style="color: #d1d5db; margin: 8px 0 0; font-size: 15px;">{{tagline}}</p>
+    </div>
+
+    <div style="padding: 32px 28px;">
+      <h2 style="margin: 0 0 16px; font-size: 22px; color: #111827;">{{levelLabel}}</h2>
+      <p style="margin: 0 0 20px; color: #374151; font-size: 15px;">We're flagging an account with unusual AI usage.</p>
+
+      <div style="background-color: #f3f4f6; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px;">
+        <p style="margin: 0 0 12px; font-weight: 600; color: #111827;">Summary</p>
+        <ul style="list-style: none; padding: 0; margin: 0; font-size: 14px; color: #4b5563;">
+          <li><strong>User ID:</strong> {{userId}}</li>
+          <li><strong>Endpoint:</strong> {{endpoint}}</li>
+          <li><strong>Month:</strong> {{monthLabel}}</li>
+          <li><strong>Total spend:</strong> {{totalCostFormatted}}</li>
+          <li><strong>Monthly limit:</strong> {{limitFormatted}}</li>
+        </ul>
+      </div>
+
+      <p style="margin: 0 0 12px; color: #1f2937;">Please review this user's recent conversations and consider reaching out if necessary.</p>
+
+      <p style="margin: 20px 0 0; font-size: 14px; color: #6b7280;">You're receiving this email because you're listed as an admin for Meal Maestro.</p>
+    </div>
+
+    <div style="background-color: #f9fafb; padding: 20px 28px; border-top: 1px solid #e5e7eb; text-align: center;">
+      <p style="color: #6b7280; font-size: 14px; margin: 0;">
+        {{footer.contact}} <a href="mailto:{{supportEmail}}" style="color: #10b981; text-decoration: none;">{{supportEmail}}</a>
+      </p>
+      <p style="color: #9ca3af; font-size: 12px; margin: 8px 0 0;">
+        © {{currentYear}} {{footer.copyright}}
+      </p>
+    </div>
+  </div>
+</body>
+</html>

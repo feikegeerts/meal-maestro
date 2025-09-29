@@ -28,12 +28,19 @@ export class FunctionCallProcessor {
   private unitPreference?: string;
   private customUnits?: string[];
   private messages: Record<string, unknown>;
+  private usageGuard?: () => Promise<void>;
 
-  constructor(locale: string, unitPreference?: string, customUnits?: string[]) {
+  constructor(
+    locale: string,
+    unitPreference?: string,
+    customUnits?: string[],
+    usageGuard?: () => Promise<void>
+  ) {
     this.locale = locale;
     this.unitPreference = unitPreference;
     this.customUnits = customUnits;
     this.messages = this.loadMessages(locale);
+    this.usageGuard = usageGuard;
   }
 
   private loadMessages(locale: string): Record<string, unknown> {
@@ -257,6 +264,10 @@ export class FunctionCallProcessor {
       },
     ];
 
+    if (this.usageGuard) {
+      await this.usageGuard();
+    }
+
     const { completion } = await createChatCompletion(
       processingMessages,
       this.getAvailableFunctionsForInstance()
@@ -324,6 +335,10 @@ export class FunctionCallProcessor {
             content: aiRecipePrompt,
           },
         ];
+
+        if (this.usageGuard) {
+          await this.usageGuard();
+        }
 
         const { completion } = await createChatCompletion(
           followUpMessages,

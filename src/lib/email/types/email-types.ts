@@ -16,9 +16,26 @@ export interface ConfirmSignupEmailData extends BaseEmailData {
   displayName?: string;
 }
 
-export type EmailData = MagicLinkEmailData | ConfirmSignupEmailData;
+export interface AdminUsageAlertEmailData extends BaseEmailData {
+  alertType: 'spend' | 'rate-limit';
+  userId: string;
+  endpoint: string;
+  totalCost: number;
+  totalCostFormatted: string;
+  limitFormatted: string;
+  monthStart: string;
+  monthLabel: string;
+  level: 'warning' | 'limit' | 'rate-limit';
+  levelLabel: string;
+  limitUsd: number;
+}
 
-export type EmailType = 'magic-link' | 'confirm-signup';
+export type EmailData =
+  | MagicLinkEmailData
+  | ConfirmSignupEmailData
+  | AdminUsageAlertEmailData;
+
+export type EmailType = 'magic-link' | 'confirm-signup' | 'admin-usage-alert';
 
 export interface EmailTemplate {
   subject: string;
