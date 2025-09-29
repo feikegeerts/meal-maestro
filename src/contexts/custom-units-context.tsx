@@ -1,7 +1,14 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
-import { CustomUnit, createUnitSystem, UnitSystem } from '@/types/recipe';
+import React, {
+  createContext,
+  useContext,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+import { CustomUnit, UnitSystem } from "@/types/recipe";
+import { createUnitSystem } from "@/lib/recipe-utils";
 
 interface CustomUnitsContextValue {
   customUnits: CustomUnit[];
@@ -18,7 +25,11 @@ const CustomUnitsContext = createContext<CustomUnitsContextValue | null>(null);
 let globalFetchPromise: Promise<CustomUnit[]> | null = null;
 let globalCustomUnits: CustomUnit[] | null = null;
 
-export function CustomUnitsProvider({ children }: { children: React.ReactNode }) {
+export function CustomUnitsProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [customUnits, setCustomUnits] = useState<CustomUnit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +48,7 @@ export function CustomUnitsProvider({ children }: { children: React.ReactNode })
     // Create new fetch promise
     globalFetchPromise = (async () => {
       try {
-        const response = await fetch('/api/custom-units');
+        const response = await fetch("/api/custom-units");
 
         if (!response.ok) {
           // Don't treat auth failures as errors during initial load
@@ -45,7 +56,9 @@ export function CustomUnitsProvider({ children }: { children: React.ReactNode })
             globalCustomUnits = [];
             return [];
           }
-          throw new Error(`Failed to fetch custom units: ${response.statusText}`);
+          throw new Error(
+            `Failed to fetch custom units: ${response.statusText}`
+          );
         }
 
         const data = await response.json();
@@ -53,7 +66,7 @@ export function CustomUnitsProvider({ children }: { children: React.ReactNode })
         globalCustomUnits = units;
         return units;
       } catch (err) {
-        console.warn('Failed to fetch custom units:', err);
+        console.warn("Failed to fetch custom units:", err);
         globalCustomUnits = [];
         throw err;
       } finally {
@@ -72,67 +85,87 @@ export function CustomUnitsProvider({ children }: { children: React.ReactNode })
       const units = await fetchCustomUnits();
       setCustomUnits(units);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch custom units');
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch custom units"
+      );
       setCustomUnits([]);
     } finally {
       setIsLoading(false);
     }
   }, [fetchCustomUnits]);
 
-  const addCustomUnit = useCallback(async (unitName: string): Promise<boolean> => {
-    try {
-      setError(null);
+  const addCustomUnit = useCallback(
+    async (unitName: string): Promise<boolean> => {
+      try {
+        setError(null);
 
-      const response = await fetch('/api/custom-units', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ unit_name: unitName }),
-      });
+        const response = await fetch("/api/custom-units", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ unit_name: unitName }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to create custom unit: ${response.statusText}`);
-      }
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error ||
+              `Failed to create custom unit: ${response.statusText}`
+          );
+        }
 
-      const newUnit = await response.json();
-      const updatedUnits = [...customUnits, newUnit].sort((a, b) => a.unit_name.localeCompare(b.unit_name));
+        const newUnit = await response.json();
+        const updatedUnits = [...customUnits, newUnit].sort((a, b) =>
+          a.unit_name.localeCompare(b.unit_name)
+        );
 
-      setCustomUnits(updatedUnits);
-      globalCustomUnits = updatedUnits; // Update global cache
+        setCustomUnits(updatedUnits);
+        globalCustomUnits = updatedUnits; // Update global cache
 
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create custom unit');
-      return false;
-    }
-  }, [customUnits]);
-
-  const removeCustomUnit = useCallback(async (unitId: string): Promise<boolean> => {
-    try {
-      setError(null);
-
-      const response = await fetch(`/api/custom-units/${unitId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.error || `Failed to delete custom unit: ${response.statusText}`);
+        return true;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to create custom unit"
+        );
         return false;
       }
+    },
+    [customUnits]
+  );
 
-      const updatedUnits = customUnits.filter(unit => unit.id !== unitId);
-      setCustomUnits(updatedUnits);
-      globalCustomUnits = updatedUnits; // Update global cache
+  const removeCustomUnit = useCallback(
+    async (unitId: string): Promise<boolean> => {
+      try {
+        setError(null);
 
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete custom unit');
-      return false;
-    }
-  }, [customUnits]);
+        const response = await fetch(`/api/custom-units/${unitId}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          setError(
+            errorData.error ||
+              `Failed to delete custom unit: ${response.statusText}`
+          );
+          return false;
+        }
+
+        const updatedUnits = customUnits.filter((unit) => unit.id !== unitId);
+        setCustomUnits(updatedUnits);
+        globalCustomUnits = updatedUnits; // Update global cache
+
+        return true;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to delete custom unit"
+        );
+        return false;
+      }
+    },
+    [customUnits]
+  );
 
   const refreshUnits = useCallback(async () => {
     // Clear cache and reload
@@ -147,7 +180,9 @@ export function CustomUnitsProvider({ children }: { children: React.ReactNode })
   }, [loadCustomUnits]);
 
   // Create unit system from current custom units
-  const unitSystem = createUnitSystem(customUnits.map(unit => unit.unit_name));
+  const unitSystem = createUnitSystem(
+    customUnits.map((unit) => unit.unit_name)
+  );
 
   const value: CustomUnitsContextValue = {
     customUnits,
@@ -169,7 +204,7 @@ export function CustomUnitsProvider({ children }: { children: React.ReactNode })
 export function useCustomUnits(): CustomUnitsContextValue {
   const context = useContext(CustomUnitsContext);
   if (!context) {
-    throw new Error('useCustomUnits must be used within a CustomUnitsProvider');
+    throw new Error("useCustomUnits must be used within a CustomUnitsProvider");
   }
   return context;
 }

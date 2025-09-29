@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { 
-  RecipeIngredient, 
-  normalizeIngredientUnit 
-} from "@/types/recipe";
+import { RecipeIngredient } from "@/types/recipe";
+import { normalizeIngredientUnit } from "@/lib/recipe-utils";
 
 interface UseIngredientStateProps {
   ingredients: RecipeIngredient[];
   onChange: (ingredients: RecipeIngredient[]) => void;
 }
 
-export function useIngredientState({ ingredients, onChange }: UseIngredientStateProps) {
+export function useIngredientState({
+  ingredients,
+  onChange,
+}: UseIngredientStateProps) {
   const [showUnitDropdown, setShowUnitDropdown] = useState<{
     [key: string]: boolean;
   }>({});

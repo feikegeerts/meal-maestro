@@ -1,5 +1,9 @@
 import { RecipeIngredient } from "@/types/recipe";
-import { normalizeIngredientUnit, formatFraction, pluralizeUnit } from "@/types/recipe";
+import {
+  normalizeIngredientUnit,
+  formatFraction,
+  pluralizeUnit,
+} from "@/lib/recipe-utils";
 
 // Translation adapter interfaces
 export interface UnitTranslator {
@@ -33,9 +37,14 @@ export class IngredientFormatterService {
    */
   public pluralizeIngredientName(ingredientName: string): string {
     try {
-      const plural = this.translationAdapter.translateIngredientPlurals(ingredientName);
+      const plural =
+        this.translationAdapter.translateIngredientPlurals(ingredientName);
       // Only return the plural if we got a real translation (not the key back)
-      if (plural && plural !== ingredientName && !plural.startsWith('ingredientPlurals.')) {
+      if (
+        plural &&
+        plural !== ingredientName &&
+        !plural.startsWith("ingredientPlurals.")
+      ) {
         // Cache the reverse lookup for singularization
         this.pluralToSingularCache.set(plural, ingredientName);
         return plural;
@@ -46,13 +55,8 @@ export class IngredientFormatterService {
     return ingredientName;
   }
 
-
-
-
-
-
   /**
-   * Get singular form of ingredient name  
+   * Get singular form of ingredient name
    * Public method for component access
    */
   public singularizeIngredientName(ingredientName: string): string {
@@ -60,7 +64,7 @@ export class IngredientFormatterService {
     if (this.pluralToSingularCache.has(ingredientName)) {
       return this.pluralToSingularCache.get(ingredientName)!;
     }
-    
+
     // This is more complex - we need to find if this ingredient is a plural form
     // For now, just return the original name since we can't efficiently reverse-lookup
     return ingredientName;
@@ -70,7 +74,10 @@ export class IngredientFormatterService {
    * Apply pluralization logic based on amount
    * Handles both singular->plural and plural->singular transformations
    */
-  private applyIngredientPluralization(ingredientName: string, amount: number): string {
+  private applyIngredientPluralization(
+    ingredientName: string,
+    amount: number
+  ): string {
     if (amount > 1) {
       // Try to pluralize, fallback to original if no mapping exists
       return this.pluralizeIngredientName(ingredientName);
@@ -78,7 +85,7 @@ export class IngredientFormatterService {
       // Try to singularize, fallback to original if no reverse mapping exists
       return this.singularizeIngredientName(ingredientName);
     }
-    
+
     // For amounts between 0 and 1, keep original form
     return ingredientName;
   }
@@ -90,37 +97,43 @@ export class IngredientFormatterService {
   formatIngredient(ingredient: RecipeIngredient): string {
     // Handle null amounts (ingredients without quantities)
     if (ingredient.amount === null) {
-      const notes = ingredient.notes ? ` (${ingredient.notes})` : '';
+      const notes = ingredient.notes ? ` (${ingredient.notes})` : "";
       return `${ingredient.name}${notes}`;
     }
-    
+
     // Handle invalid numbers
     if (!Number.isFinite(ingredient.amount)) {
-      const notes = ingredient.notes ? ` (${ingredient.notes})` : '';
+      const notes = ingredient.notes ? ` (${ingredient.notes})` : "";
       return `${ingredient.name}${notes}`;
     }
-    
+
     // Apply smart unit conversion and normalization
-    const smartResult = normalizeIngredientUnit(ingredient.amount, ingredient.unit);
+    const smartResult = normalizeIngredientUnit(
+      ingredient.amount,
+      ingredient.unit
+    );
     const finalAmount = smartResult?.amount ?? ingredient.amount;
     const finalUnit = smartResult?.unit ?? ingredient.unit;
-    
+
     // Apply unit pluralization (existing logic)
     const pluralizedUnit = pluralizeUnit(finalUnit, finalAmount);
-    
+
     // Apply ingredient name pluralization
     const pluralizedIngredientName = this.applyIngredientPluralization(
-      ingredient.name, 
+      ingredient.name,
       finalAmount
     );
-    
+
     // Build final display string
     const amount = formatFraction(finalAmount);
-    const unit = pluralizedUnit 
-      ? ` ${this.translationAdapter.translateUnit(pluralizedUnit) || pluralizedUnit}` 
-      : '';
-    const notes = ingredient.notes ? ` (${ingredient.notes})` : '';
-    
+    const unit = pluralizedUnit
+      ? ` ${
+          this.translationAdapter.translateUnit(pluralizedUnit) ||
+          pluralizedUnit
+        }`
+      : "";
+    const notes = ingredient.notes ? ` (${ingredient.notes})` : "";
+
     return `${amount}${unit} ${pluralizedIngredientName}${notes}`;
   }
 }
@@ -140,36 +153,39 @@ export function createTranslationAdapter(
       // let's suppress console errors and use a global error handler
       const originalConsoleError = console.error;
       let errorOccurred = false;
-      
+
       // Temporarily suppress console errors
       console.error = (...args: unknown[]) => {
-        const errorStr = args.join(' ');
-        if (errorStr.includes('MISSING_MESSAGE') || errorStr.includes('Could not resolve')) {
+        const errorStr = args.join(" ");
+        if (
+          errorStr.includes("MISSING_MESSAGE") ||
+          errorStr.includes("Could not resolve")
+        ) {
           errorOccurred = true;
           return; // Suppress this error
         }
         originalConsoleError(...args); // Let other errors through
       };
-      
+
       try {
         const result = translateIngredientPlurals(key);
-        
+
         // Restore console.error
         console.error = originalConsoleError;
-        
+
         // If an error occurred, return the key
         if (errorOccurred) {
           return key;
         }
-        
+
         return result;
       } catch {
         // Restore console.error
         console.error = originalConsoleError;
-        
+
         // Return the original key for any error
         return key;
       }
-    }
+    },
   };
 }

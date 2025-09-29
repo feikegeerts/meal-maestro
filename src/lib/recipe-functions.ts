@@ -9,6 +9,8 @@ import {
   ProteinType,
   OccasionType,
   CharacteristicType,
+} from "@/types/recipe";
+import {
   isValidCuisine,
   isValidDietType,
   isValidCookingMethod,
@@ -17,7 +19,7 @@ import {
   isValidOccasionType,
   isValidCharacteristicType,
   COOKING_UNITS,
-} from "@/types/recipe";
+} from "@/lib/recipe-utils";
 import { RecipeScraper } from "@/lib/recipe-scraper";
 import { UrlDetector } from "@/lib/url-detector";
 
@@ -104,7 +106,7 @@ export function createRecipeFormFunction(
       .map((u) => u.trim())
       .filter((u) => u.length > 0 && u.length <= 20) // Stricter length limit
       .filter((u) => /^[a-zA-Z0-9\s\-.]+$/.test(u))
-      .map((u) => u.replace(/[^a-zA-Z0-9\s\-.]/g, '')) // Sanitize: remove any unsafe chars
+      .map((u) => u.replace(/[^a-zA-Z0-9\s\-.]/g, "")) // Sanitize: remove any unsafe chars
       .filter((u) => u.length > 0) // Re-filter after sanitization
       .filter((u) => {
         const lower = u.toLowerCase();

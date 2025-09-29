@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import {
-  Recipe,
-  scaleRecipe,
-} from "@/types/recipe";
+import { Recipe } from "@/types/recipe";
+import { scaleRecipe } from "@/lib/recipe-utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Minus, Plus, Users, Calculator } from "lucide-react";
@@ -30,7 +28,7 @@ export function ServingSizeSelector({
   const t = useTranslations("servingSelector");
   const tUnits = useTranslations("units");
   const tIngredientPlurals = useTranslations("ingredientPlurals");
-  
+
   // Create ingredient formatter service with proper dependency injection
   const ingredientFormatter = useMemo(() => {
     const translationAdapter = createTranslationAdapter(

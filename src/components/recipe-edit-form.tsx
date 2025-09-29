@@ -6,8 +6,8 @@ import {
   RecipeInput,
   RecipeIngredient,
   RecipeSeason,
-  validateRecipeInput,
 } from "@/types/recipe";
+import { validateRecipeInput } from "@/lib/recipe-utils";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SheetClose } from "@/components/ui/sheet";

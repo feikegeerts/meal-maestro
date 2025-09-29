@@ -1,7 +1,8 @@
 "use client";
 
 import { memo } from "react";
-import { RecipeIngredient, getStepSizeForUnit } from "@/types/recipe";
+import { RecipeIngredient } from "@/types/recipe";
+import { getStepSizeForUnit } from "@/lib/recipe-utils";
 import { useTranslations } from "next-intl";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext } from "@dnd-kit/sortable";
@@ -105,13 +106,15 @@ function StructuredIngredientInputComponent({
 
         <AddIngredientButton onAdd={addIngredient} disabled={disabled} t={t} />
       </div>
-      
+
       <DragOverlay>
         {activeIngredient ? (
           !isMobile ? (
             <DesktopIngredientItem
               ingredient={activeIngredient}
-              index={ingredients.findIndex(ing => ing.id === activeIngredient.id)}
+              index={ingredients.findIndex(
+                (ing) => ing.id === activeIngredient.id
+              )}
               disabled={false}
               onAmountChange={() => {}}
               onUnitSelect={() => {}}
@@ -124,7 +127,9 @@ function StructuredIngredientInputComponent({
           ) : (
             <MobileIngredientItem
               ingredient={activeIngredient}
-              index={ingredients.findIndex(ing => ing.id === activeIngredient.id)}
+              index={ingredients.findIndex(
+                (ing) => ing.id === activeIngredient.id
+              )}
               disabled={false}
               onAmountChange={() => {}}
               onUnitSelect={() => {}}

@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useRef } from "react";
-import { Recipe, RecipeInput, validateRecipeInput } from "@/types/recipe";
+import { Recipe, RecipeInput } from "@/types/recipe";
+import { validateRecipeInput } from "@/lib/recipe-utils";
 import { FORM_CONFIG } from "../config/form-constants";
 
 interface UseAutoSaveOptions {
@@ -20,22 +21,32 @@ export function useAutoSave({
   onSave,
   enabled = true,
 }: UseAutoSaveOptions) {
-  const autoSaveStateRef = useRef<AutoSaveState>({ hasChanges: false, isValid: false });
+  const autoSaveStateRef = useRef<AutoSaveState>({
+    hasChanges: false,
+    isValid: false,
+  });
 
   const hasFormChanges = useCallback((): boolean => {
     return (
       formData.title !== originalRecipe.title ||
-      JSON.stringify(formData.ingredients) !== JSON.stringify(originalRecipe.ingredients) ||
+      JSON.stringify(formData.ingredients) !==
+        JSON.stringify(originalRecipe.ingredients) ||
       formData.servings !== originalRecipe.servings ||
       formData.description !== originalRecipe.description ||
       formData.category !== originalRecipe.category ||
       formData.cuisine !== originalRecipe.cuisine ||
-      JSON.stringify(formData.diet_types) !== JSON.stringify(originalRecipe.diet_types) ||
-      JSON.stringify(formData.cooking_methods) !== JSON.stringify(originalRecipe.cooking_methods) ||
-      JSON.stringify(formData.dish_types) !== JSON.stringify(originalRecipe.dish_types) ||
-      JSON.stringify(formData.proteins) !== JSON.stringify(originalRecipe.proteins) ||
-      JSON.stringify(formData.occasions) !== JSON.stringify(originalRecipe.occasions) ||
-      JSON.stringify(formData.characteristics) !== JSON.stringify(originalRecipe.characteristics) ||
+      JSON.stringify(formData.diet_types) !==
+        JSON.stringify(originalRecipe.diet_types) ||
+      JSON.stringify(formData.cooking_methods) !==
+        JSON.stringify(originalRecipe.cooking_methods) ||
+      JSON.stringify(formData.dish_types) !==
+        JSON.stringify(originalRecipe.dish_types) ||
+      JSON.stringify(formData.proteins) !==
+        JSON.stringify(originalRecipe.proteins) ||
+      JSON.stringify(formData.occasions) !==
+        JSON.stringify(originalRecipe.occasions) ||
+      JSON.stringify(formData.characteristics) !==
+        JSON.stringify(originalRecipe.characteristics) ||
       formData.season !== originalRecipe.season
     );
   }, [formData, originalRecipe]);
@@ -45,7 +56,7 @@ export function useAutoSave({
 
     const hasChanges = hasFormChanges();
     const validation = validateRecipeInput(formData);
-    
+
     autoSaveStateRef.current = {
       hasChanges,
       isValid: validation.valid,
