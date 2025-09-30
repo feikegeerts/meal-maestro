@@ -1,8 +1,37 @@
 import { renderHook, waitFor, render } from "@testing-library/react";
 import { act } from "react";
 import { AuthProvider, useAuth } from "../auth-context";
+import { auth, supabase } from "../supabase";
 import { server } from "../../__mocks__/server";
 import { http, HttpResponse } from "msw";
+import { profileService } from "../profile-service";
+
+jest.mock("../profile-service", () => ({
+  profileService: {
+    getUserProfile: jest.fn(),
+    updateUserProfile: jest.fn(),
+  },
+}));
+
+const mockProfileService = profileService as jest.Mocked<typeof profileService>;
+
+const setNodeEnv = (value: string) => {
+  const originalValue = process.env.NODE_ENV;
+
+  Object.defineProperty(process.env, "NODE_ENV", {
+    value,
+    configurable: true,
+    writable: true,
+  });
+
+  return () => {
+    Object.defineProperty(process.env, "NODE_ENV", {
+      value: originalValue,
+      configurable: true,
+      writable: true,
+    });
+  };
+};
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <AuthProvider>{children}</AuthProvider>
@@ -16,6 +45,10 @@ describe("AuthContext", () => {
     localStorage.clear();
     // Clear all timers
     jest.clearAllTimers();
+    mockProfileService.getUserProfile.mockReset();
+    mockProfileService.updateUserProfile.mockReset();
+    mockProfileService.getUserProfile.mockResolvedValue(null);
+    mockProfileService.updateUserProfile.mockResolvedValue(null);
     // Mock console.error to suppress error messages in tests
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
   });
@@ -23,6 +56,8 @@ describe("AuthContext", () => {
   afterEach(() => {
     // Restore console.error
     consoleErrorSpy.mockRestore();
+    mockProfileService.getUserProfile.mockReset();
+    mockProfileService.updateUserProfile.mockReset();
   });
 
   afterAll(async () => {
@@ -318,6 +353,349 @@ describe("AuthContext", () => {
 
       jest.useRealTimers();
     });
+
+    it("should prevent overlapping refresh attempts via the global lock", async () => {
+      const restoreEnv = setNodeEnv("production");
+      jest.useFakeTimers();
+
+      const getCurrentSessionMock = auth.getCurrentSession as jest.Mock;
+      const originalGetCurrentSession = getCurrentSessionMock.getMockImplementation();
+
+      const supabaseAuth = supabase.auth as unknown as {
+        getSession: jest.Mock;
+        refreshSession?: jest.Mock;
+      };
+      const getSessionMock = supabaseAuth.getSession;
+      const originalGetSession = getSessionMock.getMockImplementation();
+      const originalRefreshSession = supabaseAuth.refreshSession;
+
+      const baseSession = {
+        access_token: "initial-access",
+        refresh_token: "initial-refresh",
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 60,
+        user: {
+          id: "refresh-lock-user",
+          email: "lock@test.com",
+        },
+      };
+
+      getCurrentSessionMock.mockImplementation(async () => ({
+        session: baseSession,
+        error: null,
+      }));
+
+      getSessionMock.mockImplementation(async () => ({
+        data: { session: baseSession },
+        error: null,
+      }));
+
+      const refreshedSession = {
+        access_token: "refresh-access",
+        refresh_token: "refresh-refresh",
+        expires_in: 3600,
+        user: {
+          id: "refresh-lock-user",
+          email: "lock@test.com",
+        },
+      };
+
+      let resolveRefresh!: (value: unknown) => void;
+      const refreshPromise = new Promise((resolve) => {
+        resolveRefresh = resolve;
+      });
+
+      const refreshSessionMock = jest.fn().mockImplementation(() => refreshPromise);
+      supabaseAuth.refreshSession = refreshSessionMock;
+
+      const tokenSyncCalls: Array<{ access_token: string }> = [];
+      server.use(
+        http.post("/api/auth/set-session", async ({ request }) => {
+          const payload = (await request.json()) as { access_token: string };
+          tokenSyncCalls.push(payload);
+          return HttpResponse.json({ success: true });
+        })
+      );
+
+      let result: import("@testing-library/react").RenderHookResult<ReturnType<typeof useAuth>, { children: React.ReactNode }> | undefined;
+
+      try {
+        await act(async () => {
+          result = renderHook(() => useAuth(), { wrapper });
+        });
+
+        expect(result).toBeDefined();
+
+        await waitFor(() => {
+          expect(result!.result.current.loading).toBe(false);
+        });
+
+        await act(async () => {
+          await jest.advanceTimersByTimeAsync(10 * 60 * 1000);
+        });
+
+        await act(async () => {
+          await jest.advanceTimersByTimeAsync(10 * 60 * 1000);
+        });
+
+        resolveRefresh({
+          data: { session: refreshedSession },
+          error: null,
+        });
+
+        await waitFor(() => {
+          const refreshSyncs = tokenSyncCalls.filter(
+            (call) => call.access_token === "refresh-access"
+          );
+          expect(refreshSyncs).toHaveLength(1);
+        });
+
+        expect(refreshSessionMock).toHaveBeenCalledTimes(1);
+      } finally {
+        jest.useRealTimers();
+        restoreEnv();
+
+        if (originalGetCurrentSession) {
+          getCurrentSessionMock.mockImplementation(originalGetCurrentSession);
+        } else {
+          getCurrentSessionMock.mockReset();
+        }
+
+        if (originalGetSession) {
+          getSessionMock.mockImplementation(originalGetSession);
+        } else {
+          getSessionMock.mockReset();
+        }
+
+        if (originalRefreshSession) {
+          supabaseAuth.refreshSession = originalRefreshSession;
+        } else {
+          delete supabaseAuth.refreshSession;
+        }
+      }
+    });
+
+    it("should recover when Supabase returns an 'Already Used' refresh error", async () => {
+      const restoreEnv = setNodeEnv("production");
+      jest.useFakeTimers();
+
+      const getCurrentSessionMock = auth.getCurrentSession as jest.Mock;
+      const originalGetCurrentSession = getCurrentSessionMock.getMockImplementation();
+
+      const supabaseAuth = supabase.auth as unknown as {
+        getSession: jest.Mock;
+        refreshSession?: jest.Mock;
+      };
+      const getSessionMock = supabaseAuth.getSession;
+      const originalGetSession = getSessionMock.getMockImplementation();
+      const originalRefreshSession = supabaseAuth.refreshSession;
+
+      const aboutToExpireSession = {
+        access_token: "about-to-expire",
+        refresh_token: "about-to-expire-refresh",
+        expires_in: 60,
+        expires_at: Math.floor(Date.now() / 1000) + 30,
+        user: {
+          id: "already-used-user",
+          email: "already@example.com",
+        },
+      };
+
+      const recoveredSession = {
+        access_token: "recovered-access",
+        refresh_token: "recovered-refresh",
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        user: {
+          id: "already-used-user",
+          email: "already@example.com",
+        },
+      };
+
+      getCurrentSessionMock.mockImplementation(async () => ({
+        session: aboutToExpireSession,
+        error: null,
+      }));
+
+      getSessionMock
+        .mockImplementationOnce(async () => ({
+          data: { session: aboutToExpireSession },
+          error: null,
+        }))
+        .mockImplementationOnce(async () => ({
+          data: { session: recoveredSession },
+          error: null,
+        }));
+
+      const refreshSessionMock = jest.fn().mockResolvedValue({
+        data: { session: null },
+        error: { message: "Refresh Token Already Used", status: 400 },
+      });
+      supabaseAuth.refreshSession = refreshSessionMock;
+
+      const tokenSyncCalls: Array<{ access_token: string }> = [];
+      server.use(
+        http.post("/api/auth/set-session", async ({ request }) => {
+          const payload = (await request.json()) as { access_token: string };
+          tokenSyncCalls.push(payload);
+          return HttpResponse.json({ success: true });
+        })
+      );
+
+      const signOutSpy = auth.signOut as jest.Mock;
+      signOutSpy.mockClear();
+
+      let result: import("@testing-library/react").RenderHookResult<ReturnType<typeof useAuth>, { children: React.ReactNode }> | undefined;
+
+      try {
+        await act(async () => {
+          result = renderHook(() => useAuth(), { wrapper });
+        });
+
+        expect(result).toBeDefined();
+
+        await waitFor(() => {
+          expect(result!.result.current.loading).toBe(false);
+        });
+
+        await act(async () => {
+          await jest.advanceTimersByTimeAsync(10 * 60 * 1000);
+        });
+
+        await waitFor(() => {
+          const recoveredSyncs = tokenSyncCalls.filter(
+            (call) => call.access_token === "recovered-access"
+          );
+          expect(recoveredSyncs).toHaveLength(1);
+        });
+
+        expect(refreshSessionMock).toHaveBeenCalledTimes(1);
+        expect(signOutSpy).not.toHaveBeenCalled();
+      } finally {
+        jest.useRealTimers();
+        restoreEnv();
+
+        if (originalGetCurrentSession) {
+          getCurrentSessionMock.mockImplementation(originalGetCurrentSession);
+        } else {
+          getCurrentSessionMock.mockReset();
+        }
+
+        if (originalGetSession) {
+          getSessionMock.mockImplementation(originalGetSession);
+        } else {
+          getSessionMock.mockReset();
+        }
+
+        if (originalRefreshSession) {
+          supabaseAuth.refreshSession = originalRefreshSession;
+        } else {
+          delete supabaseAuth.refreshSession;
+        }
+      }
+    });
+
+    it("should sign the user out when refresh attempts keep failing", async () => {
+      const restoreEnv = setNodeEnv("production");
+      jest.useFakeTimers();
+
+      const getCurrentSessionMock = auth.getCurrentSession as jest.Mock;
+      const originalGetCurrentSession = getCurrentSessionMock.getMockImplementation();
+
+      const supabaseAuth = supabase.auth as unknown as {
+        getSession: jest.Mock;
+        refreshSession?: jest.Mock;
+      };
+      const getSessionMock = supabaseAuth.getSession;
+      const originalGetSession = getSessionMock.getMockImplementation();
+      const originalRefreshSession = supabaseAuth.refreshSession;
+
+      const failingSession = {
+        access_token: "failing-access",
+        refresh_token: "failing-refresh",
+        expires_in: 60,
+        expires_at: Math.floor(Date.now() / 1000) + 30,
+        user: {
+          id: "failing-user",
+          email: "failing@example.com",
+        },
+      };
+
+      getCurrentSessionMock.mockImplementation(async () => ({
+        session: failingSession,
+        error: null,
+      }));
+
+      getSessionMock.mockImplementation(async () => ({
+        data: { session: failingSession },
+        error: null,
+      }));
+
+      const refreshSessionMock = jest.fn().mockResolvedValue({
+        data: { session: null },
+        error: { message: "Refresh failed", status: 401 },
+      });
+      supabaseAuth.refreshSession = refreshSessionMock;
+
+      const serverSignOut = jest.fn();
+      server.use(
+        http.post("/api/auth/sign-out", () => {
+          serverSignOut();
+          return HttpResponse.json({ success: true });
+        })
+      );
+
+      const signOutSpy = auth.signOut as jest.Mock;
+      signOutSpy.mockClear();
+
+      let result: import("@testing-library/react").RenderHookResult<ReturnType<typeof useAuth>, { children: React.ReactNode }> | undefined;
+
+      try {
+        await act(async () => {
+          result = renderHook(() => useAuth(), { wrapper });
+        });
+
+        expect(result).toBeDefined();
+
+        await waitFor(() => {
+          expect(result!.result.current.loading).toBe(false);
+        });
+
+        await act(async () => {
+          await jest.advanceTimersByTimeAsync(10 * 60 * 1000);
+        });
+
+        await waitFor(() => {
+          expect(signOutSpy).toHaveBeenCalled();
+          expect(serverSignOut).toHaveBeenCalled();
+        });
+
+        expect(result!.result.current.user).toBeNull();
+        expect(result!.result.current.session).toBeNull();
+      } finally {
+        jest.useRealTimers();
+        restoreEnv();
+
+        if (originalGetCurrentSession) {
+          getCurrentSessionMock.mockImplementation(originalGetCurrentSession);
+        } else {
+          getCurrentSessionMock.mockReset();
+        }
+
+        if (originalGetSession) {
+          getSessionMock.mockImplementation(originalGetSession);
+        } else {
+          getSessionMock.mockReset();
+        }
+
+        if (originalRefreshSession) {
+          supabaseAuth.refreshSession = originalRefreshSession;
+        } else {
+          delete supabaseAuth.refreshSession;
+        }
+      }
+    });
+
   });
 
   describe("AuthProvider", () => {

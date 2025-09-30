@@ -1,4 +1,11 @@
-import { getAuthenticatedUser, createAuthenticatedClient, requireAuth } from '../auth-server';
+import {
+  getAuthenticatedUser,
+  createAuthenticatedClient,
+  requireAuth,
+  getAuthenticatedUserWithRole,
+  isUserAdmin,
+  requireAdmin,
+} from '../auth-server';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
@@ -27,6 +34,12 @@ describe('auth-server', () => {
       refreshSession: jest.Mock;
       setSession: jest.Mock;
     };
+    from: jest.Mock;
+  };
+  let mockProfileQuery: {
+    select: jest.Mock;
+    eq: jest.Mock;
+    single: jest.Mock;
   };
   let consoleErrorSpy: jest.SpyInstance;
 
@@ -39,15 +52,24 @@ describe('auth-server', () => {
       set: jest.fn(),
       delete: jest.fn()
     };
-    
+
+    mockProfileQuery = {
+      select: jest.fn(),
+      eq: jest.fn(),
+      single: jest.fn().mockResolvedValue({ data: { role: 'user' }, error: null })
+    };
+    mockProfileQuery.select.mockReturnValue(mockProfileQuery);
+    mockProfileQuery.eq.mockReturnValue(mockProfileQuery);
+
     mockSupabase = {
       auth: {
         getUser: jest.fn(),
         refreshSession: jest.fn(),
         setSession: jest.fn()
-      }
+      },
+      from: jest.fn().mockReturnValue(mockProfileQuery)
     };
-    
+
     mockCookies.mockResolvedValue(mockCookieStore);
     mockCreateClient.mockReturnValue(mockSupabase);
   });
@@ -301,6 +323,228 @@ describe('auth-server', () => {
         client: mockSupabase,
         user: mockUser
       });
+    });
+  });
+
+  describe('getAuthenticatedUserWithRole', () => {
+    it('should return null when user is not authenticated', async () => {
+      mockCookieStore.get.mockReturnValue(undefined);
+
+      const result = await getAuthenticatedUserWithRole();
+
+      expect(result).toBeNull();
+      expect(mockSupabase.from).not.toHaveBeenCalled();
+    });
+
+    it('should return user with role when fetch succeeds', async () => {
+      const mockUser = { id: 'user-123', email: 'test@example.com' };
+
+      mockCookieStore.get.mockImplementation((key: string) => {
+        if (key === 'sb-access-token') return { value: 'valid-token' };
+        if (key === 'sb-refresh-token') return { value: 'refresh-token' };
+        return undefined;
+      });
+
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: mockUser },
+        error: null
+      });
+
+      mockProfileQuery.single.mockResolvedValue({
+        data: { role: 'admin' },
+        error: null
+      });
+
+      const result = await getAuthenticatedUserWithRole();
+
+      expect(result).toEqual({ id: 'user-123', email: 'test@example.com', role: 'admin' });
+      expect(mockSupabase.from).toHaveBeenCalledWith('user_profiles');
+      expect(mockProfileQuery.eq).toHaveBeenCalledWith('id', 'user-123');
+    });
+
+    it('should return null when profile fetch fails', async () => {
+      const mockUser = { id: 'user-123', email: 'test@example.com' };
+
+      mockCookieStore.get.mockImplementation((key: string) => {
+        if (key === 'sb-access-token') return { value: 'valid-token' };
+        return undefined;
+      });
+
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: mockUser },
+        error: null
+      });
+
+      mockProfileQuery.single.mockResolvedValue({
+        data: null,
+        error: { message: 'Profile missing' }
+      });
+
+      const result = await getAuthenticatedUserWithRole();
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('isUserAdmin', () => {
+    it('should return false when user not authenticated', async () => {
+      mockCookieStore.get.mockReturnValue(undefined);
+
+      const result = await isUserAdmin();
+
+      expect(result).toBe(false);
+    });
+
+    it('should return true when user role is admin', async () => {
+      const mockUser = { id: 'user-123', email: 'test@example.com' };
+
+      mockCookieStore.get.mockImplementation((key: string) => {
+        if (key === 'sb-access-token') return { value: 'valid-token' };
+        return undefined;
+      });
+
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: mockUser },
+        error: null
+      });
+
+      mockProfileQuery.single.mockResolvedValue({
+        data: { role: 'admin' },
+        error: null
+      });
+
+      const result = await isUserAdmin();
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when user role is not admin', async () => {
+      const mockUser = { id: 'user-456', email: 'test@example.com' };
+
+      mockCookieStore.get.mockImplementation((key: string) => {
+        if (key === 'sb-access-token') return { value: 'valid-token' };
+        return undefined;
+      });
+
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: mockUser },
+        error: null
+      });
+
+      mockProfileQuery.single.mockResolvedValue({
+        data: { role: 'user' },
+        error: null
+      });
+
+      const result = await isUserAdmin();
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('requireAdmin', () => {
+    it('should return 401 when user is not authenticated', async () => {
+      mockCookieStore.get.mockReturnValue(undefined);
+
+      const result = await requireAdmin();
+
+      expect(result).toBeInstanceOf(Response);
+      expect((result as Response).status).toBe(401);
+      const body = await (result as Response).json();
+      expect(body).toEqual({
+        error: 'Authentication required',
+        code: 'UNAUTHORIZED'
+      });
+    });
+
+    it('should return 403 when profile fetch fails', async () => {
+      const mockUser = { id: 'user-789', email: 'test@example.com' };
+
+      mockCookieStore.get.mockImplementation((key: string) => {
+        if (key === 'sb-access-token') return { value: 'valid-token' };
+        return undefined;
+      });
+
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: mockUser },
+        error: null
+      });
+
+      mockProfileQuery.single.mockResolvedValue({
+        data: null,
+        error: { message: 'Failed to fetch profile' }
+      });
+
+      const result = await requireAdmin();
+
+      expect(result).toBeInstanceOf(Response);
+      expect((result as Response).status).toBe(403);
+      const body = await (result as Response).json();
+      expect(body).toEqual({
+        error: 'Failed to verify permissions',
+        code: 'FORBIDDEN'
+      });
+    });
+
+    it('should return 403 when user is not an admin', async () => {
+      const mockUser = { id: 'user-101', email: 'test@example.com' };
+
+      mockCookieStore.get.mockImplementation((key: string) => {
+        if (key === 'sb-access-token') return { value: 'valid-token' };
+        return undefined;
+      });
+
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: mockUser },
+        error: null
+      });
+
+      mockProfileQuery.single.mockResolvedValue({
+        data: { role: 'user' },
+        error: null
+      });
+
+      const result = await requireAdmin();
+
+      expect(result).toBeInstanceOf(Response);
+      expect((result as Response).status).toBe(403);
+      const body = await (result as Response).json();
+      expect(body).toEqual({
+        error: 'Admin access required',
+        code: 'FORBIDDEN'
+      });
+    });
+
+    it('should return client and admin user when checks pass', async () => {
+      const mockUser = { id: 'user-admin', email: 'admin@example.com' };
+
+      mockCookieStore.get.mockImplementation((key: string) => {
+        if (key === 'sb-access-token') return { value: 'valid-token' };
+        if (key === 'sb-refresh-token') return { value: 'refresh-token' };
+        return undefined;
+      });
+
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: mockUser },
+        error: null
+      });
+
+      mockProfileQuery.single.mockResolvedValue({
+        data: { role: 'admin' },
+        error: null
+      });
+
+      const result = await requireAdmin();
+
+      expect(result).toEqual({
+        client: mockSupabase,
+        user: {
+          id: 'user-admin',
+          email: 'admin@example.com',
+          role: 'admin'
+        }
+      });
+      expect(mockProfileQuery.eq).toHaveBeenCalledWith('id', 'user-admin');
     });
   });
 });
