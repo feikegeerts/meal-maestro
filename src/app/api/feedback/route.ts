@@ -50,13 +50,21 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!feedbackType || !subject || !message) {
       return NextResponse.json(
-        { success: false, error: "Feedback type, subject, and message are required" },
+        {
+          success: false,
+          error: "Feedback type, subject, and message are required",
+        },
         { status: 400 }
       );
     }
 
     // Validate feedback type
-    const validTypes = ['bug_report', 'feature_request', 'general_feedback', 'praise'];
+    const validTypes = [
+      "bug_report",
+      "feature_request",
+      "general_feedback",
+      "praise",
+    ];
     if (!validTypes.includes(feedbackType)) {
       return NextResponse.json(
         { success: false, error: "Invalid feedback type" },
@@ -67,60 +75,67 @@ export async function POST(request: NextRequest) {
     // Validate field lengths
     if (subject.trim().length === 0 || subject.length > 200) {
       return NextResponse.json(
-        { success: false, error: "Subject must be between 1 and 200 characters" },
+        {
+          success: false,
+          error: "Subject must be between 1 and 200 characters",
+        },
         { status: 400 }
       );
     }
 
     if (message.trim().length === 0 || message.length > 2000) {
       return NextResponse.json(
-        { success: false, error: "Message must be between 1 and 2000 characters" },
+        {
+          success: false,
+          error: "Message must be between 1 and 2000 characters",
+        },
         { status: 400 }
       );
     }
 
     // Get additional context
     const { version } = getAppVersion();
-    const referer = request.headers.get('referer') || '';
-    
+    const referer = request.headers.get("referer") || "";
+
     // Extract locale from Accept-Language header or use default
-    const acceptLanguage = request.headers.get('accept-language') || '';
-    const locale = acceptLanguage.split(',')[0]?.split('-')[0] || 'en';
+    const acceptLanguage = request.headers.get("accept-language") || "";
+    const locale = acceptLanguage.split(",")[0]?.split("-")[0] || "en";
 
     // Insert feedback into database
-    const { error } = await supabase
-      .from('feedback')
-      .insert([{
+    const { error } = await supabase.from("feedback").insert([
+      {
         user_id: user.id,
-        user_email: user.email || '',
+        user_email: user.email || "",
         feedback_type: feedbackType,
         subject: subject.trim(),
         message: message.trim(),
         app_version: version,
         locale: locale,
         page_url: referer,
-        status: 'open'
-      }]);
+        status: "open",
+      },
+    ]);
 
     if (error) {
-      console.error('Error creating feedback:', error);
+      console.error("Error creating feedback:", error);
       return NextResponse.json(
-        { success: false, error: 'Failed to submit feedback' },
+        { success: false, error: "Failed to submit feedback" },
         { status: 500 }
       );
     }
 
-    console.log(`✅ [Feedback] New ${feedbackType} submission from user ${user.id}: ${subject}`);
-
     const response: FeedbackResponse = {
-      success: true
+      success: true,
     };
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('🔴 [Feedback] API error:', error);
+    console.error("🔴 [Feedback] API error:", error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error while submitting feedback' },
+      {
+        success: false,
+        error: "Internal server error while submitting feedback",
+      },
       { status: 500 }
     );
   }
@@ -165,7 +180,10 @@ async function checkRateLimit(userId: string): Promise<{
 
     if (error) {
       // If database fails, allow request (fail open for availability)
-      console.warn("Feedback rate limit check failed, allowing request:", error);
+      console.warn(
+        "Feedback rate limit check failed, allowing request:",
+        error
+      );
       return {
         allowed: true,
         retryAfter: 0,

@@ -20,6 +20,7 @@ const config = {
     "<rootDir>/src/__tests__/setup.ts",
     "<rootDir>/src/__tests__/test-utils.tsx",
     "<rootDir>/src/__tests__/msw-setup.js",
+    "<rootDir>/src/__tests__/integration/",
   ],
   // Module name mapping for path aliases
   moduleNameMapper: {

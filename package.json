@@ -13,8 +13,10 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "NODE_ENV=test jest --ci --watchAll=false",
-    "verify": "pnpm run type-check && pnpm run lint && pnpm run test:ci",
-    "prepare": "husky"
+    "test:integration": "jest --config=jest.integration.config.js",
+    "verify": "pnpm run type-check && pnpm run lint && pnpm run test:ci && pnpm run test:integration",
+    "prepare": "husky",
+    "test:integration:cov": "jest --config=jest.integration.coverage.config.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

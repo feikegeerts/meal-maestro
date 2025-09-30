@@ -160,40 +160,43 @@ export const handlers = [
   // Rate limiting table operations
   http.get(`${SUPABASE_URL}/rest/v1/rate_limit_user`, ({ request }) => {
     const url = new URL(request.url);
-    const userId = url.searchParams.get("user_id");
-    const endpoint = url.searchParams.get("endpoint");
+    const rawUserId = url.searchParams.get("user_id") ?? "";
+    const rawEndpoint = url.searchParams.get("endpoint") ?? "";
 
-    // Return mock rate limit data
-    if (
-      userId?.includes("eq.test-user-id") &&
-      endpoint?.includes("eq./api/scrape-recipe")
-    ) {
-      const now = Date.now();
-
-      // Simulate different scenarios
-      if (userId.includes("rate-limited")) {
-        // Return 10+ entries to trigger rate limit
-        return HttpResponse.json(
-          Array(12)
-            .fill(null)
-            .map((_, i) => ({
-              id: i,
-              user_id: "test-user-id",
-              endpoint: "/api/scrape-recipe",
-              timestamp: now - i * 1000,
-              created_at: new Date(now - i * 1000).toISOString(),
-            }))
-        );
+    const decodeEqParam = (value: string) => {
+      if (!value) {
+        return "";
       }
+      const trimmed = value.startsWith("eq.") ? value.slice(3) : value;
+      return decodeURIComponent(trimmed);
+    };
 
-      // Return few entries for normal case
+    const userId = decodeEqParam(rawUserId);
+    const endpoint = decodeEqParam(rawEndpoint);
+
+    if (userId.includes("rate-limited")) {
+      const now = Date.now();
+      return HttpResponse.json(
+        Array(12)
+          .fill(null)
+          .map((_, i) => ({
+            id: i,
+            user_id: userId,
+            endpoint,
+            timestamp: now - i * 1000,
+            created_at: new Date(now - i * 1000).toISOString(),
+          }))
+      );
+    }
+
+    if (userId) {
       return HttpResponse.json([
         {
           id: 1,
-          user_id: "test-user-id",
-          endpoint: "/api/scrape-recipe",
-          timestamp: now - 30000,
-          created_at: new Date(now - 30000).toISOString(),
+          user_id: userId,
+          endpoint,
+          timestamp: Date.now() - 30000,
+          created_at: new Date(Date.now() - 30000).toISOString(),
         },
       ]);
     }
@@ -210,6 +213,20 @@ export const handlers = [
         created_at: new Date().toISOString(),
       },
     ]);
+  }),
+
+  http.post(`${SUPABASE_URL}/rest/v1/feedback`, async ({ request }) => {
+    const payload = await request.json();
+    const entries = Array.isArray(payload) ? payload : [payload];
+
+    const response = entries.map((entry, index) => ({
+      id: entry?.id ?? `feedback-${Date.now()}-${index}`,
+      created_at: new Date().toISOString(),
+      status: "open",
+      ...entry,
+    }));
+
+    return HttpResponse.json(response, { status: 201 });
   }),
 
   http.delete(`${SUPABASE_URL}/rest/v1/rate_limit_user`, () => {
