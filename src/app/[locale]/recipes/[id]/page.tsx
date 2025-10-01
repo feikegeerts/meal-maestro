@@ -8,40 +8,22 @@ import { useRecipes } from "@/contexts/recipe-context";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/ui/page-header";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Recipe, RecipeCategory, RecipeSeason } from "@/types/recipe";
+import type { Recipe } from "@/types/recipe";
 import { useLocalizedDateFormatter } from "@/lib/date-utils";
-import { ServingSizeSelector } from "@/components/serving-size-selector";
-import {
-  ArrowLeft,
-  Edit,
-  Trash2,
-  Clock,
-  Calendar,
-  CalendarDays,
-  Tag,
-  Plus,
-  Printer,
-} from "lucide-react";
-import { processInstructions, toDateOnlyISOString } from "@/lib/utils";
+import { ArrowLeft, Plus } from "lucide-react";
+import { toDateOnlyISOString } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useRecipeTranslations } from "@/messages";
 import {
   IngredientFormatterService,
   createTranslationAdapter,
 } from "@/utils/ingredient-pluralization";
-import {
-  normalizeIngredientUnit,
-  formatFraction,
-  pluralizeUnit,
-} from "@/lib/recipe-utils";
-import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import { RecipeImageUpload } from "@/components/recipe-image-upload";
-import { MarkAsEatenSplitButton } from "@/components/recipes/mark-as-eaten-split-button";
+import { RecipeDetailView } from "@/components/recipes/recipe-detail-view";
+import { ShareRecipeButton } from "@/components/recipes/share-recipe-button";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
@@ -277,389 +259,55 @@ export default function RecipeDetailPage() {
     );
   }
 
+  const headerActions = (
+    <Button
+      onClick={handleAddRecipe}
+      disabled={!!actionLoading}
+      variant="outline"
+      size="default"
+    >
+      <Plus className="mr-2 h-4 w-4" />
+      {t("addRecipe")}
+    </Button>
+  );
+
+  const displayRecipeValue = displayRecipe ?? recipe;
+
   return (
-    <PageWrapper>
-      <PageHeader
-        recipe={recipe}
-        backButtonText={t("back")}
-        className="mb-4"
-        actions={
-          <Button
-            onClick={handleAddRecipe}
-            disabled={!!actionLoading}
-            variant="outline"
-            size="default"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {t("addRecipe")}
-          </Button>
-        }
-      />
-
-      {/* Recipe Hero Section */}
-      <Card className="mb-8">
-        <CardContent className="p-4 md:px-8 md:py-6 lg:px-12 lg:py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-10">
-            {/* Content - Left side */}
-            <div className="order-2 lg:order-1 space-y-6 lg:col-span-2">
-              {/* Title & Category Section */}
-              <div>
-                <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 leading-tight">
-                  {recipe.title}
-                </CardTitle>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <ChefHatIcon className="h-4 w-4" width={16} height={16} />
-                    <span className="text-sm capitalize">
-                      {translateCategory(recipe.category as RecipeCategory)}
-                    </span>
-                  </div>
-                  {recipe.season && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span className="text-sm capitalize">
-                        {translateSeason(recipe.season as RecipeSeason)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-3 mt-6">
-                {/* Primary Action - First Row */}
-                <div className="flex items-center">
-                  <MarkAsEatenSplitButton
-                    onMarkAsEatenToday={handleMarkEatenToday}
-                    onMarkAsEatenOnDate={handleMarkEatenOnDate}
-                    disabled={!!actionLoading}
-                  />
-                </div>
-
-                {/* Secondary Actions - Second Row */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Button
-                    variant="outline"
-                    size="default"
-                    disabled={!!actionLoading}
-                    onClick={handleEdit}
-                  >
-                    <Edit className="mr-2 h-4 w-4" />
-                    {t("editDetail")}
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    disabled={!!actionLoading}
-                    onClick={() => window.print()}
-                    title={t("printRecipe")}
-                  >
-                    <Printer className="h-4 w-4" />
-                  </Button>
-
-                  <Button
-                    onClick={handleDelete}
-                    disabled={!!actionLoading}
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive"
-                    title={t("deleteDetail")}
-                  >
-                    {actionLoading === "delete" ? (
-                      <span className="animate-spin">⏳</span>
-                    ) : (
-                      <Trash2 className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mt-6">
-                {recipe.cuisine && (
-                  <Badge variant="secondary" className="text-sm px-3 py-2">
-                    <Tag className="mr-1 h-3 w-3" />
-                    {translateTag("cuisine", recipe.cuisine)}
-                  </Badge>
-                )}
-                {recipe.diet_types?.map((dietType) => (
-                  <Badge
-                    key={dietType}
-                    variant="secondary"
-                    className="text-sm px-3 py-2"
-                  >
-                    <Tag className="mr-1 h-3 w-3" />
-                    {translateTag("dietType", dietType)}
-                  </Badge>
-                ))}
-                {recipe.cooking_methods?.map((method) => (
-                  <Badge
-                    key={method}
-                    variant="secondary"
-                    className="text-sm px-3 py-2"
-                  >
-                    <Tag className="mr-1 h-3 w-3" />
-                    {translateTag("cookingMethod", method)}
-                  </Badge>
-                ))}
-                {recipe.dish_types?.map((dishType) => (
-                  <Badge
-                    key={dishType}
-                    variant="secondary"
-                    className="text-sm px-3 py-2"
-                  >
-                    <Tag className="mr-1 h-3 w-3" />
-                    {translateTag("dishType", dishType)}
-                  </Badge>
-                ))}
-                {recipe.proteins?.map((protein) => (
-                  <Badge
-                    key={protein}
-                    variant="secondary"
-                    className="text-sm px-3 py-2"
-                  >
-                    <Tag className="mr-1 h-3 w-3" />
-                    {translateTag("protein", protein)}
-                  </Badge>
-                ))}
-                {recipe.occasions?.map((occasion) => (
-                  <Badge
-                    key={occasion}
-                    variant="secondary"
-                    className="text-sm px-3 py-2"
-                  >
-                    <Tag className="mr-1 h-3 w-3" />
-                    {translateTag("occasion", occasion)}
-                  </Badge>
-                ))}
-                {recipe.characteristics?.map((characteristic) => (
-                  <Badge
-                    key={characteristic}
-                    variant="secondary"
-                    className="text-sm px-3 py-2"
-                  >
-                    <Tag className="mr-1 h-3 w-3" />
-                    {translateTag("characteristic", characteristic)}
-                  </Badge>
-                ))}
-              </div>
-
-              {/* Metadata */}
-              <div className="grid grid-cols-1 gap-3 text-sm mt-8">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">
-                    {t("createdDetail")}:
-                  </span>
-                  <span className="font-medium">
-                    {formatDateWithFallback(recipe.created_at, t("never"))}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">
-                    {t("lastEatenDetail")}:
-                  </span>
-                  <span
-                    className={`font-medium transition-colors duration-2000 ${
-                      lastEatenRecentlyUpdated ? "text-green-600" : ""
-                    }`}
-                  >
-                    {formatDateWithFallback(recipe.last_eaten, t("never"))}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Large Hero Image - Right side */}
-            <div className="order-1 lg:order-2 lg:col-span-3">
-              <RecipeImageUpload
-                recipeId={recipe.id}
-                currentImageUrl={recipe.image_url}
-                recipeTitle={recipe.title}
-                onImageUpdated={handleImageUpdated}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Single Card Layout */}
-      <Card>
-        <CardContent className="p-4 md:px-8 md:py-6 lg:px-12 lg:py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
-            {/* Left Column - Ingredients */}
-            <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5">
-              <h2 className="text-xl font-semibold mb-4">{t("ingredients")}</h2>
-
-              {/* Serving Size Selector */}
-              {recipe && (
-                <div className="mb-4">
-                  <ServingSizeSelector
-                    recipe={recipe}
-                    onServingChange={(_, scaledRecipe) => {
-                      setDisplayRecipe(scaledRecipe);
-                    }}
-                    showPreview={false}
-                  />
-                </div>
-              )}
-
-              {/* Ingredients List */}
-              <div className="space-y-1">
-                {(displayRecipe || recipe)?.ingredients.map(
-                  (ingredient, index) => {
-                    // For the grid layout, we need to separate amount/unit from ingredient name
-                    let amountText = "";
-                    let ingredientNameWithNotes = ingredient.name;
-
-                    const hasAmount =
-                      ingredient.amount !== null &&
-                      Number.isFinite(ingredient.amount);
-
-                    if (hasAmount && ingredient.amount !== null) {
-                      // Get the properly formatted amount and unit
-                      const smartResult = normalizeIngredientUnit(
-                        ingredient.amount,
-                        ingredient.unit
-                      );
-                      const finalAmount =
-                        smartResult?.amount ?? ingredient.amount;
-                      const finalUnit = smartResult?.unit ?? ingredient.unit;
-                      const pluralizedUnit = pluralizeUnit(
-                        finalUnit,
-                        finalAmount
-                      );
-
-                      // Format amount text for the left column
-                      amountText = formatFraction(finalAmount);
-                      if (pluralizedUnit) {
-                        // Define standard units to avoid translation errors for custom units
-                        const standardUnits = [
-                          "g",
-                          "kg",
-                          "ml",
-                          "l",
-                          "tbsp",
-                          "tsp",
-                          "clove",
-                          "cloves",
-                        ];
-                        const isStandardUnit =
-                          standardUnits.includes(pluralizedUnit);
-
-                        const translatedUnit = isStandardUnit
-                          ? tUnits(pluralizedUnit) || pluralizedUnit // Only translate standard units
-                          : pluralizedUnit; // Custom units are displayed as-is
-                        amountText += ` ${translatedUnit}`;
-                      }
-
-                      // Apply ingredient name pluralization/singularization based on the final amount
-                      if (finalAmount > 1) {
-                        // Try to pluralize: 1 ui -> 2 uien
-                        ingredientNameWithNotes =
-                          ingredientFormatter.pluralizeIngredientName(
-                            ingredient.name
-                          );
-                      } else if (finalAmount === 1) {
-                        // Try to singularize: 2 uien -> 1 ui
-                        ingredientNameWithNotes =
-                          ingredientFormatter.singularizeIngredientName(
-                            ingredient.name
-                          );
-                      }
-                    } else if (ingredient.unit) {
-                      // Unit-only ingredients
-                      amountText = tUnits(ingredient.unit) || ingredient.unit;
-                    }
-
-                    // Add notes if present
-                    if (ingredient.notes) {
-                      ingredientNameWithNotes += ` (${ingredient.notes})`;
-                    }
-
-                    return (
-                      <div
-                        key={index}
-                        className="grid grid-cols-12 gap-3 items-start py-1"
-                      >
-                        <div className="col-span-4 text-right">
-                          <span className="font-semibold text-sm">
-                            {amountText}
-                          </span>
-                        </div>
-                        <div className="col-span-8">
-                          <span className="text-sm leading-relaxed">
-                            {ingredientNameWithNotes}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  }
-                )}
-              </div>
-            </div>
-
-            {/* Right Column - Instructions */}
-            <div className="lg:col-span-5">
-              <h2 className="text-xl font-semibold mb-5 mt-5">
-                {t("gettingStarted")}
-              </h2>
-
-              {/* Instructions */}
-              <div className="prose prose-sm max-w-none mb-5">
-                {(() => {
-                  const processed = processInstructions(recipe.description);
-
-                  if (processed.isStepFormat && processed.steps.length > 1) {
-                    return (
-                      <div className="space-y-5">
-                        {/* Numbered steps */}
-                        {processed.steps.map((step, index) => (
-                          <div key={index} className="flex items-center gap-4">
-                            <div className="flex-shrink-0 w-9 h-9 bg-card border-2 border-primary text-primary rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
-                              {index + 1}
-                            </div>
-                            <p className="leading-relaxed text-base">{step}</p>
-                          </div>
-                        ))}
-
-                        {/* Descriptive text (if any) */}
-                        {processed.descriptiveText &&
-                          processed.descriptiveText.length > 0 && (
-                            <div className="mt-6 space-y-3">
-                              {processed.descriptiveText.map((text, index) => (
-                                <p
-                                  key={`desc-${index}`}
-                                  className="leading-relaxed text-base pl-13"
-                                >
-                                  {text}
-                                </p>
-                              ))}
-                            </div>
-                          )}
-                      </div>
-                    );
-                  } else {
-                    return (
-                      <div className="flex items-center gap-4">
-                        <div className="flex-shrink-0 w-9 h-9 bg-card border-2 border-primary text-primary rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
-                          1
-                        </div>
-                        <p className="whitespace-pre-wrap leading-relaxed text-base">
-                          {processed.originalText}
-                        </p>
-                      </div>
-                    );
-                  }
-                })()}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </PageWrapper>
+    <RecipeDetailView
+      recipe={recipe}
+      displayRecipe={displayRecipeValue}
+      ingredientFormatter={ingredientFormatter}
+      translateCategory={translateCategory}
+      translateSeason={translateSeason}
+      translateTag={translateTag}
+      formatDateWithFallback={(date, fallback) =>
+        formatDateWithFallback(date ?? undefined, fallback)
+      }
+      t={t}
+      tUnits={tUnits}
+      lastEatenRecentlyUpdated={lastEatenRecentlyUpdated}
+      actionLoading={actionLoading}
+      onMarkAsEatenToday={handleMarkEatenToday}
+      onMarkAsEatenOnDate={handleMarkEatenOnDate}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+      headerActions={headerActions}
+      onServingChange={(scaledRecipe) => setDisplayRecipe(scaledRecipe)}
+      renderImage={
+        <RecipeImageUpload
+          recipeId={recipe.id}
+          currentImageUrl={recipe.image_url}
+          recipeTitle={recipe.title}
+          onImageUpdated={handleImageUpdated}
+        />
+      }
+      additionalActionButtons={
+        <ShareRecipeButton
+          recipeId={recipe.id}
+          disabled={!!actionLoading}
+        />
+      }
+    />
   );
 }

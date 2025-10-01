@@ -152,7 +152,49 @@
       "imageRemovedDescription": "Receptfoto succesvol verwijderd",
       "editPhoto": "Foto Bewerken",
       "cancel": "Annuleren"
-    }
+    },
+    "shareRecipe": "Delen",
+    "shareDialog": {
+      "title": "Recept delen",
+      "description": "Maak een link zodat vrienden dit recept kunnen bekijken.",
+      "linkLabel": "Deel-link",
+      "loading": "Deel-link genereren…",
+      "allowSaveNote": "Iedereen met de link kan het recept bekijken en opslaan in het eigen account.",
+      "readOnlyNote": "Iedereen met de link kan het recept bekijken, maar opslaan is uitgeschakeld.",
+      "expires": "Link verloopt op {date}.",
+      "generating": "Bezig…",
+      "regenerate": "Nieuwe link genereren",
+      "generate": "Deel-link genereren",
+      "failed": "Kon deel-link niet genereren.",
+      "copyFailed": "Kon link niet kopiëren.",
+      "close": "Sluiten",
+      "statusShared": "Dit recept wordt momenteel gedeeld.",
+      "statusNotShared": "Dit recept wordt momenteel niet gedeeld.",
+      "fetchingStatus": "Deelstatus controleren…",
+      "statusFailed": "Kon de deelstatus niet ophalen.",
+      "sharedOn": "Gedeeld op {date}.",
+      "noLinkNote": "Genereer een nieuwe link als je die opnieuw wilt kopiëren.",
+      "stop": "Delen stoppen",
+      "stopFailed": "Kon delen niet stoppen."
+    },
+    "shareSuccess": "Link gekopieerd naar klembord!",
+    "shareError": "Link kopiëren mislukt",
+    "viewSharedBannerTitle": "Gedeeld recept",
+    "viewSharedBannerDescription": "Gedeeld door {name}.",
+    "viewSharedBannerAnonymous": "Dit recept is gedeeld via een link door {name}.",
+    "viewSharedOwnerUnknown": "een Meal Maestro kok",
+    "viewSharedSave": "Opslaan in mijn recepten",
+    "viewSharedSaveLoading": "Bezig met opslaan…",
+    "viewSharedSaved": "Recept opgeslagen in je recepten!",
+    "viewSharedSaveFailed": "Kon dit recept niet opslaan.",
+    "viewSharedLogin": "Inloggen om op te slaan",
+    "viewSharedAllowSaveDisabled": "De eigenaar heeft opslaan voor dit recept uitgeschakeld.",
+    "viewSharedExpired": "Deze link is verlopen.",
+    "viewSharedInvalid": "Deze link is ongeldig of ingetrokken.",
+    "viewSharedMissingToken": "Deze link mist een vereiste token.",
+    "viewSharedError": "We konden dit gedeelde recept niet laden.",
+    "viewSharedGoHome": "Ga naar home",
+    "imageUnavailable": "Geen afbeelding beschikbaar"
   },
   "recipeForm": {
     "title": "Titel",
@@ -715,9 +757,7 @@
         "tokens": "Totaal tokens",
         "signInToSee": "Log in om je persoonlijke gebruikskosten te zien:"
       }
-    },
-    "shareSuccess": "Link gekopieerd naar klembord!",
-    "shareError": "Link kopiëren mislukt"
+    }
   },
   "feedback": {
     "title": "Feedback Versturen",

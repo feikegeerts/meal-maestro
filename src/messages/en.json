@@ -152,7 +152,49 @@
       "imageRemovedDescription": "Recipe photo removed successfully",
       "editPhoto": "Edit Photo",
       "cancel": "Cancel"
-    }
+    },
+    "shareRecipe": "Share",
+    "shareDialog": {
+      "title": "Share this recipe",
+      "description": "Generate a link so friends can view this recipe.",
+      "linkLabel": "Share link",
+      "loading": "Generating share link…",
+      "allowSaveNote": "Anyone with the link can view this recipe and save it to their account.",
+      "readOnlyNote": "Anyone with the link can view this recipe, but saving is disabled.",
+      "expires": "Link expires on {date}.",
+      "generating": "Generating…",
+      "regenerate": "Generate new link",
+      "generate": "Generate share link",
+      "failed": "Could not generate share link.",
+      "copyFailed": "Could not copy the link.",
+      "close": "Close",
+      "statusShared": "This recipe is currently shared.",
+      "statusNotShared": "This recipe isn't shared yet.",
+      "fetchingStatus": "Checking share status…",
+      "statusFailed": "Could not check sharing status.",
+      "sharedOn": "Shared on {date}.",
+      "noLinkNote": "Generate a new link if you need to copy it again.",
+      "stop": "Stop sharing",
+      "stopFailed": "Could not stop sharing."
+    },
+    "shareSuccess": "Link copied to clipboard!",
+    "shareError": "Failed to copy link",
+    "viewSharedBannerTitle": "Shared recipe",
+    "viewSharedBannerDescription": "Shared by {name}.",
+    "viewSharedBannerAnonymous": "This recipe was shared via a link by {name}.",
+    "viewSharedOwnerUnknown": "a Meal Maestro cook",
+    "viewSharedSave": "Save to my recipes",
+    "viewSharedSaveLoading": "Saving…",
+    "viewSharedSaved": "Recipe saved to your recipes!",
+    "viewSharedSaveFailed": "Could not save this recipe.",
+    "viewSharedLogin": "Log in to save",
+    "viewSharedAllowSaveDisabled": "Saving this recipe has been disabled by the owner.",
+    "viewSharedExpired": "This share link has expired.",
+    "viewSharedInvalid": "This share link is invalid or may have been revoked.",
+    "viewSharedMissingToken": "This share link is missing a required token.",
+    "viewSharedError": "We couldn't load this shared recipe.",
+    "viewSharedGoHome": "Go to home",
+    "imageUnavailable": "No image available"
   },
   "recipeForm": {
     "title": "Title",
@@ -713,9 +755,7 @@
         "tokens": "Total tokens",
         "signInToSee": "Sign in to see your personal usage costs:"
       }
-    },
-    "shareSuccess": "Link copied to clipboard!",
-    "shareError": "Failed to copy link"
+    }
   },
   "feedback": {
     "title": "Send Feedback",

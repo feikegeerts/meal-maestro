@@ -64,6 +64,8 @@ This document provides an exhaustive list of all implemented features in the Mea
 - Recipe context management with global state
 - Recipe import from various sources (URL, AI, manual)
 - Drag and drop re-ordering of ingredients
+- Share a recipe link
+- Allow a shared recipe to be stored in own database
 
 ## AI-Powered Features
 
