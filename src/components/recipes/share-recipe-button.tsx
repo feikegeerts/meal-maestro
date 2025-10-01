@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Share2, Copy, Check, RefreshCw } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 
 interface ShareRecipeButtonProps {
@@ -33,6 +33,7 @@ export function ShareRecipeButton({
   disabled = false,
 }: ShareRecipeButtonProps) {
   const tRecipes = useTranslations("recipes");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [sharePath, setSharePath] = useState<string | null>(null);
   const [shareInfo, setShareInfo] = useState<ShareLinkState | null>(null);
@@ -98,7 +99,10 @@ export function ShareRecipeButton({
           if (raw) {
             try {
               const parsed = JSON.parse(raw) as { slug: string; path: string };
-              if (parsed.slug === info.slug && typeof parsed.path === "string") {
+              if (
+                parsed.slug === info.slug &&
+                typeof parsed.path === "string"
+              ) {
                 setSharePath(parsed.path);
               } else {
                 setSharePath(null);
@@ -117,7 +121,11 @@ export function ShareRecipeButton({
       }
     } catch (err) {
       console.error("Failed to fetch share status", err);
-      setError(err instanceof Error ? err.message : tRecipes("shareDialog.statusFailed"));
+      setError(
+        err instanceof Error
+          ? err.message
+          : tRecipes("shareDialog.statusFailed")
+      );
       setShareInfo(null);
       setSharePath(null);
     } finally {
@@ -151,6 +159,7 @@ export function ShareRecipeButton({
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ locale }),
       });
 
       if (!response.ok) {
@@ -164,7 +173,7 @@ export function ShareRecipeButton({
         try {
           window.localStorage.setItem(
             storageKey,
-            JSON.stringify({ slug: data.slug, path: data.sharePath })
+            JSON.stringify({ slug: data.slug, path: data.sharePath, locale })
           );
         } catch {
           // ignore storage errors
@@ -179,7 +188,9 @@ export function ShareRecipeButton({
       setAllowSave(data.allowSave ?? true);
     } catch (err) {
       console.error("Failed to generate share link", err);
-      setError(err instanceof Error ? err.message : tRecipes("shareDialog.failed"));
+      setError(
+        err instanceof Error ? err.message : tRecipes("shareDialog.failed")
+      );
       setSharePath(null);
     } finally {
       setOperation(null);
@@ -208,7 +219,9 @@ export function ShareRecipeButton({
       }
     } catch (err) {
       console.error("Failed to stop sharing", err);
-      setError(err instanceof Error ? err.message : tRecipes("shareDialog.stopFailed"));
+      setError(
+        err instanceof Error ? err.message : tRecipes("shareDialog.stopFailed")
+      );
     } finally {
       setOperation(null);
     }
@@ -266,9 +279,7 @@ export function ShareRecipeButton({
           </DialogHeader>
 
           <div className="space-y-4">
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
 
             <div className="space-y-2 text-sm">
               {statusLoading ? (
@@ -304,7 +315,7 @@ export function ShareRecipeButton({
                   )}
 
                   <p className="text-xs text-muted-foreground">
-                    {(shareInfo?.allowSave ?? allowSave)
+                    {shareInfo?.allowSave ?? allowSave
                       ? tRecipes("shareDialog.allowSaveNote")
                       : tRecipes("shareDialog.readOnlyNote")}
                   </p>
@@ -320,7 +331,9 @@ export function ShareRecipeButton({
                           readOnly
                           value={fullShareUrl}
                           className="font-mono"
-                          placeholder={actionLoading ? tRecipes("shareDialog.loading") : ""}
+                          placeholder={
+                            actionLoading ? tRecipes("shareDialog.loading") : ""
+                          }
                         />
                         <Button
                           type="button"
@@ -329,7 +342,11 @@ export function ShareRecipeButton({
                           onClick={handleCopy}
                           disabled={!fullShareUrl || actionLoading}
                         >
-                          {copySuccess ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                          {copySuccess ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </div>

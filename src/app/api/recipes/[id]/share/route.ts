@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 interface ShareRequestBody {
   expiresAt?: string | null;
   allowSave?: boolean;
+  locale?: string;
 }
 
 async function ensureRecipeOwnership(
@@ -29,10 +30,7 @@ async function ensureRecipeOwnership(
   }
 
   if (!recipe) {
-    return NextResponse.json(
-      { error: "Recipe not found" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Recipe not found" }, { status: 404 });
   }
 
   return null;
@@ -58,7 +56,11 @@ export async function POST(
     );
   }
 
-  const ownershipError = await ensureRecipeOwnership(supabase, user.id, recipeId);
+  const ownershipError = await ensureRecipeOwnership(
+    supabase,
+    user.id,
+    recipeId
+  );
   if (ownershipError) {
     return ownershipError;
   }
@@ -78,15 +80,43 @@ export async function POST(
     }
   }
 
-  const { expiresAt = null, allowSave = true } = body;
+  const { expiresAt = null, allowSave = true, locale: requestedLocale } = body;
+
+  // Derive locale: prefer explicit body value, else attempt to parse from referer path, else default
+  let effectiveLocale = requestedLocale;
+  if (!effectiveLocale) {
+    try {
+      const referer = request.headers.get("referer");
+      if (referer) {
+        const url = new URL(referer);
+        const firstSegment = url.pathname.split("/").filter(Boolean)[0];
+        if (["nl", "en"].includes(firstSegment)) {
+          effectiveLocale = firstSegment;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  if (!effectiveLocale || !["nl", "en"].includes(effectiveLocale)) {
+    effectiveLocale = "nl"; // default (matches routing.defaultLocale)
+  }
 
   try {
-    const result = await RecipeShareService.createShareLink(supabase, user.id, recipeId, {
-      expiresAt,
-      allowSave,
-    });
+    const result = await RecipeShareService.createShareLink(
+      supabase,
+      user.id,
+      recipeId,
+      {
+        expiresAt,
+        allowSave,
+      }
+    );
 
-    const sharePath = `/share/${result.slug}?token=${encodeURIComponent(result.token)}`;
+    // Include locale prefix so copied link stays in creator's language context
+    const sharePath = `/${effectiveLocale}/share/${
+      result.slug
+    }?token=${encodeURIComponent(result.token)}`;
 
     return NextResponse.json(
       {
@@ -121,7 +151,11 @@ export async function GET(
   const { user, client: supabase } = authResult;
   const { id: recipeId } = await context.params;
 
-  const ownershipError = await ensureRecipeOwnership(supabase, user.id, recipeId);
+  const ownershipError = await ensureRecipeOwnership(
+    supabase,
+    user.id,
+    recipeId
+  );
   if (ownershipError) {
     return ownershipError;
   }
@@ -167,7 +201,11 @@ export async function DELETE(
   const { user, client: supabase } = authResult;
   const { id: recipeId } = await context.params;
 
-  const ownershipError = await ensureRecipeOwnership(supabase, user.id, recipeId);
+  const ownershipError = await ensureRecipeOwnership(
+    supabase,
+    user.id,
+    recipeId
+  );
   if (ownershipError) {
     return ownershipError;
   }
