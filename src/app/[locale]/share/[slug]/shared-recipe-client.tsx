@@ -17,6 +17,7 @@ import {
 } from "@/utils/ingredient-pluralization";
 import { toast } from "sonner";
 import Image from "next/image";
+import { Printer } from "lucide-react";
 
 interface SharedRecipeClientProps {
   status: "success" | "expired" | "not-found" | "missing-token" | "error";
@@ -139,21 +140,19 @@ export function SharedRecipeClient({ status, data }: SharedRecipeClientProps) {
 
   const banner = (
     <div className="space-y-3">
-      <div>
+      <div className="flex flex-col gap-1">
         <p className="text-sm font-semibold text-primary">
           {t("viewSharedBannerTitle")}
         </p>
         <p className="text-sm text-muted-foreground">
           {data.ownerDisplayName
-            ? t("viewSharedBannerDescription", {
-                name: data.ownerDisplayName,
-              })
+            ? t("viewSharedBannerDescription", { name: data.ownerDisplayName })
             : t("viewSharedBannerAnonymous", {
                 name: t("viewSharedOwnerUnknown"),
               })}
         </p>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 items-center">
         {data.allowSave ? (
           user ? (
             <Button onClick={handleImport} disabled={importLoading}>
@@ -176,6 +175,16 @@ export function SharedRecipeClient({ status, data }: SharedRecipeClientProps) {
             {t("viewSharedAllowSaveDisabled")}
           </p>
         )}
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => window.print()}
+          title={t("printRecipe")}
+          aria-label={t("printRecipe")}
+        >
+          <Printer className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
@@ -197,7 +206,6 @@ export function SharedRecipeClient({ status, data }: SharedRecipeClientProps) {
       headerActions={undefined}
       onServingChange={(scaledRecipe) => setDisplayRecipe(scaledRecipe)}
       renderImage={renderImage}
-      showPrintButton={false}
     />
   );
 }

@@ -12,7 +12,7 @@ interface ImportRequestBody {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
   const authResult = await requireAuth();
 
@@ -21,13 +21,10 @@ export async function POST(
   }
 
   const { user, client: supabase } = authResult;
-  const slug = params.slug;
+  const { slug } = await context.params;
 
   if (!slug) {
-    return NextResponse.json(
-      { error: "Missing share slug" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing share slug" }, { status: 400 });
   }
 
   let body: ImportRequestBody;
@@ -45,17 +42,17 @@ export async function POST(
   const token = body.token;
 
   if (!token) {
-    return NextResponse.json(
-      { error: "Missing share token" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing share token" }, { status: 400 });
   }
 
   try {
     const sharedData = await RecipeShareService.getSharedRecipe(slug, token);
 
     if (!sharedData.allowSave) {
-      throw new SharedRecipeError("This recipe cannot be imported", "FORBIDDEN");
+      throw new SharedRecipeError(
+        "This recipe cannot be imported",
+        "FORBIDDEN"
+      );
     }
 
     const recipe = sharedData.recipe;
@@ -117,7 +114,10 @@ export async function POST(
           if (!updateError && updatedRecipe) {
             importedRecipe = updatedRecipe as Recipe;
           } else if (updateError) {
-            console.error("Failed to update imported recipe image", updateError);
+            console.error(
+              "Failed to update imported recipe image",
+              updateError
+            );
             warnings.push("IMAGE_METADATA_UPDATE_FAILED");
           }
         }
@@ -137,17 +137,11 @@ export async function POST(
   } catch (error) {
     if (error instanceof SharedRecipeError) {
       if (error.code === "FORBIDDEN") {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: error.message }, { status: 403 });
       }
 
       if (error.code === "EXPIRED") {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 410 }
-        );
+        return NextResponse.json({ error: error.message }, { status: 410 });
       }
 
       return NextResponse.json(

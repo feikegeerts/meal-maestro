@@ -195,7 +195,7 @@ export function ShareRecipeButton({
     } finally {
       setOperation(null);
     }
-  }, [recipeId, tRecipes, storageKey]);
+  }, [recipeId, tRecipes, storageKey, locale]);
 
   const handleStopSharing = useCallback(async () => {
     try {
@@ -301,7 +301,14 @@ export function ShareRecipeButton({
                   {isShared && shareInfo?.createdAt && (
                     <p className="text-xs text-muted-foreground">
                       {tRecipes("shareDialog.sharedOn", {
-                        date: new Date(shareInfo.createdAt).toLocaleString(),
+                        date: new Intl.DateTimeFormat(locale, {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: locale === "en",
+                        }).format(new Date(shareInfo.createdAt)),
                       })}
                     </p>
                   )}
@@ -309,7 +316,14 @@ export function ShareRecipeButton({
                   {isShared && shareInfo?.expiresAt && (
                     <p className="text-xs text-muted-foreground">
                       {tRecipes("shareDialog.expires", {
-                        date: new Date(shareInfo.expiresAt).toLocaleString(),
+                        date: new Intl.DateTimeFormat(locale, {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: locale === "en",
+                        }).format(new Date(shareInfo.expiresAt)),
                       })}
                     </p>
                   )}

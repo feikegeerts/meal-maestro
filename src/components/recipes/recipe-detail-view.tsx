@@ -10,13 +10,18 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ServingSizeSelector } from "@/components/serving-size-selector";
 import { MarkAsEatenSplitButton } from "@/components/recipes/mark-as-eaten-split-button";
-import { ArrowLeft, Calendar, CalendarDays, Clock, Edit, Printer, Tag, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  CalendarDays,
+  Clock,
+  Edit,
+  Printer,
+  Tag,
+  Trash2,
+} from "lucide-react";
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
-import type {
-  Recipe,
-  RecipeCategory,
-  RecipeSeason,
-} from "@/types/recipe";
+import type { Recipe, RecipeCategory, RecipeSeason } from "@/types/recipe";
 import {
   formatFraction,
   normalizeIngredientUnit,
@@ -35,7 +40,10 @@ interface RecipeDetailViewProps {
   translateCategory: (category: RecipeCategory) => string;
   translateSeason: (season: RecipeSeason) => string;
   translateTag: (type: string, value: string) => string;
-  formatDateWithFallback: (date: string | null | undefined, fallback: string) => string;
+  formatDateWithFallback: (
+    date: string | null | undefined,
+    fallback: string
+  ) => string;
   t: (key: string) => string;
   tUnits: (key: string) => string;
   lastEatenRecentlyUpdated?: boolean;
@@ -45,7 +53,6 @@ interface RecipeDetailViewProps {
   onEdit?: () => void;
   onDelete?: () => void;
   renderImage?: React.ReactNode;
-  showPrintButton?: boolean;
   isLoading?: boolean;
   errorMessage?: string | null;
   onNavigateBack?: () => void;
@@ -72,7 +79,6 @@ export function RecipeDetailView({
   onEdit,
   onDelete,
   renderImage,
-  showPrintButton = true,
   isLoading = false,
   errorMessage = null,
   onNavigateBack,
@@ -102,15 +108,20 @@ export function RecipeDetailView({
                 {t("backToRecipes")}
               </Button>
             )}
-         </div>
-       </div>
-     </PageWrapper>
-   );
- }
+          </div>
+        </div>
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper>
-      <PageHeader recipe={recipe} backButtonText={t("back")} className="mb-4" actions={headerActions} />
+      <PageHeader
+        recipe={recipe}
+        backButtonText={t("back")}
+        className="mb-4"
+        actions={headerActions}
+      />
 
       <Card className="mb-8">
         <CardContent className="p-4 md:px-8 md:py-6 lg:px-12 lg:py-8">
@@ -139,7 +150,11 @@ export function RecipeDetailView({
                 </div>
               </div>
 
-              {(onMarkAsEatenToday || onEdit || onDelete || showPrintButton || additionalActionButtons || banner) && (
+              {(onMarkAsEatenToday ||
+                onEdit ||
+                onDelete ||
+                additionalActionButtons ||
+                banner) && (
                 <div className="space-y-3 mt-6">
                   {banner && (
                     <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
@@ -157,31 +172,21 @@ export function RecipeDetailView({
                     </div>
                   )}
 
-                  {(onEdit || onDelete || showPrintButton || additionalActionButtons) && (
+                  {(onEdit || onDelete || additionalActionButtons) && (
                     <div className="flex items-center gap-2 flex-wrap">
                       {onEdit && (
                         <Button
                           variant="outline"
                           size="default"
                           disabled={!!actionLoading}
-                        onClick={onEdit}
-                      >
-                        <Edit className="mr-2 h-4 w-4" />
-                        {t("editDetail")}
-                      </Button>
-                    )}
+                          onClick={onEdit}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          {t("editDetail")}
+                        </Button>
+                      )}
 
-                    {showPrintButton && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        disabled={!!actionLoading}
-                        onClick={() => window.print()}
-                        title={t("printRecipe")}
-                      >
-                        <Printer className="h-4 w-4" />
-                      </Button>
-                    )}
+                      {/* Print button removed from core view; now expected to be provided via banner or additionalActionButtons */}
 
                       {additionalActionButtons}
 
@@ -214,37 +219,61 @@ export function RecipeDetailView({
                   </Badge>
                 )}
                 {recipe.diet_types?.map((dietType) => (
-                  <Badge key={dietType} variant="secondary" className="text-sm px-3 py-2">
+                  <Badge
+                    key={dietType}
+                    variant="secondary"
+                    className="text-sm px-3 py-2"
+                  >
                     <Tag className="mr-1 h-3 w-3" />
                     {translateTag("dietType", dietType)}
                   </Badge>
                 ))}
                 {recipe.cooking_methods?.map((method) => (
-                  <Badge key={method} variant="secondary" className="text-sm px-3 py-2">
+                  <Badge
+                    key={method}
+                    variant="secondary"
+                    className="text-sm px-3 py-2"
+                  >
                     <Tag className="mr-1 h-3 w-3" />
                     {translateTag("cookingMethod", method)}
                   </Badge>
                 ))}
                 {recipe.dish_types?.map((dishType) => (
-                  <Badge key={dishType} variant="secondary" className="text-sm px-3 py-2">
+                  <Badge
+                    key={dishType}
+                    variant="secondary"
+                    className="text-sm px-3 py-2"
+                  >
                     <Tag className="mr-1 h-3 w-3" />
                     {translateTag("dishType", dishType)}
                   </Badge>
                 ))}
                 {recipe.proteins?.map((protein) => (
-                  <Badge key={protein} variant="secondary" className="text-sm px-3 py-2">
+                  <Badge
+                    key={protein}
+                    variant="secondary"
+                    className="text-sm px-3 py-2"
+                  >
                     <Tag className="mr-1 h-3 w-3" />
                     {translateTag("protein", protein)}
                   </Badge>
                 ))}
                 {recipe.occasions?.map((occasion) => (
-                  <Badge key={occasion} variant="secondary" className="text-sm px-3 py-2">
+                  <Badge
+                    key={occasion}
+                    variant="secondary"
+                    className="text-sm px-3 py-2"
+                  >
                     <Tag className="mr-1 h-3 w-3" />
                     {translateTag("occasion", occasion)}
                   </Badge>
                 ))}
                 {recipe.characteristics?.map((characteristic) => (
-                  <Badge key={characteristic} variant="secondary" className="text-sm px-3 py-2">
+                  <Badge
+                    key={characteristic}
+                    variant="secondary"
+                    className="text-sm px-3 py-2"
+                  >
                     <Tag className="mr-1 h-3 w-3" />
                     {translateTag("characteristic", characteristic)}
                   </Badge>
@@ -254,14 +283,18 @@ export function RecipeDetailView({
               <div className="grid grid-cols-1 gap-3 text-sm mt-8">
                 <div className="flex items-center gap-2">
                   <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{t("createdDetail")}:</span>
+                  <span className="text-muted-foreground">
+                    {t("createdDetail")}:
+                  </span>
                   <span className="font-medium">
                     {formatDateWithFallback(recipe.created_at, t("never"))}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{t("lastEatenDetail")}:</span>
+                  <span className="text-muted-foreground">
+                    {t("lastEatenDetail")}:
+                  </span>
                   <span
                     className={`font-medium transition-colors duration-2000 ${
                       lastEatenRecentlyUpdated ? "text-green-600" : ""
@@ -290,7 +323,9 @@ export function RecipeDetailView({
                 <div className="mb-4">
                   <ServingSizeSelector
                     recipe={recipe}
-                    onServingChange={(_, scaledRecipe) => onServingChange(scaledRecipe)}
+                    onServingChange={(_, scaledRecipe) =>
+                      onServingChange(scaledRecipe)
+                    }
                     showPreview={false}
                   />
                 </div>
@@ -310,9 +345,13 @@ export function RecipeDetailView({
                       ingredient.amount,
                       ingredient.unit
                     );
-                    const finalAmount = smartResult?.amount ?? ingredient.amount;
+                    const finalAmount =
+                      smartResult?.amount ?? ingredient.amount;
                     const finalUnit = smartResult?.unit ?? ingredient.unit;
-                    const pluralizedUnit = pluralizeUnit(finalUnit, finalAmount);
+                    const pluralizedUnit = pluralizeUnit(
+                      finalUnit,
+                      finalAmount
+                    );
 
                     amountText = formatFraction(finalAmount);
                     if (pluralizedUnit) {
@@ -326,7 +365,8 @@ export function RecipeDetailView({
                         "clove",
                         "cloves",
                       ];
-                      const isStandardUnit = standardUnits.includes(pluralizedUnit);
+                      const isStandardUnit =
+                        standardUnits.includes(pluralizedUnit);
                       const translatedUnit = isStandardUnit
                         ? tUnits(pluralizedUnit) || pluralizedUnit
                         : pluralizedUnit;
@@ -334,13 +374,15 @@ export function RecipeDetailView({
                     }
 
                     if (finalAmount > 1) {
-                      ingredientNameWithNotes = ingredientFormatter.pluralizeIngredientName(
-                        ingredient.name
-                      );
+                      ingredientNameWithNotes =
+                        ingredientFormatter.pluralizeIngredientName(
+                          ingredient.name
+                        );
                     } else if (finalAmount === 1) {
-                      ingredientNameWithNotes = ingredientFormatter.singularizeIngredientName(
-                        ingredient.name
-                      );
+                      ingredientNameWithNotes =
+                        ingredientFormatter.singularizeIngredientName(
+                          ingredient.name
+                        );
                     }
                   } else if (ingredient.unit) {
                     amountText = tUnits(ingredient.unit) || ingredient.unit;
@@ -351,9 +393,14 @@ export function RecipeDetailView({
                   }
 
                   return (
-                    <div key={index} className="grid grid-cols-12 gap-3 items-start py-1">
+                    <div
+                      key={index}
+                      className="grid grid-cols-12 gap-3 items-start py-1"
+                    >
                       <div className="col-span-4 text-right">
-                        <span className="font-semibold text-sm">{amountText}</span>
+                        <span className="font-semibold text-sm">
+                          {amountText}
+                        </span>
                       </div>
                       <div className="col-span-8">
                         <span className="text-sm leading-relaxed">
@@ -367,10 +414,13 @@ export function RecipeDetailView({
             </div>
 
             <div className="lg:col-span-5">
-              <h2 className="text-xl font-semibold mb-5 mt-5">{t("gettingStarted")}</h2>
+              <h2 className="text-xl font-semibold mb-5 mt-5">
+                {t("gettingStarted")}
+              </h2>
 
               <div className="prose prose-sm max-w-none mb-5">
-                {processedInstructions.isStepFormat && processedInstructions.steps.length > 1 ? (
+                {processedInstructions.isStepFormat &&
+                processedInstructions.steps.length > 1 ? (
                   <div className="space-y-5">
                     {processedInstructions.steps.map((step, index) => (
                       <div key={index} className="flex items-center gap-4">
@@ -384,11 +434,16 @@ export function RecipeDetailView({
                     {processedInstructions.descriptiveText &&
                       processedInstructions.descriptiveText.length > 0 && (
                         <div className="mt-6 space-y-3">
-                          {processedInstructions.descriptiveText.map((text, index) => (
-                            <p key={`desc-${index}`} className="leading-relaxed text-base pl-13">
-                              {text}
-                            </p>
-                          ))}
+                          {processedInstructions.descriptiveText.map(
+                            (text, index) => (
+                              <p
+                                key={`desc-${index}`}
+                                className="leading-relaxed text-base pl-13"
+                              >
+                                {text}
+                              </p>
+                            )
+                          )}
                         </div>
                       )}
                   </div>
