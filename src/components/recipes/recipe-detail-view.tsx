@@ -185,8 +185,16 @@ export function RecipeDetailView({
                           {t("editDetail")}
                         </Button>
                       )}
-
-                      {/* Print button removed from core view; now expected to be provided via banner or additionalActionButtons */}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => window.print()}
+                        title={t("printRecipe")}
+                        aria-label={t("printRecipe")}
+                      >
+                        <Printer className="h-4 w-4" />
+                      </Button>
 
                       {additionalActionButtons}
 
