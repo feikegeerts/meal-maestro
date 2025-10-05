@@ -31,6 +31,8 @@ import {
   Edit,
   Utensils,
   Trash2,
+  Copy,
+  Calendar,
 } from "lucide-react";
 import { Link } from "@/app/i18n/routing";
 import { useTranslations } from "next-intl";
@@ -56,8 +58,10 @@ export function useRecipeColumns(): RecipeColumnsResult {
     useRecipeTranslations();
   const { formatDateWithFallback } = useLocalizedDateFormatter();
   const { removeRecipe, updateRecipe } = useRecipes();
-  
-  const [recentlyUpdatedRecipes, setRecentlyUpdatedRecipes] = React.useState<Set<string>>(new Set());
+
+  const [recentlyUpdatedRecipes, setRecentlyUpdatedRecipes] = React.useState<
+    Set<string>
+  >(new Set());
 
   const handleMarkAsEaten = async (recipe: Recipe, date?: Date) => {
     try {
@@ -67,11 +71,11 @@ export function useRecipeColumns(): RecipeColumnsResult {
       });
       updateRecipe(recipe.id, updatedRecipe.recipe);
       toast.success(tToast("recipeMarkedEaten", { count: 1 }));
-      
+
       // Trigger green fade animation
-      setRecentlyUpdatedRecipes(prev => new Set([...prev, recipe.id]));
+      setRecentlyUpdatedRecipes((prev) => new Set([...prev, recipe.id]));
       setTimeout(() => {
-        setRecentlyUpdatedRecipes(prev => {
+        setRecentlyUpdatedRecipes((prev) => {
           const newSet = new Set(prev);
           newSet.delete(recipe.id);
           return newSet;
@@ -138,7 +142,9 @@ export function useRecipeColumns(): RecipeColumnsResult {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="h-auto w-auto p-1 ml-1"
             >
               <ArrowUpDown className="h-3 w-3" />
@@ -165,7 +171,9 @@ export function useRecipeColumns(): RecipeColumnsResult {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="h-auto w-auto p-1 ml-1"
             >
               <ArrowUpDown className="h-3 w-3" />
@@ -194,7 +202,9 @@ export function useRecipeColumns(): RecipeColumnsResult {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="h-auto w-auto p-1 ml-1"
             >
               <ArrowUpDown className="h-3 w-3" />
@@ -217,9 +227,7 @@ export function useRecipeColumns(): RecipeColumnsResult {
     },
     {
       accessorKey: "tags",
-      header: () => (
-        <span className="font-semibold">{t("tags")}</span>
-      ),
+      header: () => <span className="font-semibold">{t("tags")}</span>,
       cell: ({ row }) => {
         const recipe = row.original as Recipe;
         const allTags: string[] = [
@@ -308,7 +316,9 @@ export function useRecipeColumns(): RecipeColumnsResult {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="h-auto w-auto p-1 ml-1 flex-shrink-0"
             >
               <ArrowUpDown className="h-3 w-3" />
@@ -320,14 +330,16 @@ export function useRecipeColumns(): RecipeColumnsResult {
         const recipe = row.original;
         const lastEaten = row.getValue("last_eaten") as string | undefined;
         const isRecentlyUpdated = recentlyUpdatedRecipes.has(recipe.id);
-        
+
         if (!lastEaten) {
           return <span className="text-muted-foreground">{t("never")}</span>;
         }
         return (
-          <div className={`text-sm transition-colors duration-2000 ${
-            isRecentlyUpdated ? "text-green-600" : ""
-          }`}>
+          <div
+            className={`text-sm font-medium transition-colors duration-2000 ${
+              isRecentlyUpdated ? "text-green-600" : ""
+            }`}
+          >
             {formatDateWithFallback(lastEaten)}
           </div>
         );
@@ -354,7 +366,9 @@ export function useRecipeColumns(): RecipeColumnsResult {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="h-auto w-auto p-1 ml-1 flex-shrink-0"
             >
               <ArrowUpDown className="h-3 w-3" />
@@ -374,11 +388,25 @@ export function useRecipeColumns(): RecipeColumnsResult {
     {
       id: "actions",
       size: 60,
-      header: () => (
-        <span className="font-semibold">{t("actions")}</span>
-      ),
+      header: () => <span className="font-semibold">{t("actions")}</span>,
       cell: ({ row }) => {
         const recipe = row.original;
+
+        // Local inline component to render the date selection as a visually consistent menu item
+        const MenuDateSelectionItem = () => (
+          <DateSelectionPopover
+            onDateSelect={handleMarkAsEatenOnDate(recipe)}
+            variant="ghost"
+            size="sm"
+            showIcon={false}
+            customTrigger={
+              <span className="flex w-full items-center gap-2">
+                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                <span className="truncate">{t("markAsEatenOnDate")}</span>
+              </span>
+            }
+          />
+        );
 
         return (
           <DropdownMenu>
@@ -398,37 +426,48 @@ export function useRecipeColumns(): RecipeColumnsResult {
                 onClick={() => navigator.clipboard.writeText(recipe.id)}
                 className="justify-start"
               >
+                <Copy className="mr-2 h-4 w-4" />
                 {t("copyId")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href={`/recipes/${recipe.id}`} className="flex items-center justify-start">
+                <Link
+                  href={`/recipes/${recipe.id}`}
+                  className="flex items-center justify-start"
+                >
                   <Eye className="mr-2 h-4 w-4" />
                   {t("viewDetails")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={`/recipes/${recipe.id}/edit`} className="flex items-center justify-start">
+                <Link
+                  href={`/recipes/${recipe.id}/edit`}
+                  className="flex items-center justify-start"
+                >
                   <Edit className="mr-2 h-4 w-4" />
                   {t("editRecipe")}
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleMarkAsEaten(recipe)} className="justify-start">
+              <DropdownMenuItem
+                onClick={() => handleMarkAsEaten(recipe)}
+                className="justify-start"
+              >
                 <Utensils className="mr-2 h-4 w-4" />
                 {t("markAsEatenToday")}
               </DropdownMenuItem>
-              <div className="px-2 py-1.5">
-                <DateSelectionPopover
-                  onDateSelect={handleMarkAsEatenOnDate(recipe)}
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start h-auto p-1.5 text-sm font-normal"
-                  triggerLabel={t("markAsEatenOnDate")}
-                />
+              <div
+                role="menuitem"
+                data-date-selection-item
+                className="flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <MenuDateSelectionItem />
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-destructive justify-start"
+                variant="destructive"
+                className="justify-start"
                 onClick={() => handleDeleteRecipe(recipe)}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
