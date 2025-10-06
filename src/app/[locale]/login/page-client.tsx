@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter } from "@/app/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -9,7 +9,9 @@ import { MagicLinkForm } from "@/components/auth/magic-link-form";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { sanitizeRedirectPath, resolveLocaleAwarePath } from "@/lib/auth-redirect";
+import { routing } from "@/app/i18n/routing";
 
 function LoginContent() {
   const router = useRouter();
@@ -18,14 +20,31 @@ function LoginContent() {
   const [authError, setAuthError] = useState<string | null>(null);
   const t = useTranslations('home');
   const tAuth = useTranslations('auth');
+  const locale = useLocale();
+
+  const redirectParam = useMemo(() => {
+    const raw = searchParams.get('redirectTo');
+    return sanitizeRedirectPath(raw);
+  }, [searchParams]);
+
+  const callbackRedirectPath = useMemo(() => {
+    const basePath = redirectParam ?? '/recipes';
+    const { path } = resolveLocaleAwarePath({
+      path: basePath,
+      locale,
+      availableLocales: routing.locales,
+      defaultLocale: routing.defaultLocale,
+    });
+    return path;
+  }, [redirectParam, locale]);
 
   useEffect(() => {
     // Redirect authenticated users to recipes
     if (!loading && user) {
-      router.push('/recipes');
+      router.push(redirectParam ?? '/recipes');
       return;
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, redirectParam]);
 
   useEffect(() => {
     // Handle authentication errors from callback
@@ -107,7 +126,7 @@ function LoginContent() {
               )}
 
               <div className="space-y-4">
-                <GoogleLoginButton />
+                <GoogleLoginButton redirectPath={callbackRedirectPath} locale={locale} />
                 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
@@ -120,7 +139,7 @@ function LoginContent() {
                   </div>
                 </div>
 
-                <MagicLinkForm />
+                <MagicLinkForm redirectPath={callbackRedirectPath} locale={locale} />
               </div>
 
               <div className="text-xs text-muted-foreground leading-relaxed">

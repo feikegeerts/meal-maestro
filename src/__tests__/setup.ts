@@ -127,25 +127,45 @@ const mockSupabaseClient = {
 };
 
 const auth = {
-  signInWithGoogle: jest.fn().mockImplementation(async () => {
-    const isLocalhost =
-      global.window?.location?.hostname === "localhost" ||
-      global.window?.location?.hostname === "127.0.0.1";
-    const redirectTo = isLocalhost
-      ? "http://localhost:3000/auth/callback"
-      : `${global.window?.location?.origin}/auth/callback`;
+  signInWithGoogle: jest.fn().mockImplementation(async (options = {}) => {
+    const redirectTo = new URL(
+      "/auth/callback",
+      global.window?.location?.origin
+    );
+
+    if (options.redirectPath) {
+      redirectTo.searchParams.set("redirectTo", options.redirectPath);
+    }
 
     return mockSupabaseClient.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo },
+      options: { redirectTo: redirectTo.toString() },
     });
   }),
-  signInWithMagicLink: jest.fn().mockImplementation(async () => {
-    return mockSupabaseClient.auth.signInWithOtp({
-      email: "test@example.com",
-      options: { emailRedirectTo: "http://localhost:3000/auth/callback" },
-    });
-  }),
+  signInWithMagicLink: jest
+    .fn()
+    .mockImplementation(async (email, options = {}) => {
+      const redirectTo = new URL(
+        "/auth/callback",
+        global.window?.location?.origin
+      );
+
+      if (options.redirectPath) {
+        redirectTo.searchParams.set("redirectTo", options.redirectPath);
+      }
+
+      return mockSupabaseClient.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: redirectTo.toString(),
+          shouldCreateUser: true,
+          data: {
+            originUrl: global.window?.location?.origin,
+            pageUrl: global.window?.location?.href,
+          },
+        },
+      });
+    }),
   signOut: jest
     .fn()
     .mockImplementation(() => mockSupabaseClient.auth.signOut()),

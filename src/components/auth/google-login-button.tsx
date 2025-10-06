@@ -35,9 +35,15 @@ const GoogleIcon = () => (
 interface GoogleLoginButtonProps {
   className?: string;
   size?: "default" | "sm" | "lg";
+  redirectPath?: string | null;
+  locale?: string | null;
 }
 
-export function GoogleLoginButton({ className }: GoogleLoginButtonProps) {
+export function GoogleLoginButton({
+  className,
+  redirectPath,
+  locale,
+}: GoogleLoginButtonProps) {
   const { signInWithGoogle } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +54,10 @@ export function GoogleLoginButton({ className }: GoogleLoginButtonProps) {
     setError(null);
 
     try {
-      const { error } = await signInWithGoogle();
+      const { error } = await signInWithGoogle({
+        redirectPath,
+        locale,
+      });
 
       if (error) {
         setError(error.message || "Failed to sign in with Google");

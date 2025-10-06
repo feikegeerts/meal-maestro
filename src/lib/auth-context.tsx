@@ -10,7 +10,7 @@ import {
   ReactNode,
 } from "react";
 import { User, Session, AuthError, OAuthResponse } from "@supabase/supabase-js";
-import { auth, supabase } from "./supabase";
+import { auth, supabase, AuthRedirectOptions } from "./supabase";
 import { profileService } from "./profile-service";
 import type { UserProfile, ProfileUpdatePayload } from "./profile-types";
 
@@ -19,11 +19,14 @@ interface AuthContextType {
   session: Session | null;
   profile: UserProfile | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<{
+  signInWithGoogle: (options?: AuthRedirectOptions) => Promise<{
     data: OAuthResponse["data"] | null;
     error: AuthError | null;
   }>;
-  signInWithMagicLink: (email: string) => Promise<{
+  signInWithMagicLink: (
+    email: string,
+    options?: AuthRedirectOptions
+  ) => Promise<{
     data: { user: User | null; session: Session | null } | null;
     error: AuthError | null;
   }>;
@@ -287,10 +290,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [session?.access_token, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (options?: AuthRedirectOptions) => {
     setLoading(true);
     try {
-      const result = await auth.signInWithGoogle();
+      const result = await auth.signInWithGoogle(options);
       return result;
     } catch (error) {
       console.error("Error signing in with Google:", error);
@@ -298,11 +301,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signInWithMagicLink = async (email: string) => {
+  const signInWithMagicLink = async (
+    email: string,
+    options?: AuthRedirectOptions
+  ) => {
     // Don't set global loading state for magic link email sending
     // The form component handles its own loading state
     try {
-      const result = await auth.signInWithMagicLink(email);
+      const result = await auth.signInWithMagicLink(email, options);
       return result;
     } catch (error) {
       console.error("Error signing in with magic link:", error);

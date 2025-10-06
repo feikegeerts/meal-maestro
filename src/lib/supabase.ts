@@ -1,4 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  clearPendingAuthRedirect,
+  sanitizeRedirectPath,
+  setPendingAuthRedirect,
+} from "./auth-redirect";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -16,14 +21,34 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
+export type AuthRedirectOptions = {
+  redirectPath?: string | null;
+  locale?: string | null;
+};
+
+const buildCallbackUrl = (options?: AuthRedirectOptions) => {
+  const origin = window.location.origin || "";
+  const callbackUrl = new URL("/auth/callback", origin);
+
+  const sanitizedPath = sanitizeRedirectPath(options?.redirectPath);
+
+  if (sanitizedPath) {
+    callbackUrl.searchParams.set("redirectTo", sanitizedPath);
+  }
+
+  return callbackUrl.toString();
+};
+
 export const auth = {
-  async signInWithGoogle() {
-    const isLocalhost =
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1";
-    const redirectTo = isLocalhost
-      ? "http://localhost:3000/auth/callback"
-      : `${window.location.origin}/auth/callback`;
+  async signInWithGoogle(options?: AuthRedirectOptions) {
+    const sanitizedPath = sanitizeRedirectPath(options?.redirectPath);
+    if (sanitizedPath) {
+      setPendingAuthRedirect(sanitizedPath, options?.locale ?? null);
+    } else {
+      clearPendingAuthRedirect();
+    }
+
+    const redirectTo = buildCallbackUrl(options);
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -39,13 +64,15 @@ export const auth = {
     return { data, error };
   },
 
-  async signInWithMagicLink(email: string) {
-    const isLocalhost =
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1";
-    const redirectTo = isLocalhost
-      ? "http://localhost:3000/auth/callback"
-      : `${window.location.origin}/auth/callback`;
+  async signInWithMagicLink(email: string, options?: AuthRedirectOptions) {
+    const sanitizedPath = sanitizeRedirectPath(options?.redirectPath);
+    if (sanitizedPath) {
+      setPendingAuthRedirect(sanitizedPath, options?.locale ?? null);
+    } else {
+      clearPendingAuthRedirect();
+    }
+
+    const redirectTo = buildCallbackUrl(options);
 
     const { data, error } = await supabase.auth.signInWithOtp({
       email,

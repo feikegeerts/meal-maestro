@@ -11,9 +11,11 @@ import { rateLimitManager } from '@/lib/rate-limit-utils'
 
 interface MagicLinkFormProps {
   className?: string
+  redirectPath?: string | null
+  locale?: string | null
 }
 
-export function MagicLinkForm({ className }: MagicLinkFormProps) {
+export function MagicLinkForm({ className, redirectPath, locale }: MagicLinkFormProps) {
   const { signInWithMagicLink } = useAuth()
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -79,7 +81,10 @@ export function MagicLinkForm({ className }: MagicLinkFormProps) {
     setIsSuccess(false)
 
     try {
-      const { error } = await signInWithMagicLink(email.trim())
+      const { error } = await signInWithMagicLink(email.trim(), {
+        redirectPath,
+        locale,
+      })
       
       if (error) {
         const rateLimitResult = rateLimitManager.analyzeRateLimit(error)
