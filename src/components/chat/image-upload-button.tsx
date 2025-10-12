@@ -78,7 +78,7 @@ export function ImageUploadButton({
               size="icon"
               disabled={disabled}
               className="h-10 w-10 flex-shrink-0"
-              title="Upload image"
+              title={t("uploadImage")}
             >
               <Camera className="h-4 w-4" />
             </Button>
@@ -133,7 +133,7 @@ export function ImageUploadButton({
             onClick={handleDirectClick}
             disabled={disabled}
             className="h-10 w-10 flex-shrink-0"
-            title="Upload image"
+            title={t("uploadImage")}
           >
             <Camera className="h-4 w-4" />
           </Button>

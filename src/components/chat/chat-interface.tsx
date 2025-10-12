@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useIntelligentLoading } from "@/hooks/use-intelligent-loading";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +29,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
 import { useImageCompression } from "@/hooks/use-image-compression";
 import { IMAGE_COMPRESSION_CONFIG } from "@/lib/image-compression-config";
+import type { ConversationStore } from "@/lib/conversation-store";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -101,6 +102,19 @@ interface ChatInterfaceProps {
     season?: string;
   };
   isDesktopSidebar?: boolean;
+  // Optional props to customize behavior for different endpoints/contexts
+  endpoint?: string;
+  requestContext?: RequestContext;
+  onFunctionCall?: (fn: { function: string; result?: unknown; error?: string }) => void;
+  initialMessage?: string;
+  conversationId?: string;
+  conversationStore?: ConversationStore;
+  onConversationStateChange?: (state: {
+    messages: ChatMessage[];
+    input: string;
+    isExpanded: boolean;
+  }) => void;
+  greetingContext?: string;
 }
 
 export function ChatInterface({
@@ -108,17 +122,33 @@ export function ChatInterface({
   onRecipeGenerated,
   currentFormState,
   isDesktopSidebar = false,
-}: ChatInterfaceProps) {
+  // New props for reuse in different contexts (e.g., /inspire)
+  endpoint = "/api/recipes/chat",
+  requestContext,
+  onFunctionCall,
+  initialMessage,
+  conversationId,
+  conversationStore,
+  onConversationStateChange,
+  greetingContext,
+}: ChatInterfaceProps & {
+  endpoint?: string;
+  requestContext?: RequestContext;
+  onFunctionCall?: (fn: { function: string; result?: unknown; error?: string }) => void;
+  initialMessage?: string;
+  conversationId?: string;
+  conversationStore?: ConversationStore;
+  onConversationStateChange?: (state: {
+    messages: ChatMessage[];
+    input: string;
+    isExpanded: boolean;
+  }) => void;
+  greetingContext?: string;
+}) {
   const t = useTranslations("chat");
   const locale = useLocale();
   const { profile } = useAuth();
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      content: t("welcomeMessage"),
-      timestamp: new Date().toISOString(),
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -129,7 +159,8 @@ export function ChatInterface({
     compressedImageData: string | null;
     context: RequestContext;
   } | null>(null);
-  const [isExpanded, setIsExpanded] = useState(isDesktopSidebar ? true : false);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Image compression state and actions
   const {
@@ -144,10 +175,18 @@ export function ChatInterface({
   const [isDragging, setIsDragging] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previousStoreRef = useRef<ConversationStore | undefined>(undefined);
+  const previousConversationIdRef = useRef<string | undefined>(undefined);
+  const metadataRef = useRef<Record<string, unknown>>({});
 
   // Use the intelligent loading hook
   const { loadingMessage, startIntelligentLoading, stopIntelligentLoading } =
     useIntelligentLoading({ t });
+
+  const defaultAssistantMessage = useMemo(
+    () => initialMessage || t("welcomeMessage"),
+    [initialMessage, t]
+  );
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -158,6 +197,89 @@ export function ChatInterface({
       }
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (!conversationId || !conversationStore) return;
+    if (
+      previousStoreRef.current !== conversationStore ||
+      previousConversationIdRef.current !== conversationId
+    ) {
+      setHasInitialized(false);
+      previousStoreRef.current = conversationStore;
+      previousConversationIdRef.current = conversationId;
+      metadataRef.current = {};
+    }
+  }, [conversationId, conversationStore]);
+
+  useEffect(() => {
+    if (hasInitialized) return;
+
+    if (conversationId && conversationStore) {
+      const stored = conversationStore.load(conversationId);
+      if (stored && stored.messages?.length) {
+        metadataRef.current = stored.metadata ?? {};
+        let restoredMessages = stored.messages.map((m) => ({
+          role: m.role,
+          content: m.content,
+          timestamp: m.timestamp,
+        }));
+
+        const storedGreetingContext =
+          typeof metadataRef.current.greetingContext === "string"
+            ? (metadataRef.current.greetingContext as string)
+            : undefined;
+        const hasSingleAssistantGreeting =
+          restoredMessages.length === 1 &&
+          restoredMessages[0].role === "assistant";
+
+        if (
+          hasSingleAssistantGreeting &&
+          greetingContext &&
+          storedGreetingContext !== greetingContext
+        ) {
+          restoredMessages = [
+            {
+              ...restoredMessages[0],
+              content: defaultAssistantMessage,
+            },
+          ];
+          metadataRef.current.greetingContext = greetingContext;
+        }
+
+        setMessages(restoredMessages);
+        setInputMessage(stored.input ?? "");
+        setIsExpanded(
+          typeof stored.isExpanded === "boolean" ? stored.isExpanded : true
+        );
+        setHasInitialized(true);
+        return;
+      }
+    }
+
+    setMessages([
+      {
+        role: "assistant",
+        content: defaultAssistantMessage,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    if (greetingContext) {
+      metadataRef.current.greetingContext = greetingContext;
+    }
+    setIsExpanded(true);
+    setHasInitialized(true);
+  }, [
+    conversationId,
+    conversationStore,
+    hasInitialized,
+    defaultAssistantMessage,
+    greetingContext,
+  ]);
+
+  useEffect(() => {
+    if (!hasInitialized) return;
+    adjustTextareaHeight();
+  }, [hasInitialized]);
 
   // Cleanup object URLs on unmount to prevent memory leaks
   useEffect(() => {
@@ -178,11 +300,49 @@ export function ChatInterface({
     }
   };
 
+  useEffect(() => {
+    if (!hasInitialized) return;
+    adjustTextareaHeight();
+  }, [inputMessage, hasInitialized]);
+
   // Handle input change with auto-resize
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputMessage(e.target.value);
     adjustTextareaHeight();
   };
+
+  const persistState = useCallback(
+    (nextMessages: ChatMessage[], nextInput: string, nextExpanded: boolean) => {
+      if (!conversationId || !conversationStore) return;
+      const MAX = 50;
+      const trimmed = nextMessages
+        .slice(-MAX)
+        .map((m) => ({ role: m.role, content: m.content, timestamp: m.timestamp }));
+      if (greetingContext) {
+        metadataRef.current = {
+          ...metadataRef.current,
+          greetingContext,
+        };
+      }
+      conversationStore.save(conversationId, {
+        messages: trimmed,
+        input: nextInput,
+        isExpanded: nextExpanded,
+        metadata: metadataRef.current,
+      });
+      onConversationStateChange?.({
+        messages: nextMessages,
+        input: nextInput,
+        isExpanded: nextExpanded,
+      });
+    },
+    [conversationId, conversationStore, onConversationStateChange, greetingContext]
+  );
+
+  useEffect(() => {
+    if (!hasInitialized) return;
+    persistState(messages, inputMessage, isExpanded);
+  }, [messages, inputMessage, isExpanded, persistState, hasInitialized]);
 
   // Handle image errors from compression hook
   useEffect(() => {
@@ -222,7 +382,7 @@ export function ChatInterface({
       userMessage: string,
       imageToProcess: File | null,
       compressedImageForApi: string | null,
-      requestContext: RequestContext
+      requestCtx: RequestContext
     ) => {
       setIsLoading(true);
       clearAllErrors();
@@ -260,15 +420,53 @@ export function ChatInterface({
           }
         }
 
+        const mergedContext: RequestContext = {
+          ...(requestContext ? { ...requestContext } : {}),
+          ...(requestCtx ? { ...requestCtx } : {}),
+        };
+
+        if (currentFormState) {
+          mergedContext.current_form_state = currentFormState;
+        }
+
+        if (selectedRecipe) {
+          const existingSelected = mergedContext.selected_recipe
+            ? { ...mergedContext.selected_recipe }
+            : undefined;
+          const ingredientsWithAmounts =
+            existingSelected?.ingredients ||
+            selectedRecipe.ingredients.map((ing) =>
+              `${ing.amount ?? ""} ${ing.unit ?? ""} ${ing.name}`.trim()
+            );
+
+          mergedContext.selected_recipe = {
+            ...existingSelected,
+            id: selectedRecipe.id,
+            title: selectedRecipe.title,
+            category: selectedRecipe.category,
+            season: selectedRecipe.season,
+            cuisine: selectedRecipe.cuisine,
+            diet_types: selectedRecipe.diet_types,
+            cooking_methods: selectedRecipe.cooking_methods,
+            dish_types: selectedRecipe.dish_types,
+            proteins: selectedRecipe.proteins,
+            occasions: selectedRecipe.occasions,
+            characteristics: selectedRecipe.characteristics,
+            ingredients: ingredientsWithAmounts,
+            description:
+              existingSelected?.description ?? selectedRecipe.description,
+          };
+        }
+
         const requestBody = {
           message: userMessage || (imageToProcess ? "" : ""),
           locale: locale,
           conversation_history: messages,
           ...(imageData && { images: [imageData] }),
-          context: requestContext,
+          context: mergedContext,
         };
 
-        const response = await fetch("/api/recipes/chat", {
+        const response = await fetch(endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -306,26 +504,36 @@ export function ChatInterface({
         };
         setMessages((prev) => [...prev, assistantResponse]);
 
-        // Check if AI updated the form (either through direct update or URL extraction)
-        if (chatData.function_call && onRecipeGenerated) {
-          if (chatData.function_call.function === "update_recipe_form") {
-            const result = chatData.function_call.result as {
-              formUpdate?: unknown;
-              success?: boolean;
-            };
-            if (result?.formUpdate) {
-              onRecipeGenerated(result.formUpdate);
-            }
-          } else if (
-            chatData.function_call.function === "extract_recipe_from_url"
-          ) {
-            const result = chatData.function_call.result as {
-              formUpdate?: unknown;
-              success?: boolean;
-              error?: string;
-            };
-            if (result?.formUpdate) {
-              onRecipeGenerated(result.formUpdate);
+        // Handle function calls
+        if (chatData.function_call) {
+          // Emit generic callback if provided (for /inspire recommendations, etc.)
+          onFunctionCall?.(chatData.function_call as unknown as {
+            function: string;
+            result?: unknown;
+            error?: string;
+          });
+
+          // Backward compatibility for recipe creation/extraction flows
+          if (onRecipeGenerated) {
+            if (chatData.function_call.function === "update_recipe_form") {
+              const result = chatData.function_call.result as {
+                formUpdate?: unknown;
+                success?: boolean;
+              };
+              if (result?.formUpdate) {
+                onRecipeGenerated(result.formUpdate);
+              }
+            } else if (
+              chatData.function_call.function === "extract_recipe_from_url"
+            ) {
+              const result = chatData.function_call.result as {
+                formUpdate?: unknown;
+                success?: boolean;
+                error?: string;
+              };
+              if (result?.formUpdate) {
+                onRecipeGenerated(result.formUpdate);
+              }
             }
           }
         }
@@ -348,7 +556,7 @@ export function ChatInterface({
             message: userMessage,
             imageFile: imageToProcess,
             compressedImageData: compressedImageForApi,
-            context: requestContext,
+            context: requestCtx,
           });
         } else {
           setError(
@@ -360,17 +568,22 @@ export function ChatInterface({
         stopIntelligentLoading();
       }
     },
-    [
-      messages,
-      locale,
-      onRecipeGenerated,
-      startIntelligentLoading,
-      stopIntelligentLoading,
-      clearAllErrors,
-      fileToBase64,
-      t,
-    ]
-  );
+  [
+    messages,
+    locale,
+    onRecipeGenerated,
+    startIntelligentLoading,
+    stopIntelligentLoading,
+    clearAllErrors,
+    fileToBase64,
+    t,
+    currentFormState,
+    selectedRecipe,
+    endpoint,
+    onFunctionCall,
+    requestContext,
+  ]
+);
 
   // Retry last request
   const handleRetry = useCallback(async () => {
@@ -496,7 +709,11 @@ export function ChatInterface({
     <Card className="w-full shadow-lg gap-2">
       <CardHeader
         className={`${!isDesktopSidebar ? "cursor-pointer" : ""} pb-3`}
-        onClick={() => !isDesktopSidebar && setIsExpanded(!isExpanded)}
+        onClick={() => {
+          if (!isDesktopSidebar) {
+            setIsExpanded((prev) => !prev);
+          }
+        }}
       >
         <div className="flex items-center justify-between">
           <CardTitle
@@ -590,7 +807,7 @@ export function ChatInterface({
                     <button
                       onClick={clearAllErrors}
                       className="text-destructive hover:text-destructive/80 ml-2"
-                      aria-label="Dismiss error"
+                      aria-label={t("dismissError")}
                     >
                       ×
                     </button>
@@ -636,7 +853,7 @@ export function ChatInterface({
               {isDragging && (
                 <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center z-10 mb-3">
                   <div className="text-primary font-medium">
-                    Drop image here to analyze for recipes
+                    {t("dropImageOverlay")}
                   </div>
                 </div>
               )}
@@ -651,7 +868,7 @@ export function ChatInterface({
                     onPaste={handlePaste}
                     placeholder={
                       selectedImage
-                        ? "Add a message about this image (optional)"
+                        ? t("addMessageAboutImage")
                         : t("inputPlaceholder")
                     }
                     disabled={isLoading}

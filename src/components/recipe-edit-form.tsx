@@ -14,6 +14,7 @@ import { SheetClose } from "@/components/ui/sheet";
 import { useTranslations } from "next-intl";
 import { AlertCircle } from "lucide-react";
 
+import type { ConversationStore } from "@/lib/conversation-store";
 import { useAutoSave } from "./recipe-edit/hooks/use-auto-save";
 import { FormTransformerService } from "./recipe-edit/services/form-transformer";
 import { BasicInformationSection } from "./recipe-edit/components/basic-information-section";
@@ -30,6 +31,9 @@ interface RecipeEditFormProps {
   standalone?: boolean;
   onCancel?: () => void;
   layoutMode?: "single-column" | "two-column";
+  conversationId?: string;
+  conversationStore?: ConversationStore;
+  conversationGreetingContext?: string;
 }
 
 // Export auto-save function for external use (backward compatibility)
@@ -48,6 +52,9 @@ export function RecipeEditForm({
   standalone = false,
   onCancel,
   layoutMode = "single-column",
+  conversationId,
+  conversationStore,
+  conversationGreetingContext,
 }: RecipeEditFormProps) {
   const t = useTranslations("recipeForm");
 
@@ -358,16 +365,19 @@ export function RecipeEditForm({
   );
 
   return (
-    <FormLayoutRenderer
-      layoutMode={layoutMode}
-      includeChat={includeChat}
-      recipe={recipe}
-      memoizedFormState={memoizedFormState}
-      onAIRecipeUpdate={handleAIRecipeUpdate}
-      leftColumnSections={LeftColumnSections}
-      rightColumnSections={RightColumnSections}
-      actionButtons={ActionButtons}
-    >
+        <FormLayoutRenderer
+          layoutMode={layoutMode}
+          includeChat={includeChat}
+          recipe={recipe}
+          memoizedFormState={memoizedFormState}
+          onAIRecipeUpdate={handleAIRecipeUpdate}
+          leftColumnSections={LeftColumnSections}
+          rightColumnSections={RightColumnSections}
+          actionButtons={ActionButtons}
+          conversationId={conversationId}
+          conversationStore={conversationStore}
+          conversationGreetingContext={conversationGreetingContext}
+        >
       {FormSections}
       {!standalone && (
         <button ref={closeButtonRef} className="hidden" aria-hidden="true" />

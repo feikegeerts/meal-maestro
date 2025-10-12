@@ -184,10 +184,10 @@ export class RecipeChatService {
   private loadMessages(locale: string): Record<string, unknown> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const messages = require(`../messages/${locale}.json`) as Record<
-        string,
-        unknown
-      >;
+      const messagesModule = require(`../messages/${locale}`) as {
+        default: Record<string, unknown>;
+      };
+      const messages = messagesModule.default;
       const safeMessages = Object.create(null);
       for (const key in messages) {
         if (Object.prototype.hasOwnProperty.call(messages, key)) {
@@ -197,10 +197,10 @@ export class RecipeChatService {
       return safeMessages;
     } catch {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const messages = require(`../messages/en.json`) as Record<
-        string,
-        unknown
-      >;
+      const messagesModule = require(`../messages/en`) as {
+        default: Record<string, unknown>;
+      };
+      const messages = messagesModule.default;
       const safeMessages = Object.create(null);
       for (const key in messages) {
         if (Object.prototype.hasOwnProperty.call(messages, key)) {

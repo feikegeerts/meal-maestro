@@ -4,8 +4,8 @@ import {
   getLanguageInstruction,
   getUnitPreferenceInstruction,
 } from "./chat-prompts";
-import enMessages from "../messages/en.json";
-import nlMessages from "../messages/nl.json";
+import enMessages from "../messages/en";
+import nlMessages from "../messages/nl";
 
 export interface ChatMessage {
   role: "user" | "assistant" | "system" | "tool";

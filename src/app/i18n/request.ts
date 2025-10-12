@@ -11,8 +11,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
   }
 
   // Load main messages, legal content messages, and SEO messages
-  const [mainMessages, termsMessages, privacyMessages, seoMessages] = await Promise.all([
-    import(`../../messages/${locale}.json`),
+  const [localeMessages, termsMessages, privacyMessages, seoMessages] = await Promise.all([
+    import(`../../messages/${locale}`),
     import(`../../messages/terms-${locale}.json`),
     import(`../../messages/privacy-${locale}.json`),
     import(`../../messages/seo-${locale}.json`)
@@ -21,7 +21,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   return {
     locale,
     messages: {
-      ...mainMessages.default,
+      ...localeMessages.default,
       terms: termsMessages.default,
       privacy: privacyMessages.default,
       seo: seoMessages.default

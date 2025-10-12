@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import { Recipe, RecipeInput } from "@/types/recipe";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { GRID_CONFIG, SPACING_CONFIG } from "../config/form-constants";
+import type { ConversationStore } from "@/lib/conversation-store";
 
 interface FormLayoutRendererProps {
   layoutMode: "single-column" | "two-column";
@@ -15,6 +16,9 @@ interface FormLayoutRendererProps {
   leftColumnSections?: ReactNode;
   rightColumnSections?: ReactNode;
   actionButtons?: ReactNode;
+  conversationId?: string;
+  conversationStore?: ConversationStore;
+  conversationGreetingContext?: string;
 }
 
 export function FormLayoutRenderer({
@@ -27,6 +31,9 @@ export function FormLayoutRenderer({
   leftColumnSections,
   rightColumnSections,
   actionButtons,
+  conversationId,
+  conversationStore,
+  conversationGreetingContext,
 }: FormLayoutRendererProps) {
   if (layoutMode === "single-column") {
     return (
@@ -43,6 +50,9 @@ export function FormLayoutRenderer({
               selectedRecipe={recipe}
               onRecipeGenerated={onAIRecipeUpdate}
               currentFormState={memoizedFormState}
+              conversationId={conversationId}
+              conversationStore={conversationStore}
+              greetingContext={conversationGreetingContext}
             />
           </div>
         )}
@@ -83,6 +93,9 @@ export function FormLayoutRenderer({
               onRecipeGenerated={onAIRecipeUpdate}
               currentFormState={memoizedFormState}
               isDesktopSidebar={true}
+              conversationId={conversationId}
+              conversationStore={conversationStore}
+              greetingContext={conversationGreetingContext}
             />
           </div>
         </div>

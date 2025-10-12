@@ -20,10 +20,28 @@ export class ChatResponseFormatter {
     conversationHistory: ChatMessage[],
     functionResult: FunctionCallResult | null
   ): Promise<ChatResponse> {
-    const translations = (await import(`@/messages/${this.locale}.json`)).default;
+    const translations = (await import(`@/messages/${this.locale}`)).default;
     
-    // Ensure we always have response content
-    const finalResponseContent = responseContent || translations.chat.processingError;
+    // Ensure we always have a meaningful response
+    let finalResponseContent = responseContent?.trim() || "";
+    if (!finalResponseContent) {
+      // If we have a function call but no textual content from the model,
+      // provide a friendly, context-aware fallback instead of an error.
+      const fn = functionResult?.function;
+      if (fn === "choose_recommendations") {
+        finalResponseContent = translations.chat.recommendationsReady || translations.chat.processingError;
+      } else {
+        finalResponseContent = translations.chat.processingError;
+      }
+    }
+
+    if (
+      functionResult?.function === "choose_recommendations" &&
+      finalResponseContent === translations.chat.processingError &&
+      translations.chat.recommendationsReady
+    ) {
+      finalResponseContent = translations.chat.recommendationsReady;
+    }
     
     return {
       response: finalResponseContent,
