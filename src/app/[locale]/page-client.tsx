@@ -343,8 +343,16 @@ function HomeContent() {
               <div className="lg:col-span-5 lg:order-2">
                 <ScrollAnimation animation="fadeIn" delay={0.2}>
                   <VideoDemo
-                  // videoSrc="/videos/recipe-table-demo.mp4"
-                  // posterSrc="/videos/recipe-table-poster.jpg"
+                    className="aspect-[720/1442] lg:max-h-[620px]"
+                    posterSrc="/video/nl/search-poster.webp"
+                    sources={[
+                      { src: "/video/nl/search.webm", type: "video/webm" },
+                      { src: "/video/nl/search.mp4", type: "video/mp4" },
+                    ]}
+                    showControls={false}
+                    loop
+                    muted
+                    playWhenInView
                   />
                 </ScrollAnimation>
               </div>
@@ -368,7 +376,6 @@ function HomeContent() {
                 <div className="space-y-4">
                   <ScrollAnimation animation="slideUp" delay={0.4}>
                     <div className="flex items-center gap-4 p-4 rounded-lg liquid-glass-card interactive-liquid">
-                      {/* Inverted: neutral circle, info-colored icon */}
                       <div className="bg-muted rounded-full p-3">
                         <Search
                           className="h-6 w-6"
