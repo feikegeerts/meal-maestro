@@ -26,6 +26,7 @@ interface VideoDemoProps {
   playWhenInView?: boolean;
   resetOnExit?: boolean;
   intersectionObserverOptions?: IntersectionObserverInit;
+  disableDefaultContainerChrome?: boolean;
 }
 
 export function VideoDemo({
@@ -41,6 +42,7 @@ export function VideoDemo({
   playWhenInView = false,
   resetOnExit = false,
   intersectionObserverOptions,
+  disableDefaultContainerChrome = false,
 }: VideoDemoProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -104,8 +106,11 @@ export function VideoDemo({
     shouldMute,
   ]);
 
+  const containerBaseClasses = disableDefaultContainerChrome
+    ? "relative overflow-hidden"
+    : "relative overflow-hidden rounded-lg bg-muted";
   const containerClasses = cn(
-    "relative overflow-hidden rounded-lg bg-muted",
+    containerBaseClasses,
     className ?? "aspect-video",
   );
   const combinedVideoClassName = cn(

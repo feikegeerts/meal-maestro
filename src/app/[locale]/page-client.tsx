@@ -342,18 +342,36 @@ function HomeContent() {
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-start">
               <div className="lg:col-span-5 lg:order-2">
                 <ScrollAnimation animation="fadeIn" delay={0.2}>
-                  <VideoDemo
-                    className="aspect-[720/1442] lg:max-h-[620px]"
-                    posterSrc="/video/nl/search-poster.webp"
-                    sources={[
-                      { src: "/video/nl/search.webm", type: "video/webm" },
-                      { src: "/video/nl/search.mp4", type: "video/mp4" },
-                    ]}
-                    showControls={false}
-                    loop
-                    muted
-                    playWhenInView
-                  />
+                  <div className="mx-auto w-full max-w-[340px] sm:max-w-[300px]">
+                    <div className="relative block aspect-[1707/3420]">
+                      <div className="absolute left-[6.5%] right-[6.5%] top-[3%] bottom-[3%]">
+                        <VideoDemo
+                          disableDefaultContainerChrome
+                          className="h-full w-full rounded-[34px] bg-black shadow-xl"
+                          videoClassName="h-full w-full object-cover"
+                          posterSrc="/video/nl/search-poster.webp"
+                          sources={[
+                            {
+                              src: "/video/nl/search.webm",
+                              type: "video/webm",
+                            },
+                            { src: "/video/nl/search.mp4", type: "video/mp4" },
+                          ]}
+                          showControls={false}
+                          loop
+                          muted
+                          playWhenInView
+                        />
+                      </div>
+                      <Image
+                        src="/video/iphone-template.png"
+                        alt="Phone frame"
+                        fill
+                        sizes="(max-width: 1024px) 360px, 460px"
+                        className="pointer-events-none absolute inset-0 z-10 object-contain"
+                      />
+                    </div>
+                  </div>
                 </ScrollAnimation>
               </div>
               <div className="lg:col-span-7 lg:order-1 space-y-8">
