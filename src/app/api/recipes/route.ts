@@ -132,7 +132,8 @@ export async function POST(request: NextRequest) {
       proteins,
       occasions,
       characteristics,
-      season 
+      season,
+      nutrition,
     } = body;
 
     if (!title || !ingredients || !description || !category || !servings) {
@@ -223,6 +224,7 @@ export async function POST(request: NextRequest) {
       occasions: occasions || [],
       characteristics: characteristics || [],
       season,
+      nutrition: nutrition ?? null,
       user_id: user.id
     };
 

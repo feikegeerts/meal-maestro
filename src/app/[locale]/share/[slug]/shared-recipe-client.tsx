@@ -42,6 +42,7 @@ export function SharedRecipeClient({ status, data }: SharedRecipeClientProps) {
   const t = useTranslations("recipes");
   const tUnits = useTranslations("units");
   const tIngredientPlurals = useTranslations("ingredientPlurals");
+  const tNutrition = useTranslations("recipeForm.nutrition");
   const { translateCategory, translateSeason, translateTag } =
     useRecipeTranslations();
 
@@ -202,6 +203,7 @@ export function SharedRecipeClient({ status, data }: SharedRecipeClientProps) {
       }
       t={t}
       tUnits={tUnits}
+      tNutrition={tNutrition}
       banner={banner}
       headerActions={undefined}
       onServingChange={(scaledRecipe) => setDisplayRecipe(scaledRecipe)}

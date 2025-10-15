@@ -85,6 +85,7 @@ export class FormTransformerService {
       occasions: formData.occasions,
       characteristics: formData.characteristics,
       season: formData.season,
+      nutrition: formData.nutrition,
     };
   }
 

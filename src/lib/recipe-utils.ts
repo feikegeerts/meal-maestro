@@ -6,6 +6,9 @@ import {
   Recipe,
   RecipeIngredient,
   RecipeInput,
+  RecipeNutrition,
+  RecipeNutritionValues,
+  RecipeNutritionExtra,
   RecipeCategory,
   RecipeSeason,
   CuisineType,
@@ -68,6 +71,238 @@ export function isValidCharacteristicType(
   characteristicType: string
 ): characteristicType is CharacteristicType {
   return isStringIn(CHARACTERISTIC_TYPES, characteristicType);
+}
+
+function isNonNegativeNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
+function validateNutritionValues(
+  values: RecipeNutritionValues,
+  path: string,
+  errors: string[]
+) {
+  const requiredNumericFields: Array<keyof RecipeNutritionValues> = [
+    "calories",
+    "protein",
+    "carbohydrates",
+    "fat",
+    "saturatedFat",
+    "fiber",
+    "sugars",
+    "sodium",
+  ];
+
+  requiredNumericFields.forEach((field) => {
+    if (!isNonNegativeNumber(values[field])) {
+      errors.push(
+        `Nutrition ${path}.${field} must be a non-negative number when nutrition is provided`
+      );
+    }
+  });
+
+  if (
+    typeof values.cholesterol !== "undefined" &&
+    !isNonNegativeNumber(values.cholesterol)
+  ) {
+    errors.push(
+      `Nutrition ${path}.cholesterol must be a non-negative number when provided`
+    );
+  }
+
+  if (values.extras) {
+    values.extras.forEach((extra: RecipeNutritionExtra, index: number) => {
+      if (!extra.key || extra.key.trim().length === 0) {
+        errors.push(
+          `Nutrition ${path}.extras[${index}].key is required when extras are provided`
+        );
+      }
+      if (!extra.unit || extra.unit.trim().length === 0) {
+        errors.push(
+          `Nutrition ${path}.extras[${index}].unit is required when extras are provided`
+        );
+      }
+      if (!isNonNegativeNumber(extra.value)) {
+        errors.push(
+          `Nutrition ${path}.extras[${index}].value must be a non-negative number when extras are provided`
+        );
+      }
+    });
+  }
+}
+
+function validateRecipeNutrition(
+  nutrition: RecipeNutrition,
+  servings: number,
+  errors: string[]
+) {
+  if (!nutrition.totals) {
+    errors.push("Nutrition totals are required when nutrition is provided");
+  } else {
+    validateNutritionValues(nutrition.totals, "totals", errors);
+  }
+
+  if (!nutrition.perPortion) {
+    errors.push(
+      "Nutrition perPortion is required when nutrition is provided"
+    );
+  } else {
+    validateNutritionValues(nutrition.perPortion, "perPortion", errors);
+  }
+
+  if (!nutrition.meta) {
+    errors.push("Nutrition meta information is required when nutrition is provided");
+  } else {
+    if (!nutrition.meta.source) {
+      errors.push("Nutrition meta.source is required when nutrition is provided");
+    }
+    if (!nutrition.meta.fetchedAt) {
+      errors.push(
+        "Nutrition meta.fetchedAt is required when nutrition is provided"
+      );
+    }
+    if (
+      nutrition.meta.source === "ai" &&
+      (!nutrition.meta.cacheKey || nutrition.meta.cacheKey.trim().length === 0)
+    ) {
+      errors.push(
+        "Nutrition meta.cacheKey is required when nutrition is provided by AI"
+      );
+    }
+    if (
+      typeof nutrition.meta.confidence !== "undefined" &&
+      (typeof nutrition.meta.confidence !== "number" ||
+        nutrition.meta.confidence < 0 ||
+        nutrition.meta.confidence > 1)
+    ) {
+      errors.push(
+        "Nutrition meta.confidence must be a number between 0 and 1 when provided"
+      );
+    }
+  }
+
+  if (nutrition.totals && nutrition.perPortion && servings > 0) {
+    const fieldsToCompare: Array<keyof RecipeNutritionValues> = [
+      "calories",
+      "protein",
+      "carbohydrates",
+      "fat",
+      "saturatedFat",
+      "fiber",
+      "sugars",
+      "sodium",
+    ];
+
+    fieldsToCompare.forEach((field) => {
+      const totalValue = nutrition.totals[field];
+      const perPortionValue = nutrition.perPortion[field];
+      if (
+        isNonNegativeNumber(totalValue) &&
+        isNonNegativeNumber(perPortionValue)
+      ) {
+        const expectedPerPortion =
+          servings > 0 ? totalValue / servings : perPortionValue;
+        const delta = Math.abs(perPortionValue - expectedPerPortion);
+        if (
+          !Number.isNaN(expectedPerPortion) &&
+          delta / (expectedPerPortion || 1) > 0.2
+        ) {
+          errors.push(
+            `Nutrition perPortion.${field} does not match totals.${field} divided by servings`
+          );
+        }
+      }
+    });
+  }
+}
+
+function scaleNutritionExtras(
+  extras: RecipeNutritionExtra[] | undefined,
+  multiplier: number
+): RecipeNutritionExtra[] | undefined {
+  if (!extras?.length) {
+    return extras;
+  }
+
+  return extras.map((extra) => ({
+    ...extra,
+    value:
+      typeof extra.value === "number" && Number.isFinite(extra.value)
+        ? extra.value * multiplier
+        : extra.value,
+  }));
+}
+
+function buildPerPortionFromTotals(
+  totals: RecipeNutritionValues,
+  servings: number
+): RecipeNutritionValues {
+  const divide = (value: number): number =>
+    servings > 0 && Number.isFinite(value) ? value / servings : value;
+
+  const perPortion: RecipeNutritionValues = {
+    calories: divide(totals.calories),
+    protein: divide(totals.protein),
+    carbohydrates: divide(totals.carbohydrates),
+    fat: divide(totals.fat),
+    saturatedFat: divide(totals.saturatedFat),
+    fiber: divide(totals.fiber),
+    sugars: divide(totals.sugars),
+    sodium: divide(totals.sodium),
+  };
+
+  if (typeof totals.cholesterol === "number") {
+    perPortion.cholesterol = divide(totals.cholesterol);
+  }
+
+  if (totals.extras?.length) {
+    perPortion.extras = totals.extras.map((extra) => ({
+      ...extra,
+      value:
+        typeof extra.value === "number" && servings > 0
+          ? extra.value / servings
+          : extra.value,
+    }));
+  }
+
+  return perPortion;
+}
+
+function scaleNutrition(
+  nutrition: RecipeNutrition,
+  ratio: number,
+  newServings: number
+): RecipeNutrition {
+  if (!Number.isFinite(ratio) || ratio <= 0) {
+    return nutrition;
+  }
+
+  const scale = (value: number): number => value * ratio;
+
+  const scaledTotals: RecipeNutritionValues = {
+    calories: scale(nutrition.totals.calories),
+    protein: scale(nutrition.totals.protein),
+    carbohydrates: scale(nutrition.totals.carbohydrates),
+    fat: scale(nutrition.totals.fat),
+    saturatedFat: scale(nutrition.totals.saturatedFat),
+    fiber: scale(nutrition.totals.fiber),
+    sugars: scale(nutrition.totals.sugars),
+    sodium: scale(nutrition.totals.sodium),
+  };
+
+  if (typeof nutrition.totals.cholesterol === "number") {
+    scaledTotals.cholesterol = scale(nutrition.totals.cholesterol);
+  }
+
+  scaledTotals.extras = scaleNutritionExtras(nutrition.totals.extras, ratio);
+
+  const perPortion = buildPerPortionFromTotals(scaledTotals, newServings);
+
+  return {
+    totals: scaledTotals,
+    perPortion,
+    meta: { ...nutrition.meta },
+  };
 }
 
 export function validateRecipeInput(input: RecipeInput): {
@@ -181,6 +416,19 @@ export function validateRecipeInput(input: RecipeInput): {
         )}. Available characteristics: ${CHARACTERISTIC_TYPES.join(", ")}`
       );
   }
+
+  if (input.nutrition) {
+    try {
+      validateRecipeNutrition(input.nutrition, input.servings, errors);
+    } catch (error) {
+      errors.push(
+        error instanceof Error
+          ? `Nutrition validation failed: ${error.message}`
+          : "Nutrition validation failed"
+      );
+    }
+  }
+
   return { valid: errors.length === 0, errors };
 }
 
@@ -346,7 +594,15 @@ export function scaleRecipe(recipe: Recipe, newServings: number): Recipe {
   const scaledIngredients = recipe.ingredients.map((ing) =>
     scaleIngredient(ing, ratio)
   );
-  return { ...recipe, ingredients: scaledIngredients, servings: newServings };
+  const scaledNutrition = recipe.nutrition
+    ? scaleNutrition(recipe.nutrition, ratio, newServings)
+    : recipe.nutrition;
+  return {
+    ...recipe,
+    ingredients: scaledIngredients,
+    servings: newServings,
+    nutrition: scaledNutrition,
+  };
 }
 
 export function formatIngredientDisplay(ingredient: RecipeIngredient): string {

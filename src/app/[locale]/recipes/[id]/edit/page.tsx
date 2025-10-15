@@ -14,6 +14,7 @@ import { Recipe, RecipeInput } from "@/types/recipe";
 import { RecipeEditForm } from "@/components/recipe-edit-form";
 import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { recipeService } from "@/lib/recipe-service";
 
 export default function EditRecipePage() {
   const { id } = useParams();
@@ -92,7 +93,9 @@ export default function EditRecipePage() {
       router.replace(`/recipes/${recipe.id}`);
     } catch (error) {
       console.error("Error updating recipe:", error);
-      throw error;
+      setError(
+        error instanceof Error ? error.message : t("failedToLoad")
+      );
     } finally {
       setSaveLoading(false);
     }
@@ -101,25 +104,24 @@ export default function EditRecipePage() {
   const updateRecipe = async (updateData: Partial<RecipeInput>) => {
     if (!recipe) throw new Error("Recipe not found");
 
-    const response = await fetch(`/api/recipes/${recipe.id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(updateData),
-    });
+    try {
+      const { recipe: updatedRecipe } = await recipeService.updateRecipe(
+        recipe.id,
+        updateData
+      );
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to update recipe");
+      updateRecipeInContext?.(recipe.id, updatedRecipe);
+      return updatedRecipe;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update recipe";
+
+      if (message.toLowerCase().includes("authentication")) {
+        router.push("/login");
+      }
+
+      throw new Error(message);
     }
-
-    const data = await response.json();
-
-    // Update context if available
-    updateRecipeInContext?.(recipe.id, data.recipe);
-
-    return data.recipe;
   };
 
   const handleCancel = () => {

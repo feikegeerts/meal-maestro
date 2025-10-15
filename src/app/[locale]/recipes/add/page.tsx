@@ -35,6 +35,7 @@ const defaultRecipe: Recipe = {
   created_at: undefined,
   updated_at: undefined,
   user_id: "",
+  nutrition: null,
 };
 
 export default function AddRecipePage() {
@@ -84,6 +85,7 @@ export default function AddRecipePage() {
         description: draft.description || "",
         category,
         season,
+        nutrition: null,
       } as Recipe;
     } catch {
       return defaultRecipe;

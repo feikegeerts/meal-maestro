@@ -128,6 +128,42 @@ export interface RecipeIngredient {
   notes?: string;
 }
 
+export interface RecipeNutritionExtra {
+  key: string;
+  unit: string;
+  value: number;
+  label?: string;
+}
+
+export interface RecipeNutritionValues {
+  calories: number;
+  protein: number;
+  carbohydrates: number;
+  fat: number;
+  saturatedFat: number;
+  fiber: number;
+  sugars: number;
+  sodium: number;
+  cholesterol?: number;
+  extras?: RecipeNutritionExtra[];
+}
+
+export interface RecipeNutritionMeta {
+  source: "ai" | "database" | "mixed";
+  fetchedAt: string;
+  model?: string;
+  confidence?: number;
+  warnings?: string[];
+  notes?: string;
+  cacheKey?: string;
+}
+
+export interface RecipeNutrition {
+  totals: RecipeNutritionValues;
+  perPortion: RecipeNutritionValues;
+  meta: RecipeNutritionMeta;
+}
+
 export interface Recipe {
   id: string;
   title: string;
@@ -156,6 +192,7 @@ export interface Recipe {
   created_at?: string;
   updated_at?: string;
   user_id: string;
+  nutrition?: RecipeNutrition | null;
 }
 
 export interface RecipeInput {
@@ -174,6 +211,7 @@ export interface RecipeInput {
   occasions?: string[];
   characteristics?: string[];
   last_eaten?: string;
+  nutrition?: RecipeNutrition | null;
 }
 
 export interface RecipeSearchParams {

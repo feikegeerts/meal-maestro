@@ -86,7 +86,8 @@ export async function PUT(
       occasions,
       characteristics,
       season, 
-      last_eaten 
+      last_eaten,
+      nutrition,
     } = body;
 
     if (!recipeId) {
@@ -111,6 +112,7 @@ export async function PUT(
       characteristics: string[];
       season: string;
       last_eaten: string;
+      nutrition: unknown;
     }> = {};
     if (title !== undefined) updateData.title = title;
     if (ingredients !== undefined) {
@@ -168,6 +170,7 @@ export async function PUT(
     if (characteristics !== undefined) updateData.characteristics = characteristics;
     if (season !== undefined) updateData.season = season;
     if (last_eaten !== undefined) updateData.last_eaten = last_eaten;
+    if (nutrition !== undefined) updateData.nutrition = nutrition;
 
     const { data: recipe, error } = await supabase
       .from('recipes')

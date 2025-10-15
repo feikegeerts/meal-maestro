@@ -6,6 +6,7 @@ import {
   RecipeInput,
   RecipeIngredient,
   RecipeSeason,
+  RecipeNutrition,
 } from "@/types/recipe";
 import { validateRecipeInput } from "@/lib/recipe-utils";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { IngredientsSection } from "./recipe-edit/components/ingredients-section
 import { InstructionsSection } from "./recipe-edit/components/instructions-section";
 import { CategorizedTagSelector } from "./recipe-edit/components/categorized-tag-selector";
 import { FormLayoutRenderer } from "./recipe-edit/components/form-layout-renderer";
+import { NutritionSection } from "./recipe-edit/components/nutrition-section";
 
 interface RecipeEditFormProps {
   recipe: Recipe;
@@ -83,9 +85,11 @@ export function RecipeEditForm({
     occasions: recipe.occasions || [],
     characteristics: recipe.characteristics || [],
     season: recipe.season || RecipeSeason.YEAR_ROUND,
+    nutrition: recipe.nutrition || null,
   });
   const [errors, setErrors] = useState<string[]>([]);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [nutritionStale, setNutritionStale] = useState(false);
 
   // Auto-save hook replaces global state pattern
   useAutoSave({
@@ -132,14 +136,45 @@ export function RecipeEditForm({
 
   const handleIngredientsChange = useCallback(
     (ingredients: RecipeIngredient[]) => {
-      setFormData((prev) => ({ ...prev, ingredients }));
+      setFormData((prev) => {
+        if (prev.nutrition) {
+          setNutritionStale(true);
+        }
+        return { ...prev, ingredients };
+      });
     },
     []
   );
 
   const handleFormDataChange = useCallback((updates: Partial<RecipeInput>) => {
-    setFormData((prev) => ({ ...prev, ...updates }));
+    setFormData((prev) => {
+      if (
+        prev.nutrition &&
+        "servings" in updates &&
+        typeof updates.servings === "number" &&
+        updates.servings !== prev.servings
+      ) {
+        setNutritionStale(true);
+      }
+      return { ...prev, ...updates };
+    });
   }, []);
+
+  const handleNutritionFetched = useCallback(
+    ({ nutrition, cacheHit }: { nutrition: RecipeNutrition; cacheHit: boolean }) => {
+      setFormData((prev) => ({
+        ...prev,
+        nutrition,
+      }));
+      setNutritionStale(false);
+      if (!cacheHit) {
+        setErrors((prev) =>
+          prev.filter((message) => !message.toLowerCase().includes("nutrition"))
+        );
+      }
+    },
+    []
+  );
 
   const FormSections = useMemo(
     () => (
@@ -167,6 +202,16 @@ export function RecipeEditForm({
         <CategorizedTagSelector
           formData={formData}
           onFormDataChange={handleFormDataChange}
+          disabled={loading}
+        />
+
+        <NutritionSection
+          recipeId={recipe.id}
+          ingredients={formData.ingredients}
+          servings={formData.servings}
+          nutrition={formData.nutrition}
+          isStale={nutritionStale}
+          onFetchComplete={handleNutritionFetched}
           disabled={loading}
         />
 
@@ -256,6 +301,8 @@ export function RecipeEditForm({
       onCancel,
       recipe.id,
       t,
+      nutritionStale,
+      handleNutritionFetched,
     ]
   );
 
@@ -295,9 +342,26 @@ export function RecipeEditForm({
           onFormDataChange={handleFormDataChange}
           disabled={loading}
         />
+
+        <NutritionSection
+          recipeId={recipe.id}
+          ingredients={formData.ingredients}
+          servings={formData.servings}
+          nutrition={formData.nutrition}
+          isStale={nutritionStale}
+          onFetchComplete={handleNutritionFetched}
+          disabled={loading}
+        />
       </>
     ),
-    [formData, handleFormDataChange, loading]
+    [
+      formData,
+      handleFormDataChange,
+      loading,
+      nutritionStale,
+      handleNutritionFetched,
+      recipe.id,
+    ]
   );
 
   const ActionButtons = useMemo(

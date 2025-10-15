@@ -243,6 +243,51 @@
       "descriptionMissing": "Een beschrijving helpt je herinneren wat dit recept zo bijzonder maakt",
       "ingredientNameMissing": "Sommige ingrediënten missen hun naam - wat zullen we toevoegen?",
       "ingredientIssue": "Laten we ervoor zorgen dat al je ingrediënten goed zijn ingevuld"
+    },
+    "nutrition": {
+      "title": "Voedingswaarden",
+      "badge": "Beta",
+      "description": "Vraag een AI-schatting van de voedingswaarden voor dit recept op. De cijfers zijn alleen ter informatie.",
+      "fetch": "Voedingswaarden ophalen",
+      "refetch": "Opnieuw berekenen",
+      "fetching": "Bezig met ophalen…",
+      "requiresSave": {
+        "title": "Sla het recept eerst op",
+        "body": "Sla dit recept op zodat het een ID heeft. Daarna kun je de voedingswaarden ophalen."
+      },
+      "needsIngredients": {
+        "title": "Voeg eerst ingrediënten toe",
+        "body": "We hebben minstens één ingrediënt met een naam nodig voordat we voedingswaarden kunnen inschatten."
+      },
+      "stale": "Ingrediënten of porties zijn gewijzigd sinds de laatste berekening. Haal de waarden opnieuw op voor actuele cijfers.",
+      "cacheHit": {
+        "title": "Gecachte voedingswaarden",
+        "body": "Deze cijfers komen uit een recente berekening met dezelfde ingrediënten. Bereken opnieuw als er iets is aangepast."
+      },
+      "errorTitle": "Voedingswaarden ophalen mislukt",
+      "errorFallback": "Het lukt nu niet om de voedingswaarden te berekenen. Probeer het later nog eens.",
+      "emptyState": "Nog geen voedingsinformatie. Haal de waarden op zodra je er klaar voor bent.",
+      "disclaimer": "Voedingswaarden zijn schattingen gegenereerd door AI. Voor medisch of dieetadvies: raadpleeg een professional.",
+      "results": {
+        "heading": "Voedingsstof",
+        "whole": "Totaal recept",
+        "perPortion": "Per portie",
+        "confidence": "Vertrouwen",
+        "lastFetched": "Laatst opgehaald",
+        "warnings": "Opmerkingen van het model"
+      },
+      "nutrients": {
+        "calories": "Calorieën",
+        "protein": "Eiwit",
+        "carbohydrates": "Koolhydraten",
+        "fat": "Vet totaal",
+        "saturatedFat": "Verzadigd vet",
+        "fiber": "Vezels",
+        "sugars": "Suikers",
+        "sodium": "Natrium",
+        "cholesterol": "Cholesterol",
+        "extras": "Extra voedingsstoffen"
+      }
     }
   },
   "categories": {

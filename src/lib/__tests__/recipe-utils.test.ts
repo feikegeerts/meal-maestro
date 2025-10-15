@@ -10,6 +10,7 @@ import {
   isValidCharacteristicType,
   validateRecipeInput,
   COOKING_UNITS,
+  scaleRecipe,
 } from '../recipe-utils';
 import {
   RECIPE_CATEGORIES,
@@ -22,6 +23,8 @@ import {
   OCCASION_TYPES,
   CHARACTERISTIC_TYPES,
   RecipeInput,
+  Recipe,
+  RecipeCategory,
 } from '@/types/recipe';
 
 describe('recipe-utils type guards', () => {
@@ -160,5 +163,147 @@ describe('validateRecipeInput', () => {
         'Ingredient 1 amount must be a positive number or empty for "to taste"',
       ])
     );
+  });
+
+  it('requires cacheKey when nutrition meta comes from AI', () => {
+    const input = createValidInput();
+    input.nutrition = {
+      totals: {
+        calories: 800,
+        protein: 40,
+        carbohydrates: 120,
+        fat: 20,
+        saturatedFat: 8,
+        fiber: 12,
+        sugars: 30,
+        sodium: 900,
+      },
+      perPortion: {
+        calories: 200,
+        protein: 10,
+        carbohydrates: 30,
+        fat: 5,
+        saturatedFat: 2,
+        fiber: 3,
+        sugars: 7.5,
+        sodium: 225,
+      },
+      meta: {
+        source: 'ai',
+        fetchedAt: new Date().toISOString(),
+      },
+    };
+
+    const result = validateRecipeInput(input);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        'Nutrition meta.cacheKey is required when nutrition is provided by AI',
+      ])
+    );
+  });
+
+  it('accepts AI nutrition when cacheKey is provided', () => {
+    const input = createValidInput();
+    input.nutrition = {
+      totals: {
+        calories: 800,
+        protein: 40,
+        carbohydrates: 120,
+        fat: 20,
+        saturatedFat: 8,
+        fiber: 12,
+        sugars: 30,
+        sodium: 900,
+      },
+      perPortion: {
+        calories: 200,
+        protein: 10,
+        carbohydrates: 30,
+        fat: 5,
+        saturatedFat: 2,
+        fiber: 3,
+        sugars: 7.5,
+        sodium: 225,
+      },
+      meta: {
+        source: 'ai',
+        fetchedAt: new Date().toISOString(),
+        cacheKey: 'sample-cache-key',
+      },
+    };
+
+    const result = validateRecipeInput(input);
+    expect(result.valid).toBe(true);
+  });
+});
+
+describe('scaleRecipe', () => {
+  const baseCategory = RECIPE_CATEGORIES[0] ?? RecipeCategory.MAIN_COURSE;
+
+  const baseRecipe: Recipe = {
+    id: 'recipe-1',
+    title: 'Scalable Recipe',
+    description: 'A recipe with nutrition data',
+    category: baseCategory,
+    servings: 4,
+    ingredients: [
+      { id: '1', name: 'Ingredient', amount: 100, unit: 'g' },
+    ],
+    user_id: 'user-1',
+    cuisine: undefined,
+    diet_types: [],
+    cooking_methods: [],
+    dish_types: [],
+    proteins: [],
+    occasions: [],
+    characteristics: [],
+    season: undefined,
+    created_at: undefined,
+    updated_at: undefined,
+    last_eaten: undefined,
+    nutrition: {
+      totals: {
+        calories: 800,
+        protein: 40,
+        carbohydrates: 120,
+        fat: 20,
+        saturatedFat: 8,
+        fiber: 12,
+        sugars: 30,
+        sodium: 900,
+      },
+      perPortion: {
+        calories: 200,
+        protein: 10,
+        carbohydrates: 30,
+        fat: 5,
+        saturatedFat: 2,
+        fiber: 3,
+        sugars: 7.5,
+        sodium: 225,
+      },
+      meta: {
+        source: 'ai',
+        fetchedAt: new Date().toISOString(),
+        cacheKey: 'base-cache-key',
+      },
+    },
+  };
+
+  it('scales nutrition totals while keeping per-portion values consistent', () => {
+    const scaled = scaleRecipe(baseRecipe, 8);
+
+    expect(scaled.servings).toBe(8);
+    expect(scaled.nutrition?.totals.calories).toBeCloseTo(1600);
+    expect(scaled.nutrition?.perPortion.calories).toBeCloseTo(200);
+    expect(scaled.nutrition?.totals.protein).toBeCloseTo(80);
+    expect(scaled.nutrition?.perPortion.protein).toBeCloseTo(10);
+  });
+
+  it('does not mutate the original recipe nutrition', () => {
+    const originalTotals = { ...baseRecipe.nutrition?.totals };
+    scaleRecipe(baseRecipe, 8);
+    expect(baseRecipe.nutrition?.totals).toEqual(originalTotals);
   });
 });

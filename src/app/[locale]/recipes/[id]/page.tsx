@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "@/app/i18n/routing";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -15,7 +15,7 @@ import type { Recipe } from "@/types/recipe";
 import { useLocalizedDateFormatter } from "@/lib/date-utils";
 import { ArrowLeft, Plus } from "lucide-react";
 import { toDateOnlyISOString } from "@/lib/utils";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRecipeTranslations } from "@/messages";
 import {
   IngredientFormatterService,
@@ -45,6 +45,13 @@ export default function RecipeDetailPage() {
   const t = useTranslations("recipes");
   const tUnits = useTranslations("units");
   const tIngredientPlurals = useTranslations("ingredientPlurals");
+  const tNutrition = useTranslations("recipeForm.nutrition");
+  const locale = useLocale();
+  const [nutritionFetching, setNutritionFetching] = useState(false);
+  const [nutritionError, setNutritionError] = useState<string | null>(null);
+  const [nutritionCacheHit, setNutritionCacheHit] = useState<boolean | null>(
+    null
+  );
   const { translateCategory, translateSeason, translateTag } =
     useRecipeTranslations();
 
@@ -56,6 +63,14 @@ export default function RecipeDetailPage() {
     );
     return new IngredientFormatterService(translationAdapter);
   }, [tUnits, tIngredientPlurals]);
+  const recipeId = recipe?.id ?? null;
+  const canFetchNutrition = useMemo(() => {
+    if (!recipeId) return false;
+    if (!recipe?.servings || recipe.servings <= 0) return false;
+    return recipe.ingredients.some(
+      (ingredient) => ingredient.name && ingredient.name.trim().length > 0
+    );
+  }, [recipeId, recipe]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -63,6 +78,13 @@ export default function RecipeDetailPage() {
       return;
     }
   }, [user, authLoading, router, id]);
+
+  useEffect(() => {
+    if (recipeId) {
+      setNutritionCacheHit(null);
+      setNutritionError(null);
+    }
+  }, [recipeId]);
 
   useEffect(() => {
     const loadRecipe = async () => {
@@ -196,6 +218,63 @@ export default function RecipeDetailPage() {
     }
   };
 
+  const handleFetchNutrition = useCallback(
+    async ({ forceRefresh = false }: { forceRefresh?: boolean } = {}) => {
+      if (!recipeId) return;
+
+      setNutritionFetching(true);
+      setNutritionError(null);
+      setNutritionCacheHit(null);
+
+      try {
+        const response = await fetch(`/api/recipes/${recipeId}/nutrition`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            locale,
+            forceRefresh,
+          }),
+        });
+
+        const payload = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            typeof payload?.error === "string"
+              ? payload.error
+              : tNutrition("errorFallback")
+          );
+        }
+
+        if (!payload?.nutrition) {
+          throw new Error(tNutrition("errorFallback"));
+        }
+
+        setRecipe((prev) =>
+          prev && prev.id === recipeId
+            ? { ...prev, nutrition: payload.nutrition }
+            : prev
+        );
+        setDisplayRecipe((prev) =>
+          prev && prev.id === recipeId
+            ? { ...prev, nutrition: payload.nutrition }
+            : prev
+        );
+        setNutritionCacheHit(Boolean(payload.cacheHit));
+      } catch (error) {
+        const fallback = tNutrition("errorFallback");
+        const message =
+          error instanceof Error ? error.message || fallback : fallback;
+        setNutritionError(message);
+      } finally {
+        setNutritionFetching(false);
+      }
+    },
+    [recipeId, locale, tNutrition]
+  );
+
   const handleAddRecipe = () => {
     router.push("/recipes/add");
   };
@@ -286,6 +365,12 @@ export default function RecipeDetailPage() {
       }
       t={t}
       tUnits={tUnits}
+      tNutrition={tNutrition}
+      onFetchNutrition={handleFetchNutrition}
+      canFetchNutrition={canFetchNutrition}
+      nutritionFetching={nutritionFetching}
+      nutritionError={nutritionError}
+      nutritionCacheHit={nutritionCacheHit}
       lastEatenRecentlyUpdated={lastEatenRecentlyUpdated}
       actionLoading={actionLoading}
       onMarkAsEatenToday={handleMarkEatenToday}
