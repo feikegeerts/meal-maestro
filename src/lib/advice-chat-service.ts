@@ -8,6 +8,11 @@ import { OpenAI } from "openai";
 import { getAdviceTools, RecommendationCallArgs, NewRecipeSuggestionArgs } from "./advice-functions";
 import type { FunctionCallResult } from "./function-call-processor";
 import type { ChatMessage } from "./conversation-builder";
+import {
+  RECIPE_CREATION_QUALITY_PROMPT,
+  getCustomUnitsInstruction,
+  getUnitPreferenceInstruction,
+} from "./chat-prompts";
 
 type RecommendationPayload = {
   primaryId?: string;
@@ -80,12 +85,84 @@ export class AdviceChatService {
   private locale: string;
   private supabaseClient?: SupabaseClient;
   private responseFormatter: ChatResponseFormatter;
+  private unitPreference?: string;
+  private customUnits: string[] = [];
+  private preferencesLoaded = false;
+  private preferencesLoading: Promise<void> | null = null;
 
   constructor(userId: string, locale: string = "en", supabaseClient?: SupabaseClient) {
     this.userId = userId;
     this.locale = locale;
     this.supabaseClient = supabaseClient;
     this.responseFormatter = new ChatResponseFormatter(locale);
+  }
+
+  private async ensureUserPreferencesLoaded(): Promise<void> {
+    if (this.preferencesLoaded) {
+      return;
+    }
+    if (this.preferencesLoading) {
+      await this.preferencesLoading;
+      return;
+    }
+
+    this.preferencesLoading = (async () => {
+      // Default preference aligns with recipe assistant expectations
+      let unitPreference: string | undefined = "traditional-metric";
+      let customUnits: string[] = [];
+
+      if (this.supabaseClient) {
+        try {
+          const { data: profile, error } = await this.supabaseClient
+            .from("user_profiles")
+            .select("unit_system_preference")
+            .eq("id", this.userId)
+            .maybeSingle();
+
+          if (!error && profile?.unit_system_preference) {
+            unitPreference = profile.unit_system_preference;
+          }
+        } catch (err) {
+          console.warn(
+            "[AdviceChatService] Failed to load user unit preference:",
+            err instanceof Error ? err.message : err
+          );
+        }
+
+        try {
+          const { data: unitsData, error: unitsError } = await this.supabaseClient
+            .from("custom_units")
+            .select("unit_name")
+            .eq("user_id", this.userId)
+            .order("unit_name", { ascending: true });
+
+          if (!unitsError && Array.isArray(unitsData)) {
+            customUnits = unitsData
+              .map((u) => u.unit_name?.trim())
+              .filter((name): name is string => Boolean(name))
+              .filter((name) => name.length > 0 && name.length <= 20)
+              .filter((name) => /^[a-zA-Z0-9\s\-.]+$/.test(name))
+              .slice(0, 25);
+          }
+        } catch (err) {
+          console.warn(
+            "[AdviceChatService] Failed to load custom units:",
+            err instanceof Error ? err.message : err
+          );
+          customUnits = [];
+        }
+      }
+
+      this.unitPreference = unitPreference;
+      this.customUnits = customUnits;
+      this.preferencesLoaded = true;
+    })();
+
+    try {
+      await this.preferencesLoading;
+    } finally {
+      this.preferencesLoading = null;
+    }
   }
 
   private buildSystemPrompt(context?: AdviceContext): string {
@@ -116,7 +193,28 @@ export class AdviceChatService {
       return `${c.id} | ${c.title} | ${c.category}${tagStr ? ` | ${tagStr}` : ""} | ${c.season || "year-round"} | ${c.last_eaten || "never"}`;
     });
 
-    return [languageLine, header, seasonLine, guidance, candidateIntro, ...candidates]
+    const recipeDraftGuardrails =
+      "If you call create_new_recipe_suggestion, the draft MUST follow these recipe requirements exactly:";
+
+    const preferenceInstruction = this.unitPreference
+      ? getUnitPreferenceInstruction(this.unitPreference).trim()
+      : "";
+    const customUnitsInstruction = this.customUnits.length
+      ? getCustomUnitsInstruction(this.customUnits).trim()
+      : "";
+
+    return [
+      languageLine,
+      header,
+      seasonLine,
+      guidance,
+      candidateIntro,
+      ...candidates,
+      recipeDraftGuardrails,
+      RECIPE_CREATION_QUALITY_PROMPT,
+      preferenceInstruction,
+      customUnitsInstruction,
+    ]
       .filter(Boolean)
       .join("\n");
   }
@@ -128,6 +226,7 @@ export class AdviceChatService {
       throw new Error("Message is required");
     }
 
+    await this.ensureUserPreferencesLoaded();
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
     messages.push({ role: "system", content: this.buildSystemPrompt(context) });
 
