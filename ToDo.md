@@ -1,8 +1,6 @@
 # Post-MVP Development Roadmap
 
-1. [ ] The inspiritation prompt doesn't have all the extensive prompt chunks that the add recipe prompt has. this means that when the inspiriation prompt is used to generate a new recipe, it's a lot lower in terms of quality than the add new recipe prompt.
 1. [ ] Record videos for the homepage
-1. [ ] Uploading image for recipe -> go to recipe list -> go back to recipe detail of the recipe for which you've just added an image. -> image is not visible due to the state/context of the recipe list not being updated on image upload.
 1. [ ] Inspire page AI doesn't have a function to search for a recipe with a keyword.
 1. [ ] Do shared recipe without token so it is easier to store the url
 
@@ -13,8 +11,6 @@
 1. [ ] Tiktok import
 1. [ ] Extra columns
    1. [ ] Reference column to add the original link / place of the recipe
-   1. [ ] Add calories
-   1. [ ] nutritional values
    1. [ ] Bereidingstijd, totale tijd etc.
    1. [ ] Add free form notes to the recipes, to for example keep track of when somebody ate this with whom
    1. [ ] Add whine section

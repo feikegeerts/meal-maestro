@@ -284,9 +284,7 @@ export default function RecipeDetailPage() {
       const updatedRecipe = { ...recipe, image_url: imageUrl };
       setRecipe(updatedRecipe);
       setDisplayRecipe(updatedRecipe);
-
-      // Don't update context to avoid triggering re-renders
-      // The context will be updated when the user navigates back to recipe list
+      updateRecipeInContext?.(recipe.id, updatedRecipe);
     }
   };
 
