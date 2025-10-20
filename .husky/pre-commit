@@ -59,5 +59,11 @@ fi
 
 echo "husky (pre-commit): using pnpm at ${PNPM_BIN}"
 
-echo "husky (pre-commit): skipping automatic pnpm verify (run manually when convenient)."
-exit 0
+if ! "${PNPM_BIN}" verify; then
+  status=$?
+  cat >&2 <<'EOF'
+husky (pre-commit): pnpm verify failed. Commit aborted.
+Resolve the issue above or run `pnpm verify` manually to inspect the failure.
+EOF
+  exit $status
+fi
