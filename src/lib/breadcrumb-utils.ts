@@ -105,15 +105,6 @@ export function generateBreadcrumbs(
     }
   }
 
-  // Handle /inspire route
-  if (segments[0] === 'inspire') {
-    breadcrumbs.push({
-      label: t?.('inspire') || 'Inspire',
-      isCurrentPage: true,
-    });
-    return breadcrumbs;
-  }
-
   // Handle other routes (admin, etc.)
   if (segments[0] === 'admin') {
     breadcrumbs.push({
@@ -159,10 +150,6 @@ export function getPageTitle(pathname: string, options: BreadcrumbOptions = {}):
       }
       return t?.('recipeDetail') || 'Recipe Details';
     }
-  }
-
-  if (segments[0] === 'inspire') {
-    return t?.('inspire') || 'Inspire';
   }
 
   // Fallback

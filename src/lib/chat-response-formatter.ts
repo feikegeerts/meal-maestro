@@ -27,20 +27,7 @@ export class ChatResponseFormatter {
     if (!finalResponseContent) {
       // If we have a function call but no textual content from the model,
       // provide a friendly, context-aware fallback instead of an error.
-      const fn = functionResult?.function;
-      if (fn === "choose_recommendations") {
-        finalResponseContent = translations.chat.recommendationsReady || translations.chat.processingError;
-      } else {
-        finalResponseContent = translations.chat.processingError;
-      }
-    }
-
-    if (
-      functionResult?.function === "choose_recommendations" &&
-      finalResponseContent === translations.chat.processingError &&
-      translations.chat.recommendationsReady
-    ) {
-      finalResponseContent = translations.chat.recommendationsReady;
+      finalResponseContent = translations.chat.processingError;
     }
     
     return {

@@ -102,11 +102,6 @@ interface ChatInterfaceProps {
     season?: string;
   };
   isDesktopSidebar?: boolean;
-  // Optional props to customize behavior for different endpoints/contexts
-  endpoint?: string;
-  requestContext?: RequestContext;
-  onFunctionCall?: (fn: { function: string; result?: unknown; error?: string }) => void;
-  initialMessage?: string;
   conversationId?: string;
   conversationStore?: ConversationStore;
   onConversationStateChange?: (state: {
@@ -122,29 +117,11 @@ export function ChatInterface({
   onRecipeGenerated,
   currentFormState,
   isDesktopSidebar = false,
-  // New props for reuse in different contexts (e.g., /inspire)
-  endpoint = "/api/recipes/chat",
-  requestContext,
-  onFunctionCall,
-  initialMessage,
   conversationId,
   conversationStore,
   onConversationStateChange,
   greetingContext,
-}: ChatInterfaceProps & {
-  endpoint?: string;
-  requestContext?: RequestContext;
-  onFunctionCall?: (fn: { function: string; result?: unknown; error?: string }) => void;
-  initialMessage?: string;
-  conversationId?: string;
-  conversationStore?: ConversationStore;
-  onConversationStateChange?: (state: {
-    messages: ChatMessage[];
-    input: string;
-    isExpanded: boolean;
-  }) => void;
-  greetingContext?: string;
-}) {
+}: ChatInterfaceProps) {
   const t = useTranslations("chat");
   const locale = useLocale();
   const { profile } = useAuth();
@@ -184,8 +161,8 @@ export function ChatInterface({
     useIntelligentLoading({ t });
 
   const defaultAssistantMessage = useMemo(
-    () => initialMessage || t("welcomeMessage"),
-    [initialMessage, t]
+    () => t("welcomeMessage"),
+    [t]
   );
 
   // Auto-scroll to bottom when new messages arrive
@@ -420,10 +397,9 @@ export function ChatInterface({
           }
         }
 
-        const mergedContext: RequestContext = {
-          ...(requestContext ? { ...requestContext } : {}),
-          ...(requestCtx ? { ...requestCtx } : {}),
-        };
+        const mergedContext: RequestContext = requestCtx
+          ? { ...requestCtx }
+          : {};
 
         if (currentFormState) {
           mergedContext.current_form_state = currentFormState;
@@ -466,7 +442,7 @@ export function ChatInterface({
           context: mergedContext,
         };
 
-        const response = await fetch(endpoint, {
+        const response = await fetch("/api/recipes/chat", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -505,35 +481,25 @@ export function ChatInterface({
         setMessages((prev) => [...prev, assistantResponse]);
 
         // Handle function calls
-        if (chatData.function_call) {
-          // Emit generic callback if provided (for /inspire recommendations, etc.)
-          onFunctionCall?.(chatData.function_call as unknown as {
-            function: string;
-            result?: unknown;
-            error?: string;
-          });
-
-          // Backward compatibility for recipe creation/extraction flows
-          if (onRecipeGenerated) {
-            if (chatData.function_call.function === "update_recipe_form") {
-              const result = chatData.function_call.result as {
-                formUpdate?: unknown;
-                success?: boolean;
-              };
-              if (result?.formUpdate) {
-                onRecipeGenerated(result.formUpdate);
-              }
-            } else if (
-              chatData.function_call.function === "extract_recipe_from_url"
-            ) {
-              const result = chatData.function_call.result as {
-                formUpdate?: unknown;
-                success?: boolean;
-                error?: string;
-              };
-              if (result?.formUpdate) {
-                onRecipeGenerated(result.formUpdate);
-              }
+        if (chatData.function_call && onRecipeGenerated) {
+          if (chatData.function_call.function === "update_recipe_form") {
+            const result = chatData.function_call.result as {
+              formUpdate?: unknown;
+              success?: boolean;
+            };
+            if (result?.formUpdate) {
+              onRecipeGenerated(result.formUpdate);
+            }
+          } else if (
+            chatData.function_call.function === "extract_recipe_from_url"
+          ) {
+            const result = chatData.function_call.result as {
+              formUpdate?: unknown;
+              success?: boolean;
+              error?: string;
+            };
+            if (result?.formUpdate) {
+              onRecipeGenerated(result.formUpdate);
             }
           }
         }
@@ -579,9 +545,6 @@ export function ChatInterface({
     t,
     currentFormState,
     selectedRecipe,
-    endpoint,
-    onFunctionCall,
-    requestContext,
   ]
 );
 

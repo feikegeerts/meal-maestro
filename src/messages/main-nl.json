@@ -16,8 +16,7 @@
     "home": "Home",
     "back": "Terug",
     "edit": "Bewerken",
-    "addRecipe": "Recept Toevoegen",
-    "inspire": "Inspiratie"
+    "addRecipe": "Recept Toevoegen"
   },
   "pwa": {
     "installBanner": {
@@ -196,13 +195,6 @@
     "viewSharedError": "We konden dit gedeelde recept niet laden.",
     "viewSharedGoHome": "Ga naar home",
     "imageUnavailable": "Geen afbeelding beschikbaar"
-  },
-  "inspire": {
-    "subtitle": "Laat de assistent gerechten uit je collectie aanbevelen.",
-    "recommendationsTitle": "Aanbevelingen",
-    "clearSession": "Sessie wissen",
-    "emptyState": "Nog geen aanbevelingen. Vraag de assistent om ideeën.",
-    "initialChatPrompt": "Stel een vraag zoals “Wat zal ik vandaag eten?” of “Wat heb ik al lang niet gegeten dit seizoen?”"
   },
   "recipeForm": {
     "title": "Titel",

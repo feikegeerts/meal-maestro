@@ -8,25 +8,26 @@ import { CustomUnitsProvider } from "@/contexts/custom-units-context";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageHeader } from "@/components/ui/page-header";
-import { Recipe, RecipeInput, RecipeCategory, RecipeSeason, RecipeIngredient } from "@/types/recipe";
+import { Recipe, RecipeInput, RecipeCategory, RecipeSeason } from "@/types/recipe";
 import { RecipeEditForm } from "@/components/recipe-edit-form";
 import { recipeService } from "@/lib/recipe-service";
 import { useTranslations, useLocale } from 'next-intl';
 import { createConversationStore, SHARED_BUILDER_CONVERSATION_ID } from "@/lib/conversation-store";
 
 const generateIngredientId = () => `ingredient-${Date.now()}-${Math.random()}`;
-const DRAFT_STORAGE_KEY = "mm.newRecipeDraft";
 
-const defaultRecipe: Recipe = {
+const createDefaultRecipe = (): Recipe => ({
   id: "",
   title: "",
-  ingredients: [{
-    id: generateIngredientId(),
-    name: "",
-    amount: null,
-    unit: null,
-    notes: ""
-  }],
+  ingredients: [
+    {
+      id: generateIngredientId(),
+      name: "",
+      amount: null,
+      unit: null,
+      notes: "",
+    },
+  ],
   servings: 4,
   description: "",
   category: RecipeCategory.MAIN_COURSE,
@@ -36,7 +37,7 @@ const defaultRecipe: Recipe = {
   updated_at: undefined,
   user_id: "",
   nutrition: null,
-};
+});
 
 export default function AddRecipePage() {
   const router = useRouter();
@@ -58,39 +59,7 @@ export default function AddRecipePage() {
     }
   }, [user, authLoading, router]);
 
-  // Support prefilled draft passed via sessionStorage from /inspire
-  type StoredDraft = Partial<RecipeInput> & {
-    ingredients?: Array<Partial<RecipeIngredient>>;
-  };
-
-  const initialRecipe = useMemo<Recipe>(() => {
-    try {
-      const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY);
-      if (!raw) return defaultRecipe;
-      const draft = JSON.parse(raw) as StoredDraft;
-      const category = typeof draft.category === "string" ? (draft.category as RecipeCategory) : defaultRecipe.category;
-      const season = typeof draft.season === "string" ? (draft.season as RecipeSeason) : defaultRecipe.season;
-
-      return {
-        ...defaultRecipe,
-        title: draft.title || "",
-        ingredients: (draft.ingredients || []).map((ing) => ({
-          id: generateIngredientId(),
-          name: ing?.name || "",
-          amount: ing?.amount ?? null,
-          unit: ing?.unit ?? null,
-          notes: ing?.notes || "",
-        })),
-        servings: draft.servings || 4,
-        description: draft.description || "",
-        category,
-        season,
-        nutrition: null,
-      } as Recipe;
-    } catch {
-      return defaultRecipe;
-    }
-  }, []);
+  const initialRecipe = useMemo<Recipe>(() => createDefaultRecipe(), []);
 
   const handleSave = async (recipeData: Partial<RecipeInput>) => {
     setLoading(true);
@@ -116,12 +85,7 @@ export default function AddRecipePage() {
       
       // Add the new recipe to context
       addRecipe(newRecipe);
-      try {
-        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
-      } catch {
-        /* ignore */
-      }
-      
+
       // Navigate to the newly created recipe's detail page
       router.push(`/recipes/${newRecipe.id}`);
     } catch (error) {
@@ -133,11 +97,6 @@ export default function AddRecipePage() {
   };
 
   const handleCancel = () => {
-    try {
-      sessionStorage.removeItem(DRAFT_STORAGE_KEY);
-    } catch {
-      /* ignore */
-    }
     router.push("/recipes");
   };
 

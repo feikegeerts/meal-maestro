@@ -2,7 +2,6 @@
 
 1. [ ] Record videos for the homepage
 1. [ ] Reset recipe chat button in add recipe flow
-1. [ ] Inspire page AI doesn't have a function to search for a recipe with a keyword. ./feature-inspire-search.md
 1. [ ] Do shared recipe without token so it is easier to store the url
 
 ## Quality & Compliance

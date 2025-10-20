@@ -16,8 +16,7 @@
     "home": "Home",
     "back": "Back",
     "edit": "Edit",
-    "addRecipe": "Add Recipe",
-    "inspire": "Get Inspired"
+    "addRecipe": "Add Recipe"
   },
   "pwa": {
     "installBanner": {
@@ -196,13 +195,6 @@
     "viewSharedError": "We couldn't load this shared recipe.",
     "viewSharedGoHome": "Go to home",
     "imageUnavailable": "No image available"
-  },
-  "inspire": {
-    "subtitle": "Let the assistant recommend recipes from your own collection.",
-    "recommendationsTitle": "Recommendations",
-    "clearSession": "Clear session",
-    "emptyState": "No recommendations yet. Ask the assistant for ideas.",
-    "initialChatPrompt": "Ask something like “What should I eat today?” or “What haven’t I eaten in a long time this season?”"
   },
   "recipeForm": {
     "title": "Title",
