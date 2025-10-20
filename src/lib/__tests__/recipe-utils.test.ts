@@ -168,16 +168,6 @@ describe('validateRecipeInput', () => {
   it('requires cacheKey when nutrition meta comes from AI', () => {
     const input = createValidInput();
     input.nutrition = {
-      totals: {
-        calories: 800,
-        protein: 40,
-        carbohydrates: 120,
-        fat: 20,
-        saturatedFat: 8,
-        fiber: 12,
-        sugars: 30,
-        sodium: 900,
-      },
       perPortion: {
         calories: 200,
         protein: 10,
@@ -206,16 +196,6 @@ describe('validateRecipeInput', () => {
   it('accepts AI nutrition when cacheKey is provided', () => {
     const input = createValidInput();
     input.nutrition = {
-      totals: {
-        calories: 800,
-        protein: 40,
-        carbohydrates: 120,
-        fat: 20,
-        saturatedFat: 8,
-        fiber: 12,
-        sugars: 30,
-        sodium: 900,
-      },
       perPortion: {
         calories: 200,
         protein: 10,
@@ -230,6 +210,7 @@ describe('validateRecipeInput', () => {
         source: 'ai',
         fetchedAt: new Date().toISOString(),
         cacheKey: 'sample-cache-key',
+        servingsSnapshot: input.servings,
       },
     };
 

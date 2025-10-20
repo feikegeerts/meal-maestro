@@ -57,7 +57,10 @@ interface RecipeDetailViewProps {
   ) => string;
   t: (key: string) => string;
   tUnits: (key: string) => string;
-  tNutrition?: (key: string, values?: Record<string, unknown>) => string;
+  tNutrition?: (
+    key: string,
+    values?: Record<string, string | number | Date>
+  ) => string;
   onFetchNutrition?: (options?: { forceRefresh?: boolean }) => void;
   canFetchNutrition?: boolean;
   nutritionFetching?: boolean;
