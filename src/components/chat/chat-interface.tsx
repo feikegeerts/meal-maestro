@@ -102,6 +102,7 @@ interface ChatInterfaceProps {
     season?: string;
   };
   isDesktopSidebar?: boolean;
+  enableManualReset?: boolean;
   conversationId?: string;
   conversationStore?: ConversationStore;
   onConversationStateChange?: (state: {
@@ -117,6 +118,7 @@ export function ChatInterface({
   onRecipeGenerated,
   currentFormState,
   isDesktopSidebar = false,
+  enableManualReset = false,
   conversationId,
   conversationStore,
   onConversationStateChange,
@@ -342,6 +344,38 @@ export function ChatInterface({
     setIsTimeoutError(false);
     setRetryData(null);
   }, [clearError]);
+
+  const handleResetConversation = useCallback(() => {
+    if (isLoading) {
+      return;
+    }
+    clearAllErrors();
+    clearImage();
+    metadataRef.current = {};
+    if (greetingContext) {
+      metadataRef.current.greetingContext = greetingContext;
+    }
+    if (conversationId && conversationStore) {
+      conversationStore.clear(conversationId);
+    }
+    setMessages([
+      {
+        role: "assistant",
+        content: defaultAssistantMessage,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    setInputMessage("");
+    setIsExpanded(true);
+  }, [
+    clearAllErrors,
+    clearImage,
+    conversationId,
+    conversationStore,
+    defaultAssistantMessage,
+    greetingContext,
+    isLoading,
+  ]);
 
   // Convert file to base64 for API
   const fileToBase64 = useCallback((file: File): Promise<string> => {
@@ -690,6 +724,22 @@ export function ChatInterface({
             {t("assistantTitle")}
           </CardTitle>
           <div className="flex items-center gap-2">
+            {enableManualReset && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1 px-2"
+                disabled={isLoading}
+                title={locale === "nl" ? "Chat resetten" : "Reset chat"}
+                aria-label={locale === "nl" ? "Chat resetten" : "Reset chat"}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleResetConversation();
+                }}
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            )}
             {/* Unit Preference Settings */}
             <Popover>
               <PopoverTrigger asChild>

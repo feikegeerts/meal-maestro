@@ -19,6 +19,7 @@ interface FormLayoutRendererProps {
   conversationId?: string;
   conversationStore?: ConversationStore;
   conversationGreetingContext?: string;
+  enableChatReset?: boolean;
 }
 
 export function FormLayoutRenderer({
@@ -34,6 +35,7 @@ export function FormLayoutRenderer({
   conversationId,
   conversationStore,
   conversationGreetingContext,
+  enableChatReset = false,
 }: FormLayoutRendererProps) {
   if (layoutMode === "single-column") {
     return (
@@ -53,6 +55,7 @@ export function FormLayoutRenderer({
               conversationId={conversationId}
               conversationStore={conversationStore}
               greetingContext={conversationGreetingContext}
+              enableManualReset={enableChatReset}
             />
           </div>
         )}
@@ -96,6 +99,7 @@ export function FormLayoutRenderer({
               conversationId={conversationId}
               conversationStore={conversationStore}
               greetingContext={conversationGreetingContext}
+              enableManualReset={enableChatReset}
             />
           </div>
         </div>

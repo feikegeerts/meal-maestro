@@ -1,7 +1,6 @@
 # Post-MVP Development Roadmap
 
 1. [ ] Record videos for the homepage
-1. [ ] Reset recipe chat button in add recipe flow
 1. [ ] Do shared recipe without token so it is easier to store the url
 
 ## Quality & Compliance

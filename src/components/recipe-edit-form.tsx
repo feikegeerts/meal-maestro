@@ -37,6 +37,7 @@ interface RecipeEditFormProps {
   conversationStore?: ConversationStore;
   conversationGreetingContext?: string;
   showNutrition?: boolean;
+  enableChatReset?: boolean;
 }
 
 // Export auto-save function for external use (backward compatibility)
@@ -59,6 +60,7 @@ export function RecipeEditForm({
   conversationStore,
   conversationGreetingContext,
   showNutrition = true,
+  enableChatReset = false,
 }: RecipeEditFormProps) {
   const t = useTranslations("recipeForm");
 
@@ -449,6 +451,7 @@ export function RecipeEditForm({
           conversationId={conversationId}
           conversationStore={conversationStore}
           conversationGreetingContext={conversationGreetingContext}
+          enableChatReset={enableChatReset}
         >
       {FormSections}
       {!standalone && (

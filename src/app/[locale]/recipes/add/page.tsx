@@ -132,6 +132,7 @@ export default function AddRecipePage() {
           conversationStore={conversationStore}
           conversationGreetingContext="recipe-builder"
           showNutrition={false}
+          enableChatReset
         />
       </PageWrapper>
     </CustomUnitsProvider>
