@@ -31,9 +31,7 @@ import { useImageCompression } from "@/hooks/use-image-compression";
 import { IMAGE_COMPRESSION_CONFIG } from "@/lib/image-compression-config";
 import type { ConversationStore } from "@/lib/conversation-store";
 
-// Intentional type mismatch to verify Husky pre-commit hook enforcement
-// Remove after confirming pnpm verify blocks commits as expected.
-const __huskyVerifyTest: number = "fail";
+const __lintTestFlag = true;
 
 interface ChatMessage {
   role: "user" | "assistant";
