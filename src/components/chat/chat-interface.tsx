@@ -31,6 +31,8 @@ import { useImageCompression } from "@/hooks/use-image-compression";
 import { IMAGE_COMPRESSION_CONFIG } from "@/lib/image-compression-config";
 import type { ConversationStore } from "@/lib/conversation-store";
 
+const __lintTestFlag = true;
+
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
