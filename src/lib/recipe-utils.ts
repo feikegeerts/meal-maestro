@@ -8,7 +8,6 @@ import {
   RecipeInput,
   RecipeNutrition,
   RecipeNutritionValues,
-  RecipeNutritionExtra,
   RecipeCategory,
   RecipeSeason,
   CuisineType,
@@ -109,39 +108,12 @@ function validateNutritionValues(
       `Nutrition ${path}.cholesterol must be a non-negative number when provided`
     );
   }
-
-  if (values.extras) {
-    values.extras.forEach((extra: RecipeNutritionExtra, index: number) => {
-      if (!extra.key || extra.key.trim().length === 0) {
-        errors.push(
-          `Nutrition ${path}.extras[${index}].key is required when extras are provided`
-        );
-      }
-      if (!extra.unit || extra.unit.trim().length === 0) {
-        errors.push(
-          `Nutrition ${path}.extras[${index}].unit is required when extras are provided`
-        );
-      }
-      if (!isNonNegativeNumber(extra.value)) {
-        errors.push(
-          `Nutrition ${path}.extras[${index}].value must be a non-negative number when extras are provided`
-        );
-      }
-    });
-  }
 }
 
 function validateRecipeNutrition(
   nutrition: RecipeNutrition,
-  servings: number,
   errors: string[]
 ) {
-  if (!nutrition.totals) {
-    errors.push("Nutrition totals are required when nutrition is provided");
-  } else {
-    validateNutritionValues(nutrition.totals, "totals", errors);
-  }
-
   if (!nutrition.perPortion) {
     errors.push(
       "Nutrition perPortion is required when nutrition is provided"
@@ -179,130 +151,16 @@ function validateRecipeNutrition(
         "Nutrition meta.confidence must be a number between 0 and 1 when provided"
       );
     }
+    if (
+      typeof nutrition.meta.servingsSnapshot !== "undefined" &&
+      (!Number.isFinite(nutrition.meta.servingsSnapshot) ||
+        nutrition.meta.servingsSnapshot <= 0)
+    ) {
+      errors.push(
+        "Nutrition meta.servingsSnapshot must be a positive number when provided"
+      );
+    }
   }
-
-  if (nutrition.totals && nutrition.perPortion && servings > 0) {
-    const fieldsToCompare: Array<keyof RecipeNutritionValues> = [
-      "calories",
-      "protein",
-      "carbohydrates",
-      "fat",
-      "saturatedFat",
-      "fiber",
-      "sugars",
-      "sodium",
-    ];
-
-    fieldsToCompare.forEach((field) => {
-      const totalValue = nutrition.totals[field];
-      const perPortionValue = nutrition.perPortion[field];
-      if (
-        isNonNegativeNumber(totalValue) &&
-        isNonNegativeNumber(perPortionValue)
-      ) {
-        const expectedPerPortion =
-          servings > 0 ? totalValue / servings : perPortionValue;
-        const delta = Math.abs(perPortionValue - expectedPerPortion);
-        if (
-          !Number.isNaN(expectedPerPortion) &&
-          delta / (expectedPerPortion || 1) > 0.2
-        ) {
-          errors.push(
-            `Nutrition perPortion.${field} does not match totals.${field} divided by servings`
-          );
-        }
-      }
-    });
-  }
-}
-
-function scaleNutritionExtras(
-  extras: RecipeNutritionExtra[] | undefined,
-  multiplier: number
-): RecipeNutritionExtra[] | undefined {
-  if (!extras?.length) {
-    return extras;
-  }
-
-  return extras.map((extra) => ({
-    ...extra,
-    value:
-      typeof extra.value === "number" && Number.isFinite(extra.value)
-        ? extra.value * multiplier
-        : extra.value,
-  }));
-}
-
-function buildPerPortionFromTotals(
-  totals: RecipeNutritionValues,
-  servings: number
-): RecipeNutritionValues {
-  const divide = (value: number): number =>
-    servings > 0 && Number.isFinite(value) ? value / servings : value;
-
-  const perPortion: RecipeNutritionValues = {
-    calories: divide(totals.calories),
-    protein: divide(totals.protein),
-    carbohydrates: divide(totals.carbohydrates),
-    fat: divide(totals.fat),
-    saturatedFat: divide(totals.saturatedFat),
-    fiber: divide(totals.fiber),
-    sugars: divide(totals.sugars),
-    sodium: divide(totals.sodium),
-  };
-
-  if (typeof totals.cholesterol === "number") {
-    perPortion.cholesterol = divide(totals.cholesterol);
-  }
-
-  if (totals.extras?.length) {
-    perPortion.extras = totals.extras.map((extra) => ({
-      ...extra,
-      value:
-        typeof extra.value === "number" && servings > 0
-          ? extra.value / servings
-          : extra.value,
-    }));
-  }
-
-  return perPortion;
-}
-
-function scaleNutrition(
-  nutrition: RecipeNutrition,
-  ratio: number,
-  newServings: number
-): RecipeNutrition {
-  if (!Number.isFinite(ratio) || ratio <= 0) {
-    return nutrition;
-  }
-
-  const scale = (value: number): number => value * ratio;
-
-  const scaledTotals: RecipeNutritionValues = {
-    calories: scale(nutrition.totals.calories),
-    protein: scale(nutrition.totals.protein),
-    carbohydrates: scale(nutrition.totals.carbohydrates),
-    fat: scale(nutrition.totals.fat),
-    saturatedFat: scale(nutrition.totals.saturatedFat),
-    fiber: scale(nutrition.totals.fiber),
-    sugars: scale(nutrition.totals.sugars),
-    sodium: scale(nutrition.totals.sodium),
-  };
-
-  if (typeof nutrition.totals.cholesterol === "number") {
-    scaledTotals.cholesterol = scale(nutrition.totals.cholesterol);
-  }
-
-  scaledTotals.extras = scaleNutritionExtras(nutrition.totals.extras, ratio);
-
-  const perPortion = buildPerPortionFromTotals(scaledTotals, newServings);
-
-  return {
-    totals: scaledTotals,
-    perPortion,
-    meta: { ...nutrition.meta },
-  };
 }
 
 export function validateRecipeInput(input: RecipeInput): {
@@ -419,7 +277,7 @@ export function validateRecipeInput(input: RecipeInput): {
 
   if (input.nutrition) {
     try {
-      validateRecipeNutrition(input.nutrition, input.servings, errors);
+      validateRecipeNutrition(input.nutrition, errors);
     } catch (error) {
       errors.push(
         error instanceof Error
@@ -595,7 +453,13 @@ export function scaleRecipe(recipe: Recipe, newServings: number): Recipe {
     scaleIngredient(ing, ratio)
   );
   const scaledNutrition = recipe.nutrition
-    ? scaleNutrition(recipe.nutrition, ratio, newServings)
+    ? {
+        perPortion: { ...recipe.nutrition.perPortion },
+        meta: {
+          ...recipe.nutrition.meta,
+          servingsSnapshot: newServings,
+        },
+      }
     : recipe.nutrition;
   return {
     ...recipe,

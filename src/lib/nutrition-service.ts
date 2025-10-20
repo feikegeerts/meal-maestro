@@ -6,7 +6,6 @@ import {
   RecipeInput,
   RecipeNutrition,
   RecipeNutritionValues,
-  RecipeNutritionExtra,
 } from "@/types/recipe";
 
 type NutritionCacheKey = string;
@@ -37,27 +36,17 @@ export interface NutritionFetchOptions {
 }
 
 interface ChatGPTNutritionPayload {
-  totals: Record<string, unknown>;
   perPortion: Record<string, unknown>;
   meta?: {
     confidence?: number;
     warnings?: string[];
     notes?: string;
-    extras?: ChatGPTNutritionExtras;
   };
 }
 
-type ChatGPTNutritionExtras = Array<{
-  key: string;
-  label?: string;
-  unit: string;
-  total: number;
-  perPortion: number;
-}>;
-
 export const DEFAULT_CACHE = new NoopNutritionCache();
 
-type NutritionNumericKey = Exclude<keyof RecipeNutritionValues, "extras">;
+type NutritionNumericKey = keyof RecipeNutritionValues;
 
 const REQUIRED_FIELDS: NutritionNumericKey[] = [
   "calories",
@@ -90,13 +79,13 @@ function getLocaleInstruction(locale?: string): string {
   switch (locale) {
     case "nl":
       return [
-        "All human-readable text values (like extras.label, meta.warnings[], meta.notes) must be written in Dutch.",
+        "All human-readable text values (like meta.warnings[] and meta.notes) must be written in Dutch.",
         "The JSON keys themselves must remain exactly as specified in the schema.",
       ].join(" ");
     case "en":
     default:
       return [
-        "All human-readable text values (like extras.label, meta.warnings[], meta.notes) must be written in English.",
+        "All human-readable text values (like meta.warnings[] and meta.notes) must be written in English.",
         "Keep JSON keys exactly as specified in the schema.",
       ].join(" ");
   }
@@ -111,8 +100,7 @@ function buildPrompt(options: NutritionFetchOptions): string {
   const localeInstruction = getLocaleInstruction(options.locale);
 
   return [
-    `Estimate nutrition for the following recipe with ${recipe.servings} servings.`,
-    `Provide totals for the entire recipe and per portion (one serving).`,
+    `Estimate per-portion nutrition for the following recipe with ${recipe.servings} servings.`,
     `Recipe title: ${recipe.title}`,
     `Ingredients:\n${ingredientsList}`,
     localeInstruction,
@@ -120,18 +108,16 @@ function buildPrompt(options: NutritionFetchOptions): string {
     `- Respond with a single JSON object.`,
     `- Schema:`,
     `  {`,
-    `    "totals": { ${REQUIRED_FIELDS.join(": number, ")}: number, "cholesterol": number?, "extras": [{ "key": string, "label": string?, "unit": string, "value": number }]? },`,
-    `    "perPortion": { same fields as totals },`,
+    `    "perPortion": { ${REQUIRED_FIELDS.join(": number, ")}: number, "cholesterol": number? },`,
     `    "meta": {`,
     `      "confidence": number (0-1)?,`,
     `      "warnings": string[]?,`,
-    `      "notes": string?,`,
-    `      "extras": [{ "key": string, "label": string?, "unit": string, "total": number, "perPortion": number }]?`,
+    `      "notes": string?`,
     `    }`,
     `  }`,
     `- Use kilocalories for calories and grams for macronutrients.`,
     `- Include sodium in milligrams and cholesterol (if provided) in milligrams.`,
-    `- Per portion values should align with totals / servings.`,
+    `- Provide only per-portion values (one serving).`,
     `- Do not wrap the JSON in code fences or add commentary.`,
   ].join("\n");
 }
@@ -162,35 +148,8 @@ function coerceNumber(value: unknown): number | null {
   }
   return null;
 }
-
-function mapExtras(
-  extras: ChatGPTNutritionExtras | undefined,
-  target: "totals" | "perPortion"
-): RecipeNutritionExtra[] | undefined {
-  if (!extras?.length) return undefined;
-
-  const mapped: RecipeNutritionExtra[] = [];
-
-  extras.forEach((extra) => {
-    const value = target === "totals" ? extra.total : extra.perPortion;
-    const normalizedValue = coerceNumber(value);
-    if (!extra.key || normalizedValue === null || !extra.unit) {
-      return;
-    }
-    mapped.push({
-      key: extra.key,
-      label: extra.label,
-      unit: extra.unit,
-      value: normalizedValue,
-    });
-  });
-
-  return mapped.length ? mapped : undefined;
-}
-
 function buildNutritionValues(
-  payload: Record<string, unknown>,
-  extras?: RecipeNutritionExtra[]
+  payload: Record<string, unknown>
 ): RecipeNutritionValues {
   const result: Partial<RecipeNutritionValues> = {};
 
@@ -200,10 +159,6 @@ function buildNutritionValues(
       result[field] = value;
     }
   });
-
-  if (extras?.length) {
-    result.extras = extras;
-  }
 
   REQUIRED_FIELDS.forEach((field) => {
     if (typeof result[field] === "undefined") {
@@ -290,16 +245,12 @@ export class NutritionService {
       );
     }
 
-    if (!parsed.totals || !parsed.perPortion) {
-      throw new Error("Nutrition response is missing totals or perPortion");
+    if (!parsed.perPortion) {
+      throw new Error("Nutrition response is missing perPortion values");
     }
 
-    const totalsExtras = mapExtras(parsed.meta?.extras, "totals");
-    const perPortionExtras = mapExtras(parsed.meta?.extras, "perPortion");
-
     const nutrition: RecipeNutrition = {
-      totals: buildNutritionValues(parsed.totals, totalsExtras),
-      perPortion: buildNutritionValues(parsed.perPortion, perPortionExtras),
+      perPortion: buildNutritionValues(parsed.perPortion),
       meta: {
         source: "ai",
         fetchedAt: new Date().toISOString(),
@@ -316,6 +267,7 @@ export class NutritionService {
             ? parsed.meta?.notes
             : undefined,
         cacheKey,
+        servingsSnapshot: options.recipe.servings,
       },
     };
 

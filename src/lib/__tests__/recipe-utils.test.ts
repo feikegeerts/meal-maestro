@@ -263,16 +263,6 @@ describe('scaleRecipe', () => {
     updated_at: undefined,
     last_eaten: undefined,
     nutrition: {
-      totals: {
-        calories: 800,
-        protein: 40,
-        carbohydrates: 120,
-        fat: 20,
-        saturatedFat: 8,
-        fiber: 12,
-        sugars: 30,
-        sodium: 900,
-      },
       perPortion: {
         calories: 200,
         protein: 10,
@@ -287,23 +277,25 @@ describe('scaleRecipe', () => {
         source: 'ai',
         fetchedAt: new Date().toISOString(),
         cacheKey: 'base-cache-key',
+        servingsSnapshot: 4,
       },
     },
   };
 
-  it('scales nutrition totals while keeping per-portion values consistent', () => {
+  it('preserves per-portion nutrition when scaling recipes', () => {
     const scaled = scaleRecipe(baseRecipe, 8);
 
     expect(scaled.servings).toBe(8);
-    expect(scaled.nutrition?.totals.calories).toBeCloseTo(1600);
     expect(scaled.nutrition?.perPortion.calories).toBeCloseTo(200);
-    expect(scaled.nutrition?.totals.protein).toBeCloseTo(80);
     expect(scaled.nutrition?.perPortion.protein).toBeCloseTo(10);
+    expect(scaled.nutrition?.meta.servingsSnapshot).toBe(8);
   });
 
   it('does not mutate the original recipe nutrition', () => {
-    const originalTotals = { ...baseRecipe.nutrition?.totals };
+    const originalPerPortion = { ...baseRecipe.nutrition?.perPortion };
+    const originalMeta = { ...baseRecipe.nutrition?.meta };
     scaleRecipe(baseRecipe, 8);
-    expect(baseRecipe.nutrition?.totals).toEqual(originalTotals);
+    expect(baseRecipe.nutrition?.perPortion).toEqual(originalPerPortion);
+    expect(baseRecipe.nutrition?.meta).toEqual(originalMeta);
   });
 });

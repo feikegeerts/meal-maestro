@@ -266,8 +266,8 @@
       "disclaimer": "Voedingswaarden zijn schattingen gegenereerd door AI. Voor medisch of dieetadvies: raadpleeg een professional.",
       "results": {
         "heading": "Voedingsstof",
-        "whole": "Totaal recept",
         "perPortion": "Per portie",
+        "perPortionServings": "Per portie (voor {servings, number} porties)",
         "confidence": "Vertrouwen",
         "lastFetched": "Laatst opgehaald",
         "warnings": "Opmerkingen van het model"
@@ -281,8 +281,7 @@
         "fiber": "Vezels",
         "sugars": "Suikers",
         "sodium": "Natrium",
-        "cholesterol": "Cholesterol",
-        "extras": "Extra voedingsstoffen"
+        "cholesterol": "Cholesterol"
       }
     }
   },

@@ -57,7 +57,7 @@ interface RecipeDetailViewProps {
   ) => string;
   t: (key: string) => string;
   tUnits: (key: string) => string;
-  tNutrition?: (key: string) => string;
+  tNutrition?: (key: string, values?: Record<string, unknown>) => string;
   onFetchNutrition?: (options?: { forceRefresh?: boolean }) => void;
   canFetchNutrition?: boolean;
   nutritionFetching?: boolean;
@@ -585,259 +585,218 @@ export function RecipeDetailView({
 
       {tNutrition && (
         <Card className="mt-8">
-          <CardContent className="p-4 md:px-8 md:py-6 lg:px-12 lg:py-8 space-y-6">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold">
-                  {tNutrition("title")}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {tNutrition("description")}
+          <CardContent className="px-4 py-6 md:px-8 md:py-8">
+            <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="max-w-2xl space-y-2">
+                  <h2 className="text-xl font-semibold">
+                    {tNutrition("title")}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {tNutrition("description")}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 self-start md:self-auto">
+                  <Badge className="bg-primary/10 text-primary">
+                    {tNutrition("badge")}
+                  </Badge>
+                  {showFetchButton && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={
+                        nutritionFetching ||
+                        !canFetchNutrition ||
+                        !onFetchNutrition
+                      }
+                      onClick={() =>
+                        onFetchNutrition?.({
+                          forceRefresh: nutritionCacheHit === true,
+                        })
+                      }
+                      className="min-w-[160px]"
+                    >
+                      {nutritionFetching ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {fetchingLabel}
+                        </>
+                      ) : nutrition ? (
+                        <>
+                          <RefreshCcw className="mr-2 h-4 w-4" />
+                          {fetchLabel}
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          {fetchLabel}
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                {nutritionCacheHit && (
+                  <Alert className="border-muted-foreground/20 bg-muted/40">
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>{tNutrition("cacheHit.title")}</AlertTitle>
+                    <AlertDescription>
+                      {tNutrition("cacheHit.body")}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {nutritionError && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>{tNutrition("errorTitle")}</AlertTitle>
+                    <AlertDescription>{nutritionError}</AlertDescription>
+                  </Alert>
+                )}
+
+                {showFetchButton && !canFetchNutrition && (
+                  <Alert className="border-sky-500/30 bg-sky-500/10">
+                    <Info className="h-4 w-4 text-sky-600" />
+                    <AlertTitle>{tNutrition("needsIngredients.title")}</AlertTitle>
+                    <AlertDescription>
+                      {tNutrition("needsIngredients.body")}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {nutrition ? (
+                  <div className="w-full space-y-5 text-sm md:max-w-2xl">
+                    <div className="overflow-hidden rounded-lg border border-border/60 bg-card/70 shadow-sm md:w-fit">
+                      <table className="w-full min-w-[320px] text-xs sm:text-sm">
+                        <thead className="bg-muted/40 text-xs font-medium sm:text-sm">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-foreground">
+                              {tNutrition("results.heading")}
+                            </th>
+                            <th className="px-4 py-3 text-right text-muted-foreground">
+                              <div className="flex flex-col items-end gap-1">
+                                <span>{tNutrition("results.perPortion")}</span>
+                                <span className="text-[11px] font-medium text-muted-foreground sm:text-xs">
+                                  {tNutrition("results.perPortionServings", {
+                                    servings:
+                                      displayRecipe.servings ??
+                                      nutrition.meta.servingsSnapshot ??
+                                      recipe.servings,
+                                  })}
+                                </span>
+                              </div>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/50">
+                          {nutrientDefinitions
+                            .map((definition) => {
+                              const perPortionValue =
+                                nutrition.perPortion[definition.key];
+                              if (
+                                definition.optional &&
+                                typeof perPortionValue !== "number"
+                              ) {
+                                return null;
+                              }
+                              return (
+                                <tr
+                                  key={definition.key}
+                                  className="odd:bg-muted/20"
+                                >
+                                  <th
+                                    scope="row"
+                                    className="px-4 py-3 text-left font-medium text-foreground"
+                                  >
+                                    {definition.label}
+                                  </th>
+                                  <td className="px-4 py-3 text-right text-foreground">
+                                    {formatNutrientValue(
+                                      typeof perPortionValue === "number"
+                                        ? perPortionValue
+                                        : undefined,
+                                      definition.unit,
+                                      definition.decimals
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                            .filter(Boolean)}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {typeof nutrition.meta.confidence === "number" && (
+                        <div className="rounded-md border border-border/50 bg-card/70 p-4 text-sm shadow-sm">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            {tNutrition("results.confidence")}
+                          </p>
+                          <p className="mt-2 text-lg font-semibold text-foreground">
+                            {Math.round(nutrition.meta.confidence * 100)}%
+                          </p>
+                        </div>
+                      )}
+
+                      {nutrition.meta.fetchedAt && (
+                        <div className="rounded-md border border-border/50 bg-card/70 p-4 text-sm shadow-sm">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            {tNutrition("results.lastFetched")}
+                          </p>
+                          <p className="mt-2 text-sm font-medium text-foreground">
+                            {formatDateWithFallback(
+                              nutrition.meta.fetchedAt,
+                              t("never")
+                            )}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {nutrition.meta.warnings?.length ? (
+                      <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-900 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                          {tNutrition("results.warnings")}
+                        </p>
+                        <ul className="mt-2 space-y-2">
+                          {nutrition.meta.warnings.map((warning, index) => (
+                            <li key={`${warning}-${index}`} className="flex gap-2">
+                              <span aria-hidden="true">•</span>
+                              <span>{warning}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+
+                    {nutrition.meta.notes && (
+                      <p className="rounded-md border border-border/40 bg-muted/20 p-4 text-sm text-muted-foreground">
+                        {nutrition.meta.notes}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-start gap-3 rounded-md border border-dashed border-border/50 bg-muted/20 p-6 text-sm text-muted-foreground">
+                    <p>{tNutrition("emptyState")}</p>
+                    {onEdit && (
+                      <Button variant="outline" size="sm" onClick={onEdit}>
+                        {t("editDetail")}
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {tNutrition("disclaimer")}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge className="self-start bg-primary/10 text-primary">
-                  {tNutrition("badge")}
-                </Badge>
-                {showFetchButton && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={
-                      nutritionFetching || !canFetchNutrition || !onFetchNutrition
-                    }
-                    onClick={() =>
-                      onFetchNutrition?.({
-                        forceRefresh: nutritionCacheHit === true,
-                      })
-                    }
-                    className="min-w-[180px]"
-                  >
-                    {nutritionFetching ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {fetchingLabel}
-                      </>
-                    ) : nutrition ? (
-                      <>
-                        <RefreshCcw className="mr-2 h-4 w-4" />
-                        {fetchLabel}
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="mr-2 h-4 w-4" />
-                        {fetchLabel}
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
             </div>
-
-            {nutritionCacheHit && (
-              <Alert className="border-muted-foreground/20 bg-muted/40">
-                <Info className="h-4 w-4" />
-                <AlertTitle>{tNutrition("cacheHit.title")}</AlertTitle>
-                <AlertDescription>
-                  {tNutrition("cacheHit.body")}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {nutritionError && (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>{tNutrition("errorTitle")}</AlertTitle>
-                <AlertDescription>{nutritionError}</AlertDescription>
-              </Alert>
-            )}
-
-            {showFetchButton && !canFetchNutrition && (
-              <Alert className="border-sky-500/30 bg-sky-500/10">
-                <Info className="h-4 w-4 text-sky-600" />
-                <AlertTitle>{tNutrition("needsIngredients.title")}</AlertTitle>
-                <AlertDescription>
-                  {tNutrition("needsIngredients.body")}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {nutrition ? (
-              <div className="mx-auto w-full max-w-3xl space-y-4 text-sm">
-                <div className="overflow-hidden rounded-lg border border-border/50">
-                  <table className="w-full text-xs sm:text-sm">
-                    <thead className="bg-muted/40 text-xs font-medium sm:text-sm">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-foreground">
-                          {tNutrition("results.heading")}
-                        </th>
-                        <th className="px-4 py-3 text-right text-muted-foreground">
-                          {tNutrition("results.whole")}
-                        </th>
-                        <th className="px-4 py-3 text-right text-muted-foreground">
-                          {tNutrition("results.perPortion")}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/60">
-                      {nutrientDefinitions
-                        .map((definition) => {
-                          const totalValue = nutrition.totals[definition.key];
-                          const perPortionValue =
-                            nutrition.perPortion[definition.key];
-                          if (
-                            definition.optional &&
-                            typeof totalValue !== "number" &&
-                            typeof perPortionValue !== "number"
-                          ) {
-                            return null;
-                          }
-                          return (
-                            <tr key={definition.key}>
-                              <th
-                                scope="row"
-                                className="px-4 py-3 text-left font-medium text-foreground"
-                              >
-                                {definition.label}
-                              </th>
-                              <td className="px-4 py-3 text-right text-muted-foreground">
-                                {formatNutrientValue(
-                                  typeof totalValue === "number"
-                                    ? totalValue
-                                    : undefined,
-                                  definition.unit,
-                                  definition.decimals
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-right text-muted-foreground">
-                                {formatNutrientValue(
-                                  typeof perPortionValue === "number"
-                                    ? perPortionValue
-                                    : undefined,
-                                  definition.unit,
-                                  definition.decimals
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })
-                        .filter(Boolean)}
-                    </tbody>
-                  </table>
-                </div>
-
-                {nutrition.totals.extras?.length ? (
-                  <div className="space-y-2">
-                    <p className="text-sm font-semibold text-foreground">
-                      {tNutrition("nutrients.extras")}
-                    </p>
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {nutrition.totals.extras.map((extra) => {
-                        const perPortionExtra =
-                          nutrition.perPortion.extras?.find(
-                            (item) => item.key === extra.key
-                          );
-                        return (
-                          <div
-                            key={extra.key}
-                            className="rounded-md border border-border/50 bg-muted/30 p-3 text-sm"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium text-foreground">
-                                {extra.label || extra.key}
-                              </span>
-                              <span className="text-muted-foreground">
-                                {extra.unit}
-                              </span>
-                            </div>
-                            <div className="mt-2 flex items-center justify-between text-muted-foreground">
-                              <span>{tNutrition("results.whole")}</span>
-                              <span className="font-medium text-foreground">
-                                {formatNutrientValue(
-                                  extra.value,
-                                  extra.unit,
-                                  2
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between text-muted-foreground">
-                              <span>{tNutrition("results.perPortion")}</span>
-                              <span className="font-medium text-foreground">
-                                {formatNutrientValue(
-                                  perPortionExtra?.value,
-                                  extra.unit,
-                                  2
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  {typeof nutrition.meta.confidence === "number" && (
-                    <div className="rounded-md border border-border/40 bg-muted/30 p-3 text-sm">
-                      <p className="font-medium text-foreground">
-                        {tNutrition("results.confidence")}
-                      </p>
-                      <p className="mt-1 text-muted-foreground">
-                        {Math.round(nutrition.meta.confidence * 100)}%
-                      </p>
-                    </div>
-                  )}
-
-                  {nutrition.meta.fetchedAt && (
-                    <div className="rounded-md border border-border/40 bg-muted/30 p-3 text-sm">
-                      <p className="font-medium text-foreground">
-                        {tNutrition("results.lastFetched")}
-                      </p>
-                      <p className="mt-1 text-muted-foreground">
-                        {formatDateWithFallback(
-                          nutrition.meta.fetchedAt,
-                          t("never")
-                        )}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {nutrition.meta.warnings?.length ? (
-                  <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-900">
-                    <p className="font-medium">
-                      {tNutrition("results.warnings")}
-                    </p>
-                    <ul className="mt-2 list-inside list-disc space-y-1">
-                      {nutrition.meta.warnings.map((warning, index) => (
-                        <li key={`${warning}-${index}`}>{warning}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-
-                {nutrition.meta.notes && (
-                  <p className="rounded-md border border-border/40 bg-muted/30 p-3 text-sm text-muted-foreground">
-                    {nutrition.meta.notes}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col items-start gap-3 rounded-md border border-dashed border-border/50 bg-muted/20 p-6 text-sm text-muted-foreground">
-                <p>{tNutrition("emptyState")}</p>
-                {onEdit && (
-                  <Button variant="outline" size="sm" onClick={onEdit}>
-                    {t("editDetail")}
-                  </Button>
-                )}
-              </div>
-            )}
-
-            <p className="mx-auto max-w-3xl text-xs leading-relaxed text-muted-foreground">
-              {tNutrition("disclaimer")}
-            </p>
           </CardContent>
         </Card>
       )}

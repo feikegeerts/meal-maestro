@@ -128,13 +128,6 @@ export interface RecipeIngredient {
   notes?: string;
 }
 
-export interface RecipeNutritionExtra {
-  key: string;
-  unit: string;
-  value: number;
-  label?: string;
-}
-
 export interface RecipeNutritionValues {
   calories: number;
   protein: number;
@@ -145,7 +138,6 @@ export interface RecipeNutritionValues {
   sugars: number;
   sodium: number;
   cholesterol?: number;
-  extras?: RecipeNutritionExtra[];
 }
 
 export interface RecipeNutritionMeta {
@@ -156,10 +148,10 @@ export interface RecipeNutritionMeta {
   warnings?: string[];
   notes?: string;
   cacheKey?: string;
+  servingsSnapshot?: number;
 }
 
 export interface RecipeNutrition {
-  totals: RecipeNutritionValues;
   perPortion: RecipeNutritionValues;
   meta: RecipeNutritionMeta;
 }

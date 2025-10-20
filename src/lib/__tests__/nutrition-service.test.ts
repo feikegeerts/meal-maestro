@@ -24,17 +24,6 @@ describe("NutritionService", () => {
 
   it("parses AI nutrition response into RecipeNutrition structure", async () => {
     const payload = {
-      totals: {
-        calories: 1600,
-        protein: 80,
-        carbohydrates: 120,
-        fat: 60,
-        saturatedFat: 20,
-        fiber: 15,
-        sugars: 30,
-        sodium: 1200,
-        cholesterol: 50,
-      },
       perPortion: {
         calories: 400,
         protein: 20,
@@ -44,20 +33,12 @@ describe("NutritionService", () => {
         fiber: 3.75,
         sugars: 7.5,
         sodium: 300,
+        cholesterol: 12.5,
       },
       meta: {
         confidence: 0.82,
         warnings: ["Estimated values based on similar dishes"],
         notes: "Sodium assumes salted broth.",
-        extras: [
-          {
-            key: "vitaminC",
-            label: "Vitamin C",
-            unit: "mg",
-            total: 40,
-            perPortion: 10,
-          },
-        ],
       },
     };
 
@@ -82,15 +63,9 @@ describe("NutritionService", () => {
     expect(nutrition.meta.confidence).toBeCloseTo(0.82);
     expect(typeof nutrition.meta.cacheKey).toBe("string");
     expect(nutrition.meta.cacheKey?.length ?? 0).toBeGreaterThan(0);
-    expect(nutrition.totals.calories).toBe(1600);
     expect(nutrition.perPortion.calories).toBe(400);
-    expect(nutrition.totals.cholesterol).toBe(50);
-    expect(nutrition.totals.extras).toEqual([
-      { key: "vitaminC", label: "Vitamin C", unit: "mg", value: 40 },
-    ]);
-    expect(nutrition.perPortion.extras).toEqual([
-      { key: "vitaminC", label: "Vitamin C", unit: "mg", value: 10 },
-    ]);
+    expect(nutrition.perPortion.cholesterol).toBe(12.5);
+    expect(nutrition.meta.servingsSnapshot).toBe(baseRecipe.servings);
   });
 
   it("returns cached nutrition data when available", async () => {
@@ -105,16 +80,6 @@ describe("NutritionService", () => {
     };
 
     const payload = {
-      totals: {
-        calories: 800,
-        protein: 40,
-        carbohydrates: 60,
-        fat: 30,
-        saturatedFat: 10,
-        fiber: 8,
-        sugars: 15,
-        sodium: 600,
-      },
       perPortion: {
         calories: 200,
         protein: 10,
@@ -147,6 +112,7 @@ describe("NutritionService", () => {
     expect(cacheStore.size).toBe(1);
     expect(firstCall.cacheHit).toBe(false);
     expect(firstCall.nutrition.meta.cacheKey).toBeDefined();
+    expect(firstCall.nutrition.meta.servingsSnapshot).toBe(baseRecipe.servings);
 
     mockCreateChatCompletion.mockClear();
     const secondCall = await service.fetchWithChatGPT({ recipe: baseRecipe });
@@ -158,16 +124,6 @@ describe("NutritionService", () => {
   it("reuses recipe nutrition when cache key matches and forceRefresh is false", async () => {
     const cacheKey = buildCacheKey({ ...baseRecipe, nutrition: null });
     const existingNutrition: RecipeNutrition = {
-      totals: {
-        calories: 800,
-        protein: 40,
-        carbohydrates: 120,
-        fat: 25,
-        saturatedFat: 9,
-        fiber: 12,
-        sugars: 20,
-        sodium: 700,
-      },
       perPortion: {
         calories: 200,
         protein: 10,
@@ -182,6 +138,7 @@ describe("NutritionService", () => {
         source: "ai",
         fetchedAt: new Date().toISOString(),
         cacheKey,
+        servingsSnapshot: baseRecipe.servings,
       },
     };
 

@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Loader2,
   RefreshCcw,
@@ -200,227 +201,174 @@ export function NutritionSection({
       .filter(
         (definition) =>
           !definition.optional ||
-          typeof nutrition.totals[definition.key] === "number"
+          typeof nutrition.perPortion[definition.key] === "number"
       )
       .map((definition) => (
         <div
           key={definition.key}
-          className="grid grid-cols-1 gap-1 py-2 text-sm md:grid-cols-[2fr_1fr_1fr]"
+          className="grid grid-cols-[2fr_1fr] items-center gap-2 px-4 py-3 text-sm odd:bg-muted/20"
         >
           <span className="font-medium text-foreground">
             {definition.label}
           </span>
-          <span className="text-muted-foreground md:text-right">
-            {formatValue(nutrition.totals[definition.key], definition)}
-          </span>
-          <span className="text-muted-foreground md:text-right">
+          <span className="text-right text-foreground">
             {formatValue(nutrition.perPortion[definition.key], definition)}
           </span>
         </div>
       ));
   };
 
-  const extrasMarkup = () => {
-    if (!nutrition?.totals.extras?.length) return null;
-    return (
-      <div className="mt-3 space-y-2">
-        <p className="text-sm font-medium text-foreground">
-          {t("nutrients.extras")}
-        </p>
-        <div className="grid gap-2 md:grid-cols-2">
-          {nutrition.totals.extras.map((extra) => {
-            const perPortionExtra = nutrition.perPortion.extras?.find(
-              (item) => item.key === extra.key
-            );
-            return (
-              <div
-                key={extra.key}
-                className="rounded-md border border-border/50 bg-muted/40 p-3 text-sm"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-foreground">
-                    {extra.label || extra.key}
-                  </span>
-                  <span className="text-muted-foreground">
-                    {extra.unit}
-                  </span>
-                </div>
-                <div className="mt-2 grid grid-cols-2 text-muted-foreground">
-                  <span>{t("results.whole")}</span>
-                  <span className="text-right">
-                    {formatValue(extra.value, {
-                      key: "protein",
-                      label: extra.key,
-                      unit: extra.unit,
-                      decimals: 2,
-                    })}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 text-muted-foreground">
-                  <span>{t("results.perPortion")}</span>
-                  <span className="text-right">
-                    {formatValue(perPortionExtra?.value, {
-                      key: "protein",
-                      label: extra.key,
-                      unit: extra.unit,
-                      decimals: 2,
-                    })}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <Card>
-      <CardContent className="space-y-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
+      <CardContent className="px-4 py-6 md:px-8 md:py-8">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-2xl space-y-2">
               <h3 className="text-lg font-semibold text-foreground">
                 {t("title")}
               </h3>
-              <Badge className="bg-primary/10 text-primary">
-                {t("badge")}
-              </Badge>
+              <p className="text-sm text-muted-foreground">{t("description")}</p>
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t("description")}
-            </p>
+            <div className="flex items-center gap-3 self-start lg:self-auto">
+              <Badge className="bg-primary/10 text-primary">{t("badge")}</Badge>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={loading || disabled || !canFetch}
+                onClick={() => handleFetch(cacheHit === true)}
+                className="min-w-[160px]"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t("fetching")}
+                  </>
+                ) : nutrition ? (
+                  <>
+                    <RefreshCcw className="mr-2 h-4 w-4" />
+                    {buttonLabel}
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    {buttonLabel}
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={loading || disabled || !canFetch}
-              onClick={() => handleFetch(cacheHit === true)}
-              className="min-w-[180px]"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t("fetching")}
-                </>
-              ) : nutrition ? (
-                <>
-                  <RefreshCcw className="mr-2 h-4 w-4" />
-                  {buttonLabel}
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  {buttonLabel}
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+          <Separator />
 
-        {recipeId && !hasIdentifiableIngredients && (
-          <Alert className="border-sky-500/30 bg-sky-500/10">
-            <Info className="h-4 w-4 text-sky-600" />
-            <AlertTitle>{t("needsIngredients.title")}</AlertTitle>
-            <AlertDescription>
-              {t("needsIngredients.body")}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {isStale && nutrition && (
-          <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900">
-            {t("stale")}
-          </div>
-        )}
-
-        {cacheHit && (
-          <Alert className="border-muted-foreground/20 bg-muted/40">
-            <Info className="h-4 w-4" />
-            <AlertTitle>{t("cacheHit.title")}</AlertTitle>
-            <AlertDescription>{t("cacheHit.body")}</AlertDescription>
-          </Alert>
-        )}
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>{t("errorTitle")}</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {nutrition ? (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-2 rounded-lg border border-border/50 bg-muted/30 p-4 text-sm md:grid-cols-[2fr_1fr_1fr]">
-              <span className="font-medium text-foreground">
-                {t("results.heading")}
-              </span>
-              <span className="font-medium text-muted-foreground md:text-right">
-                {t("results.whole")}
-              </span>
-              <span className="font-medium text-muted-foreground md:text-right">
-                {t("results.perPortion")}
-              </span>
-            </div>
+            {recipeId && !hasIdentifiableIngredients && (
+              <Alert className="border-sky-500/30 bg-sky-500/10">
+                <Info className="h-4 w-4 text-sky-600" />
+                <AlertTitle>{t("needsIngredients.title")}</AlertTitle>
+                <AlertDescription>
+                  {t("needsIngredients.body")}
+                </AlertDescription>
+              </Alert>
+            )}
 
-            <div className="divide-y divide-border/40 rounded-lg border border-border/50">
-              {renderNutrientRows()}
-            </div>
+            {isStale && nutrition && (
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-900">
+                {t("stale")}
+              </div>
+            )}
 
-            {extrasMarkup()}
+            {cacheHit && (
+              <Alert className="border-muted-foreground/20 bg-muted/40">
+                <Info className="h-4 w-4" />
+                <AlertTitle>{t("cacheHit.title")}</AlertTitle>
+                <AlertDescription>{t("cacheHit.body")}</AlertDescription>
+              </Alert>
+            )}
 
-            <div className="grid gap-2 rounded-md border border-border/50 bg-card/40 p-4 text-sm text-muted-foreground md:grid-cols-2">
-              {typeof nutrition.meta.confidence === "number" && (
-                <div>
-                  <span className="font-medium text-foreground">
-                    {t("results.confidence")}
-                  </span>
-                  <div className="mt-1">
-                    {Math.round(nutrition.meta.confidence * 100)}%
+            {error && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>{t("errorTitle")}</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {nutrition ? (
+              <div className="w-full space-y-5 text-sm md:max-w-2xl">
+                <div className="overflow-hidden rounded-lg border border-border/60 bg-card/70 shadow-sm md:w-fit">
+                  <div className="grid grid-cols-[2fr_1fr] items-center gap-3 border-b border-border/50 bg-muted/40 px-4 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:text-sm">
+                    <span>{t("results.heading")}</span>
+                    <span className="flex flex-col items-end gap-1 text-right">
+                      <span className="text-foreground">
+                        {t("results.perPortion")}
+                      </span>
+                      <span className="text-[11px] font-medium text-muted-foreground sm:text-xs">
+                        {t("results.perPortionServings", { servings })}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="divide-y divide-border/40">
+                    {renderNutrientRows()}
                   </div>
                 </div>
-              )}
-              {formattedFetchedAt && (
-                <div>
-                  <span className="font-medium text-foreground">
-                    {t("results.lastFetched")}
-                  </span>
-                  <div className="mt-1">{formattedFetchedAt}</div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  {typeof nutrition.meta.confidence === "number" && (
+                    <div className="rounded-md border border-border/50 bg-card/70 p-4 text-sm shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {t("results.confidence")}
+                      </p>
+                      <p className="mt-2 text-lg font-semibold text-foreground">
+                        {Math.round(nutrition.meta.confidence * 100)}%
+                      </p>
+                    </div>
+                  )}
+                  {formattedFetchedAt && (
+                    <div className="rounded-md border border-border/50 bg-card/70 p-4 text-sm shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {t("results.lastFetched")}
+                      </p>
+                      <p className="mt-2 text-sm font-medium text-foreground">
+                        {formattedFetchedAt}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {nutrition.meta.warnings?.length ? (
-              <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-900">
-                <p className="font-medium">{t("results.warnings")}</p>
-                <ul className="mt-2 list-inside list-disc space-y-1">
-                  {nutrition.meta.warnings.map((warning, index) => (
-                    <li key={`${warning}-${index}`}>{warning}</li>
-                  ))}
-                </ul>
+                {nutrition.meta.warnings?.length ? (
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-900 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                      {t("results.warnings")}
+                    </p>
+                    <ul className="mt-2 space-y-2">
+                      {nutrition.meta.warnings.map((warning, index) => (
+                        <li key={`${warning}-${index}`} className="flex gap-2">
+                          <span aria-hidden="true">•</span>
+                          <span>{warning}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
+                {nutrition.meta.notes && (
+                  <p className="rounded-md border border-border/40 bg-muted/20 p-4 text-sm text-muted-foreground">
+                    {nutrition.meta.notes}
+                  </p>
+                )}
               </div>
-            ) : null}
-
-            {nutrition.meta.notes && (
-              <p className="rounded-md border border-border/40 bg-muted/30 p-3 text-sm text-muted-foreground">
-                {nutrition.meta.notes}
-              </p>
+            ) : (
+              <div className="rounded-md border border-dashed border-border/50 bg-muted/20 p-6 text-sm text-muted-foreground">
+                {t("emptyState")}
+              </div>
             )}
-          </div>
-        ) : (
-          <div className="rounded-md border border-dashed border-border/50 bg-muted/20 p-6 text-sm text-muted-foreground">
-            {t("emptyState")}
-          </div>
-        )}
 
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          {t("disclaimer")}
-        </p>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {t("disclaimer")}
+            </p>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
