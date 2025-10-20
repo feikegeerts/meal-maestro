@@ -250,10 +250,6 @@
       "fetch": "Fetch nutrition",
       "refetch": "Recalculate",
       "fetching": "Fetching…",
-      "requiresSave": {
-        "title": "Save recipe first",
-        "body": "Save this recipe to enable nutrition estimates. Once it has an ID we can fetch the numbers."
-      },
       "needsIngredients": {
         "title": "Add ingredients first",
         "body": "We need at least one ingredient with a name before estimating nutrition."

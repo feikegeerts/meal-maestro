@@ -251,10 +251,6 @@
       "fetch": "Voedingswaarden ophalen",
       "refetch": "Opnieuw berekenen",
       "fetching": "Bezig met ophalen…",
-      "requiresSave": {
-        "title": "Sla het recept eerst op",
-        "body": "Sla dit recept op zodat het een ID heeft. Daarna kun je de voedingswaarden ophalen."
-      },
       "needsIngredients": {
         "title": "Voeg eerst ingrediënten toe",
         "body": "We hebben minstens één ingrediënt met een naam nodig voordat we voedingswaarden kunnen inschatten."

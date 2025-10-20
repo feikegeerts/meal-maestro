@@ -36,6 +36,7 @@ interface RecipeEditFormProps {
   conversationId?: string;
   conversationStore?: ConversationStore;
   conversationGreetingContext?: string;
+  showNutrition?: boolean;
 }
 
 // Export auto-save function for external use (backward compatibility)
@@ -57,6 +58,7 @@ export function RecipeEditForm({
   conversationId,
   conversationStore,
   conversationGreetingContext,
+  showNutrition = true,
 }: RecipeEditFormProps) {
   const t = useTranslations("recipeForm");
 
@@ -205,15 +207,17 @@ export function RecipeEditForm({
           disabled={loading}
         />
 
-        <NutritionSection
-          recipeId={recipe.id}
-          ingredients={formData.ingredients}
-          servings={formData.servings}
-          nutrition={formData.nutrition}
-          isStale={nutritionStale}
-          onFetchComplete={handleNutritionFetched}
-          disabled={loading}
-        />
+        {showNutrition && (
+          <NutritionSection
+            recipeId={recipe.id}
+            ingredients={formData.ingredients}
+            servings={formData.servings}
+            nutrition={formData.nutrition}
+            isStale={nutritionStale}
+            onFetchComplete={handleNutritionFetched}
+            disabled={loading}
+          />
+        )}
 
         {errors.length > 0 && (
           <Alert variant="destructive">
@@ -303,6 +307,7 @@ export function RecipeEditForm({
       t,
       nutritionStale,
       handleNutritionFetched,
+      showNutrition,
     ]
   );
 
@@ -343,15 +348,17 @@ export function RecipeEditForm({
           disabled={loading}
         />
 
-        <NutritionSection
-          recipeId={recipe.id}
-          ingredients={formData.ingredients}
-          servings={formData.servings}
-          nutrition={formData.nutrition}
-          isStale={nutritionStale}
-          onFetchComplete={handleNutritionFetched}
-          disabled={loading}
-        />
+        {showNutrition && (
+          <NutritionSection
+            recipeId={recipe.id}
+            ingredients={formData.ingredients}
+            servings={formData.servings}
+            nutrition={formData.nutrition}
+            isStale={nutritionStale}
+            onFetchComplete={handleNutritionFetched}
+            disabled={loading}
+          />
+        )}
       </>
     ),
     [
@@ -361,6 +368,7 @@ export function RecipeEditForm({
       nutritionStale,
       handleNutritionFetched,
       recipe.id,
+      showNutrition,
     ]
   );
 

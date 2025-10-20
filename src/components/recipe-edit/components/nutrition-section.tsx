@@ -322,14 +322,6 @@ export function NutritionSection({
           </div>
         </div>
 
-        {!recipeId && (
-          <Alert className="border-amber-500/40 bg-amber-500/10">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <AlertTitle>{t("requiresSave.title")}</AlertTitle>
-            <AlertDescription>{t("requiresSave.body")}</AlertDescription>
-          </Alert>
-        )}
-
         {recipeId && !hasIdentifiableIngredients && (
           <Alert className="border-sky-500/30 bg-sky-500/10">
             <Info className="h-4 w-4 text-sky-600" />

@@ -172,6 +172,7 @@ export default function AddRecipePage() {
           conversationId={conversationId}
           conversationStore={conversationStore}
           conversationGreetingContext="recipe-builder"
+          showNutrition={false}
         />
       </PageWrapper>
     </CustomUnitsProvider>
