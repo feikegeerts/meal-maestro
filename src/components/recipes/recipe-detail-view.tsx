@@ -587,7 +587,7 @@ export function RecipeDetailView({
       </Card>
 
       {tNutrition && (
-        <Card className="mt-8">
+        <Card className="mt-8 print:hidden">
           <CardContent className="px-4 py-6 md:px-8 md:py-8">
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
