@@ -45,11 +45,6 @@ export function ShareRecipeButton({
 
   const isShared = !!shareInfo;
   const actionLoading = operation !== null;
-  const storageKey = useMemo(
-    () => (typeof window !== "undefined" ? `recipe-share-${recipeId}` : null),
-    [recipeId]
-  );
-
   const fullShareUrl = useMemo(() => {
     if (!sharePath) {
       return "";
@@ -64,12 +59,15 @@ export function ShareRecipeButton({
     setStatusLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/recipes/${recipeId}/share`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `/api/recipes/${recipeId}/share?locale=${locale}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.status === 404) {
         setShareInfo(null);
@@ -93,27 +91,7 @@ export function ShareRecipeButton({
         };
         setShareInfo(info);
         setAllowSave(info.allowSave);
-
-        if (storageKey) {
-          const raw = window.localStorage.getItem(storageKey);
-          if (raw) {
-            try {
-              const parsed = JSON.parse(raw) as { slug: string; path: string };
-              if (
-                parsed.slug === info.slug &&
-                typeof parsed.path === "string"
-              ) {
-                setSharePath(parsed.path);
-              } else {
-                setSharePath(null);
-              }
-            } catch {
-              setSharePath(null);
-            }
-          } else {
-            setSharePath(null);
-          }
-        }
+        setSharePath(data.share.sharePath ?? null);
       } else {
         setShareInfo(null);
         setSharePath(null);
@@ -131,7 +109,7 @@ export function ShareRecipeButton({
     } finally {
       setStatusLoading(false);
     }
-  }, [recipeId, tRecipes, storageKey]);
+  }, [recipeId, tRecipes, locale]);
 
   useEffect(() => {
     loadShareInfo().catch(() => {
@@ -169,16 +147,6 @@ export function ShareRecipeButton({
 
       const data = await response.json();
       setSharePath(data.sharePath);
-      if (storageKey) {
-        try {
-          window.localStorage.setItem(
-            storageKey,
-            JSON.stringify({ slug: data.slug, path: data.sharePath, locale })
-          );
-        } catch {
-          // ignore storage errors
-        }
-      }
       setShareInfo({
         slug: data.slug,
         allowSave: data.allowSave ?? true,
@@ -195,7 +163,7 @@ export function ShareRecipeButton({
     } finally {
       setOperation(null);
     }
-  }, [recipeId, tRecipes, storageKey, locale]);
+  }, [recipeId, tRecipes, locale]);
 
   const handleStopSharing = useCallback(async () => {
     try {
@@ -214,9 +182,6 @@ export function ShareRecipeButton({
       setShareInfo(null);
       setSharePath(null);
       setAllowSave(true);
-      if (storageKey) {
-        window.localStorage.removeItem(storageKey);
-      }
     } catch (err) {
       console.error("Failed to stop sharing", err);
       setError(
@@ -225,7 +190,7 @@ export function ShareRecipeButton({
     } finally {
       setOperation(null);
     }
-  }, [recipeId, tRecipes, storageKey]);
+  }, [recipeId, tRecipes]);
 
   const handleCopy = useCallback(async () => {
     if (!fullShareUrl) {

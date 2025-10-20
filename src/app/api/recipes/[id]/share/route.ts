@@ -9,6 +9,33 @@ interface ShareRequestBody {
   locale?: string;
 }
 
+function resolveLocale(
+  request: NextRequest,
+  explicitLocale?: string | null
+): "nl" | "en" {
+  let effectiveLocale = explicitLocale;
+  if (!effectiveLocale) {
+    try {
+      const referer = request.headers.get("referer");
+      if (referer) {
+        const url = new URL(referer);
+        const firstSegment = url.pathname.split("/").filter(Boolean)[0];
+        if (firstSegment === "nl" || firstSegment === "en") {
+          effectiveLocale = firstSegment;
+        }
+      }
+    } catch {
+      /* ignore parsing errors */
+    }
+  }
+
+  if (effectiveLocale !== "nl" && effectiveLocale !== "en") {
+    return "nl";
+  }
+
+  return effectiveLocale;
+}
+
 async function ensureRecipeOwnership(
   supabase: SupabaseClient,
   userId: string,
@@ -81,26 +108,7 @@ export async function POST(
   }
 
   const { expiresAt = null, allowSave = true, locale: requestedLocale } = body;
-
-  // Derive locale: prefer explicit body value, else attempt to parse from referer path, else default
-  let effectiveLocale = requestedLocale;
-  if (!effectiveLocale) {
-    try {
-      const referer = request.headers.get("referer");
-      if (referer) {
-        const url = new URL(referer);
-        const firstSegment = url.pathname.split("/").filter(Boolean)[0];
-        if (["nl", "en"].includes(firstSegment)) {
-          effectiveLocale = firstSegment;
-        }
-      }
-    } catch {
-      /* ignore */
-    }
-  }
-  if (!effectiveLocale || !["nl", "en"].includes(effectiveLocale)) {
-    effectiveLocale = "nl"; // default (matches routing.defaultLocale)
-  }
+  const effectiveLocale = resolveLocale(request, requestedLocale);
 
   try {
     const result = await RecipeShareService.createShareLink(
@@ -117,6 +125,26 @@ export async function POST(
     const sharePath = `/${effectiveLocale}/share/${
       result.slug
     }?token=${encodeURIComponent(result.token)}`;
+
+    try {
+      await RecipeShareService.saveShareLinkMetadata(
+        supabase,
+        user.id,
+        recipeId,
+        {
+          slug: result.slug,
+          token: result.token,
+          allowSave: result.allowSave,
+          expiresAt: result.expiresAt,
+          createdAt: result.createdAt,
+        }
+      );
+    } catch (metadataError) {
+      console.error(
+        "Failed to persist share link metadata to profile",
+        metadataError
+      );
+    }
 
     return NextResponse.json(
       {
@@ -139,7 +167,7 @@ export async function POST(
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAuth();
@@ -171,12 +199,37 @@ export async function GET(
       return NextResponse.json({ share: null }, { status: 404 });
     }
 
+    const requestedLocale = request.nextUrl.searchParams.get("locale");
+    const effectiveLocale = resolveLocale(request, requestedLocale);
+    let sharePath: string | null = null;
+    try {
+      const metadata = await RecipeShareService.getShareLinkMetadataForRecipe(
+        supabase,
+        user.id,
+        recipeId
+      );
+      if (metadata) {
+        sharePath = RecipeShareService.buildSharePath(
+          effectiveLocale,
+          metadata.slug,
+          metadata.token
+        );
+      }
+    } catch (metadataError) {
+      console.error(
+        "Failed to load stored share link metadata",
+        metadataError
+      );
+    }
+
     return NextResponse.json({
       share: {
         slug: existingShare.slug,
         allowSave: existingShare.allowSave,
         expiresAt: existingShare.expiresAt,
         createdAt: existingShare.createdAt,
+        sharePath,
+        tokenPersisted: sharePath !== null,
       },
     });
   } catch (error) {
@@ -212,6 +265,18 @@ export async function DELETE(
 
   try {
     await RecipeShareService.deleteShareLink(supabase, user.id, recipeId);
+    try {
+      await RecipeShareService.removeShareLinkMetadata(
+        supabase,
+        user.id,
+        recipeId
+      );
+    } catch (metadataError) {
+      console.error(
+        "Failed to remove stored share link metadata",
+        metadataError
+      );
+    }
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error("Failed to delete share link", error);

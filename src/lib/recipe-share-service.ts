@@ -54,6 +54,16 @@ export class SharedRecipeError extends Error {
   }
 }
 
+export interface StoredShareLinkMetadata {
+  recipeId: string;
+  slug: string;
+  token: string;
+  allowSave: boolean;
+  expiresAt: string | null;
+  createdAt: string | null;
+  updatedAt: string;
+}
+
 const SUPABASE_URL =
   process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -148,6 +158,168 @@ function deriveDestinationPath(
 }
 
 export class RecipeShareService {
+  private static normalizeStoredLinks(
+    raw: unknown
+  ): StoredShareLinkMetadata[] {
+    if (!Array.isArray(raw)) {
+      return [];
+    }
+
+    return raw
+      .map((entry) => {
+        if (!entry || typeof entry !== "object") {
+          return null;
+        }
+        const candidate = entry as Record<string, unknown>;
+        const recipeId =
+          typeof candidate.recipeId === "string" ? candidate.recipeId : null;
+        const slug = typeof candidate.slug === "string" ? candidate.slug : null;
+        const token =
+          typeof candidate.token === "string" ? candidate.token : null;
+        if (!recipeId || !slug || !token) {
+          return null;
+        }
+
+        return {
+          recipeId,
+          slug,
+          token,
+          allowSave:
+            typeof candidate.allowSave === "boolean"
+              ? candidate.allowSave
+              : true,
+          expiresAt:
+            typeof candidate.expiresAt === "string"
+              ? candidate.expiresAt
+              : null,
+          createdAt:
+            typeof candidate.createdAt === "string"
+              ? candidate.createdAt
+              : null,
+          updatedAt:
+            typeof candidate.updatedAt === "string"
+              ? candidate.updatedAt
+              : new Date(0).toISOString(),
+        } satisfies StoredShareLinkMetadata;
+      })
+      .filter((value): value is StoredShareLinkMetadata => value !== null);
+  }
+
+  private static async getStoredShareLinks(
+    supabaseClient: SupabaseClient,
+    userId: string
+  ): Promise<StoredShareLinkMetadata[]> {
+    const { data, error } = await supabaseClient
+      .from("user_profiles")
+      .select("shared_recipe_links")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error && error.code !== "PGRST116") {
+      throw error;
+    }
+
+    return RecipeShareService.normalizeStoredLinks(
+      data?.shared_recipe_links ?? []
+    );
+  }
+
+  private static async persistStoredShareLinks(
+    supabaseClient: SupabaseClient,
+    userId: string,
+    links: StoredShareLinkMetadata[]
+  ): Promise<void> {
+    const { error } = await supabaseClient
+      .from("user_profiles")
+      .update({ shared_recipe_links: links })
+      .eq("id", userId);
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  static async saveShareLinkMetadata(
+    supabaseClient: SupabaseClient,
+    userId: string,
+    recipeId: string,
+    metadata: Omit<StoredShareLinkMetadata, "recipeId" | "updatedAt"> &
+      Partial<Pick<StoredShareLinkMetadata, "updatedAt">>
+  ): Promise<void> {
+    const existing = await RecipeShareService.getStoredShareLinks(
+      supabaseClient,
+      userId
+    );
+    const withoutRecipe = existing.filter(
+      (link) => link.recipeId !== recipeId
+    );
+    const updatedRecord: StoredShareLinkMetadata = {
+      recipeId,
+      slug: metadata.slug,
+      token: metadata.token,
+      allowSave: metadata.allowSave,
+      expiresAt: metadata.expiresAt ?? null,
+      createdAt: metadata.createdAt ?? null,
+      updatedAt: metadata.updatedAt ?? new Date().toISOString(),
+    };
+
+    withoutRecipe.push(updatedRecord);
+
+    await RecipeShareService.persistStoredShareLinks(
+      supabaseClient,
+      userId,
+      withoutRecipe
+    );
+  }
+
+  static async removeShareLinkMetadata(
+    supabaseClient: SupabaseClient,
+    userId: string,
+    recipeId: string
+  ): Promise<void> {
+    const existing = await RecipeShareService.getStoredShareLinks(
+      supabaseClient,
+      userId
+    );
+    const filtered = existing.filter((link) => link.recipeId !== recipeId);
+
+    if (filtered.length === existing.length) {
+      return;
+    }
+
+    await RecipeShareService.persistStoredShareLinks(
+      supabaseClient,
+      userId,
+      filtered
+    );
+  }
+
+  static async getShareLinkMetadataForRecipe(
+    supabaseClient: SupabaseClient,
+    userId: string,
+    recipeId: string
+  ): Promise<StoredShareLinkMetadata | null> {
+    const existing = await RecipeShareService.getStoredShareLinks(
+      supabaseClient,
+      userId
+    );
+    return existing.find((link) => link.recipeId === recipeId) ?? null;
+  }
+
+  static async listShareLinkMetadata(
+    supabaseClient: SupabaseClient,
+    userId: string
+  ): Promise<StoredShareLinkMetadata[]> {
+    return RecipeShareService.getStoredShareLinks(supabaseClient, userId);
+  }
+
+  static buildSharePath(locale: string, slug: string, token: string): string {
+    const normalizedLocale = ["nl", "en"].includes(locale) ? locale : "nl";
+    return `/${normalizedLocale}/share/${slug}?token=${encodeURIComponent(
+      token
+    )}`;
+  }
+
   static async createShareLink(
     supabaseClient: SupabaseClient,
     userId: string,
