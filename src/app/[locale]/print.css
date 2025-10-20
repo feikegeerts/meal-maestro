@@ -9,47 +9,50 @@
   footer {
     display: none !important;
   }
-  
+
   /* Page setup */
   @page {
     margin: 0.5in;
     size: letter;
   }
-  
+
   /* Clean layout for print */
   body {
-    font-size: 9pt;
-    line-height: 1.2;
+    font-size: 10pt;
+    line-height: 1.35;
     color: black;
     background: white;
   }
-  
+
   /* Hide all card styling */
-  .card {
+  .card,
+  [data-slot="card"] {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
     margin: 0 !important;
   }
-  
+
   /* Remove card content padding */
-  .card > * {
+  .card > *,
+  [data-slot="card"] > * {
     padding: 0 !important;
   }
-  
+
   /* Compact header section */
-  .recipe-title, h1 {
+  .recipe-title,
+  h1 {
     font-size: 14pt;
     font-weight: bold;
-    margin-bottom: 0.08in;
+    margin-bottom: 0.06in;
     page-break-after: avoid;
   }
-  
+
   /* Hero section layout: image left, content right */
   .grid.grid-cols-1.lg\:grid-cols-5 {
     display: grid !important;
-    grid-template-columns: 2.5in 1fr !important;
+    grid-template-columns: 2.6in 1fr !important;
     gap: 0.2in !important;
     align-items: start !important;
   }
@@ -67,17 +70,37 @@
   }
 
   /* Make recipe image compact for print */
-  .recipe-image-upload {
-    display: block !important;
+  .lg\:col-span-3 .relative.h-64,
+  .order-1 .relative.h-64.group {
+    height: auto !important;
+    max-height: 2.5in !important;
+    width: min(100%, 2.6in) !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
   }
 
-  .recipe-image-upload img {
-    max-height: 2in !important;
-    max-width: 2.5in !important;
+  .lg\:col-span-3 .relative.h-64 > span,
+  .lg\:col-span-3 .relative.h-64 > span > img,
+  .order-1 .relative.h-64.group > span,
+  .order-1 .relative.h-64.group > span > img {
+    height: 100% !important;
     width: 100% !important;
-    object-fit: contain !important;
-    display: block !important;
-    margin: 0 !important;
+    object-fit: cover !important;
+    inset: 0 !important;
+  }
+
+  .lg\:col-span-3 .relative.h-64 .md\:flex,
+  .order-1 .relative.h-64.group .md\:flex {
+    display: none !important;
+  }
+
+  .lg\:col-span-3 .relative.h-64 img,
+  .order-1 .relative.h-64.group img {
+    border-radius: 6px !important;
+    height: 100% !important;
+    width: 100% !important;
+    object-fit: cover !important;
   }
 
   /* Hide image upload controls but show the actual image */
@@ -85,32 +108,34 @@
   .recipe-image-upload .upload-controls {
     display: none !important;
   }
-  
+
   /* Compact metadata and badges */
-  .badge, .text-muted-foreground {
-    font-size: 7pt;
+  .badge,
+  .text-muted-foreground {
+    font-size: 8pt;
     margin: 0.02in;
   }
-  
+
   /* Hide action buttons and excessive metadata */
   .flex.items-center.gap-2.flex-wrap.mt-6:has(button) {
     display: none !important;
   }
-  
+
   /* Compact tags section */
   .flex.flex-wrap.gap-2.mt-6:has(.badge) {
-    margin: 0.05in 0 !important;
+    margin: 0.02in 0 !important;
+    gap: 0.05in !important;
   }
-  
+
   /* Hide created/last eaten metadata in print */
   .grid.grid-cols-1.gap-3.text-sm.mt-8 {
     display: none !important;
   }
-  
+
   /* Force ingredients and instructions side-by-side - target ONLY the content grid */
   .grid.grid-cols-1.lg\:grid-cols-7.gap-6 {
     display: grid !important;
-    grid-template-columns: 3in 1fr !important;
+    grid-template-columns: 2.6in 1fr !important;
     grid-template-rows: auto !important;
     gap: 0.2in !important;
     margin-top: 0.1in !important;
@@ -121,7 +146,7 @@
     background: transparent !important;
     border: 1px solid #666 !important;
     border-radius: 4px !important;
-    padding: 0.08in !important;
+    padding: 0.15in !important;
     margin: 0 !important;
     grid-column: 1 / 2 !important;
     grid-row: 1 !important;
@@ -140,13 +165,14 @@
     width: auto !important;
     float: none !important;
   }
-  
-  .ingredients-section h2, h2 {
+
+  .ingredients-section h2,
+  h2 {
     font-size: 10pt;
     font-weight: bold;
     margin: 0 0 0.04in 0 !important;
   }
-  
+
   /* Ingredient grid with more space for amounts/units */
   .grid-cols-12 {
     gap: 0.03in !important;
@@ -154,86 +180,165 @@
   }
 
   .grid-cols-12 .text-sm {
-    font-size: 8pt;
-    line-height: 1.1;
+    font-size: 9pt !important;
+    line-height: 1.3 !important;
   }
 
   /* Give more space to ingredient amounts and units */
   .grid-cols-12 > *:first-child {
     grid-column: 1 !important;
     word-break: break-word !important;
+    text-align: left !important;
   }
 
   .grid-cols-12 > *:last-child {
     grid-column: 2 !important;
+    text-align: left !important;
   }
-  
+
   /* Hide serving size selector in print */
   .mb-4:has(.serving-size-selector) {
     display: none !important;
   }
-  
+
   /* Hide step circles in print - use numbered list instead */
-  .step-circle, .w-9.h-9 {
+  .step-circle,
+  .w-9.h-9 {
     display: none !important;
   }
-  
+
   /* Compact step text */
-  .prose p, .text-base {
-    font-size: 8pt;
-    line-height: 1.2;
-    margin: 0.02in 0;
+  .prose p,
+  .text-base {
+    font-size: 10pt !important;
+    line-height: 1.35;
+    margin: 0.04in 0;
   }
-  
+
   /* Minimize all spacing */
-  .space-y-5 > * + *, 
+  .space-y-5 > * + *,
   .space-y-6 > * + *,
   .gap-6,
   .gap-4 {
     margin-top: 0.05in !important;
     gap: 0.05in !important;
   }
-  
-  .mb-4, .mb-5, .mb-6, .mb-8,
-  .mt-4, .mt-5, .mt-6, .mt-8,
-  .py-6, .py-8,
-  .p-4, .px-8, .py-6, .px-12, .py-8 {
+
+  .mb-4,
+  .mb-5,
+  .mb-6,
+  .mb-8,
+  .mt-4,
+  .mt-5,
+  .mt-6,
+  .mt-8,
+  .py-6,
+  .py-8,
+  .p-4,
+  .px-8,
+  .py-6,
+  .px-12,
+  .py-8 {
     margin: 0.02in 0 !important;
     padding: 0 !important;
   }
-  
+
   /* Instructions section compact */
   .prose.prose-sm {
     margin: 0 !important;
   }
-  
+
   .space-y-5 {
     gap: 0.04in;
   }
-  
+
   /* Convert step layout to simple numbered list */
   .flex.items-center.gap-4 {
     display: list-item !important;
     list-style-type: decimal !important;
     list-style-position: outside !important;
-    margin: 0.03in 0 0.03in 0.2in !important;
+    margin: 0.06in 0 0.06in 0.2in !important;
+    padding: 0.03in 0 !important;
     gap: 0 !important;
+    line-height: 1.4 !important;
   }
-  
+
   /* Instructions container as ordered list */
   .space-y-5:has(.flex.items-center.gap-4) {
     display: block !important;
     counter-reset: step-counter !important;
   }
-  
+
+  /* Simplify serving size selector styling */
+  .mb-4:has(.inline-flex.items-center.gap-2) {
+    margin-bottom: 0.05in !important;
+  }
+
+  .mb-4:has(.inline-flex.items-center.gap-2) .flex.justify-center {
+    justify-content: flex-start !important;
+    margin: 0 !important;
+  }
+
+  .mb-4:has(.inline-flex.items-center.gap-2) .inline-flex.items-center.gap-2 {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    gap: 0.05in !important;
+  }
+
+  .mb-4:has(.inline-flex.items-center.gap-2)
+    .inline-flex.items-center.gap-2
+    .flex.items-center.border.rounded-md {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .mb-4:has(.inline-flex.items-center.gap-2)
+    .inline-flex.items-center.gap-2
+    .flex.items-center.border.rounded-md
+    button {
+    display: none !important;
+  }
+
+  .mb-4:has(.inline-flex.items-center.gap-2)
+    .inline-flex.items-center.gap-2
+    .flex.items-center.border.rounded-md
+    div {
+    padding: 0 !important;
+    min-width: 0 !important;
+    font-size: 9pt !important;
+    font-weight: 600 !important;
+  }
+
+  .mb-4:has(.inline-flex.items-center.gap-2)
+    .inline-flex.items-center.gap-2
+    span.text-xs {
+    font-size: 9pt !important;
+    margin: 0 !important;
+  }
+
+  .mb-4:has(.inline-flex.items-center.gap-2)
+    .flex.items-center.justify-between {
+    display: none !important;
+  }
+
+  .mb-4:has(.inline-flex.items-center.gap-2) .card,
+  .mb-4:has(.inline-flex.items-center.gap-2) [data-slot="card"] {
+    display: none !important;
+  }
+
   /* Remove all shadows, borders, and backgrounds */
   * {
     box-shadow: none !important;
     text-shadow: none !important;
   }
-  
+
   /* Make container full width */
-  .container, .max-w-4xl {
+  .container,
+  .max-w-4xl {
     max-width: 100% !important;
     padding: 0 !important;
   }
