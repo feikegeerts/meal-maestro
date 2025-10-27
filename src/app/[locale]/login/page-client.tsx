@@ -87,72 +87,82 @@ function LoginContent() {
   }
 
   return (
-    <>
-      <PageWrapper>
-      <div className="container mx-auto px-4 py-8 md:py-16">
-        <div className="max-w-md mx-auto md:max-w-2xl">
-          {/* Header */}
-          <div className="text-center mb-8 md:mb-12">
-            <div className="flex items-center justify-center mb-6">
-              <ChefHatIcon className="h-16 w-16 md:h-20 md:w-20 text-primary" width={80} height={80} />
+    <PageWrapper>
+      <div className="container mx-auto px-4 py-10 lg:py-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col gap-10 lg:grid lg:grid-cols-2 lg:items-start lg:gap-16">
+            {/* Header */}
+            <div className="text-center lg:text-left space-y-4">
+              <div className="flex items-center justify-center lg:justify-start">
+                <ChefHatIcon
+                  className="h-14 w-14 md:h-16 md:w-16 text-primary"
+                  width={64}
+                  height={64}
+                />
+              </div>
+              <div className="space-y-3 lg:space-y-4">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
+                  {t("title")}
+                </h1>
+                <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground">
+                  {t("subtitle")}
+                </p>
+                <p className="text-base md:text-lg text-muted-foreground lg:max-w-xl">
+                  {t("description")}
+                </p>
+              </div>
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-              {t('title')}
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-4">
-              {t('subtitle')}
-            </p>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              {t('description')}
-            </p>
-          </div>
 
-          {/* Authentication Section */}
-          <div className="bg-card rounded-lg shadow-lg p-6 md:p-8">
-            <div className="text-center space-y-6">
-              <div>
-                <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-2">
-                  {t('getStarted')}
-                </h2>
-                <p className="text-muted-foreground text-sm md:text-base">
-                  {t('signInDescription')}
-                </p>
-              </div>
-
-              {authError && (
-                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-                  <p className="text-destructive text-sm">{authError}</p>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <GoogleLoginButton redirectPath={callbackRedirectPath} locale={locale} />
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">
-                      {tAuth('or') || 'Or'}
-                    </span>
-                  </div>
+            {/* Authentication Section */}
+            <div className="bg-card rounded-lg shadow-lg p-6 md:p-8 lg:w-full lg:max-w-md lg:justify-self-end">
+              <div className="text-center space-y-6">
+                <div>
+                  <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-2">
+                    {t("getStarted")}
+                  </h2>
+                  <p className="text-muted-foreground text-sm md:text-base">
+                    {t("signInDescription")}
+                  </p>
                 </div>
 
-                <MagicLinkForm redirectPath={callbackRedirectPath} locale={locale} />
-              </div>
+                {authError && (
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                    <p className="text-destructive text-sm">{authError}</p>
+                  </div>
+                )}
 
-              <div className="text-xs text-muted-foreground leading-relaxed">
-                <p>
-                  {t('termsText')}
-                </p>
+                <div className="space-y-4">
+                  <GoogleLoginButton
+                    redirectPath={callbackRedirectPath}
+                    locale={locale}
+                  />
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">
+                        {tAuth("or") || "Or"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <MagicLinkForm
+                    redirectPath={callbackRedirectPath}
+                    locale={locale}
+                  />
+                </div>
+
+                <div className="text-xs text-muted-foreground leading-relaxed">
+                  <p>{t("termsText")}</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        </div>
-      </PageWrapper>
-    </>
+      </div>
+    </PageWrapper>
   );
 }
 

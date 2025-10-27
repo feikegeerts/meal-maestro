@@ -1,6 +1,7 @@
 # Post-MVP Development Roadmap
 
 1. [ ] Record videos for the homepage
+1. [ ] Layout of the nutrition card
 
 ## Quality & Compliance
 
