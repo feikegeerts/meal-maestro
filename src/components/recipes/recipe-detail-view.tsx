@@ -130,6 +130,12 @@ export function RecipeDetailView({
       : tNutrition("fetch")
     : "";
   const fetchingLabel = tNutrition ? tNutrition("fetching") : "";
+  const showNeedsIngredientsAlert = Boolean(
+    showFetchButton && !canFetchNutrition
+  );
+  const showAnyNutritionAlert = Boolean(
+    nutritionCacheHit || nutritionError || showNeedsIngredientsAlert
+  );
   const nutrientDefinitions = useMemo<NutrientDefinition[]>(() => {
     if (!tNutrition) return [];
     return [
@@ -587,9 +593,9 @@ export function RecipeDetailView({
       </Card>
 
       {tNutrition && (
-        <Card className="mt-8 print:hidden">
-          <CardContent className="px-4 py-6 md:px-8 md:py-8">
-            <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+        <Card className="mt-8 print:hidden md:mx-auto md:max-w-4xl lg:max-w-5xl">
+          <CardContent className="px-4 py-6 md:px-8 md:py-8 lg:px-10">
+            <div className="mx-auto w-full max-w-5xl space-y-6">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="max-w-2xl space-y-2">
                   <h2 className="text-xl font-semibold">
@@ -643,38 +649,44 @@ export function RecipeDetailView({
 
               <Separator />
 
-              <div className="space-y-4">
-                {nutritionCacheHit && (
-                  <Alert className="border-muted-foreground/20 bg-muted/40">
-                    <Info className="h-4 w-4" />
-                    <AlertTitle>{tNutrition("cacheHit.title")}</AlertTitle>
-                    <AlertDescription>
-                      {tNutrition("cacheHit.body")}
-                    </AlertDescription>
-                  </Alert>
-                )}
+              {showAnyNutritionAlert && (
+                <div className="space-y-4">
+                  {nutritionCacheHit && (
+                    <Alert className="border-muted-foreground/20 bg-muted/40">
+                      <Info className="h-4 w-4" />
+                      <AlertTitle>{tNutrition("cacheHit.title")}</AlertTitle>
+                      <AlertDescription>
+                        {tNutrition("cacheHit.body")}
+                      </AlertDescription>
+                    </Alert>
+                  )}
 
-                {nutritionError && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>{tNutrition("errorTitle")}</AlertTitle>
-                    <AlertDescription>{nutritionError}</AlertDescription>
-                  </Alert>
-                )}
+                  {nutritionError && (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>{tNutrition("errorTitle")}</AlertTitle>
+                      <AlertDescription>{nutritionError}</AlertDescription>
+                    </Alert>
+                  )}
 
-                {showFetchButton && !canFetchNutrition && (
-                  <Alert className="border-sky-500/30 bg-sky-500/10">
-                    <Info className="h-4 w-4 text-sky-600" />
-                    <AlertTitle>{tNutrition("needsIngredients.title")}</AlertTitle>
-                    <AlertDescription>
-                      {tNutrition("needsIngredients.body")}
-                    </AlertDescription>
-                  </Alert>
-                )}
+                  {showNeedsIngredientsAlert && (
+                    <Alert className="border-sky-500/30 bg-sky-500/10">
+                      <Info className="h-4 w-4 text-sky-600" />
+                      <AlertTitle>
+                        {tNutrition("needsIngredients.title")}
+                      </AlertTitle>
+                      <AlertDescription>
+                        {tNutrition("needsIngredients.body")}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              )}
 
-                {nutrition ? (
-                  <div className="w-full space-y-5 text-sm md:max-w-2xl">
-                    <div className="overflow-hidden rounded-lg border border-border/60 bg-card/70 shadow-sm md:w-fit">
+              {nutrition ? (
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-12">
+                  <div className="flex-1">
+                    <div className="overflow-hidden rounded-lg border border-border/60 bg-card/70 shadow-sm md:w-fit lg:max-w-xl">
                       <table className="w-full min-w-[320px] text-xs sm:text-sm">
                         <thead className="bg-muted/40 text-xs font-medium sm:text-sm">
                           <tr>
@@ -734,8 +746,10 @@ export function RecipeDetailView({
                         </tbody>
                       </table>
                     </div>
+                  </div>
 
-                    <div className="grid gap-3 md:grid-cols-2">
+                  <div className="w-full space-y-4 lg:w-80 lg:flex-shrink-0">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                       {typeof nutrition.meta.confidence === "number" && (
                         <div className="rounded-md border border-border/50 bg-card/70 p-4 text-sm shadow-sm">
                           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -784,21 +798,21 @@ export function RecipeDetailView({
                       </p>
                     )}
                   </div>
-                ) : (
-                  <div className="flex flex-col items-start gap-3 rounded-md border border-dashed border-border/50 bg-muted/20 p-6 text-sm text-muted-foreground">
-                    <p>{tNutrition("emptyState")}</p>
-                    {onEdit && (
-                      <Button variant="outline" size="sm" onClick={onEdit}>
-                        {t("editDetail")}
-                      </Button>
-                    )}
-                  </div>
-                )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-start gap-3 rounded-md border border-dashed border-border/50 bg-muted/20 p-6 text-sm text-muted-foreground">
+                  <p>{tNutrition("emptyState")}</p>
+                  {onEdit && (
+                    <Button variant="outline" size="sm" onClick={onEdit}>
+                      {t("editDetail")}
+                    </Button>
+                  )}
+                </div>
+              )}
 
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  {tNutrition("disclaimer")}
-                </p>
-              </div>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {tNutrition("disclaimer")}
+              </p>
             </div>
           </CardContent>
         </Card>
