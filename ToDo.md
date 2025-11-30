@@ -6,7 +6,6 @@
 
 ## V2.0 feature requests
 
-1. [ ] Add optional sections to a recipe so that a recipe can hold multiple sections. Like in a recipe you can have For example one section for the sauce and a section for the mashed potato and one section for the salad. Something like that. Does that make sense? Please ask questions if this requirement is not clear
 1. [ ] Extra columns
    1. [ ] Reference column to add the original link / place of the recipe
    1. [ ] Bereidingstijd, totale tijd etc.

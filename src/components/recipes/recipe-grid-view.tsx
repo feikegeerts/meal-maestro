@@ -103,7 +103,7 @@ export function RecipeGridView({
             <Card
               key={row.id}
               data-state={row.getIsSelected() && "selected"}
-              className={`group relative flex h-full flex-col gap-0 overflow-hidden border p-0 py-0 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg ${
+              className={`group relative flex h-full flex-col gap-0 overflow-hidden border p-0 py-0 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg cursor-pointer ${
                 row.getIsSelected()
                   ? "ring-2 ring-primary"
                   : "border-border/80"
