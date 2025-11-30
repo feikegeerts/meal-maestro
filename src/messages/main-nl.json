@@ -465,6 +465,8 @@
     "allSeasons": "Alle seizoenen",
     "clear": "Wissen",
     "viewOptions": "Weergave opties",
+    "listView": "Lijstweergave",
+    "tileView": "Tegelweergave",
     "rowsSelected": "{count} van {total} rij(en) geselecteerd",
     "deleteSelected": "Geselecteerde verwijderen",
     "markAsEatenOnDateBulk": "Markeer als gegeten op...",

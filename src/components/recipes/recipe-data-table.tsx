@@ -6,7 +6,6 @@ import {
   ColumnFiltersState,
   SortingState,
   VisibilityState,
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
@@ -15,36 +14,9 @@ import {
 } from "@tanstack/react-table";
 import { Recipe } from "@/types/recipe";
 import { useRouter } from "@/app/i18n/routing";
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { RECIPE_CATEGORIES, RECIPE_SEASONS } from "@/types/recipe";
 import {
-  Search,
-  Settings,
-  X,
   ChevronFirst,
   ChevronLeft,
   ChevronRight,
@@ -58,6 +30,8 @@ import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { useRecipeTranslations } from "@/messages";
 import {
+  RecipeCategory,
+  RecipeSeason,
   CuisineType,
   DietType,
   CookingMethodType,
@@ -65,52 +39,31 @@ import {
   ProteinType,
   OccasionType,
   CharacteristicType,
-  RecipeCategory,
-  RecipeSeason,
 } from "@/types/recipe";
 import { DateSelectionDialog } from "@/components/ui/date-selection-dialog";
 import { Calendar } from "lucide-react";
+import { RecipeGridView } from "./recipe-grid-view";
+import { RecipeTableView } from "./recipe-table-view";
+import { RecipeTableToolbar } from "./recipe-table-toolbar";
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
+interface DataTableProps {
+  columns: ColumnDef<Recipe, unknown>[];
+  data: Recipe[];
   loading?: boolean;
 }
 
-export function RecipeDataTable<TData, TValue>({
+export function RecipeDataTable({
   columns,
   data,
   loading = false,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps) {
   const router = useRouter();
   const { removeRecipes, markRecipesAsEaten } = useRecipes();
   const t = useTranslations("toast");
   const tTable = useTranslations("recipeTable");
-  const tCategories = useTranslations("categories");
-  const tSeasons = useTranslations("seasons");
   const { translateTag, translateCategory, translateSeason } =
     useRecipeTranslations();
 
-  const getColumnDisplayName = (columnId: string): string => {
-    switch (columnId) {
-      case "title":
-        return tTable("title");
-      case "category":
-        return tTable("category");
-      case "season":
-        return tTable("season");
-      case "tags":
-        return tTable("tags");
-      case "last_eaten":
-        return tTable("lastEaten");
-      case "created_at":
-        return tTable("created");
-      case "actions":
-        return tTable("actions");
-      default:
-        return columnId;
-    }
-  };
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -123,15 +76,27 @@ export function RecipeDataTable<TData, TValue>({
   const [bulkOperationLoading, setBulkOperationLoading] = React.useState(false);
   const [dateDialogOpen, setDateDialogOpen] = React.useState(false);
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+  const [viewMode, setViewMode] = React.useState<"table" | "grid">(() => {
+    if (typeof window === "undefined") return "table";
+    const stored = window.localStorage.getItem("recipeViewMode");
+    return stored === "grid" ? "grid" : "table";
+  });
+  const [clickedRecipeId, setClickedRecipeId] = React.useState<string | null>(
+    null
+  );
 
-  // Debounce the search input
   React.useEffect(() => {
     const timeoutId = setTimeout(() => {
       setGlobalFilter(searchInput);
-    }, 300); // 300ms delay
+    }, 300);
 
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("recipeViewMode", viewMode);
+  }, [viewMode]);
 
   const table = useReactTable({
     data,
@@ -155,15 +120,11 @@ export function RecipeDataTable<TData, TValue>({
       const searchValue = filterValue.toLowerCase();
       const recipe = row.original as Recipe;
 
-      // Search in title
       const title = row.getValue("title") as string;
       if (title?.toLowerCase().includes(searchValue)) return true;
 
-      // Search in category (both raw and translated values)
       const category = row.getValue("category") as string;
       if (category?.toLowerCase().includes(searchValue)) return true;
-
-      // Also search in translated category value
       if (category) {
         const translatedCategory = translateCategory(
           category as RecipeCategory
@@ -172,17 +133,13 @@ export function RecipeDataTable<TData, TValue>({
           return true;
       }
 
-      // Search in season (both raw and translated values)
       const season = row.getValue("season") as string;
       if (season?.toLowerCase().includes(searchValue)) return true;
-
-      // Also search in translated season value
       if (season) {
         const translatedSeason = translateSeason(season as RecipeSeason);
         if (translatedSeason?.toLowerCase().includes(searchValue)) return true;
       }
 
-      // Search in categorized tags (both raw and translated values)
       const allTags = [
         ...(recipe.cuisine ? [recipe.cuisine] : []),
         ...(recipe.diet_types || []),
@@ -193,11 +150,9 @@ export function RecipeDataTable<TData, TValue>({
         ...(recipe.characteristics || []),
       ];
 
-      // Check raw tag values
       if (allTags?.some((tag) => tag.toLowerCase().includes(searchValue)))
         return true;
 
-      // Check translated tag values
       const translatedTags: string[] = [];
       if (recipe.cuisine) {
         translatedTags.push(
@@ -246,7 +201,6 @@ export function RecipeDataTable<TData, TValue>({
       )
         return true;
 
-      // Search in description (if available in row data)
       if (recipe?.description?.toLowerCase().includes(searchValue)) return true;
 
       return false;
@@ -261,18 +215,13 @@ export function RecipeDataTable<TData, TValue>({
   });
 
   const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
+  const hasFilters = globalFilter || columnFilters.length > 0;
 
   const clearFilters = () => {
     setGlobalFilter("");
     setSearchInput("");
     setColumnFilters([]);
   };
-
-  const hasFilters = globalFilter || columnFilters.length > 0;
-
-  const [clickedRecipeId, setClickedRecipeId] = React.useState<string | null>(
-    null
-  );
 
   const handleRowClick = (recipe: Recipe) => {
     setClickedRecipeId(recipe.id);
@@ -285,22 +234,20 @@ export function RecipeDataTable<TData, TValue>({
 
   const handleDeleteSelected = async () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
-    const selectedIds = selectedRows.map((row) => (row.original as Recipe).id);
-
-    if (selectedIds.length === 0) return;
+    const ids = selectedRows.map((row) => (row.original as Recipe).id);
+    if (ids.length === 0) return;
 
     const confirmDelete = window.confirm(
       tTable("confirmDelete", {
-        count: selectedIds.length,
-        plural: selectedIds.length > 1 ? "s" : "",
+        count: ids.length,
+        plural: ids.length > 1 ? "s" : "",
       })
     );
-
     if (!confirmDelete) return;
 
     setBulkOperationLoading(true);
     try {
-      const result = await recipeService.deleteRecipes(selectedIds);
+      const result = await recipeService.deleteRecipes(ids);
       removeRecipes(result.deletedIds);
       setRowSelection({});
       const message =
@@ -318,18 +265,12 @@ export function RecipeDataTable<TData, TValue>({
 
   const handleMarkAsEaten = async (date?: Date) => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
-    const currentSelectedIds = selectedRows.map(
-      (row) => (row.original as Recipe).id
-    );
-
-    if (currentSelectedIds.length === 0) return;
+    const ids = selectedRows.map((row) => (row.original as Recipe).id);
+    if (ids.length === 0) return;
 
     setBulkOperationLoading(true);
     try {
-      const result = await recipeService.markRecipesAsEaten(
-        currentSelectedIds,
-        date
-      );
+      const result = await recipeService.markRecipesAsEaten(ids, date);
       markRecipesAsEaten(result.updatedIds);
       setRowSelection({});
       const message =
@@ -347,13 +288,9 @@ export function RecipeDataTable<TData, TValue>({
 
   const handleMarkAsEatenOnDate = () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
-    const currentSelectedIds = selectedRows.map(
-      (row) => (row.original as Recipe).id
-    );
-
-    if (currentSelectedIds.length === 0) return;
-
-    setSelectedIds(currentSelectedIds);
+    const ids = selectedRows.map((row) => (row.original as Recipe).id);
+    if (ids.length === 0) return;
+    setSelectedIds(ids);
     setDateDialogOpen(true);
   };
 
@@ -369,139 +306,28 @@ export function RecipeDataTable<TData, TValue>({
 
   return (
     <div className="w-full space-y-4">
-      {/* Toolbar */}
-      <div className="flex flex-col gap-3">
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={tTable("searchPlaceholder")}
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            className="pl-10"
-          />
-        </div>
+      <RecipeTableToolbar
+        table={table}
+        searchInput={searchInput}
+        onSearchChange={setSearchInput}
+        hasFilters={!!hasFilters}
+        clearFilters={clearFilters}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+      />
 
-        {/* Filters Row */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Category Filter */}
-          <Select
-            value={
-              (table.getColumn("category")?.getFilterValue() as string[])?.join(
-                ","
-              ) || ""
-            }
-            onValueChange={(value) => {
-              const column = table.getColumn("category");
-              if (value && value !== "all") {
-                column?.setFilterValue([value]);
-              } else {
-                column?.setFilterValue(undefined);
-              }
-            }}
-          >
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder={tTable("categoryPlaceholder")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{tTable("allCategories")}</SelectItem>
-              {RECIPE_CATEGORIES.map((category) => (
-                <SelectItem
-                  key={category}
-                  value={category}
-                  className="capitalize"
-                >
-                  {tCategories(category)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Season Filter */}
-          <Select
-            value={
-              (table.getColumn("season")?.getFilterValue() as string[])?.join(
-                ","
-              ) || ""
-            }
-            onValueChange={(value) => {
-              const column = table.getColumn("season");
-              if (value && value !== "all") {
-                column?.setFilterValue([value]);
-              } else {
-                column?.setFilterValue(undefined);
-              }
-            }}
-          >
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder={tTable("seasonPlaceholder")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{tTable("allSeasons")}</SelectItem>
-              {RECIPE_SEASONS.map((season) => (
-                <SelectItem key={season} value={season} className="capitalize">
-                  {tSeasons(season)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Clear Filters */}
-          {hasFilters && (
-            <Button
-              variant="ghost"
-              onClick={clearFilters}
-              className="h-10 px-3"
-            >
-              <X className="mr-2 h-4 w-4" />
-              {tTable("clear")}
-            </Button>
-          )}
-
-          {/* Column Visibility */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-10 w-10 p-0">
-                <Settings className="h-4 w-4" />
-                <span className="sr-only">{tTable("viewOptions")}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {getColumnDisplayName(column.id)}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      {/* Selection Info */}
       {selectedRowCount > 0 && (
-        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 bg-accent/40 rounded-md p-3 border border-accent/50">
+        <div className="flex flex-col gap-2 rounded-md border border-accent/50 bg-accent/40 p-3 md:flex-row md:items-center md:gap-3">
           <Badge
             variant="secondary"
-            className="w-full md:w-auto justify-center"
+            className="w-full justify-center md:w-auto"
           >
             {tTable("rowsSelected", {
               count: selectedRowCount,
               total: table.getFilteredRowModel().rows.length,
             })}
           </Badge>
-          <div className="flex flex-col md:flex-row gap-2 md:gap-3 w-full md:w-auto">
+          <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:gap-3">
             <Button
               variant="destructive"
               size="sm"
@@ -534,102 +360,27 @@ export function RecipeDataTable<TData, TValue>({
         </div>
       )}
 
-      {/* Table */}
-      <div className="rounded-md border text-sm sm:text-base">
-        <Table
-          style={{
-            width: "100%",
-            tableLayout: "fixed",
-          }}
-        >
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead
-                      key={header.id}
-                      style={{ width: header.getSize() }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <TableRow key={index}>
-                  {columns.map((_, cellIndex) => (
-                    <TableCell key={cellIndex}>
-                      <div className="h-4 bg-muted animate-pulse rounded" />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className={`cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors ${
-                    clickedRecipeId === (row.original as Recipe).id
-                      ? "bg-muted animate-pulse"
-                      : ""
-                  }`}
-                  onMouseEnter={() =>
-                    handleRowMouseEnter((row.original as Recipe).id)
-                  }
-                  onClick={(e) => {
-                    const target = e.target as HTMLElement;
-                    if (
-                      target.closest("button") ||
-                      target.closest('[role="checkbox"]') ||
-                      target.closest("[data-radix-popper-content-wrapper]") ||
-                      target.closest("[data-dropdown-trigger]") ||
-                      target.closest('[role="menuitem"]') ||
-                      target.closest("a[href]")
-                    ) {
-                      return;
-                    }
-                    handleRowClick(row.original as Recipe);
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      style={{ width: cell.column.getSize() }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  {tTable("noRecipesFound")}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {viewMode === "table" ? (
+        <RecipeTableView
+          table={table}
+          columns={columns}
+          loading={loading}
+          clickedRecipeId={clickedRecipeId}
+          onRowMouseEnter={handleRowMouseEnter}
+          onRowClick={(recipe) => handleRowClick(recipe)}
+        />
+      ) : (
+        <RecipeGridView
+          table={table}
+          loading={loading}
+          onRowMouseEnter={handleRowMouseEnter}
+          onRowClick={(recipe) => handleRowClick(recipe)}
+          translateCategory={(category) => translateCategory(category)}
+          translateSeason={(season) => translateSeason(season)}
+          translateTag={translateTag}
+        />
+      )}
 
-      {/* Pagination */}
       <div className="flex items-center justify-between">
         <div className="flex-1 text-sm text-muted-foreground">
           {selectedRowCount > 0 && (
@@ -644,25 +395,17 @@ export function RecipeDataTable<TData, TValue>({
         <div className="flex items-center space-x-6 lg:space-x-8">
           <div className="flex items-center space-x-2">
             <p className="text-sm font-medium">{tTable("rowsPerPage")}</p>
-            <Select
-              value={`${table.getState().pagination.pageSize}`}
-              onValueChange={(value) => {
-                table.setPageSize(Number(value));
-              }}
+            <select
+              className="h-8 w-[70px] rounded-md border border-input bg-background px-2 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              value={table.getState().pagination.pageSize}
+              onChange={(e) => table.setPageSize(Number(e.target.value))}
             >
-              <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue
-                  placeholder={table.getState().pagination.pageSize}
-                />
-              </SelectTrigger>
-              <SelectContent side="top">
-                {[10, 20, 30, 40, 50].map((pageSize) => (
-                  <SelectItem key={pageSize} value={`${pageSize}`}>
-                    {pageSize}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {[10, 20, 30, 40, 50].map((pageSize) => (
+                <option key={pageSize} value={pageSize}>
+                  {pageSize}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex w-[100px] items-center justify-center text-sm font-medium">
             {tTable("page", {

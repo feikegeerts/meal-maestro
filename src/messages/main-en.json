@@ -464,6 +464,8 @@
     "allSeasons": "All Seasons",
     "clear": "Clear",
     "viewOptions": "View options",
+    "listView": "List view",
+    "tileView": "Tile view",
     "rowsSelected": "{count} of {total} row(s) selected",
     "deleteSelected": "Delete Selected",
     "markAsEatenOnDateBulk": "Mark as Eaten on...",
