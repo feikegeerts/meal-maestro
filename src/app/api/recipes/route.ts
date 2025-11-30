@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
-import { Recipe, RecipesResponse } from "@/types/recipe";
+import {
+  Recipe,
+  RecipeIngredient,
+  RecipeSection,
+  RecipesResponse,
+} from "@/types/recipe";
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
@@ -134,42 +139,64 @@ export async function POST(request: NextRequest) {
       characteristics,
       season,
       nutrition,
+      sections,
     } = body;
 
-    if (!title || !ingredients || !description || !category || !servings) {
+    const hasSections = Array.isArray(sections) && sections.length > 0;
+
+    if (!title || !category || !servings) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, ingredients, servings, description, category' },
+        { error: 'Missing required fields: title, servings, category' },
         { status: 400 }
       );
     }
 
+    if ((!ingredients || ingredients.length === 0) && !hasSections) {
+      return NextResponse.json(
+        { error: 'At least one ingredient is required unless sections are provided' },
+        { status: 400 }
+      );
+    }
+
+    if ((!description || description.trim().length === 0) && !hasSections) {
+      return NextResponse.json(
+        { error: 'Description is required unless sections are provided' },
+        { status: 400 }
+      );
+    }
+
+    const ingredientsArray = Array.isArray(ingredients) ? ingredients : [];
+
     // Validate structured ingredients
-    if (!Array.isArray(ingredients)) {
+    if (!Array.isArray(ingredients) && !hasSections) {
       return NextResponse.json(
         { error: 'Ingredients must be an array of structured ingredient objects' },
         { status: 400 }
       );
     }
 
-    for (const ingredient of ingredients) {
-      if (!ingredient.id || !ingredient.name) {
-        return NextResponse.json(
-          { error: 'Each ingredient must have an id and name' },
-          { status: 400 }
-        );
-      }
-      // Normalize amount: treat 0 as null for "to taste" scenarios
-      const normalizedAmount = ingredient.amount === 0 ? null : ingredient.amount;
-      if (normalizedAmount !== null && (typeof normalizedAmount !== 'number' || normalizedAmount <= 0)) {
-        return NextResponse.json(
-          { error: 'Ingredient amounts must be positive numbers or null' },
-          { status: 400 }
-        );
+    if (Array.isArray(ingredients)) {
+      for (const ingredient of ingredientsArray) {
+        if (!ingredient.id || !ingredient.name) {
+          return NextResponse.json(
+            { error: 'Each ingredient must have an id and name' },
+            { status: 400 }
+          );
+        }
+        // Normalize amount: treat 0 as null for "to taste" scenarios
+        const normalizedAmount = ingredient.amount === 0 ? null : ingredient.amount;
+        if (normalizedAmount !== null && (typeof normalizedAmount !== 'number' || normalizedAmount <= 0)) {
+          return NextResponse.json(
+            { error: 'Ingredient amounts must be positive numbers or null' },
+            { status: 400 }
+          );
+        }
       }
     }
 
-    // Normalize ingredient amounts and units
-    const normalizedIngredients = ingredients.map(ingredient => {
+    const normalizeIngredient = (
+      ingredient: RecipeIngredient
+    ): RecipeIngredient => {
       let normalizedUnit = ingredient.unit;
       
       // Convert common non-standard units to standard ones or remove them
@@ -205,16 +232,111 @@ export async function POST(request: NextRequest) {
       
       return {
         ...ingredient,
-        amount: ingredient.amount === 0 ? null : ingredient.amount,
-        unit: normalizedUnit
+        amount:
+          ingredient.amount === 0 || typeof ingredient.amount === "undefined"
+            ? null
+            : ingredient.amount,
+        unit: normalizedUnit,
       };
-    });
+    };
+
+    // Normalize ingredient amounts and units
+    const normalizedIngredients = ingredientsArray.map(normalizeIngredient);
+
+    // Validate and normalize sections
+    let normalizedSections: RecipeSection[] | undefined;
+    if (hasSections) {
+      if (!Array.isArray(sections)) {
+        return NextResponse.json(
+          { error: 'Sections must be an array when provided' },
+          { status: 400 }
+        );
+      }
+
+      const sectionErrors: string[] = [];
+      normalizedSections = (sections as RecipeSection[]).map(
+        (section, index: number) => {
+          if (!section.id) {
+            sectionErrors.push(`Section ${index + 1} is missing an id`);
+          }
+          if (!section.title || !section.title.trim()) {
+            sectionErrors.push(`Section ${index + 1} title is required`);
+          }
+          if (!section.instructions || !section.instructions.trim()) {
+            sectionErrors.push(`Section ${index + 1} instructions are required`);
+          }
+          if (
+            !Array.isArray(section.ingredients) ||
+            section.ingredients.length === 0
+          ) {
+            sectionErrors.push(
+              `Section ${index + 1} must include at least one ingredient`
+            );
+          } else {
+            section.ingredients.forEach(
+              (ingredient: RecipeIngredient, ingredientIndex: number) => {
+                if (!ingredient.id || !ingredient.name) {
+                  sectionErrors.push(
+                    `Section ${index + 1} ingredient ${
+                      ingredientIndex + 1
+                    } must have an id and name`
+                  );
+                }
+                const normalizedAmount =
+                  ingredient.amount === 0 ? null : ingredient.amount;
+                if (
+                  normalizedAmount !== null &&
+                  (typeof normalizedAmount !== "number" ||
+                    normalizedAmount <= 0)
+                ) {
+                  sectionErrors.push(
+                    `Section ${index + 1} ingredient ${
+                      ingredientIndex + 1
+                    } amounts must be positive numbers or null`
+                  );
+                }
+              }
+            );
+          }
+
+          return {
+            ...section,
+            title: section.title?.trim?.() ?? section.title,
+            instructions: section.instructions,
+            ingredients: Array.isArray(section.ingredients)
+              ? section.ingredients.map(normalizeIngredient)
+              : [],
+          };
+        }
+      );
+
+      if (sectionErrors.length > 0) {
+        return NextResponse.json(
+          { error: sectionErrors.join("; ") },
+          { status: 400 }
+        );
+      }
+    }
+
+    const descriptionToStore =
+      description && description.trim().length > 0
+        ? description
+        : hasSections
+        ? normalizedSections
+            ?.map((section) =>
+              section.title
+                ? `${section.title}: ${section.instructions}`
+                : section.instructions
+            )
+            .join("\n\n") ?? ""
+        : "";
 
     const insertData = {
       title,
       ingredients: normalizedIngredients,
+      sections: normalizedSections ?? [],
       servings: parseInt(servings),
-      description,
+      description: descriptionToStore,
       category,
       cuisine,
       diet_types: diet_types || [],

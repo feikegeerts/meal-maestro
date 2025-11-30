@@ -79,6 +79,7 @@ export default function AddRecipePage() {
         occasions: recipeData.occasions || [],
         characteristics: recipeData.characteristics || [],
         season: recipeData.season,
+        sections: recipeData.sections || [],
       };
 
       const { recipe: newRecipe } = await recipeService.createRecipe(createData);

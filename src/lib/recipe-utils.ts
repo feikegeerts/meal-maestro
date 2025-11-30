@@ -8,6 +8,7 @@ import {
   RecipeInput,
   RecipeNutrition,
   RecipeNutritionValues,
+  RecipeSection,
   RecipeCategory,
   RecipeSeason,
   CuisineType,
@@ -74,6 +75,57 @@ export function isValidCharacteristicType(
 
 function isNonNegativeNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
+function validateIngredientsList(
+  ingredients: RecipeIngredient[] | undefined | null,
+  errors: string[],
+  contextLabel: string
+) {
+  if (!ingredients || ingredients.length === 0) {
+    errors.push(`${contextLabel} must include at least one ingredient`);
+    return;
+  }
+
+  ingredients.forEach((ingredient, index) => {
+    const ingredientLabel =
+      contextLabel === "Ingredient"
+        ? "Ingredient"
+        : `${contextLabel} ingredient`;
+    if (!ingredient.name || ingredient.name.trim().length === 0) {
+      errors.push(`${ingredientLabel} ${index + 1} name is required`);
+    }
+    const normalizedAmount = ingredient.amount === 0 ? null : ingredient.amount;
+    if (
+      normalizedAmount !== null &&
+      (isNaN(normalizedAmount) || normalizedAmount <= 0)
+    ) {
+      errors.push(
+        `${ingredientLabel} ${
+          index + 1
+        } amount must be a positive number or empty for "to taste"`
+      );
+    }
+  });
+}
+
+function validateSections(sections: RecipeSection[], errors: string[]) {
+  sections.forEach((section, index) => {
+    const sectionLabel = `Section ${index + 1}`;
+    if (!section.title || section.title.trim().length === 0) {
+      errors.push(`${sectionLabel} title is required`);
+    }
+
+    validateIngredientsList(
+      section.ingredients,
+      errors,
+      `${sectionLabel} ingredients`
+    );
+
+    if (!section.instructions || section.instructions.trim().length === 0) {
+      errors.push(`${sectionLabel} instructions are required`);
+    }
+  });
 }
 
 function validateNutritionValues(
@@ -170,28 +222,20 @@ export function validateRecipeInput(input: RecipeInput): {
   const errors: string[] = [];
   if (!input.title || input.title.trim().length === 0)
     errors.push("Recipe title is required");
-  if (!input.description || input.description.trim().length === 0)
-    errors.push("Recipe description is required");
+  const hasSections =
+    Array.isArray(input.sections) && input.sections.length > 0;
+  if (!input.description || input.description.trim().length === 0) {
+    if (!hasSections) errors.push("Recipe description is required");
+  }
+
   if (!input.ingredients || input.ingredients.length === 0) {
-    errors.push("At least one ingredient is required");
+    if (!hasSections) errors.push("At least one ingredient is required");
   } else {
-    input.ingredients.forEach((ingredient, index) => {
-      if (!ingredient.name || ingredient.name.trim().length === 0) {
-        errors.push(`Ingredient ${index + 1} name is required`);
-      }
-      const normalizedAmount =
-        ingredient.amount === 0 ? null : ingredient.amount;
-      if (
-        normalizedAmount !== null &&
-        (isNaN(normalizedAmount) || normalizedAmount <= 0)
-      ) {
-        errors.push(
-          `Ingredient ${
-            index + 1
-          } amount must be a positive number or empty for "to taste"`
-        );
-      }
-    });
+    validateIngredientsList(input.ingredients, errors, "Ingredient");
+  }
+
+  if (hasSections && input.sections) {
+    validateSections(input.sections, errors);
   }
   if (!input.servings || input.servings <= 0 || input.servings > 100)
     errors.push("Servings must be between 1 and 100");
@@ -452,6 +496,12 @@ export function scaleRecipe(recipe: Recipe, newServings: number): Recipe {
   const scaledIngredients = recipe.ingredients.map((ing) =>
     scaleIngredient(ing, ratio)
   );
+  const scaledSections = recipe.sections?.map((section) => ({
+    ...section,
+    ingredients: section.ingredients.map((ingredient) =>
+      scaleIngredient(ingredient, ratio)
+    ),
+  }));
   const scaledNutrition = recipe.nutrition
     ? {
         perPortion: { ...recipe.nutrition.perPortion },
@@ -464,6 +514,7 @@ export function scaleRecipe(recipe: Recipe, newServings: number): Recipe {
   return {
     ...recipe,
     ingredients: scaledIngredients,
+    sections: scaledSections ?? recipe.sections,
     servings: newServings,
     nutrition: scaledNutrition,
   };

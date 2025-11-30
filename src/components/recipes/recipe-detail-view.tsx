@@ -32,6 +32,7 @@ import type {
   RecipeCategory,
   RecipeSeason,
   RecipeNutritionValues,
+  RecipeIngredient,
 } from "@/types/recipe";
 import {
   formatFraction,
@@ -136,6 +137,119 @@ export function RecipeDetailView({
   const showAnyNutritionAlert = Boolean(
     nutritionCacheHit || nutritionError || showNeedsIngredientsAlert
   );
+  const hasSections =
+    Array.isArray(displayRecipe.sections) &&
+    displayRecipe.sections.length > 0;
+  const renderIngredientList = (ingredients: RecipeIngredient[]) => {
+    if (!ingredients || ingredients.length === 0) {
+      return (
+        <p className="text-sm text-muted-foreground">{t("ingredients")}</p>
+      );
+    }
+
+    return ingredients.map((ingredient, index) => {
+      let amountText = "";
+      let ingredientNameWithNotes = ingredient.name;
+
+      const hasAmount =
+        ingredient.amount !== null && Number.isFinite(ingredient.amount);
+
+      if (hasAmount && ingredient.amount !== null) {
+        const smartResult = normalizeIngredientUnit(
+          ingredient.amount,
+          ingredient.unit
+        );
+        const finalAmount = smartResult?.amount ?? ingredient.amount;
+        const finalUnit = smartResult?.unit ?? ingredient.unit;
+        const pluralizedUnit = pluralizeUnit(finalUnit, finalAmount);
+
+        amountText = formatFraction(finalAmount);
+        if (pluralizedUnit) {
+          const standardUnits = [
+            "g",
+            "kg",
+            "ml",
+            "l",
+            "tbsp",
+            "tsp",
+            "clove",
+            "cloves",
+          ];
+          const isStandardUnit = standardUnits.includes(pluralizedUnit);
+          const translatedUnit = isStandardUnit
+            ? tUnits(pluralizedUnit) || pluralizedUnit
+            : pluralizedUnit;
+          amountText += ` ${translatedUnit}`;
+        }
+
+        if (finalAmount > 1) {
+          ingredientNameWithNotes =
+            ingredientFormatter.pluralizeIngredientName(ingredient.name);
+        } else if (finalAmount === 1) {
+          ingredientNameWithNotes =
+            ingredientFormatter.singularizeIngredientName(ingredient.name);
+        }
+      } else if (ingredient.unit) {
+        amountText = tUnits(ingredient.unit) || ingredient.unit;
+      }
+
+      if (ingredient.notes) {
+        ingredientNameWithNotes += ` (${ingredient.notes})`;
+      }
+
+      return (
+        <div
+          key={`${ingredient.id}-${index}`}
+          className="grid grid-cols-12 gap-3 items-start py-1"
+        >
+          <div className="col-span-4 text-right">
+            <span className="font-semibold text-sm">{amountText}</span>
+          </div>
+          <div className="col-span-8">
+            <span className="text-sm leading-relaxed">
+              {ingredientNameWithNotes}
+            </span>
+          </div>
+        </div>
+      );
+    });
+  };
+
+  const renderInstructionsContent = (instructions: string) => {
+    const processed = processInstructions(instructions || "");
+
+    if (
+      processed.isStepFormat &&
+      processed.steps.length > 1
+    ) {
+      return (
+        <div className="space-y-5">
+          {processed.steps.map((step, index) => (
+            <div key={index} className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-9 h-9 bg-card border-2 border-primary text-primary rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
+                {index + 1}
+              </div>
+              <p className="leading-relaxed text-base">{step}</p>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="prose prose-sm max-w-none mb-5">
+        {processed.steps
+          .map((paragraph) => paragraph.trim())
+          .filter((paragraph) => paragraph.length > 0)
+          .map((paragraph, index) => (
+            <p key={index} className="leading-relaxed text-base">
+              {paragraph}
+            </p>
+          ))}
+      </div>
+    );
+  };
+
   const nutrientDefinitions = useMemo<NutrientDefinition[]>(() => {
     if (!tNutrition) return [];
     return [
@@ -244,9 +358,9 @@ export function RecipeDetailView({
         actions={headerActions}
       />
 
-      <Card className="mb-8">
+      <Card className="mb-8 print:shadow-none print:border">
         <CardContent className="p-4 md:px-8 md:py-6 lg:px-12 lg:py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-10">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-10 print:grid-cols-1">
             <div className="order-2 lg:order-1 space-y-6 lg:col-span-2">
               <div>
                 <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 leading-tight">
@@ -439,154 +553,136 @@ export function RecipeDetailView({
               {renderImage}
             </div>
           </div>
+
+          {hasSections ? (
+            <div className="hidden print:flex print:flex-col print:gap-4">
+              {displayRecipe.sections?.map((section, index) => (
+                <div
+                  key={section.id || index}
+                  className="print-section-page"
+                >
+                  <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
+                    <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5">
+                      <div className="space-y-2">
+                        {section.title ? (
+                          <p className="text-sm font-semibold text-foreground tracking-tight">
+                            {section.title}
+                          </p>
+                        ) : null}
+                        <div className="h-px w-full bg-muted" />
+                      </div>
+                      {renderIngredientList(section.ingredients)}
+                    </div>
+
+                    <div className="lg:col-span-5">
+                      <h2 className="text-xl font-semibold mb-3 mt-3">
+                        {t("instructions")}
+                      </h2>
+                      {renderInstructionsContent(section.instructions || "")}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="print:shadow-none print:border">
         <CardContent className="p-4 md:px-8 md:py-6 lg:px-12 lg:py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
+          <div
+            className={`grid grid-cols-1 lg:grid-cols-7 gap-6 print:grid-cols-1 ${
+              hasSections ? "print:hidden" : ""
+            }`}
+          >
             <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5">
-              <h2 className="text-xl font-semibold mb-4">{t("ingredients")}</h2>
+              <div className="flex flex-col gap-3 mb-4">
+                <h2 className="text-xl font-semibold">{t("ingredients")}</h2>
+                {onServingChange && (
+                  <div className="max-w-[280px]">
+                    <ServingSizeSelector
+                      recipe={recipe}
+                      onServingChange={(_, scaledRecipe) =>
+                        onServingChange(scaledRecipe)
+                      }
+                      showPreview={false}
+                    />
+                  </div>
+                )}
+              </div>
 
-              {onServingChange && (
-                <div className="mb-4">
-                  <ServingSizeSelector
-                    recipe={recipe}
-                    onServingChange={(_, scaledRecipe) =>
-                      onServingChange(scaledRecipe)
-                    }
-                    showPreview={false}
-                  />
+              {hasSections ? (
+                <div className="space-y-5">
+                  {displayRecipe.sections?.map((section, index) => (
+                    <div
+                      key={section.id || index}
+                      className="space-y-2 print:break-inside-avoid"
+                    >
+                      {section.title ? (
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-foreground tracking-tight">
+                            {section.title}
+                          </p>
+                          <div className="h-px w-full bg-muted" />
+                        </div>
+                      ) : null}
+                      {renderIngredientList(section.ingredients)}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {renderIngredientList(displayRecipe.ingredients)}
                 </div>
               )}
-
-              <div className="space-y-1">
-                {displayRecipe.ingredients.map((ingredient, index) => {
-                  let amountText = "";
-                  let ingredientNameWithNotes = ingredient.name;
-
-                  const hasAmount =
-                    ingredient.amount !== null &&
-                    Number.isFinite(ingredient.amount);
-
-                  if (hasAmount && ingredient.amount !== null) {
-                    const smartResult = normalizeIngredientUnit(
-                      ingredient.amount,
-                      ingredient.unit
-                    );
-                    const finalAmount =
-                      smartResult?.amount ?? ingredient.amount;
-                    const finalUnit = smartResult?.unit ?? ingredient.unit;
-                    const pluralizedUnit = pluralizeUnit(
-                      finalUnit,
-                      finalAmount
-                    );
-
-                    amountText = formatFraction(finalAmount);
-                    if (pluralizedUnit) {
-                      const standardUnits = [
-                        "g",
-                        "kg",
-                        "ml",
-                        "l",
-                        "tbsp",
-                        "tsp",
-                        "clove",
-                        "cloves",
-                      ];
-                      const isStandardUnit =
-                        standardUnits.includes(pluralizedUnit);
-                      const translatedUnit = isStandardUnit
-                        ? tUnits(pluralizedUnit) || pluralizedUnit
-                        : pluralizedUnit;
-                      amountText += ` ${translatedUnit}`;
-                    }
-
-                    if (finalAmount > 1) {
-                      ingredientNameWithNotes =
-                        ingredientFormatter.pluralizeIngredientName(
-                          ingredient.name
-                        );
-                    } else if (finalAmount === 1) {
-                      ingredientNameWithNotes =
-                        ingredientFormatter.singularizeIngredientName(
-                          ingredient.name
-                        );
-                    }
-                  } else if (ingredient.unit) {
-                    amountText = tUnits(ingredient.unit) || ingredient.unit;
-                  }
-
-                  if (ingredient.notes) {
-                    ingredientNameWithNotes += ` (${ingredient.notes})`;
-                  }
-
-                  return (
-                    <div
-                      key={index}
-                      className="grid grid-cols-12 gap-3 items-start py-1"
-                    >
-                      <div className="col-span-4 text-right">
-                        <span className="font-semibold text-sm">
-                          {amountText}
-                        </span>
-                      </div>
-                      <div className="col-span-8">
-                        <span className="text-sm leading-relaxed">
-                          {ingredientNameWithNotes}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
 
             <div className="lg:col-span-5">
               <h2 className="text-xl font-semibold mb-5 mt-5">
-                {t("gettingStarted")}
+                {t("instructions")}
               </h2>
 
-              <div className="prose prose-sm max-w-none mb-5">
-                {processedInstructions.isStepFormat &&
-                processedInstructions.steps.length > 1 ? (
-                  <div className="space-y-5">
-                    {processedInstructions.steps.map((step, index) => (
-                      <div key={index} className="flex items-center gap-4">
-                        <div className="flex-shrink-0 w-9 h-9 bg-card border-2 border-primary text-primary rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
-                          {index + 1}
+              {hasSections ? (
+                <div className="space-y-6">
+                  {displayRecipe.sections?.map((section, index) => (
+                    <div
+                      key={section.id || index}
+                      className="space-y-3 print:break-inside-avoid"
+                    >
+                      {section.title ? (
+                        <div className="space-y-1">
+                          <p className="text-base font-semibold leading-snug text-foreground">
+                            {section.title}
+                          </p>
+                          <div className="h-px w-full bg-muted" />
                         </div>
-                        <p className="leading-relaxed text-base">{step}</p>
-                      </div>
-                    ))}
-
-                    {processedInstructions.descriptiveText &&
-                      processedInstructions.descriptiveText.length > 0 && (
-                        <div className="mt-6 space-y-3">
-                          {processedInstructions.descriptiveText.map(
-                            (text, index) => (
-                              <p
-                                key={`desc-${index}`}
-                                className="leading-relaxed text-base pl-13"
-                              >
-                                {text}
-                              </p>
-                            )
-                          )}
-                        </div>
+                      ) : (
+                        <div className="h-[1px] w-full bg-muted" />
                       )}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-4">
-                    <div className="flex-shrink-0 w-9 h-9 bg-card border-2 border-primary text-primary rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
-                      1
+                      {renderInstructionsContent(section.instructions || "")}
                     </div>
-                    <p className="whitespace-pre-wrap leading-relaxed text-base">
-                      {processedInstructions.originalText}
-                    </p>
-                  </div>
-                )}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {renderInstructionsContent(recipe.description)}
+
+                  {processedInstructions.descriptiveText && (
+                    <div className="bg-muted/50 border rounded-lg p-4 space-y-3">
+                      {processedInstructions.descriptiveText.map(
+                        (paragraph, index) => (
+                          <p
+                            key={index}
+                            className="text-sm text-muted-foreground leading-relaxed"
+                          >
+                            {paragraph}
+                          </p>
+                        )
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </CardContent>

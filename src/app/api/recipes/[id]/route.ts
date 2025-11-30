@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
-import { Recipe, RecipeIngredient } from "@/types/recipe";
+import { Recipe, RecipeIngredient, RecipeSection } from "@/types/recipe";
 import { ImageService } from "@/lib/image-service";
 
 export async function GET(
@@ -88,6 +88,7 @@ export async function PUT(
       season, 
       last_eaten,
       nutrition,
+      sections,
     } = body;
 
     if (!recipeId) {
@@ -100,6 +101,7 @@ export async function PUT(
     const updateData: Partial<{
       title: string;
       ingredients: RecipeIngredient[];
+      sections: RecipeSection[] | null;
       servings: number;
       description: string;
       category: string;
@@ -115,6 +117,47 @@ export async function PUT(
       nutrition: unknown;
     }> = {};
     if (title !== undefined) updateData.title = title;
+    const normalizeIngredient = (ingredient: RecipeIngredient) => {
+      let normalizedUnit = ingredient.unit;
+      
+      // Convert common non-standard units to standard ones or remove them
+      if (typeof normalizedUnit === 'string') {
+        switch (normalizedUnit.toLowerCase()) {
+          case 'el':
+          case 'eetlepel':
+            normalizedUnit = 'tbsp';
+            break;
+          case 'tl':
+          case 'theelepel':
+            normalizedUnit = 'tsp';
+            break;
+          case 'teen':
+          case 'teentje':
+          case 'teentjes':
+            normalizedUnit = 'clove'; // Convert Dutch garlic clove unit to English
+            break;
+          case 'stuk':
+          case 'stuks':
+          case 'units.stuk':
+          case 'pieces':
+            normalizedUnit = null; // Remove unit for countable items
+            break;
+          default:
+            // Keep valid units, set invalid ones to null
+            const validUnits = ['g', 'kg', 'ml', 'l', 'tbsp', 'tsp', 'clove'];
+            if (!validUnits.includes(normalizedUnit) && normalizedUnit !== 'naar smaak' && normalizedUnit !== 'to taste') {
+              normalizedUnit = null;
+            }
+        }
+      }
+      
+      return {
+        ...ingredient,
+        amount: ingredient.amount === 0 ? null : ingredient.amount,
+        unit: normalizedUnit
+      };
+    };
+
     if (ingredients !== undefined) {
       // Validate structured ingredients
       if (!Array.isArray(ingredients)) {
@@ -143,11 +186,66 @@ export async function PUT(
       
       // We'll normalize ingredient amounts and units after fetching user's custom units
       // to properly validate both standard and custom units
-      updateData.ingredients = ingredients.map(ingredient => ({
-        ...ingredient,
-        amount: ingredient.amount === 0 ? null : ingredient.amount,
-        unit: ingredient.unit
-      }));
+      updateData.ingredients = ingredients.map(normalizeIngredient);
+    }
+    if (sections !== undefined) {
+      if (!Array.isArray(sections)) {
+        return NextResponse.json(
+          { error: 'Sections must be an array when provided' },
+          { status: 400 }
+        );
+      }
+
+      const sectionErrors: string[] = [];
+      const normalizedSections = sections.map((section: RecipeSection, index: number) => {
+        if (!section.id) {
+          sectionErrors.push(`Section ${index + 1} is missing an id`);
+        }
+        if (!section.title || !section.title.trim()) {
+          sectionErrors.push(`Section ${index + 1} title is required`);
+        }
+        if (!section.instructions || !section.instructions.trim()) {
+          sectionErrors.push(`Section ${index + 1} instructions are required`);
+        }
+        if (!Array.isArray(section.ingredients) || section.ingredients.length === 0) {
+          sectionErrors.push(`Section ${index + 1} must include at least one ingredient`);
+        } else {
+          section.ingredients.forEach((ingredient: RecipeIngredient, ingredientIndex: number) => {
+            if (!ingredient.id || !ingredient.name) {
+              sectionErrors.push(
+                `Section ${index + 1} ingredient ${ingredientIndex + 1} must have an id and name`
+              );
+            }
+            const normalizedAmount = ingredient.amount === 0 ? null : ingredient.amount;
+            if (
+              normalizedAmount !== null &&
+              (typeof normalizedAmount !== 'number' || normalizedAmount <= 0)
+            ) {
+              sectionErrors.push(
+                `Section ${index + 1} ingredient ${ingredientIndex + 1} amounts must be positive numbers or null`
+              );
+            }
+          });
+        }
+
+        return {
+          ...section,
+          title: section.title?.trim?.() ?? section.title,
+          instructions: section.instructions,
+          ingredients: Array.isArray(section.ingredients)
+            ? section.ingredients.map((ingredient) => normalizeIngredient(ingredient))
+            : [],
+        };
+      });
+
+      if (sectionErrors.length > 0) {
+        return NextResponse.json(
+          { error: sectionErrors.join("; ") },
+          { status: 400 }
+        );
+      }
+
+      updateData.sections = normalizedSections;
     }
     if (servings !== undefined) {
       const servingsNum = parseInt(servings);

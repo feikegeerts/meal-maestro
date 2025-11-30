@@ -10,6 +10,18 @@ export interface AIRecipeData {
     unit?: string | null;
     notes?: string;
   }>;
+  sections?: Array<{
+    id?: string;
+    title?: string;
+    instructions?: string;
+    ingredients?: Array<{
+      id?: string;
+      name?: string;
+      amount?: number | null;
+      unit?: string | null;
+      notes?: string;
+    }>;
+  }>;
   servings?: number;
   category?: string;
   cuisine?: string;
@@ -67,6 +79,65 @@ export class FormTransformerService {
         }));
     }
 
+    if (recipeData.sections && recipeData.sections.length > 0) {
+      const normalizedSections = recipeData.sections
+        .map((section, sectionIndex) => {
+          const normalizedIngredients =
+            section.ingredients
+              ?.filter((ing): ing is typeof ing & { name: string } =>
+                Boolean(ing.name?.trim())
+              )
+              .map((ing, ingredientIndex) => ({
+                id:
+                  ing.id ||
+                  `section-ingredient-ai-${Date.now()}-${sectionIndex}-${ingredientIndex}`,
+                name: ing.name.trim(),
+                amount: ing.amount ?? null,
+                unit: ing.unit ?? null,
+                notes: ing.notes ?? "",
+              })) || [];
+
+          const hasContent =
+            (section.title && section.title.trim()) ||
+            (section.instructions && section.instructions.trim()) ||
+            normalizedIngredients.length > 0;
+
+          if (!hasContent) return null;
+
+          return {
+            id: section.id || this.generateSectionId(sectionIndex),
+            title: section.title?.trim() || `Section ${sectionIndex + 1}`,
+            instructions: section.instructions || "",
+            ingredients: normalizedIngredients,
+          };
+        })
+        .filter(Boolean);
+
+      if (normalizedSections.length > 0) {
+        updatedFormData.sections = normalizedSections as NonNullable<
+          typeof updatedFormData.sections
+        >;
+
+        const flattened = normalizedSections.flatMap(
+          (section) => section!.ingredients
+        );
+        if (flattened.length > 0) {
+          updatedFormData.ingredients = flattened;
+        }
+
+        if (
+          (!updatedFormData.description ||
+            updatedFormData.description.trim().length === 0) &&
+          normalizedSections.some((s) => s?.instructions?.trim())
+        ) {
+          updatedFormData.description = normalizedSections
+            .map((s) => s?.instructions)
+            .filter(Boolean)
+            .join("\n\n");
+        }
+      }
+    }
+
     return updatedFormData;
   }
 
@@ -74,6 +145,7 @@ export class FormTransformerService {
     return {
       title: formData.title,
       ingredients: formData.ingredients,
+      sections: formData.sections,
       servings: formData.servings,
       description: formData.description,
       category: formData.category,
@@ -91,6 +163,10 @@ export class FormTransformerService {
 
   static generateIngredientId(): string {
     return `ingredient-${Date.now()}-${Math.random()}`;
+  }
+
+  static generateSectionId(index?: number): string {
+    return `section-${Date.now()}-${index ?? Math.random()}`;
   }
 
   static scrollToFormOnMobile(layoutMode: string): void {

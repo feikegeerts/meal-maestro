@@ -27,6 +27,9 @@
   /* Hide all card styling */
   .card,
   [data-slot="card"] {
+    display: block;
+    break-inside: auto;
+    page-break-inside: auto;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
@@ -37,6 +40,9 @@
   /* Remove card content padding */
   .card > *,
   [data-slot="card"] > * {
+    display: block;
+    break-inside: auto;
+    page-break-inside: auto;
     padding: 0 !important;
   }
 
@@ -139,6 +145,11 @@
     grid-template-rows: auto !important;
     gap: 0.2in !important;
     margin-top: 0.1in !important;
+  }
+
+  /* Respect explicit print:hidden on that grid */
+  .grid.grid-cols-1.lg\:grid-cols-7.gap-6.print\:hidden {
+    display: none !important;
   }
 
   /* Ingredients column - left side - ONLY within the 7-column grid */
@@ -341,5 +352,16 @@
   .max-w-4xl {
     max-width: 100% !important;
     padding: 0 !important;
+  }
+
+  /* Ensure each recipe section prints on its own page */
+  .print-section-page + .print-section-page {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
+  /* Honor explicit print hidden utility even when other rules set display */
+  .print\:hidden {
+    display: none !important;
   }
 }

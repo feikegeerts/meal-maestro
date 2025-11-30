@@ -7,6 +7,7 @@ import {
   RecipeIngredient,
   RecipeSeason,
   RecipeNutrition,
+  RecipeSection,
 } from "@/types/recipe";
 import { validateRecipeInput } from "@/lib/recipe-utils";
 import { Button } from "@/components/ui/button";
@@ -21,9 +22,11 @@ import { FormTransformerService } from "./recipe-edit/services/form-transformer"
 import { BasicInformationSection } from "./recipe-edit/components/basic-information-section";
 import { IngredientsSection } from "./recipe-edit/components/ingredients-section";
 import { InstructionsSection } from "./recipe-edit/components/instructions-section";
+import { SectionsSection } from "./recipe-edit/components/sections-section";
 import { CategorizedTagSelector } from "./recipe-edit/components/categorized-tag-selector";
 import { FormLayoutRenderer } from "./recipe-edit/components/form-layout-renderer";
 import { NutritionSection } from "./recipe-edit/components/nutrition-section";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface RecipeEditFormProps {
   recipe: Recipe;
@@ -69,7 +72,9 @@ export function RecipeEditForm({
     ingredients:
       recipe.ingredients.length > 0
         ? recipe.ingredients.map((ing) => ({ ...ing }))
-        : [
+        : recipe.sections?.flatMap((section) =>
+            section.ingredients.map((ing) => ({ ...ing }))
+          ) || [
             {
               id: FormTransformerService.generateIngredientId(),
               name: "",
@@ -78,6 +83,7 @@ export function RecipeEditForm({
               notes: "",
             },
           ],
+    sections: recipe.sections || [],
     servings: recipe.servings || 4,
     description: recipe.description,
     category: recipe.category,
@@ -91,6 +97,8 @@ export function RecipeEditForm({
     season: recipe.season || RecipeSeason.YEAR_ROUND,
     nutrition: recipe.nutrition || null,
   });
+  const hasSectionsInitially = (recipe.sections?.length ?? 0) > 0;
+  const [useSections, setUseSections] = useState<boolean>(hasSectionsInitially);
   const [errors, setErrors] = useState<string[]>([]);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [nutritionStale, setNutritionStale] = useState(false);
@@ -164,8 +172,147 @@ export function RecipeEditForm({
     });
   }, []);
 
+  const handleSectionsChange = useCallback(
+    (sections: RecipeSection[]) => {
+      setFormData((prev) => {
+        const flattenedIngredients = sections.flatMap(
+          (section) => section.ingredients
+        );
+        const fallbackDescription = useSections
+          ? ""
+          : prev.description && prev.description.trim().length > 0
+          ? prev.description
+          : sections
+              .map((section) => section.instructions)
+              .filter(Boolean)
+              .join("\n\n");
+
+        if (prev.nutrition) {
+          setNutritionStale(true);
+        }
+
+        return {
+          ...prev,
+          sections,
+          ingredients: flattenedIngredients.length
+            ? flattenedIngredients
+            : prev.ingredients,
+          description: fallbackDescription,
+        };
+      });
+    },
+    [useSections]
+  );
+
+  const handleToggleSections = useCallback(
+    (checked: boolean) => {
+      const enableSections = Boolean(checked);
+      setUseSections(enableSections);
+      setFormData((prev) => {
+        if (prev.nutrition) {
+          setNutritionStale(true);
+        }
+        if (enableSections) {
+          const initialSections =
+            prev.sections && prev.sections.length > 0
+              ? prev.sections
+              : [
+                  {
+                    id: FormTransformerService.generateSectionId(),
+                    title: t("defaultSectionTitle"),
+                    ingredients:
+                      prev.ingredients && prev.ingredients.length > 0
+                        ? prev.ingredients
+                        : [
+                            {
+                              id: FormTransformerService.generateIngredientId(),
+                              name: "",
+                              amount: null,
+                              unit: null,
+                              notes: "",
+                            },
+                          ],
+                    instructions: prev.description || "",
+                  },
+                ];
+
+          const flattened = initialSections.flatMap(
+            (section) => section.ingredients
+          );
+          return {
+            ...prev,
+            sections: initialSections,
+            ingredients: flattened,
+            description: "",
+          };
+        }
+
+        const flattenedFromSections = prev.sections?.flatMap(
+          (section) => section.ingredients
+        );
+        const combinedDescription =
+          prev.description && prev.description.trim().length > 0
+            ? prev.description
+            : prev.sections
+            ? prev.sections
+                .map((section) => section.instructions)
+                .filter(Boolean)
+                .join("\n\n")
+            : "";
+
+        return {
+          ...prev,
+          sections: [],
+          ingredients:
+            prev.ingredients.length > 0
+              ? prev.ingredients
+              : flattenedFromSections || [],
+          description: combinedDescription,
+        };
+      });
+    },
+    [t]
+  );
+
+  const handleAddSection = useCallback(() => {
+    setFormData((prev) => {
+      if (prev.nutrition) {
+        setNutritionStale(true);
+      }
+      const nextSections: RecipeSection[] = [
+        ...(prev.sections || []),
+        {
+          id: FormTransformerService.generateSectionId(),
+          title: t("defaultSectionTitle"),
+          ingredients: [
+            {
+              id: FormTransformerService.generateIngredientId(),
+              name: "",
+              amount: null,
+              unit: null,
+              notes: "",
+            },
+          ],
+          instructions: "",
+        },
+      ];
+
+      return {
+        ...prev,
+        sections: nextSections,
+        ingredients: nextSections.flatMap((section) => section.ingredients),
+      };
+    });
+  }, [t]);
+
   const handleNutritionFetched = useCallback(
-    ({ nutrition, cacheHit }: { nutrition: RecipeNutrition; cacheHit: boolean }) => {
+    ({
+      nutrition,
+      cacheHit,
+    }: {
+      nutrition: RecipeNutrition;
+      cacheHit: boolean;
+    }) => {
       setFormData((prev) => ({
         ...prev,
         nutrition,
@@ -189,19 +336,64 @@ export function RecipeEditForm({
           loading={loading}
         />
 
-        <IngredientsSection
-          ingredients={formData.ingredients}
-          onIngredientsChange={handleIngredientsChange}
-          loading={loading}
-        />
+        <div className="rounded-lg border p-4 bg-card">
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="use-sections"
+              checked={useSections}
+              onCheckedChange={(value) => handleToggleSections(Boolean(value))}
+              disabled={loading}
+              className="mt-2"
+            />
+            <div className="space-y-1">
+              <label
+                htmlFor="use-sections"
+                className="text-sm font-medium leading-none"
+              >
+                {t("useSectionsLabel")}
+              </label>
+              <p className="text-xs text-muted-foreground">
+                {t("useSectionsDescription")}
+              </p>
+            </div>
+          </div>
+        </div>
 
-        <InstructionsSection
-          description={formData.description}
-          onDescriptionChange={(description) =>
-            handleFormDataChange({ description })
-          }
-          loading={loading}
-        />
+        {useSections ? (
+          <SectionsSection
+            sections={
+              formData.sections && formData.sections.length > 0
+                ? formData.sections
+                : [
+                    {
+                      id: FormTransformerService.generateSectionId(),
+                      title: t("defaultSectionTitle"),
+                      ingredients: formData.ingredients,
+                      instructions: formData.description,
+                    },
+                  ]
+            }
+            onChange={handleSectionsChange}
+            onAddSection={handleAddSection}
+            disabled={loading}
+          />
+        ) : (
+          <IngredientsSection
+            ingredients={formData.ingredients}
+            onIngredientsChange={handleIngredientsChange}
+            loading={loading}
+          />
+        )}
+
+        {!useSections && (
+          <InstructionsSection
+            description={formData.description}
+            onDescriptionChange={(description) =>
+              handleFormDataChange({ description })
+            }
+            loading={loading}
+          />
+        )}
 
         <CategorizedTagSelector
           formData={formData}
@@ -300,6 +492,10 @@ export function RecipeEditForm({
       errors,
       formData,
       loading,
+      useSections,
+      handleToggleSections,
+      handleSectionsChange,
+      handleAddSection,
       handleIngredientsChange,
       handleFormDataChange,
       handleSave,
@@ -323,26 +519,81 @@ export function RecipeEditForm({
           loading={loading}
         />
 
-        <IngredientsSection
-          ingredients={formData.ingredients}
-          onIngredientsChange={handleIngredientsChange}
-          loading={loading}
-        />
+        <div className="rounded-lg border p-4 bg-card">
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="use-sections-inline"
+              checked={useSections}
+              onCheckedChange={(value) => handleToggleSections(Boolean(value))}
+              disabled={loading}
+              className="mt-2"
+            />
+            <div className="space-y-1">
+              <label
+                htmlFor="use-sections-inline"
+                className="text-sm font-medium leading-none"
+              >
+                {t("useSectionsLabel")}
+              </label>
+              <p className="text-xs text-muted-foreground">
+                {t("useSectionsDescription")}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {useSections ? (
+          <SectionsSection
+            sections={
+              formData.sections && formData.sections.length > 0
+                ? formData.sections
+                : [
+                    {
+                      id: FormTransformerService.generateSectionId(),
+                      title: t("defaultSectionTitle"),
+                      ingredients: formData.ingredients,
+                      instructions: formData.description,
+                    },
+                  ]
+            }
+            onChange={handleSectionsChange}
+            onAddSection={handleAddSection}
+            disabled={loading}
+          />
+        ) : (
+          <IngredientsSection
+            ingredients={formData.ingredients}
+            onIngredientsChange={handleIngredientsChange}
+            loading={loading}
+          />
+        )}
       </>
     ),
-    [formData, loading, handleIngredientsChange, handleFormDataChange]
+    [
+      formData,
+      loading,
+      handleIngredientsChange,
+      handleFormDataChange,
+      useSections,
+      handleToggleSections,
+      handleSectionsChange,
+      handleAddSection,
+      t,
+    ]
   );
 
   const RightColumnSections = useMemo(
     () => (
       <>
-        <InstructionsSection
-          description={formData.description}
-          onDescriptionChange={(description) =>
-            handleFormDataChange({ description })
-          }
-          loading={loading}
-        />
+        {!useSections && (
+          <InstructionsSection
+            description={formData.description}
+            onDescriptionChange={(description) =>
+              handleFormDataChange({ description })
+            }
+            loading={loading}
+          />
+        )}
 
         <CategorizedTagSelector
           formData={formData}
@@ -371,6 +622,7 @@ export function RecipeEditForm({
       handleNutritionFetched,
       recipe.id,
       showNutrition,
+      useSections,
     ]
   );
 
@@ -439,20 +691,20 @@ export function RecipeEditForm({
   );
 
   return (
-        <FormLayoutRenderer
-          layoutMode={layoutMode}
-          includeChat={includeChat}
-          recipe={recipe}
-          memoizedFormState={memoizedFormState}
-          onAIRecipeUpdate={handleAIRecipeUpdate}
-          leftColumnSections={LeftColumnSections}
-          rightColumnSections={RightColumnSections}
-          actionButtons={ActionButtons}
-          conversationId={conversationId}
-          conversationStore={conversationStore}
-          conversationGreetingContext={conversationGreetingContext}
-          enableChatReset={enableChatReset}
-        >
+    <FormLayoutRenderer
+      layoutMode={layoutMode}
+      includeChat={includeChat}
+      recipe={recipe}
+      memoizedFormState={memoizedFormState}
+      onAIRecipeUpdate={handleAIRecipeUpdate}
+      leftColumnSections={LeftColumnSections}
+      rightColumnSections={RightColumnSections}
+      actionButtons={ActionButtons}
+      conversationId={conversationId}
+      conversationStore={conversationStore}
+      conversationGreetingContext={conversationGreetingContext}
+      enableChatReset={enableChatReset}
+    >
       {FormSections}
       {!standalone && (
         <button ref={closeButtonRef} className="hidden" aria-hidden="true" />

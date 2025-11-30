@@ -170,6 +170,45 @@ export function createRecipeFormFunction(
             },
             description: ingredientDescription,
           },
+          sections: {
+            type: "array",
+            description:
+              "Optional sections if the recipe has multiple parts (e.g., sauce, filling). Each section should include its own ingredients and instructions.",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string", description: "Section title" },
+                instructions: {
+                  type: "string",
+                  description:
+                    "Instructions specific to this section. Use clear, step-by-step guidance.",
+                },
+                ingredients: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string", description: "Ingredient name" },
+                      amount: { type: "number", description: amountDescription },
+                      unit: {
+                        type: "string",
+                        enum: allowedUnits,
+                        description: unitDescription,
+                      },
+                      notes: {
+                        type: "string",
+                        description: "Additional notes (optional)",
+                      },
+                    },
+                    required: ["name"],
+                  },
+                  description:
+                    "Ingredients for this section. Same structure as the main ingredient list.",
+                },
+              },
+              required: ["title", "instructions", "ingredients"],
+            },
+          },
           servings: {
             type: "number",
             description: "Number of servings this recipe makes",
@@ -329,6 +368,7 @@ export async function updateRecipeForm(
     occasions,
     characteristics,
     season,
+    sections,
   } = args as {
     title?: string;
     ingredients?: Array<{
@@ -348,11 +388,23 @@ export async function updateRecipeForm(
     occasions?: string[];
     characteristics?: string[];
     season?: string;
+    sections?: Array<{
+      id?: string;
+      title?: string;
+      instructions?: string;
+      ingredients?: Array<{
+        id?: string;
+        name: string;
+        amount?: number | null;
+        unit?: string | null;
+        notes?: string;
+      }>;
+    }>;
   };
 
   try {
     // Process ingredients - ensure they have all required fields
-    const processedIngredients = ingredients
+    let processedIngredients = ingredients
       ?.filter((ing) => ing.name?.trim())
       .map((ingredient, index) => {
         // Clean up amount - handle invalid values
@@ -385,6 +437,84 @@ export async function updateRecipeForm(
           notes: ingredient.notes ?? "",
         };
       });
+
+    let normalizedDescription = description;
+
+    type ProcessedSection = {
+      id: string;
+      title: string;
+      instructions: string;
+      ingredients: {
+        id: string;
+        name: string;
+        amount: number | null;
+        unit: string | null;
+        notes: string;
+      }[];
+    };
+
+    const processedSections: ProcessedSection[] =
+      sections
+        ?.map((section, sectionIndex) => {
+          const normalizedSectionIngredients =
+            section.ingredients
+              ?.filter((ing) => ing.name?.trim())
+              .map((ingredient, ingredientIndex) => {
+                const cleanAmount: number | null =
+                  typeof ingredient.amount === "number"
+                    ? ingredient.amount
+                    : null;
+                let cleanUnit = ingredient.unit;
+                if (typeof cleanUnit === "string" && cleanUnit.trim() === "") {
+                  cleanUnit = null;
+                }
+                return {
+                  id:
+                    ingredient.id ||
+                    `section-ingredient-${Date.now()}-${sectionIndex}-${ingredientIndex}`,
+                  name: ingredient.name.trim(),
+                  amount: cleanAmount ?? null,
+                  unit: cleanUnit ?? null,
+                  notes: ingredient.notes ?? "",
+                };
+              }) || [];
+
+          const hasContent =
+            (typeof section.title === "string" && section.title.trim()) ||
+            (typeof section.instructions === "string" &&
+              section.instructions.trim()) ||
+            normalizedSectionIngredients.length > 0;
+
+          if (!hasContent) return null;
+
+          return {
+            id: section.id || `section-${Date.now()}-${sectionIndex}`,
+            title: section.title?.trim() || `Section ${sectionIndex + 1}`,
+            instructions: section.instructions || "",
+            ingredients: normalizedSectionIngredients,
+          };
+        })
+        .filter(
+          (section): section is ProcessedSection => Boolean(section)
+        ) || [];
+
+    if (processedSections.length > 0) {
+      if (!processedIngredients || processedIngredients.length === 0) {
+        processedIngredients = processedSections.flatMap(
+          (section) => section.ingredients
+        );
+      }
+
+      if (
+        (!normalizedDescription || normalizedDescription.trim().length === 0) &&
+        processedSections.some((section) => section.instructions?.trim())
+      ) {
+        normalizedDescription = processedSections
+          .map((section) => section.instructions)
+          .filter(Boolean)
+          .join("\n\n");
+      }
+    }
 
     // Validate categorized tags if provided
     let validCuisine = cuisine;
@@ -488,8 +618,9 @@ export async function updateRecipeForm(
     const formUpdate = {
       title,
       ingredients: processedIngredients,
+      sections: processedSections.length ? processedSections : undefined,
       servings,
-      description,
+      description: normalizedDescription,
       category,
       cuisine: validCuisine,
       diet_types: validDietTypes,

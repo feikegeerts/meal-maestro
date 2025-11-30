@@ -156,10 +156,18 @@ export interface RecipeNutrition {
   meta: RecipeNutritionMeta;
 }
 
+export interface RecipeSection {
+  id: string;
+  title: string;
+  ingredients: RecipeIngredient[];
+  instructions: string;
+}
+
 export interface Recipe {
   id: string;
   title: string;
   ingredients: RecipeIngredient[];
+  sections?: RecipeSection[] | null;
   servings: number;
   description: string;
   category: RecipeCategory;
@@ -191,6 +199,7 @@ export interface RecipeInput {
   id?: string;
   title: string;
   ingredients: RecipeIngredient[];
+  sections?: RecipeSection[] | null;
   servings: number;
   description: string;
   category: string;
