@@ -354,10 +354,16 @@
     padding: 0 !important;
   }
 
-  /* Ensure each recipe section prints on its own page */
-  .print-section-page + .print-section-page {
-    break-before: page !important;
-    page-break-before: always !important;
+  /* Keep each section together but allow multiple per page */
+  .print-section-page {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    padding: 0.08in 0 !important;
+  }
+
+  /* Separate sections with a light divider instead of forced page breaks */
+  .print-section-page:not(:last-child) {
+    margin-bottom: 0.1in !important;
   }
 
   /* Honor explicit print hidden utility even when other rules set display */

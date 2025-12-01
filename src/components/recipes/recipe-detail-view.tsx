@@ -576,7 +576,7 @@ export function RecipeDetailView({
 
                     <div className="lg:col-span-5">
                       <h2 className="text-xl font-semibold mb-3 mt-3">
-                        {t("instructions")}
+                        {section.title || t("instructions")}
                       </h2>
                       {renderInstructionsContent(section.instructions || "")}
                     </div>
