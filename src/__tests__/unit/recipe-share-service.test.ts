@@ -3,6 +3,8 @@ import {
   RecipeShareService,
   type StoredShareLinkMetadata,
 } from "@/lib/recipe-share-service";
+import * as crypto from "crypto";
+import { RecipeCategory } from "@/types/recipe";
 
 type SelectBuilder = {
   select: (columns: string) => SelectBuilder;
@@ -85,6 +87,69 @@ function createSupabaseMock(options: {
   } as unknown as SupabaseClient & { state: typeof state };
 
   return mockSupabase;
+}
+
+function createShareLinkSupabaseMock() {
+  const state = {
+    insertCalls: [] as unknown[],
+  };
+
+  const deleteChain = {
+    eq: () => ({
+      eq: async () => ({ data: null, error: null }),
+    }),
+  };
+
+  const supabase = {
+    from(table: string) {
+      if (table !== "shared_recipe_links") {
+        throw new Error(`Unexpected table ${table}`);
+      }
+      return {
+        delete: () => deleteChain,
+        insert: (rows: unknown[]) => {
+          const row = rows[0] as Record<string, unknown>;
+          state.insertCalls.push(row);
+          return {
+            select: () => ({
+              single: async () => {
+                if (state.insertCalls.length === 1) {
+                  return { data: null, error: { code: "23505" } };
+                }
+                return {
+                  data: {
+                    slug: row.slug,
+                    expires_at: row.expires_at ?? null,
+                    allow_save: row.allow_save,
+                    created_at: "2025-01-01T00:00:00.000Z",
+                  },
+                  error: null,
+                };
+              },
+            }),
+          };
+        },
+      };
+    },
+    state,
+  } as unknown as SupabaseClient & { state: typeof state };
+
+  return supabase;
+}
+
+async function loadServiceWithAdminMock<T extends Record<string, unknown>>(
+  adminMock: T
+) {
+  process.env.SUPABASE_URL = "https://admin.supabase.test";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-key";
+
+  jest.resetModules();
+  jest.doMock("@supabase/supabase-js", () => ({
+    createClient: jest.fn(() => adminMock),
+  }));
+
+  const shareModule = await import("@/lib/recipe-share-service");
+  return shareModule.RecipeShareService;
 }
 
 const baseLink = (overrides: Partial<StoredShareLinkMetadata> = {}): StoredShareLinkMetadata => ({
@@ -270,6 +335,368 @@ describe("RecipeShareService share metadata helpers", () => {
       expect(RecipeShareService.buildSharePath("fr", "slug", "token")).toBe(
         "/nl/share/slug?token=token"
       );
+    });
+  });
+});
+
+describe("RecipeShareService core operations", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.resetModules();
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  });
+
+  describe("createShareLink", () => {
+    it("retries on slug collision before succeeding", async () => {
+      const supabase = createShareLinkSupabaseMock();
+      const randomValues = [
+        Buffer.from([1, 2, 3, 4, 5, 6]), // slug attempt 1
+        Buffer.alloc(32, 1), // token attempt 1
+        Buffer.from([6, 5, 4, 3, 2, 1]), // slug attempt 2
+        Buffer.alloc(32, 2), // token attempt 2
+      ];
+      const randomSpy = jest
+        .spyOn(crypto, "randomBytes")
+        .mockImplementation((size) => {
+          const next = randomValues.shift();
+          return next && next.length === size ? next : Buffer.alloc(size, 0);
+        });
+
+      const result = await RecipeShareService.createShareLink(
+        supabase,
+        "user-1",
+        "recipe-abc",
+        { allowSave: false, expiresAt: "2025-02-02T00:00:00.000Z" }
+      );
+
+      expect(supabase.state.insertCalls).toHaveLength(2);
+      const [firstInsert, secondInsert] = supabase.state
+        .insertCalls as Record<string, unknown>[];
+      expect(firstInsert.slug).not.toBe(secondInsert.slug);
+      expect(result.slug).toBe(secondInsert.slug);
+      expect(result.allowSave).toBe(false);
+      expect(result.expiresAt).toBe("2025-02-02T00:00:00.000Z");
+      expect(result.token).toHaveLength(43); // 32-byte base64url
+
+      randomSpy.mockRestore();
+    });
+  });
+
+  describe("getShareLinkForRecipe", () => {
+    it("returns null on PGRST116 (no rows)", async () => {
+      const supabase = {
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: null,
+                  error: { code: "PGRST116" },
+                }),
+              }),
+            }),
+          }),
+        }),
+      } as unknown as SupabaseClient;
+
+      const result = await RecipeShareService.getShareLinkForRecipe(
+        supabase,
+        "user-1",
+        "recipe-missing"
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it("maps stored record fields", async () => {
+      const supabase = {
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    slug: "slug-123",
+                    allow_save: false,
+                    expires_at: "2025-03-01T00:00:00.000Z",
+                    created_at: "2025-02-01T00:00:00.000Z",
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          }),
+        }),
+      } as unknown as SupabaseClient;
+
+      const result = await RecipeShareService.getShareLinkForRecipe(
+        supabase,
+        "user-1",
+        "recipe-123"
+      );
+
+      expect(result).toEqual({
+        slug: "slug-123",
+        allowSave: false,
+        expiresAt: "2025-03-01T00:00:00.000Z",
+        createdAt: "2025-02-01T00:00:00.000Z",
+      });
+    });
+  });
+
+  describe("admin-backed operations", () => {
+    it("throws TOKEN_INVALID when token hash does not match", async () => {
+      const correctHash = crypto
+        .createHash("sha256")
+        .update("correct-token")
+        .digest("hex");
+      const admin = {
+        from: jest.fn((table: string) => ({
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => {
+                if (table === "shared_recipe_links") {
+                  return {
+                    data: {
+                      id: "link-1",
+                      recipe_id: "recipe-1",
+                      owner_id: "owner-1",
+                      token_hash: correctHash,
+                      allow_save: true,
+                      expires_at: null,
+                    },
+                    error: null,
+                  };
+                }
+                return { data: null, error: null };
+              },
+            }),
+          }),
+        })),
+        storage: { from: jest.fn() },
+      };
+
+      const Service = await loadServiceWithAdminMock(admin);
+
+      await expect(
+        Service.getSharedRecipe("slug-1", "wrong-token")
+      ).rejects.toMatchObject({ code: "TOKEN_INVALID" });
+
+      expect((admin.from as jest.Mock)).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns signed url for valid storage path and null otherwise", async () => {
+      const createSignedUrl = jest.fn(async () => ({
+        data: { signedUrl: "https://signed.test/image.webp" },
+        error: null,
+      }));
+      const admin = {
+        from: jest.fn(),
+        storage: {
+          from: jest.fn(() => ({
+            createSignedUrl,
+          })),
+        },
+      };
+
+      const Service = await loadServiceWithAdminMock(admin);
+
+      const result = await Service.createSignedImageUrl(
+        "https://example.com/storage/v1/object/public/recipe-images/user/recipe/image.webp"
+      );
+      expect(result).toBe("https://signed.test/image.webp");
+      expect(createSignedUrl).toHaveBeenCalledWith(
+        "user/recipe/image.webp",
+        60 * 60
+      );
+
+      const nullResult = await Service.createSignedImageUrl(null);
+      expect(nullResult).toBeNull();
+    });
+
+    it("copies images and returns updated metadata", async () => {
+      jest.useFakeTimers().setSystemTime(new Date("2025-02-01T12:00:00.000Z"));
+      const copy = jest.fn(async () => ({ data: null, error: null }));
+      const getPublicUrl = jest.fn(() => ({
+        data: { publicUrl: "https://cdn.test/new-path.webp" },
+      }));
+      const admin = {
+        from: jest.fn(),
+        storage: {
+          from: jest.fn(() => ({
+            copy,
+            getPublicUrl,
+          })),
+        },
+      };
+      const Service = await loadServiceWithAdminMock(admin);
+
+      const result = await Service.copyImageForUser(
+        "https://example.com/storage/v1/object/public/recipe-images/source/path.webp",
+        "new-user",
+        "new-recipe",
+        {
+          originalSize: 2000,
+          compressedSize: 1500,
+          compressionRatio: 0.75,
+          dimensions: { width: 100, height: 200 },
+          format: "webp",
+          uploadedAt: "2024-01-01T00:00:00.000Z",
+        }
+      );
+
+      expect(copy).toHaveBeenCalledWith(
+        "source/path.webp",
+        expect.stringMatching(/^new-user\/new-recipe\//)
+      );
+      const destinationPath = (copy.mock.calls[0] as string[])[1];
+      expect(getPublicUrl).toHaveBeenCalledWith(destinationPath);
+      expect(result).toEqual({
+        imageUrl: "https://cdn.test/new-path.webp",
+        imageMetadata: expect.objectContaining({
+          dimensions: { width: 100, height: 200 },
+          format: "webp",
+          uploadedAt: "2025-02-01T12:00:00.000Z",
+        }),
+      });
+      jest.useRealTimers();
+    });
+
+    it("throws IMAGE_COPY_FAILED when storage copy fails", async () => {
+      const consoleSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => undefined);
+      const copy = jest.fn(async () => ({
+        data: null,
+        error: new Error("copy failed"),
+      }));
+      const admin = {
+        from: jest.fn(),
+        storage: {
+          from: jest.fn(() => ({
+            copy,
+            getPublicUrl: jest.fn(),
+          })),
+        },
+      };
+      const Service = await loadServiceWithAdminMock(admin);
+
+      await expect(
+        Service.copyImageForUser(
+          "https://example.com/storage/v1/object/public/recipe-images/source/path.webp",
+        "user",
+        "recipe",
+        null
+      )
+      ).rejects.toMatchObject({ code: "IMAGE_COPY_FAILED" });
+
+      consoleSpy.mockRestore();
+    });
+
+    it("increments view count and logs on failure", async () => {
+      const update = jest.fn(async (_args?: unknown) => {
+        void _args;
+        return { data: null, error: null };
+      });
+      const selectMaybeSingle = jest.fn(async () => ({
+        data: { view_count: 2 },
+        error: null,
+      }));
+      const admin = {
+        from: jest.fn((table: string) => {
+          void table;
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: selectMaybeSingle,
+              }),
+            }),
+            update: (values: unknown) => ({
+              eq: (column: string, value: string) => {
+                return update({ values, column, value });
+              },
+            }),
+          };
+        }),
+        storage: { from: jest.fn() },
+      };
+      const Service = await loadServiceWithAdminMock(admin);
+
+      await Service.recordView("link-1");
+
+      expect(selectMaybeSingle).toHaveBeenCalled();
+      expect(update).toHaveBeenCalledWith({
+        values: expect.objectContaining({ view_count: 3 }),
+        column: "id",
+        value: "link-1",
+      });
+
+      const consoleSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => undefined);
+      const failingAdmin = {
+        from: jest.fn(() => ({
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: null,
+                error: new Error("db down"),
+              }),
+            }),
+          }),
+          update: jest.fn(),
+        })),
+        storage: { from: jest.fn() },
+      };
+      const ServiceWithError = await loadServiceWithAdminMock(failingAdmin);
+
+      await ServiceWithError.recordView("link-err");
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Failed to record share view",
+        expect.any(Error)
+      );
+    });
+  });
+
+  describe("buildPublicPayload", () => {
+    it("removes user_id and image_url from public recipe", () => {
+      const data = {
+        linkId: "link-1",
+        allowSave: true,
+        expiresAt: null,
+        ownerId: "owner-1",
+        ownerDisplayName: "Owner",
+        recipe: {
+          id: "recipe-1",
+          title: "Title",
+          ingredients: [
+            { id: "ing-1", name: "Water", amount: null, unit: null },
+          ],
+          servings: 2,
+          description: "desc",
+          category: RecipeCategory.MAIN_COURSE,
+          diet_types: [],
+          cooking_methods: [],
+          dish_types: [],
+          proteins: [],
+          occasions: [],
+          characteristics: [],
+          last_eaten: undefined,
+          image_url: "https://example.com/image.webp",
+          image_metadata: null,
+          created_at: "2025-01-01T00:00:00.000Z",
+          updated_at: "2025-01-02T00:00:00.000Z",
+          user_id: "owner-1",
+        },
+      };
+
+      const payload = RecipeShareService.buildPublicPayload(data, "signed-url");
+
+      expect(payload.recipe.user_id).toBeUndefined();
+      expect(payload.recipe.image_url).toBeNull();
+      expect(payload.signedImageUrl).toBe("signed-url");
+      expect(payload.originalRecipeId).toBe("recipe-1");
     });
   });
 });

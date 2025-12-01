@@ -9,6 +9,7 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const config = {
+  displayName: "unit",
   coverageProvider: "v8",
   testEnvironment: "jest-fixed-jsdom",
   // Add more setup options before each test is run
@@ -40,16 +41,18 @@ const config = {
   workerIdleMemoryLimit: process.env.CI ? "512MB" : undefined,
   collectCoverageFrom: [
     "src/lib/**/*.{js,jsx,ts,tsx}",
+    "src/app/api/**/*.{ts,tsx}",
+    "src/components/**/*.{ts,tsx}",
     "!src/**/*.d.ts",
     "!src/__tests__/**",
     "!src/__mocks__/**",
   ],
   coverageThreshold: {
     global: {
-      branches: 50,
-      functions: 50,
-      lines: 50,
-      statements: 50,
+      branches: 65,
+      functions: 65,
+      lines: 65,
+      statements: 65,
     },
   },
 };

@@ -1,3 +1,4 @@
+/** @jest-environment node */
 import { POST, GET } from "../route";
 import { NextRequest } from "next/server";
 import { server } from "../../../../__mocks__/server";

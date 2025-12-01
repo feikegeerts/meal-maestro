@@ -228,11 +228,6 @@ module.exports = {
   __esModule: true,
   default: { supabase: mockSupabaseClient, auth },
 };
-// Establish API mocking before all tests
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: "error" });
-});
-
 // Reset any request handlers that we may add during the tests,
 // so they don't affect other tests
 afterEach(() => {
@@ -242,133 +237,130 @@ afterEach(() => {
   jest.clearAllTimers();
 });
 
-// Clean up after the tests are finished
-afterAll(() => {
-  server.close();
-});
-
-// Mock window.location with minimal properties to avoid JSDOM navigation errors
 const assignMock = jest.fn();
 
-// Suppress the JSDOM navigation error before attempting to mock location
-const originalConsoleError = console.error;
-console.error = (message: unknown, ...args: unknown[]) => {
-  if (
-    typeof message === "object" &&
-    message &&
-    "type" in message &&
-    "message" in message &&
-    (message as { type: string; message: string }).type === "not implemented" &&
-    (message as { message: string }).message.includes("navigation")
-  ) {
-    return; // Suppress navigation errors
-  }
-  if (
-    typeof message === "string" &&
-    message.includes("Not implemented: navigation")
-  ) {
-    return; // Suppress navigation errors
-  }
-  originalConsoleError(message, ...args);
-};
+// Only apply browser-specific mocks when window exists (jsdom). Node env tests skip.
+if (typeof window !== "undefined") {
+  // Suppress the JSDOM navigation error before attempting to mock location
+  const originalConsoleError = console.error;
+  console.error = (message: unknown, ...args: unknown[]) => {
+    if (
+      typeof message === "object" &&
+      message &&
+      "type" in message &&
+      "message" in message &&
+      (message as { type: string; message: string }).type === "not implemented" &&
+      (message as { message: string }).message.includes("navigation")
+    ) {
+      return; // Suppress navigation errors
+    }
+    if (
+      typeof message === "string" &&
+      message.includes("Not implemented: navigation")
+    ) {
+      return; // Suppress navigation errors
+    }
+    originalConsoleError(message, ...args);
+  };
 
-// Now safely delete and redefine location
-delete (window as unknown as Record<string, unknown>).location;
-(window as unknown as Record<string, unknown>).location = {
-  assign: assignMock,
-  hostname: "localhost",
-  origin: "http://localhost:3000",
-  href: "http://localhost:3000",
-  protocol: "http:",
-  host: "localhost:3000",
-  pathname: "/",
-  search: "",
-  hash: "",
-  port: "3000",
-  replace: jest.fn(),
-  reload: jest.fn(),
-  toString: () => "http://localhost:3000",
-};
+  // Now safely delete and redefine location
+  delete (window as unknown as Record<string, unknown>).location;
+  (window as unknown as Record<string, unknown>).location = {
+    assign: assignMock,
+    hostname: "localhost",
+    origin: "http://localhost:3000",
+    href: "http://localhost:3000",
+    protocol: "http:",
+    host: "localhost:3000",
+    pathname: "/",
+    search: "",
+    hash: "",
+    port: "3000",
+    replace: jest.fn(),
+    reload: jest.fn(),
+    toString: () => "http://localhost:3000",
+  };
 
-// Restore console.error temporarily
-console.error = originalConsoleError;
+  // Restore console.error temporarily
+  console.error = originalConsoleError;
 
-// Mock window.matchMedia for responsive tests
-Object.defineProperty(window, "matchMedia", {
-  writable: true,
-  value: jest.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+  // Mock window.matchMedia for responsive tests
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: jest.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(), // deprecated
+      removeListener: jest.fn(), // deprecated
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
 
-// Mock WebCrypto API for PKCE
-Object.defineProperty(global, "crypto", {
-  value: {
-    getRandomValues: (arr: Uint8Array) =>
-      arr.map(() => Math.floor(Math.random() * 256)),
-    subtle: {
-      digest: jest.fn().mockResolvedValue(new ArrayBuffer(32)),
+  // Mock WebCrypto API for PKCE
+  Object.defineProperty(global, "crypto", {
+    value: {
+      getRandomValues: (arr: Uint8Array) =>
+        arr.map(() => Math.floor(Math.random() * 256)),
+      subtle: {
+        digest: jest.fn().mockResolvedValue(new ArrayBuffer(32)),
+      },
     },
-  },
-});
+  });
 
-// Mock Web APIs needed for fetch and WebStreams
-if (typeof global.MessagePort === 'undefined') {
-  global.MessagePort = class MessagePort {
-    onmessage: ((event: MessageEvent) => void) | null = null;
-    postMessage() {}
-    start() {}
-    close() {}
-  };
-}
+  // Mock Web APIs needed for fetch and WebStreams
+  if (typeof global.MessagePort === "undefined") {
+    global.MessagePort = class MessagePort {
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      postMessage() {}
+      start() {}
+      close() {}
+    };
+  }
 
-if (typeof global.MessageChannel === 'undefined') {
-  global.MessageChannel = class MessageChannel {
-    port1: MessagePort;
-    port2: MessagePort;
-    constructor() {
-      this.port1 = new MessagePort();
-      this.port2 = new MessagePort();
-    }
-  };
-}
+  if (typeof global.MessageChannel === "undefined") {
+    global.MessageChannel = class MessageChannel {
+      port1: MessagePort;
+      port2: MessagePort;
+      constructor() {
+        this.port1 = new MessagePort();
+        this.port2 = new MessagePort();
+      }
+    };
+  }
 
-// Mock ReadableStream for streaming response tests
-if (typeof global.ReadableStream === 'undefined') {
-  global.ReadableStream = class ReadableStream {
-    constructor() {}
-    getReader() {
-      return {
-        read: jest.fn().mockResolvedValue({ done: true, value: undefined }),
-        releaseLock: jest.fn()
-      };
-    }
-  };
-}
+  // Mock ReadableStream for streaming response tests
+  if (typeof global.ReadableStream === "undefined") {
+    global.ReadableStream = class ReadableStream {
+      constructor() {}
+      getReader() {
+        return {
+          read: jest.fn().mockResolvedValue({ done: true, value: undefined }),
+          releaseLock: jest.fn(),
+        };
+      }
+    };
+  }
 
-// Mock TextEncoder/TextDecoder if they don't exist
-if (typeof global.TextEncoder === 'undefined') {
-  global.TextEncoder = class TextEncoder {
-    encode(input: string) {
-      return new Uint8Array(input.split('').map(char => char.charCodeAt(0)));
-    }
-  };
-}
+  // Mock TextEncoder/TextDecoder if they don't exist
+  if (typeof global.TextEncoder === "undefined") {
+    global.TextEncoder = class TextEncoder {
+      encode(input: string) {
+        return new Uint8Array(input.split("").map((char) => char.charCodeAt(0)));
+      }
+    };
+  }
 
-if (typeof global.TextDecoder === 'undefined') {
-  global.TextDecoder = class TextDecoder {
-    decode(input?: Uint8Array) {
-      if (!input) return '';
-      return String.fromCharCode(...Array.from(input));
-    }
-  };
+  if (typeof global.TextDecoder === "undefined") {
+    global.TextDecoder = class TextDecoder {
+      decode(input?: Uint8Array) {
+        if (!input) return "";
+        return String.fromCharCode(...Array.from(input));
+      }
+    };
+  }
 }
 
 // Suppress JSDOM navigation errors globally
@@ -464,7 +456,8 @@ beforeAll(() => {
     // Suppress all console.warn during tests for cleaner output
   };
 
-  server.listen({ onUnhandledRequest: "error" });
+  // Ensure MSW handlers are active; msw-setup.js starts the server
+  // before the test framework runs.
 });
 
 afterAll(() => {
