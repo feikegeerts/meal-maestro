@@ -169,6 +169,12 @@ export interface Recipe {
   ingredients: RecipeIngredient[];
   sections?: RecipeSection[] | null;
   servings: number;
+  reference?: string | null;
+  prep_time?: number | null;
+  cook_time?: number | null;
+  total_time?: number | null;
+  pairing_wine?: string | null;
+  notes?: string | null;
   description: string;
   category: RecipeCategory;
   season?: RecipeSeason;
@@ -201,6 +207,12 @@ export interface RecipeInput {
   ingredients: RecipeIngredient[];
   sections?: RecipeSection[] | null;
   servings: number;
+  reference?: string | null;
+  prep_time?: number | null;
+  cook_time?: number | null;
+  total_time?: number | null;
+  pairing_wine?: string | null;
+  notes?: string | null;
   description: string;
   category: string;
   season?: string;

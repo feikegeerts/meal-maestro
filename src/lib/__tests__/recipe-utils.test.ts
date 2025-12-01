@@ -11,6 +11,9 @@ import {
   validateRecipeInput,
   COOKING_UNITS,
   scaleRecipe,
+  MAX_NOTES_LENGTH,
+  MAX_PAIRING_WINE_LENGTH,
+  MAX_REFERENCE_LENGTH,
 } from '../recipe-utils';
 import {
   RECIPE_CATEGORIES,
@@ -216,6 +219,42 @@ describe('validateRecipeInput', () => {
 
     const result = validateRecipeInput(input);
     expect(result.valid).toBe(true);
+  });
+
+  it('rejects negative or non-integer time values', () => {
+    const input = createValidInput();
+    input.prep_time = -5;
+    input.cook_time = 12.5;
+    input.total_time = Number.NaN;
+
+    const result = validateRecipeInput(input);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        'Prep time cannot be negative',
+        'Cook time must be a whole number of minutes',
+        'Total time must be a number of minutes when provided',
+      ])
+    );
+  });
+
+  it('rejects overly long reference, wine pairing, or notes', () => {
+    const input = createValidInput();
+    input.reference = 'a'.repeat(MAX_REFERENCE_LENGTH + 1);
+    input.pairing_wine = 'a'.repeat(MAX_PAIRING_WINE_LENGTH + 1);
+    input.notes = 'a'.repeat(MAX_NOTES_LENGTH + 1);
+
+    const result = validateRecipeInput(input);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('Reference must be'),
+        expect.stringContaining('Wine pairing must be'),
+        expect.stringContaining('Notes must be'),
+      ])
+    );
   });
 });
 

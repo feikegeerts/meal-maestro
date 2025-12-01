@@ -23,6 +23,7 @@ import { BasicInformationSection } from "./recipe-edit/components/basic-informat
 import { IngredientsSection } from "./recipe-edit/components/ingredients-section";
 import { InstructionsSection } from "./recipe-edit/components/instructions-section";
 import { SectionsSection } from "./recipe-edit/components/sections-section";
+import { MetadataSection } from "./recipe-edit/components/metadata-section";
 import { CategorizedTagSelector } from "./recipe-edit/components/categorized-tag-selector";
 import { FormLayoutRenderer } from "./recipe-edit/components/form-layout-renderer";
 import { NutritionSection } from "./recipe-edit/components/nutrition-section";
@@ -85,6 +86,12 @@ export function RecipeEditForm({
           ],
     sections: recipe.sections || [],
     servings: recipe.servings || 4,
+    reference: recipe.reference ?? "",
+    prep_time: recipe.prep_time ?? null,
+    cook_time: null,
+    total_time: recipe.total_time ?? null,
+    pairing_wine: recipe.pairing_wine ?? "",
+    notes: recipe.notes ?? "",
     description: recipe.description,
     category: recipe.category,
     cuisine: recipe.cuisine,
@@ -127,14 +134,23 @@ export function RecipeEditForm({
   );
 
   const handleSave = useCallback(async () => {
-    const validation = validateRecipeInput(formData);
+    const derivedTotalTime =
+      formData.total_time ??
+      (typeof formData.prep_time === "number" ? formData.prep_time : null);
+    const formWithDerivedTotal = {
+      ...formData,
+      total_time: derivedTotalTime,
+    };
+
+    const validation = validateRecipeInput(formWithDerivedTotal);
     if (!validation.valid) {
       setErrors(validation.errors);
       return;
     }
 
     setErrors([]);
-    const updateData = FormTransformerService.createUpdatePayload(formData);
+    const updateData =
+      FormTransformerService.createUpdatePayload(formWithDerivedTotal);
 
     try {
       await onSave(updateData);
@@ -395,6 +411,12 @@ export function RecipeEditForm({
           />
         )}
 
+        <MetadataSection
+          formData={formData}
+          onFormDataChange={handleFormDataChange}
+          loading={loading}
+        />
+
         <CategorizedTagSelector
           formData={formData}
           onFormDataChange={handleFormDataChange}
@@ -594,6 +616,12 @@ export function RecipeEditForm({
             loading={loading}
           />
         )}
+
+        <MetadataSection
+          formData={formData}
+          onFormDataChange={handleFormDataChange}
+          loading={loading}
+        />
 
         <CategorizedTagSelector
           formData={formData}

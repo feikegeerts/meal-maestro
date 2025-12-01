@@ -56,6 +56,11 @@ export async function POST(
     }
 
     const recipe = sharedData.recipe;
+    const derivedTotalTime =
+      recipe.total_time ??
+      (typeof recipe.prep_time === "number" || typeof recipe.cook_time === "number"
+        ? (recipe.prep_time ?? 0) + (recipe.cook_time ?? 0)
+        : null);
 
     const insertPayload = {
       title: recipe.title,
@@ -63,6 +68,12 @@ export async function POST(
       sections: recipe.sections ?? null,
       servings: recipe.servings,
       description: recipe.description,
+      reference: recipe.reference ?? null,
+      prep_time: recipe.prep_time ?? null,
+      cook_time: recipe.cook_time ?? null,
+      total_time: derivedTotalTime ?? null,
+      pairing_wine: recipe.pairing_wine ?? null,
+      notes: recipe.notes ?? null,
       category: recipe.category,
       cuisine: recipe.cuisine ?? undefined,
       diet_types: recipe.diet_types ?? [],

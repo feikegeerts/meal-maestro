@@ -2,6 +2,39 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
 import { Recipe, RecipeIngredient, RecipeSection } from "@/types/recipe";
 import { ImageService } from "@/lib/image-service";
+type OptionalNumber = number | null | undefined;
+
+function normalizeTimeField(
+  value: unknown,
+  label: string,
+  errors: string[]
+): OptionalNumber {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    errors.push(`${label} must be a number of minutes when provided`);
+    return undefined;
+  }
+  if (!Number.isInteger(numeric)) {
+    errors.push(`${label} must be a whole number of minutes`);
+    return undefined;
+  }
+  if (numeric < 0) {
+    errors.push(`${label} cannot be negative`);
+    return undefined;
+  }
+  return numeric;
+}
+
+function hasKey(body: Record<string, unknown>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(body, key);
+}
+import {
+  MAX_NOTES_LENGTH,
+  MAX_PAIRING_WINE_LENGTH,
+  MAX_REFERENCE_LENGTH,
+} from "@/lib/recipe-utils";
 
 export async function GET(
   request: NextRequest,
@@ -89,6 +122,12 @@ export async function PUT(
       last_eaten,
       nutrition,
       sections,
+      reference,
+      prep_time,
+      cook_time,
+      total_time,
+      pairing_wine,
+      notes,
     } = body;
 
     if (!recipeId) {
@@ -96,6 +135,67 @@ export async function PUT(
         { error: 'Recipe ID is required' },
         { status: 400 }
       );
+    }
+
+    const validationErrors: string[] = [];
+    const bodyRecord = (body || {}) as Record<string, unknown>;
+    const normalizedReference =
+      typeof reference === "string" ? reference.trim() : null;
+    if (
+      normalizedReference &&
+      normalizedReference.length > MAX_REFERENCE_LENGTH
+    ) {
+      validationErrors.push(
+        `Reference must be ${MAX_REFERENCE_LENGTH} characters or fewer`
+      );
+    }
+
+    const normalizedPairingWine =
+      typeof pairing_wine === "string" ? pairing_wine.trim() : null;
+    if (
+      normalizedPairingWine &&
+      normalizedPairingWine.length > MAX_PAIRING_WINE_LENGTH
+    ) {
+      validationErrors.push(
+        `Wine pairing must be ${MAX_PAIRING_WINE_LENGTH} characters or fewer`
+      );
+    }
+
+    const normalizedNotes = typeof notes === "string" ? notes : null;
+    if (normalizedNotes && normalizedNotes.length > MAX_NOTES_LENGTH) {
+      validationErrors.push(
+        `Notes must be ${MAX_NOTES_LENGTH} characters or fewer`
+      );
+    }
+
+    const normalizedPrepTime = normalizeTimeField(
+      prep_time,
+      "Prep time",
+      validationErrors
+    );
+    const normalizedCookTime = normalizeTimeField(
+      cook_time,
+      "Cook time",
+      validationErrors
+    );
+    const totalProvided = hasKey(bodyRecord, "total_time");
+    const prepProvided = hasKey(bodyRecord, "prep_time");
+    const cookProvided = hasKey(bodyRecord, "cook_time");
+    let normalizedTotalTime = normalizeTimeField(
+      total_time,
+      "Total time",
+      validationErrors
+    );
+
+    if (!totalProvided && (prepProvided || cookProvided)) {
+      if (
+        typeof normalizedPrepTime === "number" ||
+        typeof normalizedCookTime === "number"
+      ) {
+        const prepValue = typeof normalizedPrepTime === "number" ? normalizedPrepTime : 0;
+        const cookValue = typeof normalizedCookTime === "number" ? normalizedCookTime : 0;
+        normalizedTotalTime = prepValue + cookValue;
+      }
     }
 
     const updateData: Partial<{
@@ -115,6 +215,12 @@ export async function PUT(
       season: string;
       last_eaten: string;
       nutrition: unknown;
+      reference: string | null;
+      pairing_wine: string | null;
+      notes: string | null;
+      prep_time: number | null;
+      cook_time: number | null;
+      total_time: number | null;
     }> = {};
     if (title !== undefined) updateData.title = title;
     const normalizeIngredient = (ingredient: RecipeIngredient) => {
@@ -269,6 +375,43 @@ export async function PUT(
     if (season !== undefined) updateData.season = season;
     if (last_eaten !== undefined) updateData.last_eaten = last_eaten;
     if (nutrition !== undefined) updateData.nutrition = nutrition;
+    if (hasKey(bodyRecord, "reference")) {
+      updateData.reference =
+        normalizedReference && normalizedReference.length > 0
+          ? normalizedReference
+          : null;
+    }
+    if (hasKey(bodyRecord, "pairing_wine")) {
+      updateData.pairing_wine =
+        normalizedPairingWine && normalizedPairingWine.length > 0
+          ? normalizedPairingWine
+          : null;
+    }
+    if (hasKey(bodyRecord, "notes")) {
+      updateData.notes =
+        normalizedNotes && normalizedNotes.trim().length > 0
+          ? normalizedNotes.trim()
+          : null;
+    }
+    if (prepProvided) {
+      updateData.prep_time =
+        typeof normalizedPrepTime === "number" ? normalizedPrepTime : null;
+    }
+    if (cookProvided) {
+      updateData.cook_time =
+        typeof normalizedCookTime === "number" ? normalizedCookTime : null;
+    }
+    if (totalProvided || (!totalProvided && (prepProvided || cookProvided))) {
+      updateData.total_time =
+        typeof normalizedTotalTime === "number" ? normalizedTotalTime : null;
+    }
+
+    if (validationErrors.length > 0) {
+      return NextResponse.json(
+        { error: validationErrors.join("; ") },
+        { status: 400 }
+      );
+    }
 
     const { data: recipe, error } = await supabase
       .from('recipes')

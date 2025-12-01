@@ -6,7 +6,43 @@ import {
   RecipeSection,
   RecipesResponse,
 } from "@/types/recipe";
+import {
+  MAX_NOTES_LENGTH,
+  MAX_PAIRING_WINE_LENGTH,
+  MAX_REFERENCE_LENGTH,
+} from "@/lib/recipe-utils";
 
+type OptionalNumber = number | null | undefined;
+
+function normalizeTimeField(
+  value: unknown,
+  label: string,
+  errors: string[]
+): OptionalNumber {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    errors.push(`${label} must be a number of minutes when provided`);
+    return undefined;
+  }
+  if (!Number.isInteger(numeric)) {
+    errors.push(`${label} must be a whole number of minutes`);
+    return undefined;
+  }
+  if (numeric < 0) {
+    errors.push(`${label} cannot be negative`);
+    return undefined;
+  }
+  return numeric;
+}
+
+function hasKey(
+  body: Record<string, unknown>,
+  key: string
+): boolean {
+  return Object.prototype.hasOwnProperty.call(body, key);
+}
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   
@@ -140,9 +176,76 @@ export async function POST(request: NextRequest) {
       season,
       nutrition,
       sections,
+      reference,
+      prep_time,
+      cook_time,
+      total_time,
+      pairing_wine,
+      notes,
     } = body;
 
     const hasSections = Array.isArray(sections) && sections.length > 0;
+    const bodyRecord = (body || {}) as Record<string, unknown>;
+    const validationErrors: string[] = [];
+
+    const normalizedReference =
+      typeof reference === "string" ? reference.trim() : null;
+    if (
+      normalizedReference &&
+      normalizedReference.length > MAX_REFERENCE_LENGTH
+    ) {
+      validationErrors.push(
+        `Reference must be ${MAX_REFERENCE_LENGTH} characters or fewer`
+      );
+    }
+
+    const normalizedPairingWine =
+      typeof pairing_wine === "string" ? pairing_wine.trim() : null;
+    if (
+      normalizedPairingWine &&
+      normalizedPairingWine.length > MAX_PAIRING_WINE_LENGTH
+    ) {
+      validationErrors.push(
+        `Wine pairing must be ${MAX_PAIRING_WINE_LENGTH} characters or fewer`
+      );
+    }
+
+    const normalizedNotes = typeof notes === "string" ? notes : null;
+    if (normalizedNotes && normalizedNotes.length > MAX_NOTES_LENGTH) {
+      validationErrors.push(
+        `Notes must be ${MAX_NOTES_LENGTH} characters or fewer`
+      );
+    }
+
+    const normalizedPrepTime = normalizeTimeField(
+      prep_time,
+      "Prep time",
+      validationErrors
+    );
+    const normalizedCookTime = normalizeTimeField(
+      cook_time,
+      "Cook time",
+      validationErrors
+    );
+    const totalProvided = hasKey(bodyRecord, "total_time");
+    const prepProvided = hasKey(bodyRecord, "prep_time");
+    const cookProvided = hasKey(bodyRecord, "cook_time");
+    let normalizedTotalTime = normalizeTimeField(
+      total_time,
+      "Total time",
+      validationErrors
+    );
+
+    if (!totalProvided && (prepProvided || cookProvided)) {
+      if (
+        typeof normalizedPrepTime === "number" ||
+        typeof normalizedCookTime === "number"
+      ) {
+        const prepValue = typeof normalizedPrepTime === "number" ? normalizedPrepTime : 0;
+        const cookValue = typeof normalizedCookTime === "number" ? normalizedCookTime : 0;
+        normalizedTotalTime = prepValue + cookValue;
+      }
+    }
 
     if (!title || !category || !servings) {
       return NextResponse.json(
@@ -318,6 +421,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (validationErrors.length > 0) {
+      return NextResponse.json(
+        { error: validationErrors.join("; ") },
+        { status: 400 }
+      );
+    }
+
     const descriptionToStore =
       description && description.trim().length > 0
         ? description
@@ -337,6 +447,21 @@ export async function POST(request: NextRequest) {
       sections: normalizedSections ?? [],
       servings: parseInt(servings),
       description: descriptionToStore,
+      reference:
+        normalizedReference && normalizedReference.length > 0
+          ? normalizedReference
+          : null,
+      prep_time: normalizedPrepTime ?? null,
+      cook_time: normalizedCookTime ?? null,
+      total_time: normalizedTotalTime ?? null,
+      pairing_wine:
+        normalizedPairingWine && normalizedPairingWine.length > 0
+          ? normalizedPairingWine
+          : null,
+      notes:
+        normalizedNotes && normalizedNotes.trim().length > 0
+          ? normalizedNotes.trim()
+          : null,
       category,
       cuisine,
       diet_types: diet_types || [],

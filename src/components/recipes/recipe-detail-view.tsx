@@ -25,6 +25,10 @@ import {
   Sparkles,
   AlertTriangle,
   Info,
+  Link2,
+  NotebookText,
+  Wine,
+  Slice,
 } from "lucide-react";
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import type {
@@ -41,6 +45,7 @@ import {
 } from "@/lib/recipe-utils";
 import { processInstructions } from "@/lib/utils";
 import type { IngredientFormatterService } from "@/utils/ingredient-pluralization";
+import { UrlDetector } from "@/lib/url-detector";
 
 interface RecipeDetailViewProps {
   recipe: Recipe;
@@ -138,8 +143,7 @@ export function RecipeDetailView({
     nutritionCacheHit || nutritionError || showNeedsIngredientsAlert
   );
   const hasSections =
-    Array.isArray(displayRecipe.sections) &&
-    displayRecipe.sections.length > 0;
+    Array.isArray(displayRecipe.sections) && displayRecipe.sections.length > 0;
   const renderIngredientList = (ingredients: RecipeIngredient[]) => {
     if (!ingredients || ingredients.length === 0) {
       return (
@@ -183,8 +187,9 @@ export function RecipeDetailView({
         }
 
         if (finalAmount > 1) {
-          ingredientNameWithNotes =
-            ingredientFormatter.pluralizeIngredientName(ingredient.name);
+          ingredientNameWithNotes = ingredientFormatter.pluralizeIngredientName(
+            ingredient.name
+          );
         } else if (finalAmount === 1) {
           ingredientNameWithNotes =
             ingredientFormatter.singularizeIngredientName(ingredient.name);
@@ -215,13 +220,19 @@ export function RecipeDetailView({
     });
   };
 
+  const hasTimeMeta =
+    typeof recipe.prep_time === "number" ||
+    typeof recipe.total_time === "number";
+  const referenceText = recipe.reference?.trim() ?? "";
+  const referenceIsLink =
+    referenceText.length > 0 && UrlDetector.isValidUrl(referenceText);
+  const pairingWineText = recipe.pairing_wine?.trim() ?? "";
+  const notesText = recipe.notes?.trim() ?? "";
+
   const renderInstructionsContent = (instructions: string) => {
     const processed = processInstructions(instructions || "");
 
-    if (
-      processed.isStepFormat &&
-      processed.steps.length > 1
-    ) {
+    if (processed.isStepFormat && processed.steps.length > 1) {
       return (
         <div className="space-y-5">
           {processed.steps.map((step, index) => (
@@ -523,6 +534,77 @@ export function RecipeDetailView({
                 ))}
               </div>
 
+              {(hasTimeMeta || referenceText || pairingWineText) && (
+                <div className="mt-6 space-y-3 text-sm">
+                  {hasTimeMeta && (
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                      {typeof recipe.prep_time === "number" ? (
+                        <div className="flex items-center gap-2">
+                          <Slice className="h-4 w-4 text-primary" />
+                          <span className="text-foreground">
+                            {`${recipe.prep_time} ${t("minutesShort")}. ${t(
+                              "prepTimeLabel"
+                            ).toLowerCase()}`}
+                          </span>
+                        </div>
+                      ) : null}
+                      {typeof recipe.total_time === "number" ? (
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-primary" />
+                          <span className="text-foreground">
+                            {(() => {
+                              const waitingTime =
+                                typeof recipe.prep_time === "number"
+                                  ? recipe.total_time - recipe.prep_time
+                                  : recipe.total_time;
+                              if (
+                                typeof waitingTime === "number" &&
+                                waitingTime > 0 &&
+                                typeof recipe.prep_time === "number"
+                              ) {
+                                return `${waitingTime} ${t(
+                                  "minutesShort"
+                                )}. ${t("totalTimeLabel").toLowerCase()}`;
+                              }
+                              return `${recipe.total_time} ${t(
+                                "minutesShort"
+                              )}. ${t("totalTimeLabel").toLowerCase()}`;
+                            })()}
+                          </span>
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
+
+                  {referenceText && (
+                    <div className="flex items-start gap-2 text-muted-foreground">
+                      <Link2 className="h-4 w-4 mt-0.5" />
+                      {referenceIsLink ? (
+                        <a
+                          href={referenceText}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-foreground underline-offset-4 hover:underline break-words"
+                        >
+                          {referenceText}
+                        </a>
+                      ) : (
+                        <span className="text-foreground break-words">
+                          {referenceText}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {pairingWineText && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Wine className="h-4 w-4" />
+                      <span className="text-foreground">{pairingWineText}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="grid grid-cols-1 gap-3 text-sm mt-8">
                 <div className="flex items-center gap-2">
                   <CalendarDays className="h-4 w-4 text-muted-foreground" />
@@ -557,10 +639,7 @@ export function RecipeDetailView({
           {hasSections ? (
             <div className="hidden print:flex print:flex-col print:gap-4">
               {displayRecipe.sections?.map((section, index) => (
-                <div
-                  key={section.id || index}
-                  className="print-section-page"
-                >
+                <div key={section.id || index} className="print-section-page">
                   <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
                     <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5">
                       <div className="space-y-2">
@@ -688,10 +767,28 @@ export function RecipeDetailView({
         </CardContent>
       </Card>
 
-      {tNutrition && (
-        <Card className="mt-8 print:hidden md:mx-auto md:max-w-4xl lg:max-w-5xl">
-          <CardContent className="px-4 py-6 md:px-8 md:py-8 lg:px-10">
-            <div className="mx-auto w-full max-w-5xl space-y-6">
+      {(notesText || tNutrition) && (
+        <div className="mt-8 grid gap-6 items-start lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
+          {notesText && (
+            <Card className="print:shadow-none print:border self-start">
+              <CardContent className="px-4 py-6 md:px-8 md:py-8 lg:px-10">
+                <div className="flex items-start gap-3">
+                  <NotebookText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="space-y-2">
+                    <h2 className="text-lg font-semibold">{t("notesLabel")}</h2>
+                    <p className="whitespace-pre-line text-sm leading-relaxed recipe-notes">
+                      {notesText}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {tNutrition && (
+            <Card className="print:hidden overflow-hidden">
+              <CardContent className="px-4 py-6 md:px-8 md:py-8 lg:px-10 space-y-6">
+                <div className="w-full space-y-6">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="max-w-2xl space-y-2">
                   <h2 className="text-xl font-semibold">
@@ -780,9 +877,9 @@ export function RecipeDetailView({
               )}
 
               {nutrition ? (
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-12">
-                  <div className="flex-1">
-                    <div className="overflow-hidden rounded-lg border border-border/60 bg-card/70 shadow-sm md:w-fit lg:max-w-xl">
+                <div className="flex flex-col gap-6">
+                  <div className="flex-1 min-w-0 flex justify-center">
+                    <div className="overflow-hidden rounded-lg border border-border/60 bg-card/70 shadow-sm md:w-fit lg:max-w-2xl w-full">
                       <table className="w-full min-w-[320px] text-xs sm:text-sm">
                         <thead className="bg-muted/40 text-xs font-medium sm:text-sm">
                           <tr>
@@ -844,8 +941,8 @@ export function RecipeDetailView({
                     </div>
                   </div>
 
-                  <div className="w-full space-y-4 lg:w-80 lg:flex-shrink-0">
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                  <div className="w-full space-y-4">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
                       {typeof nutrition.meta.confidence === "number" && (
                         <div className="rounded-md border border-border/50 bg-card/70 p-4 text-sm shadow-sm">
                           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -873,15 +970,18 @@ export function RecipeDetailView({
                     </div>
 
                     {nutrition.meta.warnings?.length ? (
-                      <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-900 shadow-sm">
+                      <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-900 shadow-sm break-words">
                         <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
                           {tNutrition("results.warnings")}
                         </p>
-                        <ul className="mt-2 space-y-2">
+                        <ul className="mt-2 space-y-2 leading-relaxed">
                           {nutrition.meta.warnings.map((warning, index) => (
-                            <li key={`${warning}-${index}`} className="flex gap-2">
+                            <li
+                              key={`${warning}-${index}`}
+                              className="flex gap-2"
+                            >
                               <span aria-hidden="true">•</span>
-                              <span>{warning}</span>
+                              <span className="break-words">{warning}</span>
                             </li>
                           ))}
                         </ul>
@@ -889,7 +989,7 @@ export function RecipeDetailView({
                     ) : null}
 
                     {nutrition.meta.notes && (
-                      <p className="rounded-md border border-border/40 bg-muted/20 p-4 text-sm text-muted-foreground">
+                      <p className="rounded-md border border-border/40 bg-muted/20 p-4 text-sm text-muted-foreground break-words">
                         {nutrition.meta.notes}
                       </p>
                     )}
@@ -906,12 +1006,14 @@ export function RecipeDetailView({
                 </div>
               )}
 
-              <p className="text-xs leading-relaxed text-muted-foreground">
+              <p className="text-xs leading-relaxed text-muted-foreground lg:col-span-2">
                 {tNutrition("disclaimer")}
               </p>
             </div>
           </CardContent>
         </Card>
+      )}
+        </div>
       )}
     </PageWrapper>
   );

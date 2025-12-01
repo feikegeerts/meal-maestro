@@ -29,6 +29,10 @@ import {
   CHARACTERISTIC_TYPES,
 } from "@/types/recipe";
 
+export const MAX_NOTES_LENGTH = 4000;
+export const MAX_PAIRING_WINE_LENGTH = 255;
+export const MAX_REFERENCE_LENGTH = 1024;
+
 // ---- Type guards / validation helpers ----
 function isStringIn<T extends string>(
   arr: readonly T[],
@@ -75,6 +79,26 @@ export function isValidCharacteristicType(
 
 function isNonNegativeNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
+function validateTimeValue(
+  value: unknown,
+  label: string,
+  errors: string[]
+) {
+  if (value === undefined || value === null) {
+    return;
+  }
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    errors.push(`${label} must be a number of minutes when provided`);
+    return;
+  }
+  if (!Number.isInteger(value)) {
+    errors.push(`${label} must be a whole number of minutes`);
+  }
+  if (value < 0) {
+    errors.push(`${label} cannot be negative`);
+  }
 }
 
 function validateIngredientsList(
@@ -317,6 +341,43 @@ export function validateRecipeInput(input: RecipeInput): {
           ", "
         )}. Available characteristics: ${CHARACTERISTIC_TYPES.join(", ")}`
       );
+  }
+
+  validateTimeValue(input.prep_time, "Prep time", errors);
+  validateTimeValue(input.cook_time, "Cook time", errors);
+  validateTimeValue(input.total_time, "Total time", errors);
+
+  if (input.reference !== undefined && input.reference !== null) {
+    if (typeof input.reference !== "string") {
+      errors.push("Reference must be text when provided");
+    } else {
+      const trimmedReference = input.reference.trim();
+      if (trimmedReference.length > MAX_REFERENCE_LENGTH) {
+        errors.push(
+          `Reference must be ${MAX_REFERENCE_LENGTH} characters or fewer`
+        );
+      }
+    }
+  }
+
+  if (input.pairing_wine !== undefined && input.pairing_wine !== null) {
+    if (typeof input.pairing_wine !== "string") {
+      errors.push("Wine pairing must be text when provided");
+    } else if (input.pairing_wine.trim().length > MAX_PAIRING_WINE_LENGTH) {
+      errors.push(
+        `Wine pairing must be ${MAX_PAIRING_WINE_LENGTH} characters or fewer`
+      );
+    }
+  }
+
+  if (input.notes !== undefined && input.notes !== null) {
+    if (typeof input.notes !== "string") {
+      errors.push("Notes must be text when provided");
+    } else if (input.notes.length > MAX_NOTES_LENGTH) {
+      errors.push(
+        `Notes must be ${MAX_NOTES_LENGTH} characters or fewer`
+      );
+    }
   }
 
   if (input.nutrition) {
