@@ -77,9 +77,9 @@ export function RecipeDataTable({
   const [dateDialogOpen, setDateDialogOpen] = React.useState(false);
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const [viewMode, setViewMode] = React.useState<"table" | "grid">(() => {
-    if (typeof window === "undefined") return "table";
+    if (typeof window === "undefined") return "grid";
     const stored = window.localStorage.getItem("recipeViewMode");
-    return stored === "grid" ? "grid" : "table";
+    return stored === "table" ? "table" : "grid";
   });
   const [clickedRecipeId, setClickedRecipeId] = React.useState<string | null>(
     null

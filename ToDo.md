@@ -4,6 +4,7 @@
 
 ## Quality & Compliance
 
+1. [ ] Add integration test to test the usage limit emails that need to be send when the limit is almost reached.
 1. [ ] Add more integration tests (run via `pnpm verify` in CI; keep them fast and focused on auth flows, recipe sharing/import, and key edit paths). Maintain ≥65% coverage for libs/api/components.
 
 ## V2.0 feature requests

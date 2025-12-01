@@ -176,16 +176,6 @@ export function RecipeTableToolbar({
 
         <div className="ml-auto flex items-center gap-2">
           <Button
-            variant={viewMode === "table" ? "secondary" : "ghost"}
-            size="icon"
-            className="h-10 w-10"
-            aria-pressed={viewMode === "table"}
-            onClick={() => onViewModeChange("table")}
-            title={tTable("listView")}
-          >
-            <List className="h-4 w-4" />
-          </Button>
-          <Button
             variant={viewMode === "grid" ? "secondary" : "ghost"}
             size="icon"
             className="h-10 w-10"
@@ -194,6 +184,16 @@ export function RecipeTableToolbar({
             title={tTable("tileView")}
           >
             <LayoutGrid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === "table" ? "secondary" : "ghost"}
+            size="icon"
+            className="h-10 w-10"
+            aria-pressed={viewMode === "table"}
+            onClick={() => onViewModeChange("table")}
+            title={tTable("listView")}
+          >
+            <List className="h-4 w-4" />
           </Button>
         </div>
       </div>
