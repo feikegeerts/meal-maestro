@@ -60,6 +60,7 @@ export async function POST(
     const insertPayload = {
       title: recipe.title,
       ingredients: recipe.ingredients,
+      sections: recipe.sections ?? null,
       servings: recipe.servings,
       description: recipe.description,
       category: recipe.category,

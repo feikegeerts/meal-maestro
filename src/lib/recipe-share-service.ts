@@ -452,7 +452,7 @@ export class RecipeShareService {
     const { data: recipe, error: recipeError } = await admin
       .from("recipes")
       .select(
-        "id, title, ingredients, servings, description, category, cuisine, diet_types, cooking_methods, dish_types, proteins, occasions, characteristics, season, last_eaten, image_url, image_metadata, created_at, updated_at, user_id"
+        "id, title, ingredients, sections, servings, description, category, cuisine, diet_types, cooking_methods, dish_types, proteins, occasions, characteristics, season, last_eaten, image_url, image_metadata, created_at, updated_at, user_id"
       )
       .eq("id", link.recipe_id)
       .maybeSingle();
