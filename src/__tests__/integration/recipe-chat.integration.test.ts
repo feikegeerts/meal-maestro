@@ -3,7 +3,6 @@ import { POST as chatPost } from "@/app/api/recipes/chat/route";
 import { RecipeChatService } from "@/lib/recipe-chat-service";
 import { MonthlySpendLimitError, usageLimitService } from "@/lib/usage-limit-service";
 import { ChatResponseFormatter } from "@/lib/chat-response-formatter";
-import { OpenAITimeoutError } from "@/lib/openai-service";
 
 process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || "test-key";
 
@@ -33,14 +32,6 @@ jest.mock("@/lib/openai-service", () => {
   return { OpenAITimeoutError };
 });
 
-jest.mock("@/lib/chat-response-formatter", () => {
-  const formatErrorResponse = jest.fn(async () => ({ error: "Error", status: 500 }));
-  const ChatResponseFormatterMock = jest.fn().mockImplementation(() => ({
-    formatErrorResponse,
-  }));
-  return { ChatResponseFormatter: ChatResponseFormatterMock };
-});
-
 jest.mock("@/lib/usage-limit-service", () => ({
   usageLimitService: {
     recordRateLimitViolation: jest.fn(),
@@ -55,6 +46,9 @@ jest.mock("@/lib/usage-limit-service", () => ({
 }));
 
 const requireAuth = jest.requireMock("@/lib/auth-server").requireAuth as jest.Mock;
+const { OpenAITimeoutError } = jest.requireMock("@/lib/openai-service") as {
+  OpenAITimeoutError: new (message?: string) => Error & { code: string; isRetryable: boolean };
+};
 
 const buildRequest = (body: Record<string, unknown>) =>
   new NextRequest("http://localhost/api/recipes/chat", {
@@ -151,10 +145,9 @@ describe("POST /api/recipes/chat (integration)", () => {
   });
 
   it("records rate limit violation when formatter returns 429", async () => {
-    const formatErrorResponse = jest.fn().mockResolvedValue({ error: "Too many requests", status: 429 });
-    (ChatResponseFormatter as unknown as jest.Mock).mockImplementation(() => ({
-      formatErrorResponse,
-    }));
+    const formatErrorResponse = jest
+      .spyOn(ChatResponseFormatter.prototype, "formatErrorResponse")
+      .mockResolvedValue({ error: "Too many requests", status: 429 });
     (RecipeChatService as unknown as jest.Mock).mockImplementation(() => ({
       processMessage: jest.fn().mockRejectedValue(new Error("rate limit")),
     }));
