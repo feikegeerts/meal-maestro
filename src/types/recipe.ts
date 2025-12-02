@@ -174,6 +174,7 @@ export interface Recipe {
   cook_time?: number | null;
   total_time?: number | null;
   pairing_wine?: string | null;
+  utensils?: string[] | null;
   notes?: string | null;
   description: string;
   category: RecipeCategory;
@@ -212,6 +213,7 @@ export interface RecipeInput {
   cook_time?: number | null;
   total_time?: number | null;
   pairing_wine?: string | null;
+  utensils?: string[] | null;
   notes?: string | null;
   description: string;
   category: string;

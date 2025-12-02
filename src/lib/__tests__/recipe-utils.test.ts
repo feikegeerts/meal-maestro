@@ -14,6 +14,8 @@ import {
   MAX_NOTES_LENGTH,
   MAX_PAIRING_WINE_LENGTH,
   MAX_REFERENCE_LENGTH,
+  MAX_UTENSIL_ITEMS,
+  MAX_UTENSIL_LENGTH,
 } from '../recipe-utils';
 import {
   RECIPE_CATEGORIES,
@@ -255,6 +257,35 @@ describe('validateRecipeInput', () => {
         expect.stringContaining('Notes must be'),
       ])
     );
+  });
+
+  it('validates utensils length and count', () => {
+    const input = createValidInput();
+    input.utensils = Array.from(
+      { length: MAX_UTENSIL_ITEMS + 1 },
+      (_, index) => `Tool ${index}`
+    );
+
+    const tooManyResult = validateRecipeInput(input);
+    expect(tooManyResult.valid).toBe(false);
+    expect(tooManyResult.errors).toEqual(
+      expect.arrayContaining([
+        `Utensils must have ${MAX_UTENSIL_ITEMS} items or fewer`,
+      ])
+    );
+
+    input.utensils = [`a`.repeat(MAX_UTENSIL_LENGTH + 1)];
+    const tooLongResult = validateRecipeInput(input);
+    expect(tooLongResult.valid).toBe(false);
+    expect(tooLongResult.errors).toEqual(
+      expect.arrayContaining([
+        `Each utensil must be ${MAX_UTENSIL_LENGTH} characters or fewer`,
+      ])
+    );
+
+    input.utensils = ['Whisk', 'Bowl'];
+    const validResult = validateRecipeInput(input);
+    expect(validResult.valid).toBe(true);
   });
 });
 

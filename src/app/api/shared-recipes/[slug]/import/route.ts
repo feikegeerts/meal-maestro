@@ -83,6 +83,7 @@ export async function POST(
       occasions: recipe.occasions ?? [],
       characteristics: recipe.characteristics ?? [],
       season: recipe.season ?? undefined,
+      utensils: recipe.utensils ?? [],
       user_id: user.id,
     } satisfies Partial<Recipe> & { user_id: string };
 

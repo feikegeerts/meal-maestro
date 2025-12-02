@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { RecipeInput } from "@/types/recipe";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,10 @@ export function MetadataSection({
   loading = false,
 }: MetadataSectionProps) {
   const t = useTranslations("recipeForm");
+  const [utensilsInput, setUtensilsInput] = useState(
+    (formData.utensils ?? []).join(", ")
+  );
+  const utensilsEditRef = useRef(false);
 
   const handleTimeChange = (key: "prep_time" | "total_time", value: string) => {
     if (value === "") {
@@ -32,6 +37,23 @@ export function MetadataSection({
       [key]: Number.isNaN(parsed) ? null : Math.max(0, Math.floor(parsed)),
     });
   };
+
+  const parseUtensils = (value: string) =>
+    value
+      .split(/[\n,]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+  useEffect(() => {
+    const joined = (formData.utensils ?? []).join(", ");
+    if (utensilsEditRef.current) {
+      utensilsEditRef.current = false;
+      return;
+    }
+    if (joined !== utensilsInput) {
+      setUtensilsInput(joined);
+    }
+  }, [formData.utensils, utensilsInput]);
 
   return (
     <Card>
@@ -104,6 +126,26 @@ export function MetadataSection({
             disabled={loading}
             className="h-8 text-sm sm:h-9 sm:text-base"
           />
+        </div>
+
+        <div className={SPACING_CONFIG.INPUT_SPACING}>
+          <Label htmlFor="utensils">{t("utensils")}</Label>
+          <Textarea
+            id="utensils"
+          value={utensilsInput}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            utensilsEditRef.current = true;
+            setUtensilsInput(newValue);
+            onFormDataChange({ utensils: parseUtensils(newValue) });
+          }}
+            placeholder={t("utensilsPlaceholder")}
+            disabled={loading}
+            className="min-h-[80px] text-sm sm:text-base"
+          />
+          <p className="text-xs text-muted-foreground">
+            {t("utensilsHelper")}
+          </p>
         </div>
 
         <div className={SPACING_CONFIG.INPUT_SPACING}>

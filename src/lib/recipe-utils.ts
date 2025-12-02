@@ -32,6 +32,8 @@ import {
 export const MAX_NOTES_LENGTH = 4000;
 export const MAX_PAIRING_WINE_LENGTH = 255;
 export const MAX_REFERENCE_LENGTH = 1024;
+export const MAX_UTENSIL_ITEMS = 30;
+export const MAX_UTENSIL_LENGTH = 120;
 
 // ---- Type guards / validation helpers ----
 function isStringIn<T extends string>(
@@ -239,6 +241,40 @@ function validateRecipeNutrition(
   }
 }
 
+export function normalizeUtensils(
+  value: unknown,
+  errors?: string[]
+): string[] | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  if (!Array.isArray(value)) {
+    errors?.push("Utensils must be an array of strings when provided");
+    return null;
+  }
+
+  const normalized = value
+    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .filter((item) => item.length > 0);
+
+  if (normalized.length > MAX_UTENSIL_ITEMS) {
+    errors?.push(
+      `Utensils must have ${MAX_UTENSIL_ITEMS} items or fewer`
+    );
+  }
+
+  normalized.forEach((item) => {
+    if (item.length > MAX_UTENSIL_LENGTH) {
+      errors?.push(
+        `Each utensil must be ${MAX_UTENSIL_LENGTH} characters or fewer`
+      );
+    }
+  });
+
+  return Array.from(new Set(normalized));
+}
+
 export function validateRecipeInput(input: RecipeInput): {
   valid: boolean;
   errors: string[];
@@ -346,6 +382,8 @@ export function validateRecipeInput(input: RecipeInput): {
   validateTimeValue(input.prep_time, "Prep time", errors);
   validateTimeValue(input.cook_time, "Cook time", errors);
   validateTimeValue(input.total_time, "Total time", errors);
+
+  normalizeUtensils(input.utensils, errors);
 
   if (input.reference !== undefined && input.reference !== null) {
     if (typeof input.reference !== "string") {

@@ -46,6 +46,20 @@ import { RecipeGridView } from "./recipe-grid-view";
 import { RecipeTableView } from "./recipe-table-view";
 import { RecipeTableToolbar } from "./recipe-table-toolbar";
 
+const TABLE_STATE_STORAGE_KEY = "recipeTableState";
+
+function loadStoredTableState() {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = window.localStorage.getItem(TABLE_STATE_STORAGE_KEY);
+    if (!stored) return null;
+    return JSON.parse(stored);
+  } catch (error) {
+    console.error("Failed to parse stored recipe table state", error);
+    return null;
+  }
+}
+
 interface DataTableProps {
   columns: ColumnDef<Recipe, unknown>[];
   data: Recipe[];
@@ -57,6 +71,15 @@ export function RecipeDataTable({
   data,
   loading = false,
 }: DataTableProps) {
+  const initialStoredState =
+    typeof window !== "undefined" ? loadStoredTableState() : null;
+  const initialSearch =
+    typeof initialStoredState?.searchInput === "string"
+      ? initialStoredState.searchInput
+      : typeof initialStoredState?.globalFilter === "string"
+      ? initialStoredState.globalFilter
+      : "";
+
   const router = useRouter();
   const { removeRecipes, markRecipesAsEaten } = useRecipes();
   const t = useTranslations("toast");
@@ -64,15 +87,22 @@ export function RecipeDataTable({
   const { translateTag, translateCategory, translateSeason } =
     useRecipeTranslations();
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>(() =>
+    Array.isArray(initialStoredState?.sorting)
+      ? (initialStoredState.sorting as SortingState)
+      : []
+  );
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    () =>
+      Array.isArray(initialStoredState?.columnFilters)
+        ? (initialStoredState.columnFilters as ColumnFiltersState)
+        : []
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [globalFilter, setGlobalFilter] = React.useState("");
-  const [searchInput, setSearchInput] = React.useState("");
+  const [globalFilter, setGlobalFilter] = React.useState(initialSearch);
+  const [searchInput, setSearchInput] = React.useState(initialSearch);
   const [bulkOperationLoading, setBulkOperationLoading] = React.useState(false);
   const [dateDialogOpen, setDateDialogOpen] = React.useState(false);
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
@@ -94,9 +124,50 @@ export function RecipeDataTable({
   }, [searchInput]);
 
   React.useEffect(() => {
+    const stored = loadStoredTableState();
+    if (!stored) return;
+
+    if (Array.isArray(stored.sorting)) {
+      setSorting(stored.sorting);
+    }
+    if (Array.isArray(stored.columnFilters)) {
+      setColumnFilters(stored.columnFilters);
+    }
+
+    const persistedSearch =
+      typeof stored.searchInput === "string"
+        ? stored.searchInput
+        : typeof stored.globalFilter === "string"
+        ? stored.globalFilter
+        : "";
+
+    if (persistedSearch) {
+      setSearchInput(persistedSearch);
+      setGlobalFilter(persistedSearch);
+    }
+  }, []);
+
+  React.useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem("recipeViewMode", viewMode);
   }, [viewMode]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stateToPersist = {
+        sorting,
+        columnFilters,
+        searchInput,
+      };
+      window.localStorage.setItem(
+        TABLE_STATE_STORAGE_KEY,
+        JSON.stringify(stateToPersist)
+      );
+    } catch (error) {
+      console.error("Failed to persist recipe table state", error);
+    }
+  }, [sorting, columnFilters, searchInput]);
 
   const table = useReactTable({
     data,
@@ -117,27 +188,38 @@ export function RecipeDataTable({
     onGlobalFilterChange: setGlobalFilter,
     enableColumnResizing: false,
     globalFilterFn: (row, _columnId, filterValue) => {
-      const searchValue = filterValue.toLowerCase();
+      const searchValue =
+        typeof filterValue === "string"
+          ? filterValue.toLowerCase().trim()
+          : String(filterValue ?? "").toLowerCase().trim();
+
+      if (!searchValue) return true;
+
       const recipe = row.original as Recipe;
+      const matchesText = (value?: string | null) =>
+        typeof value === "string" &&
+        value.toLowerCase().includes(searchValue);
+      const matchesArray = (values?: string[] | null) =>
+        Array.isArray(values) &&
+        values.some((value) => matchesText(value));
 
       const title = row.getValue("title") as string;
-      if (title?.toLowerCase().includes(searchValue)) return true;
+      if (matchesText(title)) return true;
 
       const category = row.getValue("category") as string;
-      if (category?.toLowerCase().includes(searchValue)) return true;
+      if (matchesText(category)) return true;
       if (category) {
         const translatedCategory = translateCategory(
           category as RecipeCategory
         );
-        if (translatedCategory?.toLowerCase().includes(searchValue))
-          return true;
+        if (matchesText(translatedCategory)) return true;
       }
 
       const season = row.getValue("season") as string;
-      if (season?.toLowerCase().includes(searchValue)) return true;
+      if (matchesText(season)) return true;
       if (season) {
         const translatedSeason = translateSeason(season as RecipeSeason);
-        if (translatedSeason?.toLowerCase().includes(searchValue)) return true;
+        if (matchesText(translatedSeason)) return true;
       }
 
       const allTags = [
@@ -150,8 +232,7 @@ export function RecipeDataTable({
         ...(recipe.characteristics || []),
       ];
 
-      if (allTags?.some((tag) => tag.toLowerCase().includes(searchValue)))
-        return true;
+      if (matchesArray(allTags)) return true;
 
       const translatedTags: string[] = [];
       if (recipe.cuisine) {
@@ -196,12 +277,60 @@ export function RecipeDataTable({
         });
       }
 
-      if (
-        translatedTags?.some((tag) => tag.toLowerCase().includes(searchValue))
-      )
-        return true;
+      if (matchesArray(translatedTags)) return true;
 
-      if (recipe?.description?.toLowerCase().includes(searchValue)) return true;
+      if (matchesText(recipe.description)) return true;
+      if (matchesText(recipe.reference)) return true;
+      if (matchesText(recipe.pairing_wine)) return true;
+      if (matchesText(recipe.notes)) return true;
+
+      if (matchesArray(recipe.utensils)) return true;
+
+      const timeFields = [
+        recipe.prep_time,
+        recipe.cook_time,
+        recipe.total_time,
+      ];
+      if (
+        timeFields.some(
+          (time) =>
+            typeof time === "number" &&
+            time.toString().includes(searchValue)
+        )
+      ) {
+        return true;
+      }
+
+      const sectionsMatch =
+        Array.isArray(recipe.sections) &&
+        recipe.sections.some((section) => {
+          if (
+            matchesText(section?.title) ||
+            matchesText(section?.instructions)
+          ) {
+            return true;
+          }
+
+          return Array.isArray(section.ingredients)
+            ? section.ingredients.some(
+                (ingredient) =>
+                  matchesText(ingredient.name) ||
+                  matchesText(ingredient.notes)
+              )
+            : false;
+        });
+
+      if (sectionsMatch) return true;
+
+      if (
+        Array.isArray(recipe.ingredients) &&
+        recipe.ingredients.some(
+          (ingredient) =>
+            matchesText(ingredient.name) || matchesText(ingredient.notes)
+        )
+      ) {
+        return true;
+      }
 
       return false;
     },

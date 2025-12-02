@@ -452,7 +452,37 @@ export class RecipeShareService {
     const { data: recipe, error: recipeError } = await admin
       .from("recipes")
       .select(
-        "id, title, ingredients, sections, servings, description, category, cuisine, diet_types, cooking_methods, dish_types, proteins, occasions, characteristics, season, last_eaten, image_url, image_metadata, created_at, updated_at, user_id"
+        [
+          "id",
+          "title",
+          "ingredients",
+          "sections",
+          "servings",
+          "description",
+          "category",
+          "cuisine",
+          "diet_types",
+          "cooking_methods",
+          "dish_types",
+          "proteins",
+          "occasions",
+          "characteristics",
+          "season",
+          "last_eaten",
+          "reference",
+          "prep_time",
+          "cook_time",
+          "total_time",
+          "pairing_wine",
+          "notes",
+          "utensils",
+          "nutrition",
+          "image_url",
+          "image_metadata",
+          "created_at",
+          "updated_at",
+          "user_id",
+        ].join(", ")
       )
       .eq("id", link.recipe_id)
       .maybeSingle();
@@ -480,7 +510,7 @@ export class RecipeShareService {
       expiresAt: link.expires_at,
       ownerId: link.owner_id,
       ownerDisplayName: ownerProfile?.display_name ?? null,
-      recipe: recipe as Recipe,
+      recipe: recipe as unknown as Recipe,
     };
   }
 

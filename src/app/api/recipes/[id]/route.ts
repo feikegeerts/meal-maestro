@@ -34,6 +34,7 @@ import {
   MAX_NOTES_LENGTH,
   MAX_PAIRING_WINE_LENGTH,
   MAX_REFERENCE_LENGTH,
+  normalizeUtensils,
 } from "@/lib/recipe-utils";
 
 export async function GET(
@@ -128,6 +129,7 @@ export async function PUT(
       total_time,
       pairing_wine,
       notes,
+      utensils,
     } = body;
 
     if (!recipeId) {
@@ -167,6 +169,7 @@ export async function PUT(
         `Notes must be ${MAX_NOTES_LENGTH} characters or fewer`
       );
     }
+    const normalizedUtensils = normalizeUtensils(utensils, validationErrors);
 
     const normalizedPrepTime = normalizeTimeField(
       prep_time,
@@ -221,6 +224,7 @@ export async function PUT(
       prep_time: number | null;
       cook_time: number | null;
       total_time: number | null;
+      utensils: string[];
     }> = {};
     if (title !== undefined) updateData.title = title;
     const normalizeIngredient = (ingredient: RecipeIngredient) => {
@@ -375,6 +379,9 @@ export async function PUT(
     if (season !== undefined) updateData.season = season;
     if (last_eaten !== undefined) updateData.last_eaten = last_eaten;
     if (nutrition !== undefined) updateData.nutrition = nutrition;
+    if (hasKey(bodyRecord, "utensils")) {
+      updateData.utensils = normalizedUtensils ?? [];
+    }
     if (hasKey(bodyRecord, "reference")) {
       updateData.reference =
         normalizedReference && normalizedReference.length > 0

@@ -91,6 +91,7 @@ export function RecipeEditForm({
     cook_time: null,
     total_time: recipe.total_time ?? null,
     pairing_wine: recipe.pairing_wine ?? "",
+    utensils: recipe.utensils ?? [],
     notes: recipe.notes ?? "",
     description: recipe.description,
     category: recipe.category,

@@ -24,6 +24,23 @@
     background: white;
   }
 
+  /* Force a clean white canvas for print */
+  html,
+  body,
+  #__next,
+  main {
+    background: white !important;
+    background-color: white !important;
+  }
+
+  /* Override inline gradient/background on the wrapper */
+  .min-h-screen,
+  [style*="--background-gradient"],
+  [style*="--background"] {
+    background: white !important;
+    background-color: white !important;
+  }
+
   /* Hide all card styling */
   .card,
   [data-slot="card"] {
@@ -115,11 +132,44 @@
     display: none !important;
   }
 
-  /* Compact metadata and badges */
-  .badge,
-  .text-muted-foreground {
+  /* Compact badges but keep supporting text legible */
+  .badge {
     font-size: 8pt;
-    margin: 0.02in;
+    margin: 0.02in 0.02in 0.02in 0;
+  }
+
+  .text-muted-foreground {
+    font-size: 10pt !important;
+    margin: 0 !important;
+  }
+
+  /* Normalize header metadata sizing and spacing */
+  .header-meta-row {
+    font-size: 10pt !important;
+    gap: 0.08in !important;
+    margin: 0 !important;
+  }
+
+  .header-meta-row .flex {
+    gap: 0.05in !important;
+  }
+
+  .header-meta-row .text-sm,
+  .header-meta-row .text-muted-foreground {
+    font-size: 10pt !important;
+    margin: 0 !important;
+  }
+
+  .metadata-block {
+    font-size: 10pt !important;
+    line-height: 1.35 !important;
+    gap: 0.05in !important;
+  }
+
+  .metadata-block *,
+  .metadata-block .text-muted-foreground {
+    font-size: 10pt !important;
+    margin: 0 !important;
   }
 
   /* Hide action buttons and excessive metadata */
@@ -129,7 +179,8 @@
 
   /* Compact tags section */
   .flex.flex-wrap.gap-2.mt-6:has(.badge) {
-    margin: 0.02in 0 !important;
+    margin-top: 2px !important;
+    margin-bottom: 6px !important;
     gap: 0.05in !important;
   }
 
@@ -154,8 +205,8 @@
 
   /* Ingredients column - left side - ONLY within the 7-column grid */
   .grid.lg\:grid-cols-7 .lg\:col-span-2 {
-    background: transparent !important;
-    border: 1px solid #666 !important;
+    background: #f6f6f6 !important;
+    border: 1px solid #cfcfcf !important;
     border-radius: 4px !important;
     padding: 0.15in !important;
     margin: 0 !important;
@@ -267,8 +318,9 @@
     gap: 0.04in;
   }
 
-  /* Convert step layout to simple numbered list */
-  .flex.items-center.gap-4 {
+  /* Convert cooking instructions layout to simple numbered list */
+  .space-y-5 .flex.items-center.gap-4,
+  .prose .flex.items-center.gap-4 {
     display: list-item !important;
     list-style-type: decimal !important;
     list-style-position: outside !important;
@@ -279,7 +331,8 @@
   }
 
   /* Instructions container as ordered list */
-  .space-y-5:has(.flex.items-center.gap-4) {
+  .space-y-5:has(.flex.items-center.gap-4),
+  .prose .space-y-5:has(.flex.items-center.gap-4) {
     display: block !important;
     counter-reset: step-counter !important;
   }

@@ -32,6 +32,7 @@ export interface AIRecipeData {
   occasions?: string[];
   characteristics?: string[];
   season?: string;
+  utensils?: string[];
 }
 
 export class FormTransformerService {
@@ -63,6 +64,7 @@ export class FormTransformerService {
         characteristics: recipeData.characteristics,
       }),
       ...(recipeData.season && { season: recipeData.season }),
+      ...(recipeData.utensils && { utensils: recipeData.utensils }),
     };
 
     if (recipeData.ingredients && recipeData.ingredients.length > 0) {
@@ -142,6 +144,11 @@ export class FormTransformerService {
   }
 
   static createUpdatePayload(formData: RecipeInput): Partial<RecipeInput> {
+    const sanitizedUtensils =
+      formData.utensils
+        ?.map((item) => (typeof item === "string" ? item.trim() : ""))
+        .filter(Boolean) ?? [];
+
     return {
       title: formData.title,
       ingredients: formData.ingredients,
@@ -164,6 +171,7 @@ export class FormTransformerService {
       characteristics: formData.characteristics,
       season: formData.season,
       nutrition: formData.nutrition,
+      utensils: sanitizedUtensils,
     };
   }
 

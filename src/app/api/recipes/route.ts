@@ -10,6 +10,7 @@ import {
   MAX_NOTES_LENGTH,
   MAX_PAIRING_WINE_LENGTH,
   MAX_REFERENCE_LENGTH,
+  normalizeUtensils,
 } from "@/lib/recipe-utils";
 
 type OptionalNumber = number | null | undefined;
@@ -119,9 +120,25 @@ export async function GET(request: NextRequest) {
     }
 
     if (query) {
-      supabaseQuery = supabaseQuery.or(
-        `title.ilike.%${query}%,description.ilike.%${query}%,ingredients.cs.{${query}}`
-      );
+      const likeQuery = `%${query}%`;
+      const orFilters = [
+        `title.ilike.${likeQuery}`,
+        `description.ilike.${likeQuery}`,
+        `reference.ilike.${likeQuery}`,
+        `pairing_wine.ilike.${likeQuery}`,
+        `notes.ilike.${likeQuery}`,
+        `ingredients.cs.{${query}}`,
+        `utensils.cs.{${query}}`,
+      ];
+
+      const numericQuery = Number(query);
+      if (Number.isFinite(numericQuery)) {
+        ["prep_time", "cook_time", "total_time"].forEach((field) => {
+          orFilters.push(`${field}.eq.${numericQuery}`);
+        });
+      }
+
+      supabaseQuery = supabaseQuery.or(orFilters.join(","));
     }
 
     const { data: recipes, error } = await supabaseQuery;
@@ -182,6 +199,7 @@ export async function POST(request: NextRequest) {
       total_time,
       pairing_wine,
       notes,
+      utensils,
     } = body;
 
     const hasSections = Array.isArray(sections) && sections.length > 0;
@@ -216,6 +234,8 @@ export async function POST(request: NextRequest) {
         `Notes must be ${MAX_NOTES_LENGTH} characters or fewer`
       );
     }
+    const normalizedUtensils =
+      normalizeUtensils(utensils, validationErrors) ?? [];
 
     const normalizedPrepTime = normalizeTimeField(
       prep_time,
@@ -462,6 +482,7 @@ export async function POST(request: NextRequest) {
         normalizedNotes && normalizedNotes.trim().length > 0
           ? normalizedNotes.trim()
           : null,
+      utensils: normalizedUtensils,
       category,
       cuisine,
       diet_types: diet_types || [],

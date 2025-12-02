@@ -29,6 +29,7 @@ import {
   NotebookText,
   Wine,
   Slice,
+  Utensils,
 } from "lucide-react";
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import type {
@@ -228,6 +229,11 @@ export function RecipeDetailView({
     referenceText.length > 0 && UrlDetector.isValidUrl(referenceText);
   const pairingWineText = recipe.pairing_wine?.trim() ?? "";
   const notesText = recipe.notes?.trim() ?? "";
+  const utensils =
+    Array.isArray(recipe.utensils) && recipe.utensils.length > 0
+      ? recipe.utensils
+      : [];
+  const hasUtensils = utensils.length > 0;
 
   const renderInstructionsContent = (instructions: string) => {
     const processed = processInstructions(instructions || "");
@@ -378,7 +384,7 @@ export function RecipeDetailView({
                   {recipe.title}
                 </CardTitle>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3 header-meta-row">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <ChefHatIcon className="h-4 w-4" width={16} height={16} />
                     <span className="text-sm capitalize">
@@ -465,7 +471,7 @@ export function RecipeDetailView({
                 </div>
               )}
 
-              <div className="flex flex-wrap gap-2 mt-6">
+              <div className="flex flex-wrap gap-2 mt-6 print:mt-2">
                 {recipe.cuisine && (
                   <Badge variant="secondary" className="text-sm px-3 py-2">
                     <Tag className="mr-1 h-3 w-3" />
@@ -534,18 +540,16 @@ export function RecipeDetailView({
                 ))}
               </div>
 
-              {(hasTimeMeta || referenceText || pairingWineText) && (
-                <div className="mt-6 space-y-3 text-sm">
+              {(hasTimeMeta || referenceText || pairingWineText || hasUtensils) && (
+                <div className="metadata-block mt-6 print:mt-2 text-sm print:text-sm leading-relaxed flex flex-col gap-3 print:gap-2">
                   {hasTimeMeta && (
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                       {typeof recipe.prep_time === "number" ? (
                         <div className="flex items-center gap-2">
                           <Slice className="h-4 w-4 text-primary" />
-                          <span className="text-foreground">
-                            {`${recipe.prep_time} ${t("minutesShort")}. ${t(
-                              "prepTimeLabel"
-                            ).toLowerCase()}`}
-                          </span>
+                          <span className="text-foreground">{`${recipe.prep_time} ${t(
+                            "minutesShort"
+                          )}. ${t("prepTimeLabel").toLowerCase()}`}</span>
                         </div>
                       ) : null}
                       {typeof recipe.total_time === "number" ? (
@@ -602,6 +606,28 @@ export function RecipeDetailView({
                       <span className="text-foreground">{pairingWineText}</span>
                     </div>
                   )}
+
+                  {hasUtensils && (
+                    <div className="flex flex-col gap-2 text-left text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <Utensils className="h-4 w-4" />
+                        <span className="text-foreground font-medium">
+                          {t("utensilsLabel")}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-sm">
+                        {utensils.map((item) => (
+                          <Badge
+                            key={item}
+                            variant="secondary"
+                            className="text-xs px-3 py-1"
+                          >
+                            {item}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -641,7 +667,7 @@ export function RecipeDetailView({
               {displayRecipe.sections?.map((section, index) => (
                 <div key={section.id || index} className="print-section-page">
                   <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
-                    <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5">
+                    <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5 print:bg-muted/30 print:border print:border-muted">
                       <div className="space-y-2">
                         {section.title ? (
                           <p className="text-sm font-semibold text-foreground tracking-tight">
@@ -674,7 +700,7 @@ export function RecipeDetailView({
               hasSections ? "print:hidden" : ""
             }`}
           >
-            <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5">
+            <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5 print:bg-muted/30 print:border print:border-muted">
               <div className="flex flex-col gap-3 mb-4">
                 <h2 className="text-xl font-semibold">{t("ingredients")}</h2>
                 {onServingChange && (
@@ -770,7 +796,7 @@ export function RecipeDetailView({
       {(notesText || tNutrition) && (
         <div className="mt-8 grid gap-6 items-start lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
           {notesText && (
-            <Card className="print:shadow-none print:border self-start">
+            <Card className="self-start print:hidden">
               <CardContent className="px-4 py-6 md:px-8 md:py-8 lg:px-10">
                 <div className="flex items-start gap-3">
                   <NotebookText className="h-5 w-5 text-muted-foreground mt-0.5" />
