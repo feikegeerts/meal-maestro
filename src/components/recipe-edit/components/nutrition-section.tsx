@@ -303,9 +303,6 @@ export function NutritionSection({
                       <span className="text-foreground">
                         {t("results.perPortion")}
                       </span>
-                      <span className="text-[11px] font-medium text-muted-foreground sm:text-xs">
-                        {t("results.perPortionServings", { servings })}
-                      </span>
                     </span>
                   </div>
                   <div className="divide-y divide-border/40">

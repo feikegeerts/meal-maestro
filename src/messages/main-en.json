@@ -286,7 +286,6 @@
       "results": {
         "heading": "Nutrient",
         "perPortion": "Per portion",
-        "perPortionServings": "Per portion (serves {servings, number})",
         "confidence": "Confidence",
         "lastFetched": "Last fetched",
         "warnings": "Model notes"
