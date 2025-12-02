@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const nextJest = require("next/jest");
 
-const createJestConfig = nextJest({
+const makeJestConfig = nextJest({
   dir: "./",
 });
 
@@ -11,6 +11,7 @@ const config = {
   testEnvironment: "node",
   testMatch: ["<rootDir>/src/__tests__/integration/**/*.test.{ts,tsx,js}"],
   setupFiles: [
+    "<rootDir>/src/test-setup/polyfills.ts",
     "<rootDir>/src/test-support/integration-env-setup.js",
     "<rootDir>/src/__tests__/msw-setup.js",
   ],
@@ -23,10 +24,21 @@ const config = {
     "^@/messages$": "<rootDir>/src/__mocks__/messages.ts",
   },
   transformIgnorePatterns: [
-    "node_modules/(?!(next-intl|use-intl)/)",
+    "node_modules/(?!.*(next-intl|use-intl|msw|@mswjs/interceptors|until-async)/)",
   ],
   maxWorkers: 1,
   testTimeout: 60000,
 };
 
-module.exports = createJestConfig(config);
+const customJestConfig = async () => {
+  const baseConfig = await makeJestConfig(config)();
+  return {
+    ...baseConfig,
+    transformIgnorePatterns: [
+      "node_modules/(?!.*(next-intl|use-intl|msw|@mswjs/interceptors|until-async)/)",
+      "^.+\\.module\\.(css|sass|scss)$",
+    ],
+  };
+};
+
+module.exports = customJestConfig;

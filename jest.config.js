@@ -2,7 +2,7 @@
 const nextJest = require("next/jest");
 
 /** @type {import('jest').Config} */
-const createJestConfig = nextJest({
+const makeJestConfig = nextJest({
   // Provide the path to your Next.js app to load next.config.js and .env files
   dir: "./",
 });
@@ -13,7 +13,10 @@ const config = {
   coverageProvider: "v8",
   testEnvironment: "jest-fixed-jsdom",
   // Add more setup options before each test is run
-  setupFiles: ["<rootDir>/src/__tests__/msw-setup.js"],
+  setupFiles: [
+    "<rootDir>/src/test-setup/polyfills.ts",
+    "<rootDir>/src/__tests__/msw-setup.js",
+  ],
   setupFilesAfterEnv: ["<rootDir>/src/__tests__/setup.ts"],
   modulePathIgnorePatterns: ["<rootDir>/old/"],
   testPathIgnorePatterns: [
@@ -34,7 +37,9 @@ const config = {
   },
   // Transform ESM modules
   transformIgnorePatterns: [
-    "node_modules/(?!(next-intl|use-intl)/)"
+    // Jest 30 doesn't transpile ESM-only deps in node_modules by default.
+    // Allowlist msw + until-async (pnpm nested paths included) so their ESM exports get transformed to CJS.
+    "node_modules/(?!.*(next-intl|use-intl|msw|@mswjs/interceptors|until-async)/)"
   ],
   // CI-specific optimizations
   maxWorkers: process.env.CI ? 1 : "50%",
@@ -57,4 +62,15 @@ const config = {
   },
 };
 
-module.exports = createJestConfig(config);
+const customJestConfig = async () => {
+  const baseConfig = await makeJestConfig(config)();
+  return {
+    ...baseConfig,
+    transformIgnorePatterns: [
+      "node_modules/(?!.*(next-intl|use-intl|msw|@mswjs/interceptors|until-async)/)",
+      "^.+\\.module\\.(css|sass|scss)$",
+    ],
+  };
+};
+
+module.exports = customJestConfig;
