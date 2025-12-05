@@ -6,7 +6,7 @@ export interface DetectedUrl {
 }
 
 export class UrlDetector {
-  private static readonly URL_REGEX = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+  private static readonly URL_REGEX = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/gi;
   
   private static readonly RECIPE_SITE_INDICATORS = [
     'recipe',

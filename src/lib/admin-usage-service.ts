@@ -230,13 +230,15 @@ export class AdminUsageService {
             break;
           case "week":
             // Get Monday of the week using date-only arithmetic (no time components)
-            const dateOnly = new Date(timestamp.getFullYear(), timestamp.getMonth(), timestamp.getDate());
-            const dayOfWeek = dateOnly.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-            const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert Sunday to 6, others to dayOfWeek - 1
-            const mondayDate = new Date(dateOnly);
-            mondayDate.setDate(dateOnly.getDate() - daysToSubtract);
-            groupKey = mondayDate.toISOString().split("T")[0];
-            break;
+            {
+              const dateOnly = new Date(timestamp.getFullYear(), timestamp.getMonth(), timestamp.getDate());
+              const dayOfWeek = dateOnly.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+              const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert Sunday to 6, others to dayOfWeek - 1
+              const mondayDate = new Date(dateOnly);
+              mondayDate.setDate(dateOnly.getDate() - daysToSubtract);
+              groupKey = mondayDate.toISOString().split("T")[0];
+              break;
+            }
           case "month":
             groupKey = `${timestamp.getFullYear()}-${String(
               timestamp.getMonth() + 1

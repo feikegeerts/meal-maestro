@@ -16,8 +16,6 @@ export async function GET(request: NextRequest) {
     return authResult;
   }
 
-  const { } = authResult;
-
   try {
     const { searchParams } = new URL(request.url);
 

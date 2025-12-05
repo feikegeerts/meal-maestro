@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { routing } from "./i18n/routing";
-import { setRequestLocale } from "next-intl/server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -71,21 +70,8 @@ export const viewport: Viewport = {
   ],
 };
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
-}
-
-export default async function RootLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
-
-  // Enable static rendering
-  setRequestLocale(locale);
+export default function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = routing.defaultLocale;
 
   return (
     <html lang={locale} suppressHydrationWarning>

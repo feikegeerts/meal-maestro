@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate unit name format (alphanumeric, spaces, hyphens, dots)
-    if (!/^[a-zA-Z0-9\s\-\.]+$/.test(unitName)) {
+    if (!/^[a-zA-Z0-9\s.-]+$/.test(unitName)) {
       return NextResponse.json(
         { error: 'Unit name can only contain letters, numbers, spaces, hyphens, and dots' },
         { status: 400 }

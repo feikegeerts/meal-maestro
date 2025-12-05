@@ -344,12 +344,18 @@ export async function POST(request: NextRequest) {
           case 'pieces':
             normalizedUnit = null; // Remove unit for countable items
             break;
-          default:
+          default: {
             // Keep valid units, set invalid ones to null
             const validUnits = ['g', 'kg', 'ml', 'l', 'tbsp', 'tsp', 'clove'];
-            if (!validUnits.includes(normalizedUnit) && normalizedUnit !== 'naar smaak' && normalizedUnit !== 'to taste') {
+            if (
+              !validUnits.includes(normalizedUnit) &&
+              normalizedUnit !== 'naar smaak' &&
+              normalizedUnit !== 'to taste'
+            ) {
               normalizedUnit = null;
             }
+            break;
+          }
         }
       }
       

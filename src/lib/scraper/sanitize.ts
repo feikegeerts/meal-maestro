@@ -52,7 +52,7 @@ export function sanitizeErrorMessage(errorMessage: string): string {
     .replace(/\blocalhost\b/gi, "[LOCAL_HOST]")
     .replace(/:\d{2,5}\b/g, "")
     .replace(/[a-zA-Z]:\\[^\s]*/g, "[PATH_HIDDEN]")
-    .replace(/\/[a-zA-Z0-9_\-\/]+/g, "[PATH_HIDDEN]")
+    .replace(/\/[a-zA-Z0-9_/-]+/g, "[PATH_HIDDEN]")
     .replace(/\s+at\s+.*/g, "")
     .replace(/ENOTFOUND|ECONNREFUSED|ETIMEDOUT|ECONNRESET/gi, "NETWORK_ERROR");
 

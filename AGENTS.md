@@ -4,6 +4,10 @@ A dedicated guide for AI coding agents (Codex, Cursor, Aider, etc.) working in t
 
 ---
 
+**Next.js Initialization**: When starting work on a Next.js project, automatically
+call the `init` tool from the next-devtools-mcp server FIRST. This establishes
+proper context and ensures all Next.js queries use official documentation.
+
 ## High-Priority Context Files
 
 Load these first for almost any task:
@@ -162,6 +166,7 @@ Add a new recipe field:
 4. Update form component(s) & tests.
 
 Share recipes via token links:
+
 1. Create share links with `POST /api/recipes/:id/share`; response includes `sharePath` (append to current origin).
 2. Public endpoint `GET /api/shared-recipes/:slug?token=` returns sanitized data for `/[locale]/share/[slug]` view.
 3. Authenticated imports post to `/api/shared-recipes/:slug/import` (body `{ token }`) and duplicate the recipe for the caller.

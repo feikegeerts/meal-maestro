@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     const pageUrl = payload.user.user_metadata?.pageUrl as string;
     let pageLocale: string | undefined;
     if (pageUrl) {
-      const pageUrlMatch = pageUrl.match(/\/([a-z]{2})\/[^\/]*$/);
+      const pageUrlMatch = pageUrl.match(/\/([a-z]{2})\/[^/]*$/);
       if (
         pageUrlMatch &&
         (pageUrlMatch[1] === "nl" || pageUrlMatch[1] === "en")
@@ -260,7 +260,7 @@ function buildConfirmationUrl(payload: SupabaseAuthHookPayload): string {
   const pageUrl = payload.user.user_metadata?.pageUrl as string;
   let detectedLocale = "en"; // default fallback
   if (pageUrl) {
-    const pageUrlMatch = pageUrl.match(/\/([a-z]{2})\/[^\/]*$/);
+    const pageUrlMatch = pageUrl.match(/\/([a-z]{2})\/[^/]*$/);
     if (
       pageUrlMatch &&
       (pageUrlMatch[1] === "nl" || pageUrlMatch[1] === "en")

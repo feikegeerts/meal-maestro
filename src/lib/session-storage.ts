@@ -45,5 +45,7 @@ export function removeStored(key: string): void {
   if (typeof window === "undefined") return;
   try {
     sessionStorage.removeItem(key);
-  } catch {}
+  } catch {
+    // Ignore storage removal failures (e.g., private mode)
+  }
 }

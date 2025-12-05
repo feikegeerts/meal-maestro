@@ -200,7 +200,7 @@ export class SecurityTestUtils {
       /\b[\w-]+\.local\b/i, // Local hostnames  
       /:\d{2,5}\b/, // Port numbers
       /[a-zA-Z]:\\[^\s]*/, // Windows file paths
-      /\/[a-zA-Z0-9_\-\/]+/, // Unix file paths
+      /\/[a-zA-Z0-9_/-]+/, // Unix file paths
       /at\s+.*/, // Stack traces
       /ENOTFOUND|ECONNREFUSED|ETIMEDOUT|ECONNRESET/i // Detailed network errors
     ];

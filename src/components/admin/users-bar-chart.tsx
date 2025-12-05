@@ -60,20 +60,24 @@ export function UsersBarChart({ data, timePeriod, loading }: UsersBarChartProps)
           break;
         case 'week':
           // For weeks, show "Week of MMM DD"
-          const weekDate = new Date(item.date).toLocaleDateString(localeCode, { 
-            month: 'short', 
-            day: 'numeric' 
-          });
-          displayDate = t('weekOf', { date: weekDate });
-          break;
+          {
+            const weekDate = new Date(item.date).toLocaleDateString(localeCode, { 
+              month: 'short', 
+              day: 'numeric' 
+            });
+            displayDate = t('weekOf', { date: weekDate });
+            break;
+          }
         case 'month':
           // For months, show "MMM YYYY"
-          const [year, month] = item.date.split('-');
-          displayDate = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString(localeCode, { 
-            month: 'short', 
-            year: 'numeric' 
-          });
-          break;
+          {
+            const [year, month] = item.date.split('-');
+            displayDate = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString(localeCode, { 
+              month: 'short', 
+              year: 'numeric' 
+            });
+            break;
+          }
         default:
           displayDate = item.date;
       }
