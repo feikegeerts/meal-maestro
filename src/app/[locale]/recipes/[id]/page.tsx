@@ -23,7 +23,6 @@ import {
 } from "@/utils/ingredient-pluralization";
 import { RecipeImageUpload } from "@/components/recipe-image-upload";
 import { RecipeDetailView } from "@/components/recipes/recipe-detail-view";
-import { ShareRecipeButton } from "@/components/recipes/share-recipe-button";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
@@ -383,12 +382,6 @@ export default function RecipeDetailPage() {
           currentImageUrl={recipe.image_url}
           recipeTitle={recipe.title}
           onImageUpdated={handleImageUpdated}
-        />
-      }
-      additionalActionButtons={
-        <ShareRecipeButton
-          recipeId={recipe.id}
-          disabled={!!actionLoading}
         />
       }
     />

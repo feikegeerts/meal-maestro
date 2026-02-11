@@ -302,7 +302,7 @@ function buildConfirmationUrl(payload: SupabaseAuthHookPayload): string {
 
 // Health check endpoint for testing hook configuration
 export async function GET() {
-  let webhookSecretConfigured = false;
+  let webhookSecretConfigured: boolean;
   try {
     const configService = ConfigurationService.getInstance();
     configService.getWebhookConfig();

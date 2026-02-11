@@ -165,13 +165,6 @@ Add a new recipe field:
 3. Migrate DB if persisted (create migration in `supabase/migrations/`).
 4. Update form component(s) & tests.
 
-Share recipes via token links:
-
-1. Create share links with `POST /api/recipes/:id/share`; response includes `sharePath` (append to current origin).
-2. Public endpoint `GET /api/shared-recipes/:slug?token=` returns sanitized data for `/[locale]/share/[slug]` view.
-3. Authenticated imports post to `/api/shared-recipes/:slug/import` (body `{ token }`) and duplicate the recipe for the caller.
-4. Shared images are copied into the recipient’s storage folder; import warns but still completes if the copy fails.
-
 Add unit conversion:
 
 1. Extend conversion map.

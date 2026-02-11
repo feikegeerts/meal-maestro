@@ -115,7 +115,8 @@ export class LocalizationService {
       throw new Error(
         `Failed to get email locale: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
+        { cause: error }
       );
     }
   }
@@ -139,7 +140,8 @@ export class LocalizationService {
       throw new Error(
         `Failed to get common strings: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
+        { cause: error }
       );
     }
   }
@@ -206,7 +208,8 @@ export class LocalizationService {
         throw new Error(
           `Failed to load locale file for "${locale}": ${
             error instanceof Error ? error.message : "Unknown error"
-          }`
+          }`,
+          { cause: error }
         );
       }
     }

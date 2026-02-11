@@ -61,7 +61,6 @@ export async function compressImage(
       // Iteratively compress until target size is reached
       let currentQuality = quality;
       let bestResult: CompressionResult | null = null;
-      let format = 'webp';
 
       // Try compression with different qualities
       while (currentQuality >= IMAGE_COMPRESSION_CONFIG.MIN_QUALITY) {
@@ -71,6 +70,7 @@ export async function compressImage(
 
         // Try WebP first, fallback to JPEG if not supported
         let compressedDataUrl: string;
+        let format: 'webp' | 'jpeg';
         try {
           compressedDataUrl = canvas.toDataURL(IMAGE_COMPRESSION_CONFIG.PREFERRED_OUTPUT_FORMAT, currentQuality);
           // Check if WebP is actually supported
@@ -139,16 +139,13 @@ function calculateNewDimensions(
   maxWidth: number,
   maxHeight: number
 ): { width: number; height: number } {
-  let width = originalWidth;
-  let height = originalHeight;
-
   // Calculate scaling factor
   const widthRatio = maxWidth / originalWidth;
   const heightRatio = maxHeight / originalHeight;
   const scale = Math.min(widthRatio, heightRatio, 1); // Don't upscale
 
-  width = Math.round(originalWidth * scale);
-  height = Math.round(originalHeight * scale);
+  const width = Math.round(originalWidth * scale);
+  const height = Math.round(originalHeight * scale);
 
   return { width, height };
 }

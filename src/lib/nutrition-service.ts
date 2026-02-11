@@ -241,7 +241,8 @@ export class NutritionService {
       throw new Error(
         `Failed to parse nutrition response: ${
           error instanceof Error ? error.message : "unknown error"
-        }`
+        }`,
+        { cause: error }
       );
     }
 

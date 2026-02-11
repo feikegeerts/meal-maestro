@@ -50,7 +50,7 @@ function LoginContent() {
     // Handle authentication errors from callback
     const error = searchParams.get('error');
     if (error && !user) {
-      let errorMessage = '';
+      let errorMessage: string;
       switch (error) {
         case 'invalid_link':
           errorMessage = tAuth('invalidLink');

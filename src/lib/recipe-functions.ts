@@ -641,7 +641,8 @@ export async function updateRecipeForm(
     throw new Error(
       `Failed to update recipe form: ${
         error instanceof Error ? error.message : "Unknown error"
-      }`
+      }`,
+      { cause: error }
     );
   }
 }
@@ -806,7 +807,7 @@ export async function extractRecipeFromUrl(
               { amountStr, unit, name }
             );
 
-            let amount: number | null = null;
+            let amount: number;
 
             // Parse fraction or decimal
             if (amountStr.includes("/")) {

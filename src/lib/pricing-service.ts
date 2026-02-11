@@ -38,7 +38,7 @@ export class PricingService {
         return cachedResult;
       }
     }
-    let result: ModelPricing | null = null;
+    let result: ModelPricing | null;
     
     if (!isValidModel(model)) {
       if (process.env.NODE_ENV !== 'test') {

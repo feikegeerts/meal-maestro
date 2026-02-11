@@ -120,7 +120,7 @@ export default function EditRecipePage() {
         router.push("/login");
       }
 
-      throw new Error(message);
+      throw new Error(message, { cause: error });
     }
   };
 
