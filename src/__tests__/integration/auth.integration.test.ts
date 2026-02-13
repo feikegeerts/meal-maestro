@@ -1,102 +1,130 @@
+/**
+ * Auth integration tests for Neon Auth (Better Auth)
+ *
+ * Tests requireAuth() which delegates to auth.getSession() from @/lib/auth/server.
+ * The @/db mock prevents neon() from being called at import time.
+ */
+
+// Mock @/db to prevent neon() from being called at import time
+jest.mock("@/db", () => ({
+  db: {
+    select: jest.fn().mockReturnValue({
+      from: jest.fn().mockReturnValue({
+        where: jest.fn().mockReturnValue({
+          limit: jest.fn().mockResolvedValue([]),
+        }),
+      }),
+    }),
+  },
+}));
+
+// Mock auth.getSession() — the core of Neon Auth
+// Factory-internal jest.fn() avoids hoisting issues with const references.
+// We access it via the imported `auth` object after import.
+jest.mock("@/lib/auth/server", () => ({
+  auth: {
+    getSession: jest.fn(),
+  },
+}));
+
 import { requireAuth } from "@/lib/auth-server";
-import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { auth } from "@/lib/auth/server";
 
-jest.mock("@supabase/supabase-js", () => ({
-  createClient: jest.fn(),
-}));
+// auth.getSession is the jest.fn() created inside the factory
+const mockGetSession = auth.getSession as jest.Mock;
 
-jest.mock("next/headers", () => ({
-  cookies: jest.fn(),
-}));
-
-const mockCookies = cookies as jest.Mock;
-const mockCreateClient = createClient as jest.Mock;
-
-describe("requireAuth (integration)", () => {
+describe("requireAuth (integration – Neon Auth)", () => {
   afterEach(() => {
     jest.restoreAllMocks();
-    mockCreateClient.mockReset();
+    mockGetSession.mockReset();
   });
 
-  it("returns 401 response when no auth cookies are set", async () => {
-    mockCookies.mockResolvedValue({
-      get: jest.fn().mockReturnValue(undefined),
-      delete: jest.fn(),
-    });
+  it("returns 401 response when no session exists", async () => {
+    mockGetSession.mockResolvedValue({ data: null });
 
     const response = await requireAuth();
 
     expect(response).toBeInstanceOf(Response);
     expect((response as Response).status).toBe(401);
-    expect(mockCreateClient).not.toHaveBeenCalled();
+
+    const body = await (response as Response).json();
+    expect(body).toEqual({
+      error: "Authentication required",
+      code: "UNAUTHORIZED",
+    });
   });
 
-  it("creates session and returns user when tokens are valid", async () => {
-    const cookieStore = {
-      get: jest.fn((name: string) =>
-        name === "sb-access-token"
-          ? { value: "access-token" }
-          : name === "sb-refresh-token"
-            ? { value: "refresh-token" }
-            : undefined
-      ),
-      delete: jest.fn(),
-    };
-    mockCookies.mockResolvedValue(cookieStore);
+  it("returns 401 response when session has no user", async () => {
+    mockGetSession.mockResolvedValue({ data: { user: null } });
 
-    const auth = {
-      getUser: jest.fn().mockResolvedValue({
-        data: { user: { id: "user-1", email: "test@example.com" } },
-        error: null,
-      }),
-      setSession: jest.fn().mockResolvedValue({ data: null, error: null }),
-    };
-    const supabase = {
-      auth,
-      from: jest.fn(),
-    };
-    mockCreateClient.mockReturnValue(supabase);
+    const response = await requireAuth();
+
+    expect(response).toBeInstanceOf(Response);
+    expect((response as Response).status).toBe(401);
+  });
+
+  it("returns AuthResult with user when session is valid", async () => {
+    mockGetSession.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-1",
+          email: "test@example.com",
+          name: "Test User",
+          image: "https://example.com/avatar.png",
+        },
+      },
+    });
 
     const result = await requireAuth();
 
     expect(result).not.toBeInstanceOf(Response);
     if (!(result instanceof Response)) {
-      expect(result.user).toEqual(
-        expect.objectContaining({ id: "user-1", email: "test@example.com" })
-      );
-      expect(auth.setSession).toHaveBeenCalledWith({
-        access_token: "access-token",
-        refresh_token: "refresh-token",
+      expect(result.user).toEqual({
+        id: "user-1",
+        email: "test@example.com",
+        name: "Test User",
+        image: "https://example.com/avatar.png",
       });
     }
-    expect(mockCreateClient).toHaveBeenCalledTimes(2);
   });
 
-  it("clears cookies and returns 401 when Supabase rejects the token", async () => {
-    const cookieStore = {
-      get: jest.fn((name: string) =>
-        name === "sb-access-token" ? { value: "bad-token" } : undefined
-      ),
-      delete: jest.fn(),
-    };
-    mockCookies.mockResolvedValue(cookieStore);
+  it("returns AuthResult with optional fields undefined when not present", async () => {
+    mockGetSession.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-2",
+          email: "minimal@example.com",
+          name: null,
+          image: null,
+        },
+      },
+    });
 
-    const auth = {
-      getUser: jest.fn().mockResolvedValue({
-        data: { user: null },
-        error: { message: "invalid" },
-      }),
-      setSession: jest.fn(),
-    };
-    const supabase = { auth, from: jest.fn() };
-    mockCreateClient.mockReturnValue(supabase);
+    const result = await requireAuth();
+
+    expect(result).not.toBeInstanceOf(Response);
+    if (!(result instanceof Response)) {
+      expect(result.user).toEqual({
+        id: "user-2",
+        email: "minimal@example.com",
+        name: undefined,
+        image: undefined,
+      });
+    }
+  });
+
+  it("returns 401 when getSession throws an error", async () => {
+    const consoleSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    mockGetSession.mockRejectedValue(new Error("Session fetch failed"));
 
     const response = await requireAuth();
 
     expect(response).toBeInstanceOf(Response);
     expect((response as Response).status).toBe(401);
-    expect(cookieStore.delete).toHaveBeenCalledWith("sb-access-token");
-    expect(cookieStore.delete).toHaveBeenCalledWith("sb-refresh-token");
+
+    consoleSpy.mockRestore();
   });
 });

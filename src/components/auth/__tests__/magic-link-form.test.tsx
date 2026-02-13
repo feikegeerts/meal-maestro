@@ -6,8 +6,15 @@ import { AuthProvider } from "../../../lib/auth-context";
 import { server } from "../../../__mocks__/server";
 import { toast } from 'sonner';
 
-// Import the mocked supabase to unmock specific methods
-jest.mock("../../../lib/supabase");
+// Mock auth client to avoid ESM dependency chain (@neondatabase/auth → better-auth → jose, nanostores)
+jest.mock("@/lib/auth/client", () => ({
+  authClient: {
+    useSession: jest.fn().mockReturnValue({ data: null, isPending: false }),
+    signIn: { social: jest.fn() },
+    emailOtp: { sendVerificationOtp: jest.fn().mockResolvedValue({ error: null }) },
+    signOut: jest.fn(),
+  },
+}));
 
 // Mock Sonner toast
 jest.mock('sonner', () => ({

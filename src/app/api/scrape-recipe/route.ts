@@ -3,7 +3,9 @@ import { requireAuth } from "@/lib/auth-server";
 import { RecipeScraper } from "@/lib/recipe-scraper";
 import { UrlDetector } from "@/lib/url-detector";
 import { usageTrackingService } from "@/lib/usage-tracking-service";
-import { createClient } from "@supabase/supabase-js";
+import { db } from "@/db";
+import { rateLimitUser } from "@/db/schema";
+import { and, eq, gte, lt, count } from "drizzle-orm";
 
 interface ScrapeRequest {
   url: string;
@@ -51,11 +53,11 @@ export async function POST(request: NextRequest) {
           status: 429,
           headers: {
             "X-RateLimit-Reset": new Date(
-              rateLimitCheck.resetTime
+              rateLimitCheck.resetTime,
             ).toISOString(),
             "Retry-After": rateLimitCheck.retryAfter.toString(),
           },
-        }
+        },
       );
     }
 
@@ -65,7 +67,7 @@ export async function POST(request: NextRequest) {
     if (typeof url !== "string" || url === null || url === undefined) {
       return NextResponse.json(
         { success: false, error: "URL is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -75,7 +77,7 @@ export async function POST(request: NextRequest) {
     if (trimmedUrl === "" || !UrlDetector.isValidUrl(trimmedUrl)) {
       return NextResponse.json(
         { success: false, error: "Invalid URL format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -84,7 +86,7 @@ export async function POST(request: NextRequest) {
 
     // Log the scraping attempt for monitoring
     console.log(
-      `🔍 [Recipe Scraper] Attempting to scrape: ${normalizedUrl} for user ${user.id}`
+      `🔍 [Recipe Scraper] Attempting to scrape: ${normalizedUrl} for user ${user.id}`,
     );
 
     // Perform the scraping
@@ -99,7 +101,7 @@ export async function POST(request: NextRequest) {
         promptTokens: 0,
         completionTokens: 0,
         totalTokens: 0,
-      }
+      },
     );
 
     if (!usageLog.success) {
@@ -108,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     if (!scrapeResult.success) {
       console.warn(
-        `🟡 [Recipe Scraper] Failed to scrape ${normalizedUrl}: ${scrapeResult.error}`
+        `🟡 [Recipe Scraper] Failed to scrape ${normalizedUrl}: ${scrapeResult.error}`,
       );
       return NextResponse.json(
         {
@@ -117,7 +119,7 @@ export async function POST(request: NextRequest) {
             scrapeResult.error ||
             "Failed to extract recipe data from the provided URL",
         },
-        { status: 422 }
+        { status: 422 },
       );
     }
 
@@ -126,14 +128,18 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         ...scrapeResult.data,
-        source: scrapeResult.source as "json-ld" | "meta-tags" | "html-parsing" | "text-extraction",
+        source: scrapeResult.source as
+          | "json-ld"
+          | "meta-tags"
+          | "html-parsing"
+          | "text-extraction",
         url: normalizedUrl,
         domainDescription: UrlDetector.getDomainDescription(normalizedUrl),
       },
     };
 
     console.log(
-      `✅ [Recipe Scraper] Successfully scraped recipe from ${normalizedUrl} using ${scrapeResult.source}`
+      `✅ [Recipe Scraper] Successfully scraped recipe from ${normalizedUrl} using ${scrapeResult.source}`,
     );
 
     return NextResponse.json(response);
@@ -151,7 +157,7 @@ export async function POST(request: NextRequest) {
             success: false,
             error: "Request timeout - the website took too long to respond",
           },
-          { status: 408 }
+          { status: 408 },
         );
       }
 
@@ -162,21 +168,24 @@ export async function POST(request: NextRequest) {
             error:
               "Failed to fetch the webpage. Please check the URL and try again.",
           },
-          { status: 502 }
+          { status: 502 },
         );
       }
 
       if (error.message.includes("too large")) {
         return NextResponse.json(
           { success: false, error: "The webpage is too large to process" },
-          { status: 413 }
+          { status: 413 },
         );
       }
     }
 
     return NextResponse.json(
-      { success: false, error: "Internal server error while scraping recipe" },
-      { status: 500 }
+      {
+        success: false,
+        error: "Internal server error while scraping recipe",
+      },
+      { status: 500 },
     );
   }
 }
@@ -184,23 +193,16 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json(
     { error: "Method not allowed. Use POST to scrape a recipe." },
-    { status: 405 }
+    { status: 405 },
   );
 }
 
-// Secure rate limiting using authenticated session (no service key needed)
+// Secure rate limiting using Drizzle
 async function checkRateLimit(userId: string): Promise<{
   allowed: boolean;
   retryAfter: number;
   resetTime: number;
 }> {
-  // Use the user's authenticated session for database operations
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-  // Create client with user context (will respect RLS policies)
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
   const now = Date.now();
   const windowMs = 60 * 1000; // 1 minute window
   const maxRequests = 10;
@@ -209,28 +211,23 @@ async function checkRateLimit(userId: string): Promise<{
   try {
     // Clean up old entries (older than 1 hour to keep table clean)
     const oneHourAgo = now - 60 * 60 * 1000;
-    await supabase.from("rate_limit_user").delete().lt("timestamp", oneHourAgo);
+    await db
+      .delete(rateLimitUser)
+      .where(lt(rateLimitUser.timestamp, BigInt(oneHourAgo)));
 
     // Get current requests in window
-    const { data: attempts, error } = await supabase
-      .from("rate_limit_user")
-      .select("timestamp")
-      .eq("user_id", userId)
-      .eq("endpoint", "/api/scrape-recipe")
-      .gte("timestamp", windowStart)
-      .order("timestamp", { ascending: false });
+    const [result] = await db
+      .select({ count: count() })
+      .from(rateLimitUser)
+      .where(
+        and(
+          eq(rateLimitUser.userId, userId),
+          eq(rateLimitUser.endpoint, "/api/scrape-recipe"),
+          gte(rateLimitUser.timestamp, BigInt(windowStart)),
+        ),
+      );
 
-    if (error) {
-      // If database fails, allow request (fail open for availability)
-      console.warn("Rate limit check failed, allowing request:", error);
-      return {
-        allowed: true,
-        retryAfter: 0,
-        resetTime: now + windowMs,
-      };
-    }
-
-    const currentCount = attempts?.length || 0;
+    const currentCount = result?.count ?? 0;
 
     if (currentCount >= maxRequests) {
       // Rate limit exceeded
@@ -243,10 +240,10 @@ async function checkRateLimit(userId: string): Promise<{
     }
 
     // Record this attempt
-    await supabase.from("rate_limit_user").insert({
-      user_id: userId,
+    await db.insert(rateLimitUser).values({
+      userId,
       endpoint: "/api/scrape-recipe",
-      timestamp: now,
+      timestamp: BigInt(now),
     });
 
     return {

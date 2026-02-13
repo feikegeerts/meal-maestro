@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
-  const { user, client: supabase } = authResult;
+  const { user } = authResult;
   let detectedLocale: string | undefined;
 
   try {
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     detectedLocale = userLocale;
 
     // Create chat service and process message
-    const chatService = new RecipeChatService(user.id, userLocale, supabase);
+    const chatService = new RecipeChatService(user.id, userLocale);
     const result = await chatService.processMessage({
       message,
       conversation_history,

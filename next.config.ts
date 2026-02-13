@@ -25,6 +25,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/storage/v1/object/sign/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.meal-maestro.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };

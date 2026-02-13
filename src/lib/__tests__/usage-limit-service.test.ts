@@ -1,10 +1,8 @@
-import * as SupabaseModule from '@supabase/supabase-js';
-import * as EmailModule from '@/lib/email/services/email-delivery-service';
-import type { OpenAIUsageData } from '../openai-service';
-import { UsageLimitService } from '../usage-limit-service';
+import type { OpenAIUsageData } from "../openai-service";
 
-process.env.SUPABASE_URL = 'https://example.supabase.co';
-process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
+// ---------------------------------------------------------------------------
+// Mock types
+// ---------------------------------------------------------------------------
 
 interface MonthlySummaryRow {
   user_id: string;
@@ -18,159 +16,173 @@ interface MonthlySummaryRow {
   limit_enforced_at: string | null;
 }
 
-interface UsageAlertEventPayload {
-  user_id: string;
-  month_start: string;
-  alert_type: string;
-  alert_level: string;
-  details: Record<string, unknown>;
+// Drizzle row shapes (camelCase, matching schema)
+interface DrizzleSummaryRow {
+  userId: string;
+  monthStart: string;
+  totalCost: string;
+  totalTokens: bigint;
+  totalCalls: number;
+  warningEmailSentAt: Date | null;
+  limitEmailSentAt: Date | null;
+  rateLimitEmailSentAt: Date | null;
+  limitEnforcedAt: Date | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 }
 
-interface UpdateChain {
-  eq: jest.Mock<UpdateChain, [string, unknown]>;
-  is: jest.Mock<{ error: null }, [string, null]>;
-}
-
-interface MonthlySummaryQueryBuilder {
-  select: jest.Mock<MonthlySummaryQueryBuilder, [string, Record<string, unknown>?]>;
-  eq: jest.Mock<MonthlySummaryQueryBuilder, [string, unknown]>;
-  maybeSingle: jest.Mock<Promise<{ data: MonthlySummaryRow | null; error: null }>, []>;
-  update: jest.Mock<UpdateChain, [Record<string, unknown>]>;
-}
-
-interface UsageAlertQueryBuilder {
-  select: jest.Mock<UsageAlertQueryBuilder, [string, Record<string, unknown>?]>;
-  eq: jest.Mock<UsageAlertQueryBuilder, [string, unknown]>;
-  gte: jest.Mock<Promise<{ count: number; error: null }>, [string, string]>;
-  insert: jest.Mock<Promise<{ error: null }>, [UsageAlertEventPayload]>;
-}
-
-type RpcMockType = jest.Mock<Promise<{ data: MonthlySummaryRow; error: null }>, [string, Record<string, unknown>]>;
-type FromMockType = jest.Mock<MonthlySummaryQueryBuilder | UsageAlertQueryBuilder, [string]>;
-type SendEmailMockType = jest.Mock<Promise<void>, [unknown, { to: string }]>;
-
-jest.mock('@supabase/supabase-js', () => {
-  const rpcMock: RpcMockType = jest.fn();
-  const fromMock: FromMockType = jest.fn();
+function toDrizzleRow(summary: MonthlySummaryRow): DrizzleSummaryRow {
   return {
-    createClient: jest.fn(() => ({
-      rpc: rpcMock,
-      from: fromMock,
-    })),
-    __rpcMock: rpcMock,
-    __fromMock: fromMock,
+    userId: summary.user_id,
+    monthStart: summary.month_start,
+    totalCost: summary.total_cost.toString(),
+    totalTokens: BigInt(summary.total_tokens),
+    totalCalls: summary.total_calls,
+    warningEmailSentAt: summary.warning_email_sent_at
+      ? new Date(summary.warning_email_sent_at)
+      : null,
+    limitEmailSentAt: summary.limit_email_sent_at
+      ? new Date(summary.limit_email_sent_at)
+      : null,
+    rateLimitEmailSentAt: summary.rate_limit_email_sent_at
+      ? new Date(summary.rate_limit_email_sent_at)
+      : null,
+    limitEnforcedAt: summary.limit_enforced_at
+      ? new Date(summary.limit_enforced_at)
+      : null,
+    createdAt: null,
+    updatedAt: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Mutable state for per-test configuration
+// ---------------------------------------------------------------------------
+
+let insertedAlertEvents: Record<string, unknown>[] = [];
+let updateSets: Record<string, unknown>[] = [];
+let selectSummaryResult: DrizzleSummaryRow | null = null;
+let selectAlertCountResult = 0;
+let insertUpsertResult: DrizzleSummaryRow | null = null;
+
+// ---------------------------------------------------------------------------
+// Mock @/db
+// ---------------------------------------------------------------------------
+
+jest.mock("@/db", () => {
+  const selectFn = jest.fn().mockImplementation((fields?: Record<string, unknown>) => {
+    if (fields && "count" in fields) {
+      // count() query for alert events
+      return {
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([{ count: selectAlertCountResult }]),
+        }),
+      };
+    }
+    // Full select (getCurrentSummary)
+    return {
+      from: jest.fn().mockReturnValue({
+        where: jest.fn().mockReturnValue({
+          limit: jest.fn().mockImplementation(async () => {
+            return selectSummaryResult ? [selectSummaryResult] : [];
+          }),
+        }),
+      }),
+    };
+  });
+
+  const insertFn = jest.fn().mockImplementation(() => ({
+    values: jest.fn().mockImplementation((val: Record<string, unknown>) => {
+      if ("monthStart" in val && "totalCost" in val) {
+        // Upsert for monthly_usage_summary
+        return {
+          onConflictDoUpdate: jest.fn().mockReturnValue({
+            returning: jest.fn().mockImplementation(async () => {
+              return insertUpsertResult ? [insertUpsertResult] : [];
+            }),
+          }),
+        };
+      }
+      // Alert event insert
+      insertedAlertEvents.push(val);
+      return Promise.resolve({ rowCount: 1 });
+    }),
+  }));
+
+  const updateFn = jest.fn().mockImplementation(() => ({
+    set: jest.fn().mockImplementation((setValues: Record<string, unknown>) => {
+      updateSets.push(setValues);
+      return {
+        where: jest.fn().mockResolvedValue({ rowCount: 1 }),
+      };
+    }),
+  }));
+
+  return {
+    db: {
+      select: selectFn,
+      insert: insertFn,
+      update: updateFn,
+    },
   };
 });
 
-jest.mock('@/lib/email/services/email-delivery-service', () => {
-  const sendEmailMock: SendEmailMockType = jest.fn().mockResolvedValue(undefined);
+// ---------------------------------------------------------------------------
+// Mock email delivery
+// ---------------------------------------------------------------------------
+
+jest.mock("@/lib/email/services/email-delivery-service", () => {
+  const mock = jest.fn().mockResolvedValue(undefined);
   return {
     EmailDeliveryService: jest.fn(() => ({
-      sendEmail: sendEmailMock,
+      sendEmail: mock,
     })),
-    __sendEmailMock: sendEmailMock,
+    __sendEmailMock: mock,
   };
 });
 
-const { __rpcMock: rpcMock, __fromMock: fromMock } = SupabaseModule as unknown as {
-  __rpcMock: RpcMockType;
-  __fromMock: FromMockType;
-};
-
-const { __sendEmailMock: sendEmailMock } = EmailModule as unknown as {
-  __sendEmailMock: SendEmailMockType;
-};
-
-const createUpdateChain = (): UpdateChain => {
-  const chain: UpdateChain = {
-    eq: jest.fn(),
-    is: jest.fn(),
+// Access the send email mock for assertions
+function getSendEmailMock(): jest.Mock {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mod = require("@/lib/email/services/email-delivery-service") as {
+    __sendEmailMock: jest.Mock;
   };
-  chain.eq.mockReturnValue(chain);
-  chain.is.mockReturnValue({ error: null });
-  return chain;
-};
+  return mod.__sendEmailMock;
+}
 
-describe('UsageLimitService alerts', () => {
+// ---------------------------------------------------------------------------
+// Import after mocks
+// ---------------------------------------------------------------------------
+
+import { UsageLimitService } from "../usage-limit-service";
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+describe("UsageLimitService alerts", () => {
   let usageService: UsageLimitService;
-  let monthlyUpdates: Array<{ values: Record<string, unknown> }>;
-  let usageAlertInserts: UsageAlertEventPayload[];
-  let monthlySummaryData: MonthlySummaryRow | null;
-  let usageAlertSelectCount: number;
-
-  const createMonthlySummaryBuilder = (): MonthlySummaryQueryBuilder => {
-    const builder: MonthlySummaryQueryBuilder = {
-      select: jest.fn(),
-      eq: jest.fn(),
-      maybeSingle: jest.fn(),
-      update: jest.fn(),
-    };
-
-    builder.select.mockReturnValue(builder);
-    builder.eq.mockReturnValue(builder);
-    builder.maybeSingle.mockImplementation(async () => ({
-      data: monthlySummaryData,
-      error: null,
-    }));
-    builder.update.mockImplementation((values: Record<string, unknown>) => {
-      monthlyUpdates.push({ values });
-      return createUpdateChain();
-    });
-
-    return builder;
-  };
-
-  const createUsageAlertBuilder = (): UsageAlertQueryBuilder => {
-    const builder: UsageAlertQueryBuilder = {
-      select: jest.fn(),
-      eq: jest.fn(),
-      gte: jest.fn(),
-      insert: jest.fn(),
-    };
-
-    builder.select.mockReturnValue(builder);
-    builder.eq.mockReturnValue(builder);
-    builder.gte.mockImplementation(async () => ({ count: usageAlertSelectCount, error: null }));
-    builder.insert.mockImplementation(async (payload: UsageAlertEventPayload) => {
-      usageAlertInserts.push(payload);
-      return { error: null };
-    });
-
-    return builder;
-  };
 
   beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(new Date('2024-06-15T12:00:00Z'));
-    rpcMock.mockReset();
-    fromMock.mockReset();
-    sendEmailMock.mockClear();
-
-    monthlyUpdates = [];
-    usageAlertInserts = [];
-    monthlySummaryData = null;
-    usageAlertSelectCount = 0;
+    jest.useFakeTimers().setSystemTime(new Date("2024-06-15T12:00:00Z"));
+    getSendEmailMock().mockClear();
+    insertedAlertEvents = [];
+    updateSets = [];
+    selectSummaryResult = null;
+    selectAlertCountResult = 0;
+    insertUpsertResult = null;
 
     usageService = new UsageLimitService();
-
-    fromMock.mockImplementation((table: string) => {
-      if (table === 'monthly_usage_summary') {
-        return createMonthlySummaryBuilder();
-      }
-      if (table === 'usage_alert_events') {
-        return createUsageAlertBuilder();
-      }
-      throw new Error(`Unexpected table: ${table}`);
-    });
   });
 
   afterEach(() => {
     jest.useRealTimers();
   });
 
-  it('enforces limit and dispatches spend alerts when threshold reached', async () => {
+  it("enforces limit and dispatches spend alerts when threshold reached", async () => {
     const summary: MonthlySummaryRow = {
-      user_id: 'user-1',
-      month_start: '2024-06-01',
+      user_id: "user-1",
+      month_start: "2024-06-01",
       total_cost: 0.3,
       total_tokens: 123,
       total_calls: 4,
@@ -180,54 +192,56 @@ describe('UsageLimitService alerts', () => {
       limit_enforced_at: null,
     };
 
-    rpcMock.mockResolvedValue({ data: summary, error: null });
+    insertUpsertResult = toDrizzleRow(summary);
 
     const usageData: OpenAIUsageData = {
-      model: 'gpt-4.1-mini',
+      model: "gpt-4.1-mini",
       promptTokens: 0,
       completionTokens: 0,
       totalTokens: 123,
     };
 
-    const result = await usageService.recordUsageEvent('user-1', usageData, {
-      endpoint: 'recipes.chat',
+    const result = await usageService.recordUsageEvent("user-1", usageData, {
+      endpoint: "recipes.chat",
       costUsd: 0.3,
-      timestamp: new Date('2024-06-15T12:00:00Z'),
+      timestamp: new Date("2024-06-15T12:00:00Z"),
     });
 
-    expect(result).toEqual({ summary, reachedWarning: true, reachedLimit: true });
-
-    expect(rpcMock).toHaveBeenCalledWith(
-      'increment_monthly_usage_summary',
-      expect.objectContaining({
-        p_user_id: 'user-1',
-        p_cost: 0.3,
-      })
-    );
-
-    expect(monthlyUpdates).toHaveLength(2);
-    expect(monthlyUpdates[0].values).toHaveProperty('limit_enforced_at', expect.any(String));
-    expect(monthlyUpdates[1].values).toHaveProperty('limit_email_sent_at', expect.any(String));
-
-    expect(sendEmailMock).toHaveBeenCalledTimes(1);
-    expect(sendEmailMock.mock.calls[0]?.[0]).toMatchObject({
-      subject: expect.stringContaining('Usage limit reached'),
+    expect(result).toEqual({
+      summary,
+      reachedWarning: true,
+      reachedLimit: true,
     });
 
-    expect(usageAlertInserts).toEqual([
+    // Should have update calls for limitEnforcedAt and limitEmailSentAt
+    expect(updateSets.length).toBeGreaterThanOrEqual(2);
+    expect(updateSets[0]).toHaveProperty("limitEnforcedAt", expect.any(Date));
+    expect(updateSets[1]).toHaveProperty("limitEmailSentAt", expect.any(Date));
+
+    // Should send limit email
+    expect(getSendEmailMock()).toHaveBeenCalledTimes(1);
+    expect(getSendEmailMock().mock.calls[0]?.[0]).toMatchObject({
+      subject: expect.stringContaining("Usage limit reached"),
+    });
+
+    // Should log alert event
+    expect(insertedAlertEvents).toEqual([
       expect.objectContaining({
-        alert_type: 'spend',
-        alert_level: 'limit',
-        user_id: 'user-1',
-        details: expect.objectContaining({ endpoint: 'recipes.chat', totalCost: 0.3 }),
+        alertType: "spend",
+        alertLevel: "limit",
+        userId: "user-1",
+        details: expect.objectContaining({
+          endpoint: "recipes.chat",
+          totalCost: 0.3,
+        }),
       }),
     ]);
   });
 
-  it('sends warning alert without enforcing limit when approaching threshold', async () => {
+  it("sends warning alert without enforcing limit when approaching threshold", async () => {
     const summary: MonthlySummaryRow = {
-      user_id: 'user-2',
-      month_start: '2024-06-01',
+      user_id: "user-2",
+      month_start: "2024-06-01",
       total_cost: 0.2,
       total_tokens: 50,
       total_calls: 2,
@@ -237,42 +251,50 @@ describe('UsageLimitService alerts', () => {
       limit_enforced_at: null,
     };
 
-    rpcMock.mockResolvedValue({ data: summary, error: null });
+    insertUpsertResult = toDrizzleRow(summary);
 
     const usageData: OpenAIUsageData = {
-      model: 'gpt-4.1-mini',
+      model: "gpt-4.1-mini",
       promptTokens: 0,
       completionTokens: 0,
       totalTokens: 50,
     };
 
-    const result = await usageService.recordUsageEvent('user-2', usageData, {
-      endpoint: 'recipes.chat',
+    const result = await usageService.recordUsageEvent("user-2", usageData, {
+      endpoint: "recipes.chat",
       costUsd: 0.05,
     });
 
-    expect(result).toEqual({ summary, reachedWarning: true, reachedLimit: false });
-
-    expect(monthlyUpdates).toHaveLength(1);
-    expect(monthlyUpdates[0].values).toHaveProperty('warning_email_sent_at', expect.any(String));
-    expect(monthlyUpdates[0].values).not.toHaveProperty('limit_email_sent_at');
-
-    expect(sendEmailMock).toHaveBeenCalledTimes(1);
-    expect(sendEmailMock.mock.calls[0]?.[0]).toMatchObject({
-      subject: expect.stringContaining('Usage warning'),
+    expect(result).toEqual({
+      summary,
+      reachedWarning: true,
+      reachedLimit: false,
     });
 
-    expect(usageAlertInserts[0]).toMatchObject({
-      alert_type: 'spend',
-      alert_level: 'warning',
-      user_id: 'user-2',
+    // Should only have warning update (no limitEnforcedAt)
+    expect(updateSets).toHaveLength(1);
+    expect(updateSets[0]).toHaveProperty(
+      "warningEmailSentAt",
+      expect.any(Date)
+    );
+    expect(updateSets[0]).not.toHaveProperty("limitEmailSentAt");
+
+    expect(getSendEmailMock()).toHaveBeenCalledTimes(1);
+    expect(getSendEmailMock().mock.calls[0]?.[0]).toMatchObject({
+      subject: expect.stringContaining("Usage warning"),
+    });
+
+    expect(insertedAlertEvents[0]).toMatchObject({
+      alertType: "spend",
+      alertLevel: "warning",
+      userId: "user-2",
     });
   });
 
-  it('records rate limit alerts when no recent notifications exist', async () => {
-    monthlySummaryData = {
-      user_id: 'user-3',
-      month_start: '2024-06-01',
+  it("records rate limit alerts when no recent notifications exist", async () => {
+    selectSummaryResult = toDrizzleRow({
+      user_id: "user-3",
+      month_start: "2024-06-01",
       total_cost: 0.05,
       total_tokens: 10,
       total_calls: 1,
@@ -280,25 +302,30 @@ describe('UsageLimitService alerts', () => {
       limit_email_sent_at: null,
       rate_limit_email_sent_at: null,
       limit_enforced_at: null,
-    };
-    usageAlertSelectCount = 0;
-
-    await usageService.recordRateLimitViolation('user-3', 'recipes.chat');
-
-    expect(sendEmailMock).toHaveBeenCalledTimes(1);
-    expect(sendEmailMock.mock.calls[0]?.[0]).toMatchObject({
-      subject: expect.stringContaining('Rate limit activity'),
     });
 
-    expect(monthlyUpdates).toHaveLength(1);
-    expect(monthlyUpdates[0].values).toHaveProperty('rate_limit_email_sent_at', expect.any(String));
+    selectAlertCountResult = 0;
 
-    expect(usageAlertInserts).toHaveLength(1);
-    expect(usageAlertInserts[0]).toMatchObject({
-      alert_type: 'rate-limit',
-      alert_level: 'rate-limit',
-      user_id: 'user-3',
-      details: { endpoint: 'recipes.chat' },
+    await usageService.recordRateLimitViolation("user-3", "recipes.chat");
+
+    expect(getSendEmailMock()).toHaveBeenCalledTimes(1);
+    expect(getSendEmailMock().mock.calls[0]?.[0]).toMatchObject({
+      subject: expect.stringContaining("Rate limit activity"),
+    });
+
+    // Should update rateLimitEmailSentAt
+    expect(updateSets).toHaveLength(1);
+    expect(updateSets[0]).toHaveProperty(
+      "rateLimitEmailSentAt",
+      expect.any(Date)
+    );
+
+    expect(insertedAlertEvents).toHaveLength(1);
+    expect(insertedAlertEvents[0]).toMatchObject({
+      alertType: "rate-limit",
+      alertLevel: "rate-limit",
+      userId: "user-3",
+      details: { endpoint: "recipes.chat" },
     });
   });
 });

@@ -1,46 +1,7 @@
-jest.mock('@supabase/supabase-js', () => {
-  type TableMock = {
-    select: jest.Mock<TableMock, []>;
-    eq: jest.Mock<TableMock, [unknown, unknown?]>;
-    gte: jest.Mock<TableMock, [unknown, unknown?]>;
-    not: jest.Mock<TableMock, [unknown, unknown?]>;
-    order: jest.Mock<TableMock, [unknown, { ascending?: boolean }?]>;
-    maybeSingle: jest.Mock<Promise<{ data: null; error: null }>, []>;
-    update: jest.Mock<TableMock, [unknown?]>;
-    insert: jest.Mock<Promise<{ error: null }>, [unknown?]>;
-  };
-
-  const createTableStub = (): TableMock => {
-    const stub = {
-      select: jest.fn(),
-      eq: jest.fn(),
-      gte: jest.fn(),
-      not: jest.fn(),
-      order: jest.fn(),
-      maybeSingle: jest.fn(() => Promise.resolve({ data: null, error: null })),
-      update: jest.fn(),
-      insert: jest.fn(() => Promise.resolve({ error: null })),
-    } as unknown as TableMock;
-
-    stub.select.mockReturnValue(stub);
-    stub.eq.mockReturnValue(stub);
-    stub.gte.mockReturnValue(stub);
-    stub.not.mockReturnValue(stub);
-    stub.order.mockReturnValue(stub);
-    stub.update.mockReturnValue(stub);
-
-    return stub;
-  };
-
-  const tableStub: TableMock = createTableStub();
-
-  return {
-    createClient: jest.fn(() => ({
-      from: jest.fn(() => tableStub),
-      rpc: jest.fn(() => Promise.resolve({ data: null, error: null })),
-    })),
-  };
-});
+// Mock @/db to prevent module-level DATABASE_URL initialization
+jest.mock('@/db', () => ({
+  db: {},
+}));
 
 jest.mock('@/lib/email/services/email-delivery-service', () => ({
   EmailDeliveryService: jest.fn().mockImplementation(() => ({

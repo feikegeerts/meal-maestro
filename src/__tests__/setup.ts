@@ -1,7 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-// Ensure Supabase client is always mocked in tests
-jest.mock("../lib/supabase");
 import "@testing-library/jest-dom";
 
 import { configure } from "@testing-library/react";
@@ -12,222 +10,8 @@ configure({
   asyncUtilTimeout: 15000, // Increased timeout for CI
 });
 
-// Set up test environment variables
-process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-anon-key";
-process.env.SUPABASE_URL = "https://test.supabase.co";
-process.env.SUPABASE_ANON_KEY = "test-anon-key";
-
 import { server } from "../__mocks__/server";
 
-// Mock only the OAuth navigation part of Supabase to prevent window.location issues
-// Let MSW handle the actual API responses for testing different scenarios
-
-// Helper to simulate .single() and .update() with MSW-backed fetch
-const single = async function () {
-  // Simulate a fetch to the MSW handler for user_profiles
-  const id = this._eq?.val || "test-user-id";
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/user_profiles?id=eq.${id}`
-  );
-  if (!response.ok) {
-    return {
-      data: null,
-      error: { message: "Profile fetch failed", status: response.status },
-    };
-  }
-  const arr = await response.json();
-  if (!arr || !Array.isArray(arr) || arr.length === 0) {
-    return { data: null, error: null };
-  }
-  return { data: arr[0], error: null };
-};
-
-const update = function () {
-  // Return an object with .single() that simulates update+fetch
-  return {
-    single: async () => {
-      // Simulate a PATCH to the MSW handler for user_profiles
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/user_profiles`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(this._updates || {}),
-        }
-      );
-      if (!response.ok) {
-        return {
-          data: null,
-          error: { message: "Profile update failed", status: response.status },
-        };
-      }
-      const arr = await response.json();
-      if (!arr || !Array.isArray(arr) || arr.length === 0) {
-        return { data: null, error: null };
-      }
-      return { data: arr[0], error: null };
-    },
-    _updates: this._updates,
-  };
-};
-
-const from = function () {
-  return {
-    select: function () {
-      return this;
-    },
-    eq: function (col, val) {
-      this._eq = { col, val };
-      return this;
-    },
-    single: single,
-    update: function (updates) {
-      this._updates = updates;
-      return update.call(this);
-    },
-    insert: function () {
-      return this;
-    },
-    _eq: null,
-    _updates: null,
-  };
-};
-
-const mockSupabaseClient = {
-  auth: {
-    signInWithOAuth: jest.fn().mockResolvedValue({
-      data: { url: "https://mock-oauth-url.com" },
-      error: null,
-    }),
-    signInWithOtp: jest.fn().mockResolvedValue({
-      data: { user: null, session: null },
-      error: null,
-    }),
-    signOut: jest.fn().mockResolvedValue({
-      error: null,
-    }),
-    getUser: jest.fn().mockResolvedValue({
-      data: { user: { id: "test-user", email: "test@example.com" } },
-      error: null,
-    }),
-    getSession: jest.fn().mockResolvedValue({
-      data: { session: { access_token: "mock-token" } },
-      error: null,
-    }),
-    onAuthStateChange: jest.fn().mockReturnValue({
-      data: {
-        subscription: {
-          unsubscribe: jest.fn(),
-        },
-      },
-    }),
-  },
-  from,
-};
-
-const auth = {
-  signInWithGoogle: jest.fn().mockImplementation(async (options = {}) => {
-    const redirectTo = new URL(
-      "/auth/callback",
-      global.window?.location?.origin
-    );
-
-    if (options.redirectPath) {
-      redirectTo.searchParams.set("redirectTo", options.redirectPath);
-    }
-
-    return mockSupabaseClient.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: redirectTo.toString() },
-    });
-  }),
-  signInWithMagicLink: jest
-    .fn()
-    .mockImplementation(async (email, options = {}) => {
-      const redirectTo = new URL(
-        "/auth/callback",
-        global.window?.location?.origin
-      );
-
-      if (options.redirectPath) {
-        redirectTo.searchParams.set("redirectTo", options.redirectPath);
-      }
-
-      return mockSupabaseClient.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: redirectTo.toString(),
-          shouldCreateUser: true,
-          data: {
-            originUrl: global.window?.location?.origin,
-            pageUrl: global.window?.location?.href,
-          },
-        },
-      });
-    }),
-  signOut: jest
-    .fn()
-    .mockImplementation(() => mockSupabaseClient.auth.signOut()),
-  getCurrentUser: jest.fn().mockImplementation(async () => {
-    try {
-      // Use MSW to handle the HTTP request, but with our mock responses
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`,
-        {
-          headers: {
-            Authorization: "Bearer mock-token",
-          },
-        }
-      );
-      if (!response.ok) {
-        return {
-          user: null,
-          error: { message: "User fetch failed", status: response.status },
-        };
-      }
-      const user = await response.json();
-      return { user, error: null };
-    } catch (error) {
-      return { user: null, error };
-    }
-  }),
-  getCurrentSession: jest.fn().mockImplementation(async () => {
-    try {
-      // Use MSW to handle the HTTP request
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token`,
-        {
-          headers: {
-            Authorization: "Bearer mock-token",
-          },
-        }
-      );
-      if (!response.ok) {
-        return {
-          session: null,
-          error: { message: "Session fetch failed", status: response.status },
-        };
-      }
-      const sessionData = await response.json();
-      return { session: sessionData, error: null };
-    } catch (error) {
-      return { session: null, error };
-    }
-  }),
-  onAuthStateChange: jest
-    .fn()
-    .mockImplementation((callback) =>
-      mockSupabaseClient.auth.onAuthStateChange(callback)
-    ),
-};
-
-module.exports = {
-  supabase: mockSupabaseClient,
-  auth,
-  __esModule: true,
-  default: { supabase: mockSupabaseClient, auth },
-};
 // Reset any request handlers that we may add during the tests,
 // so they don't affect other tests
 afterEach(() => {
@@ -299,11 +83,12 @@ if (typeof window !== "undefined") {
     })),
   });
 
-  // Mock WebCrypto API for PKCE
+  // Mock WebCrypto API for PKCE and Neon Auth
   Object.defineProperty(global, "crypto", {
     value: {
       getRandomValues: (arr: Uint8Array) =>
         arr.map(() => Math.floor(Math.random() * 256)),
+      randomUUID: () => "00000000-0000-4000-8000-000000000000",
       subtle: {
         digest: jest.fn().mockResolvedValue(new ArrayBuffer(32)),
       },

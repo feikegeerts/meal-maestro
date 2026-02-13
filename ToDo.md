@@ -2,6 +2,11 @@
 
 1. [ ] Record videos for the homepage
 
+## Neon Auth Migration Follow-ups
+
+1. [ ] Implement localized magic link emails via Neon Auth / Better Auth custom email sending hook (currently `locale` is passed through but unused — see `auth-context.tsx` TODO)
+1. [ ] Remove Supabase packages and remaining references after full migration (Phase 5)
+
 ## Quality & Compliance
 
 1. [ ] Add integration test to test the usage limit emails that need to be send when the limit is almost reached.

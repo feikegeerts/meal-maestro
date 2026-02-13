@@ -1,4 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { db } from "@/db";
+import { monthlyUsageSummary, usageAlertEvents } from "@/db/schema";
+import { and, eq, gte, count, isNull, sql } from "drizzle-orm";
 import {
   ALERT_RECIPIENTS,
   ALERT_RETRY_BUFFER_MINUTES,
@@ -6,26 +8,22 @@ import {
   MONTHLY_SPEND_CAP_USD,
   RATE_LIMIT_ALERT_WINDOW_MINUTES,
   WARNING_THRESHOLD_PERCENT,
-} from '@/config/usage-limits';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import Mustache from 'mustache';
-import { EmailDeliveryService } from '@/lib/email/services/email-delivery-service';
-import type { OpenAIUsageData } from '@/lib/openai-service';
-import { pricingService } from '@/lib/pricing-service';
-
-const supabaseUrl = process.env.SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL!;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabaseAdmin = createClient(supabaseUrl, serviceKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+} from "@/config/usage-limits";
+import { readFileSync } from "fs";
+import { join } from "path";
+import Mustache from "mustache";
+import { EmailDeliveryService } from "@/lib/email/services/email-delivery-service";
+import type { OpenAIUsageData } from "@/lib/openai-service";
+import { pricingService } from "@/lib/pricing-service";
 
 export class MonthlySpendLimitError extends Error {
-  public readonly code = 'MONTHLY_SPEND_LIMIT_EXCEEDED';
-  constructor(public readonly limitUsd: number, public readonly totalCost: number) {
-    super('Monthly spend limit exceeded');
-    this.name = 'MonthlySpendLimitError';
+  public readonly code = "MONTHLY_SPEND_LIMIT_EXCEEDED";
+  constructor(
+    public readonly limitUsd: number,
+    public readonly totalCost: number,
+  ) {
+    super("Monthly spend limit exceeded");
+    this.name = "MonthlySpendLimitError";
   }
 }
 
@@ -53,25 +51,34 @@ export class UsageLimitService {
     this.emailDelivery = emailDelivery || new EmailDeliveryService();
   }
 
-  public async getCurrentSummary(userId: string, asOf: Date = new Date()): Promise<MonthlySummaryRow | null> {
+  public async getCurrentSummary(
+    userId: string,
+    asOf: Date = new Date(),
+  ): Promise<MonthlySummaryRow | null> {
     const monthStart = this.getMonthStart(asOf);
 
-    const { data, error } = await supabaseAdmin
-      .from('monthly_usage_summary')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('month_start', monthStart)
-      .maybeSingle();
+    const [row] = await db
+      .select()
+      .from(monthlyUsageSummary)
+      .where(
+        and(
+          eq(monthlyUsageSummary.userId, userId),
+          eq(monthlyUsageSummary.monthStart, monthStart),
+        ),
+      )
+      .limit(1);
 
-    if (error) {
-      console.error('[UsageLimitService] Failed to fetch monthly summary', error);
+    if (!row) {
       return null;
     }
 
-    return data as MonthlySummaryRow | null;
+    return this.toSummaryRow(row);
   }
 
-  public async assertWithinMonthlyLimit(userId: string, asOf: Date = new Date()): Promise<void> {
+  public async assertWithinMonthlyLimit(
+    userId: string,
+    asOf: Date = new Date(),
+  ): Promise<void> {
     const summary = await this.getCurrentSummary(userId, asOf);
 
     if (!summary) {
@@ -79,11 +86,17 @@ export class UsageLimitService {
     }
 
     if (summary.limit_enforced_at) {
-      throw new MonthlySpendLimitError(MONTHLY_SPEND_CAP_USD, summary.total_cost);
+      throw new MonthlySpendLimitError(
+        MONTHLY_SPEND_CAP_USD,
+        summary.total_cost,
+      );
     }
 
     if (summary.total_cost >= MONTHLY_SPEND_CAP_USD) {
-      throw new MonthlySpendLimitError(MONTHLY_SPEND_CAP_USD, summary.total_cost);
+      throw new MonthlySpendLimitError(
+        MONTHLY_SPEND_CAP_USD,
+        summary.total_cost,
+      );
     }
   }
 
@@ -94,7 +107,7 @@ export class UsageLimitService {
       endpoint: string;
       timestamp?: Date;
       costUsd: number;
-    }
+    },
   ): Promise<{
     summary: MonthlySummaryRow;
     reachedWarning: boolean;
@@ -102,21 +115,32 @@ export class UsageLimitService {
   }> {
     const { endpoint, timestamp, costUsd } = options;
     const callTime = timestamp || new Date();
+    const monthStart = this.getMonthStart(callTime);
+    const cost = Number(costUsd.toFixed(4));
+    const tokens = usage.totalTokens;
 
-    const { data, error } = await supabaseAdmin.rpc('increment_monthly_usage_summary', {
-      p_user_id: userId,
-      p_cost: Number(costUsd.toFixed(4)),
-      p_tokens: usage.totalTokens,
-      p_call_time: callTime.toISOString(),
-      p_calls: 1,
-    });
+    // Upsert: INSERT ... ON CONFLICT DO UPDATE (replaces the RPC)
+    const [row] = await db
+      .insert(monthlyUsageSummary)
+      .values({
+        userId,
+        monthStart,
+        totalCost: Math.max(cost, 0).toString(),
+        totalTokens: BigInt(Math.max(tokens, 0)),
+        totalCalls: 1,
+      })
+      .onConflictDoUpdate({
+        target: [monthlyUsageSummary.userId, monthlyUsageSummary.monthStart],
+        set: {
+          totalCost: sql`${monthlyUsageSummary.totalCost} + ${Math.max(cost, 0)}`,
+          totalTokens: sql`${monthlyUsageSummary.totalTokens} + ${Math.max(tokens, 0)}`,
+          totalCalls: sql`${monthlyUsageSummary.totalCalls} + 1`,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
 
-    if (error) {
-      console.error('[UsageLimitService] increment_monthly_usage_summary failed', error);
-      throw error;
-    }
-
-    const summary = data as MonthlySummaryRow;
+    const summary = this.toSummaryRow(row);
     const thresholds = this.evaluateThresholds(summary.total_cost);
 
     if (thresholds.reachedLimit) {
@@ -134,51 +158,64 @@ export class UsageLimitService {
     };
   }
 
-  public async recordRateLimitViolation(userId: string, endpoint: string): Promise<void> {
+  public async recordRateLimitViolation(
+    userId: string,
+    endpoint: string,
+  ): Promise<void> {
     const summary = await this.getCurrentSummary(userId);
     const now = new Date();
 
-    const windowStart = new Date(now.getTime() - RATE_LIMIT_ALERT_WINDOW_MINUTES * 60 * 1000);
+    const windowStart = new Date(
+      now.getTime() - RATE_LIMIT_ALERT_WINDOW_MINUTES * 60 * 1000,
+    );
 
-    const { count, error } = await supabaseAdmin
-      .from('usage_alert_events')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('alert_type', 'rate-limit')
-      .gte('created_at', windowStart.toISOString());
+    const [result] = await db
+      .select({ count: count() })
+      .from(usageAlertEvents)
+      .where(
+        and(
+          eq(usageAlertEvents.userId, userId),
+          eq(usageAlertEvents.alertType, "rate-limit"),
+          gte(usageAlertEvents.createdAt, windowStart),
+        ),
+      );
 
-    if (error) {
-      console.warn('[UsageLimitService] Failed to check recent rate-limit alerts', error);
-      return;
-    }
-
-    if ((count || 0) > 0) {
+    if ((result?.count ?? 0) > 0) {
       return; // Already alerted recently
     }
 
     if (summary) {
-      await supabaseAdmin
-        .from('monthly_usage_summary')
-        .update({ rate_limit_email_sent_at: now.toISOString() })
-        .eq('user_id', summary.user_id)
-        .eq('month_start', summary.month_start);
+      await db
+        .update(monthlyUsageSummary)
+        .set({ rateLimitEmailSentAt: now })
+        .where(
+          and(
+            eq(monthlyUsageSummary.userId, summary.user_id),
+            eq(monthlyUsageSummary.monthStart, summary.month_start),
+          ),
+        );
     }
 
-    await this.dispatchAlertEmail('rate-limit', {
+    await this.dispatchAlertEmail("rate-limit", {
       userId,
       summary,
       endpoint,
       totalCost: summary?.total_cost ?? 0,
-      level: 'rate-limit',
+      level: "rate-limit",
     });
 
-    await this.logAlertEvent(userId, summary ? summary.month_start : this.getMonthStart(now), 'rate-limit', 'rate-limit', {
-      endpoint,
-    });
+    await this.logAlertEvent(
+      userId,
+      summary ? summary.month_start : this.getMonthStart(now),
+      "rate-limit",
+      "rate-limit",
+      { endpoint },
+    );
   }
 
   private evaluateThresholds(totalCost: number): ThresholdResult {
-    const warningThreshold = MONTHLY_SPEND_CAP_USD * WARNING_THRESHOLD_PERCENT;
+    const warningThreshold =
+      MONTHLY_SPEND_CAP_USD * WARNING_THRESHOLD_PERCENT;
     return {
       reachedWarning: totalCost >= warningThreshold,
       reachedLimit: totalCost >= MONTHLY_SPEND_CAP_USD,
@@ -190,50 +227,60 @@ export class UsageLimitService {
       return;
     }
 
-    const nowIso = new Date().toISOString();
-    const { error } = await supabaseAdmin
-      .from('monthly_usage_summary')
-      .update({ limit_enforced_at: nowIso })
-      .eq('user_id', summary.user_id)
-      .eq('month_start', summary.month_start)
-      .is('limit_enforced_at', null);
-
-    if (error) {
-      console.error('[UsageLimitService] Failed to mark limit enforced', error);
-    }
+    await db
+      .update(monthlyUsageSummary)
+      .set({ limitEnforcedAt: new Date() })
+      .where(
+        and(
+          eq(monthlyUsageSummary.userId, summary.user_id),
+          eq(monthlyUsageSummary.monthStart, summary.month_start),
+          isNull(monthlyUsageSummary.limitEnforcedAt),
+        ),
+      );
   }
 
   private async maybeSendSpendAlert(
     summary: MonthlySummaryRow,
     endpoint: string,
-    thresholds: ThresholdResult
+    thresholds: ThresholdResult,
   ): Promise<void> {
     const now = new Date();
-    const level: AlertLevel = thresholds.reachedLimit ? 'limit' : 'warning';
+    const level: AlertLevel = thresholds.reachedLimit ? "limit" : "warning";
 
     const lastSent = thresholds.reachedLimit
       ? summary.limit_email_sent_at
       : summary.warning_email_sent_at;
 
-    if (lastSent && !this.isOutsideBuffer(lastSent, now, ALERT_RETRY_BUFFER_MINUTES)) {
+    if (
+      lastSent &&
+      !this.isOutsideBuffer(lastSent, now, ALERT_RETRY_BUFFER_MINUTES)
+    ) {
       return;
     }
 
     if (thresholds.reachedLimit) {
-      await supabaseAdmin
-        .from('monthly_usage_summary')
-        .update({ limit_email_sent_at: now.toISOString() })
-        .eq('user_id', summary.user_id)
-        .eq('month_start', summary.month_start);
+      await db
+        .update(monthlyUsageSummary)
+        .set({ limitEmailSentAt: now })
+        .where(
+          and(
+            eq(monthlyUsageSummary.userId, summary.user_id),
+            eq(monthlyUsageSummary.monthStart, summary.month_start),
+          ),
+        );
     } else {
-      await supabaseAdmin
-        .from('monthly_usage_summary')
-        .update({ warning_email_sent_at: now.toISOString() })
-        .eq('user_id', summary.user_id)
-        .eq('month_start', summary.month_start);
+      await db
+        .update(monthlyUsageSummary)
+        .set({ warningEmailSentAt: now })
+        .where(
+          and(
+            eq(monthlyUsageSummary.userId, summary.user_id),
+            eq(monthlyUsageSummary.monthStart, summary.month_start),
+          ),
+        );
     }
 
-    await this.dispatchAlertEmail('spend', {
+    await this.dispatchAlertEmail("spend", {
       userId: summary.user_id,
       summary,
       endpoint,
@@ -241,10 +288,16 @@ export class UsageLimitService {
       level,
     });
 
-    await this.logAlertEvent(summary.user_id, summary.month_start, 'spend', level, {
-      endpoint,
-      totalCost: summary.total_cost,
-    });
+    await this.logAlertEvent(
+      summary.user_id,
+      summary.month_start,
+      "spend",
+      level,
+      {
+        endpoint,
+        totalCost: summary.total_cost,
+      },
+    );
   }
 
   private async logAlertEvent(
@@ -252,46 +305,48 @@ export class UsageLimitService {
     monthStart: string,
     alertType: string,
     level: AlertLevel,
-    details: Record<string, unknown>
+    details: Record<string, unknown>,
   ): Promise<void> {
-    const { error } = await supabaseAdmin
-      .from('usage_alert_events')
-      .insert({
-        user_id: userId,
-        month_start: monthStart,
-        alert_type: alertType,
-        alert_level: level,
+    try {
+      await db.insert(usageAlertEvents).values({
+        userId,
+        monthStart,
+        alertType,
+        alertLevel: level,
         details,
       });
-
-    if (error) {
-      console.error('[UsageLimitService] Failed to log alert event', error);
+    } catch (error) {
+      console.error(
+        "[UsageLimitService] Failed to log alert event",
+        error,
+      );
     }
   }
 
   private async dispatchAlertEmail(
-    alertType: 'spend' | 'rate-limit',
+    alertType: "spend" | "rate-limit",
     context: {
       userId: string;
       summary: MonthlySummaryRow | null;
       endpoint: string;
       totalCost: number;
       level: AlertLevel;
-    }
+    },
   ): Promise<void> {
     const [primaryRecipient] = ALERT_RECIPIENTS;
 
-    const monthStart = context.summary?.month_start ?? this.getMonthStart(new Date());
-    const locale = 'en';
+    const monthStart =
+      context.summary?.month_start ?? this.getMonthStart(new Date());
+    const locale = "en";
 
     const levelLabel = this.getLevelLabel(context.level, locale);
     const subject = `${levelLabel}: user ${context.userId} usage alert`;
 
     const html = Mustache.render(getAdminAlertTemplate(), {
-      brandEmoji: '🍽️',
-      brandName: 'Meal Maestro',
-      tagline: 'Your AI-powered recipe companion',
-      supportEmail: 'info@meal-maestro.com',
+      brandEmoji: "🍽️",
+      brandName: "Meal Maestro",
+      tagline: "Your AI-powered recipe companion",
+      supportEmail: "info@meal-maestro.com",
       currentYear: new Date().getFullYear().toString(),
       levelLabel,
       userId: context.userId,
@@ -306,12 +361,14 @@ export class UsageLimitService {
         subject,
         html,
       },
-      { to: primaryRecipient }
+      { to: primaryRecipient },
     );
   }
 
   private getMonthStart(date: Date): string {
-    return new Date(date.getFullYear(), date.getMonth(), 1).toISOString().slice(0, 10);
+    return new Date(date.getFullYear(), date.getMonth(), 1)
+      .toISOString()
+      .slice(0, 10);
   }
 
   private formatMonthLabel(monthStart: string): string {
@@ -320,34 +377,58 @@ export class UsageLimitService {
       return monthStart;
     }
 
-    return date.toLocaleDateString('en-US', {
-      month: 'long',
-      year: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
     });
   }
 
-  private getLevelLabel(level: AlertLevel, locale: string): string {
+  private getLevelLabel(
+    level: AlertLevel,
+    locale: string,
+  ): string {
     const labels: Record<string, Record<AlertLevel, string>> = {
       en: {
-        warning: 'Usage warning',
-        limit: 'Usage limit reached',
-        'rate-limit': 'Rate limit activity',
+        warning: "Usage warning",
+        limit: "Usage limit reached",
+        "rate-limit": "Rate limit activity",
       },
       nl: {
-        warning: 'Waarschuwing voor gebruik',
-        limit: 'Gebruikslimiet bereikt',
-        'rate-limit': 'Rate-limit activatie',
+        warning: "Waarschuwing voor gebruik",
+        limit: "Gebruikslimiet bereikt",
+        "rate-limit": "Rate-limit activatie",
       },
     };
 
-    const localeKey = labels[locale] ? locale : 'en';
+    const localeKey = labels[locale] ? locale : "en";
     return labels[localeKey][level];
   }
 
-  private isOutsideBuffer(lastSentIso: string, now: Date, bufferMinutes: number): boolean {
+  private isOutsideBuffer(
+    lastSentIso: string,
+    now: Date,
+    bufferMinutes: number,
+  ): boolean {
     const lastSent = new Date(lastSentIso);
     const diffMinutes = (now.getTime() - lastSent.getTime()) / 60000;
     return diffMinutes >= bufferMinutes;
+  }
+
+  private toSummaryRow(
+    row: typeof monthlyUsageSummary.$inferSelect,
+  ): MonthlySummaryRow {
+    return {
+      user_id: row.userId,
+      month_start: row.monthStart,
+      total_cost: Number(row.totalCost),
+      total_tokens: Number(row.totalTokens),
+      total_calls: row.totalCalls,
+      warning_email_sent_at: row.warningEmailSentAt?.toISOString() ?? null,
+      limit_email_sent_at: row.limitEmailSentAt?.toISOString() ?? null,
+      rate_limit_email_sent_at:
+        row.rateLimitEmailSentAt?.toISOString() ?? null,
+      limit_enforced_at: row.limitEnforcedAt?.toISOString() ?? null,
+    };
   }
 }
 
@@ -359,9 +440,9 @@ function getAdminAlertTemplate(): string {
   if (!adminAlertTemplateCache) {
     const templatePath = join(
       process.cwd(),
-      'src/lib/email/templates/admin-usage-alert.mustache'
+      "src/lib/email/templates/admin-usage-alert.mustache",
     );
-    adminAlertTemplateCache = readFileSync(templatePath, 'utf-8');
+    adminAlertTemplateCache = readFileSync(templatePath, "utf-8");
     Mustache.parse(adminAlertTemplateCache);
   }
 

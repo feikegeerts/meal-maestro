@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
-import { createClient } from "@supabase/supabase-js";
+import { db } from "@/db";
+import { feedback, rateLimitUser } from "@/db/schema";
+import { and, eq, gte, lt, count } from "drizzle-orm";
 import { getAppVersion } from "@/lib/version";
 
 interface FeedbackRequest {
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
-  const { user, client: supabase } = authResult;
+  const { user } = authResult;
 
   try {
     // Check rate limiting (5 submissions per hour)
@@ -36,11 +38,11 @@ export async function POST(request: NextRequest) {
           status: 429,
           headers: {
             "X-RateLimit-Reset": new Date(
-              rateLimitCheck.resetTime
+              rateLimitCheck.resetTime,
             ).toISOString(),
             "Retry-After": rateLimitCheck.retryAfter.toString(),
           },
-        }
+        },
       );
     }
 
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Feedback type, subject, and message are required",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -68,7 +70,7 @@ export async function POST(request: NextRequest) {
     if (!validTypes.includes(feedbackType)) {
       return NextResponse.json(
         { success: false, error: "Invalid feedback type" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Subject must be between 1 and 200 characters",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -89,7 +91,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Message must be between 1 and 2000 characters",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -102,27 +104,17 @@ export async function POST(request: NextRequest) {
     const locale = acceptLanguage.split(",")[0]?.split("-")[0] || "en";
 
     // Insert feedback into database
-    const { error } = await supabase.from("feedback").insert([
-      {
-        user_id: user.id,
-        user_email: user.email || "",
-        feedback_type: feedbackType,
-        subject: subject.trim(),
-        message: message.trim(),
-        app_version: version,
-        locale: locale,
-        page_url: referer,
-        status: "open",
-      },
-    ]);
-
-    if (error) {
-      console.error("Error creating feedback:", error);
-      return NextResponse.json(
-        { success: false, error: "Failed to submit feedback" },
-        { status: 500 }
-      );
-    }
+    await db.insert(feedback).values({
+      userId: user.id,
+      userEmail: user.email || "",
+      feedbackType,
+      subject: subject.trim(),
+      message: message.trim(),
+      appVersion: version,
+      locale,
+      pageUrl: referer,
+      status: "open",
+    });
 
     const response: FeedbackResponse = {
       success: true,
@@ -136,7 +128,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: "Internal server error while submitting feedback",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -144,7 +136,7 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json(
     { error: "Method not allowed. Use POST to submit feedback." },
-    { status: 405 }
+    { status: 405 },
   );
 }
 
@@ -154,11 +146,6 @@ async function checkRateLimit(userId: string): Promise<{
   retryAfter: number;
   resetTime: number;
 }> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
   const now = Date.now();
   const windowMs = 60 * 60 * 1000; // 1 hour window
   const maxRequests = 5; // 5 feedback submissions per hour
@@ -167,31 +154,23 @@ async function checkRateLimit(userId: string): Promise<{
   try {
     // Clean up old entries (older than 24 hours)
     const oneDayAgo = now - 24 * 60 * 60 * 1000;
-    await supabase.from("rate_limit_user").delete().lt("timestamp", oneDayAgo);
+    await db
+      .delete(rateLimitUser)
+      .where(lt(rateLimitUser.timestamp, BigInt(oneDayAgo)));
 
     // Get current requests in window
-    const { data: attempts, error } = await supabase
-      .from("rate_limit_user")
-      .select("timestamp")
-      .eq("user_id", userId)
-      .eq("endpoint", "/api/feedback")
-      .gte("timestamp", windowStart)
-      .order("timestamp", { ascending: false });
-
-    if (error) {
-      // If database fails, allow request (fail open for availability)
-      console.warn(
-        "Feedback rate limit check failed, allowing request:",
-        error
+    const [result] = await db
+      .select({ count: count() })
+      .from(rateLimitUser)
+      .where(
+        and(
+          eq(rateLimitUser.userId, userId),
+          eq(rateLimitUser.endpoint, "/api/feedback"),
+          gte(rateLimitUser.timestamp, BigInt(windowStart)),
+        ),
       );
-      return {
-        allowed: true,
-        retryAfter: 0,
-        resetTime: now + windowMs,
-      };
-    }
 
-    const currentCount = attempts?.length || 0;
+    const currentCount = result?.count ?? 0;
 
     if (currentCount >= maxRequests) {
       // Rate limit exceeded
@@ -204,10 +183,10 @@ async function checkRateLimit(userId: string): Promise<{
     }
 
     // Record this attempt
-    await supabase.from("rate_limit_user").insert({
-      user_id: userId,
+    await db.insert(rateLimitUser).values({
+      userId,
       endpoint: "/api/feedback",
-      timestamp: now,
+      timestamp: BigInt(now),
     });
 
     return {
@@ -217,7 +196,10 @@ async function checkRateLimit(userId: string): Promise<{
     };
   } catch (error) {
     // If anything fails, allow the request (fail open)
-    console.warn("Feedback rate limit check failed, allowing request:", error);
+    console.warn(
+      "Feedback rate limit check failed, allowing request:",
+      error,
+    );
     return {
       allowed: true,
       retryAfter: 0,

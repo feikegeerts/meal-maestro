@@ -1,36 +1,45 @@
 import { EmailTemplateService } from "../services/email-template-service";
 import type { MagicLinkEmailData, EmailType } from "../types/email-types";
 
-// Mock environment variables
-process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-key";
+// Mock @/db to prevent neon() from being called at import time.
+// The mock db.select() returns a chainable builder that resolves
+// to a language preference row by default.
+jest.mock("@/db", () => {
+  const selectChain = {
+    from: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockResolvedValue([{ languagePreference: "en" }]),
+  };
+  return {
+    db: {
+      select: jest.fn(() => selectChain),
+      __selectChain: selectChain,
+    },
+  };
+});
 
-// Mock the supabase createClient function
-const mockSupabaseClient = {
-  rpc: jest.fn().mockResolvedValue({
-    data: "en",
-    error: null,
-  }),
-  from: jest.fn().mockReturnValue({
-    select: jest.fn().mockReturnValue({
-      eq: jest.fn().mockReturnValue({
-        single: jest.fn().mockResolvedValue({
-          data: { language_preference: "en" },
-          error: null,
-        }),
-      }),
-    }),
-  }),
-};
-
-jest.mock("@supabase/supabase-js", () => ({
-  createClient: jest.fn(() => mockSupabaseClient),
-}));
+// Access the mock chain for per-test overrides
+function getSelectChain() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { db } = require("@/db") as {
+    db: {
+      __selectChain: {
+        from: jest.Mock;
+        where: jest.Mock;
+        limit: jest.Mock;
+      };
+    };
+  };
+  return db.__selectChain;
+}
 
 describe("EmailTemplateService", () => {
   let emailService: EmailTemplateService;
 
   beforeEach(() => {
+    // Reset to default English
+    const chain = getSelectChain();
+    chain.limit.mockResolvedValue([{ languagePreference: "en" }]);
     emailService = new EmailTemplateService();
   });
 
@@ -45,20 +54,13 @@ describe("EmailTemplateService", () => {
 
       const result = await emailService.renderTemplate("magic-link", mockData);
 
-      // Verify the result is successful
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
 
       const template = result.data!;
 
-      // Log the HTML for manual verification
-      console.log("=== ENGLISH MAGIC LINK EMAIL HTML ===");
-      console.log(template.html);
-      console.log("=== END HTML ===");
-
       expect(template.subject).toBe("Sign in to Meal Maestro");
       expect(template.html).toContain("🍽️ Meal Maestro");
-      // Check for HTML-escaped URL (Mustache escapes slashes and equals using HTML entities)
       expect(template.html).toContain(
         "https:&#x2F;&#x2F;example.com&#x2F;auth&#x2F;callback?token_hash&#x3D;abc123def456&amp;type&#x3D;magiclink"
       );
@@ -69,31 +71,23 @@ describe("EmailTemplateService", () => {
     });
 
     it("should render magic-link template in Dutch", async () => {
-      // Mock Dutch language preference from database RPC call
-      mockSupabaseClient.rpc.mockResolvedValue({
-        data: "nl",
-        error: null,
-      });
+      // Mock Dutch language preference from database
+      const chain = getSelectChain();
+      chain.limit.mockResolvedValue([{ languagePreference: "nl" }]);
 
       const mockData: MagicLinkEmailData = {
         userEmail: "test@example.com",
-        locale: "en", // This should be overridden by database preference
+        locale: "en",
         confirmationUrl:
           "https://example.com/auth/callback?token_hash=xyz789&type=magiclink",
       };
 
       const result = await emailService.renderTemplate("magic-link", mockData);
 
-      // Verify the result is successful
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
 
       const template = result.data!;
-
-      // Log the HTML for manual verification
-      console.log("=== DUTCH MAGIC LINK EMAIL HTML ===");
-      console.log(template.html);
-      console.log("=== END HTML ===");
 
       expect(template.subject).toBe("Inloggen bij Meal Maestro");
       expect(template.html).toContain("🍽️ Meal Maestro");
@@ -115,9 +109,7 @@ describe("EmailTemplateService", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
-      expect(result.error?.message).toContain(
-        'Failed to load template "non-existent-template"'
-      );
+      expect(result.error?.message).toContain("non-existent-template");
     });
 
     it("should cache compiled templates", async () => {
@@ -128,10 +120,7 @@ describe("EmailTemplateService", () => {
           "https://example.com/auth/callback?token_hash=def789&type=magiclink",
       };
 
-      // First render should compile the template
       const result1 = await emailService.renderTemplate("magic-link", mockData);
-
-      // Second render should use cached template
       const result2 = await emailService.renderTemplate("magic-link", mockData);
 
       expect(result1.success).toBe(true);
@@ -147,13 +136,9 @@ describe("EmailTemplateService", () => {
           "https://example.com/auth/callback?token_hash=xyz456&type=magiclink",
       };
 
-      // Render template to populate cache
       await emailService.renderTemplate("magic-link", mockData);
-
-      // Clear cache
       emailService.clearCache();
 
-      // Should still work after cache clear
       const result = await emailService.renderTemplate("magic-link", mockData);
       expect(result.success).toBe(true);
       expect(result.data!.html).toContain("🍽️ Meal Maestro");

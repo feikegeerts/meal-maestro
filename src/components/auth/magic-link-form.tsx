@@ -81,14 +81,14 @@ export function MagicLinkForm({ className, redirectPath, locale }: MagicLinkForm
     setIsSuccess(false)
 
     try {
-      const { error } = await signInWithMagicLink(email.trim(), {
+      const result = await signInWithMagicLink(email.trim(), {
         redirectPath,
         locale,
       })
-      
-      if (error) {
-        const rateLimitResult = rateLimitManager.analyzeRateLimit(error)
-        
+
+      if (result.error) {
+        const rateLimitResult = rateLimitManager.analyzeRateLimit({ message: result.error })
+
         if (rateLimitResult.isRateLimited) {
           setRateLimitInfo({
             isRateLimited: true,
@@ -97,7 +97,7 @@ export function MagicLinkForm({ className, redirectPath, locale }: MagicLinkForm
           })
           toast.error(`${t('tooManyRequests')} Please wait ${rateLimitResult.waitTimeText}.`)
         } else {
-          toast.error(error.message || t('failedToSendMagicLink'))
+          toast.error(result.error || t('failedToSendMagicLink'))
         }
       } else {
         // Clear any existing rate limit on successful send
