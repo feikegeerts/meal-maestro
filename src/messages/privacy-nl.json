@@ -70,9 +70,9 @@
         "title": "Google OAuth",
         "content": "We gebruiken Google OAuth voor authenticatie. Google's privacybeleid is van toepassing op data die wordt verzameld tijdens het authenticatieproces. We vragen alleen toegang tot basisprofielinformatie (email, naam, profielfoto)."
       },
-      "supabase": {
-        "title": "Supabase (Database & Auth)",
-        "content": "Je receptdata en accountinformatie worden veilig opgeslagen in Supabase's cloud database-infrastructuur. Supabase opereert onder hun privacybeleid en onderhoudt SOC 2-compliance."
+      "neon": {
+        "title": "Neon (Database & Auth)",
+        "content": "Je receptdata en accountinformatie worden veilig opgeslagen in Neon's cloud database-infrastructuur. Neon opereert onder hun privacybeleid en onderhoudt SOC 2-compliance."
       },
       "openai": {
         "title": "OpenAI",

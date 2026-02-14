@@ -96,8 +96,8 @@ export default function PrivacyPolicyPage() {
             <h3 className="text-xl font-semibold mb-3">{t("sections.thirdPartyServices.googleOAuth.title")}</h3>
             <p>{t("sections.thirdPartyServices.googleOAuth.content")}</p>
 
-            <h3 className="text-xl font-semibold mb-3 mt-6">{t("sections.thirdPartyServices.supabase.title")}</h3>
-            <p>{t("sections.thirdPartyServices.supabase.content")}</p>
+            <h3 className="text-xl font-semibold mb-3 mt-6">{t("sections.thirdPartyServices.neon.title")}</h3>
+            <p>{t("sections.thirdPartyServices.neon.content")}</p>
 
             <h3 className="text-xl font-semibold mb-3 mt-6">{t("sections.thirdPartyServices.openai.title")}</h3>
             <p>{t("sections.thirdPartyServices.openai.intro")}</p>

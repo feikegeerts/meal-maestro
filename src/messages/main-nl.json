@@ -745,7 +745,7 @@
         "title": "Infrastructuurkosten",
         "domain": "Domein registratie",
         "hosting": "Hosting (Vercel)",
-        "database": "Database (Supabase)",
+        "database": "Database (Neon)",
         "free": "Gratis",
         "perYear": "jaar",
         "vercelLimits": {
@@ -755,8 +755,8 @@
           "usage": "Alleen voor hobby projecten",
           "userLimit": "~100 gebruikers"
         },
-        "supabaseLimits": {
-          "title": "Supabase Gratis Pakket Limieten:",
+        "neonLimits": {
+          "title": "Neon Gratis Pakket Limieten:",
           "bandwidth": "10 GB bandbreedte/maand",
           "storage": "1 GB bestandsopslag",
           "usage": "Alleen voor hobby projecten",
