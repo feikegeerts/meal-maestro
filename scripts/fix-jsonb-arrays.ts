@@ -13,11 +13,6 @@ const sql = neon(process.env.DATABASE_URL!);
 
 async function main() {
   // Fix sections: {} → []
-  const sectionsResult = await sql`
-    UPDATE recipes
-    SET sections = '[]'::jsonb
-    WHERE sections = '{}'::jsonb
-  `;
   const sectionsBefore = await sql`
     SELECT count(*) as count FROM recipes WHERE sections = '{}'::jsonb
   `;
