@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
 import { db } from "@/db";
 import { userProfiles } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { UserProfile } from "@/lib/profile-types";
 
 type DrizzleProfile = typeof userProfiles.$inferSelect;
@@ -21,6 +21,69 @@ function toSnakeCase(profile: DrizzleProfile): UserProfile {
   };
 }
 
+/**
+ * Migrates a user profile from a legacy Supabase UUID to the new Neon Auth UUID.
+ * Updates user_profiles.id and cascades the change to all referencing tables.
+ * This is a one-time operation per user during the Supabase→Neon migration.
+ */
+async function migrateUserIdToNeonAuth(
+  oldId: string,
+  newId: string,
+): Promise<DrizzleProfile | null> {
+  // Update all FK-referencing tables first, then the profile itself.
+  // Uses a single raw SQL statement with CTEs to run atomically on Neon HTTP.
+  const result = await db.execute(sql`
+    WITH
+      update_recipes AS (
+        UPDATE recipes SET user_id = ${newId} WHERE user_id = ${oldId}
+      ),
+      update_api_usage AS (
+        UPDATE api_usage SET user_id = ${newId} WHERE user_id = ${oldId}
+      ),
+      update_monthly_usage AS (
+        UPDATE monthly_usage_summary SET user_id = ${newId} WHERE user_id = ${oldId}
+      ),
+      update_usage_alerts AS (
+        UPDATE usage_alert_events SET user_id = ${newId} WHERE user_id = ${oldId}
+      ),
+      update_rate_limit_user AS (
+        UPDATE rate_limit_user SET user_id = ${newId} WHERE user_id = ${oldId}
+      ),
+      update_rate_limit_violations AS (
+        UPDATE rate_limit_violations SET user_id = ${newId} WHERE user_id = ${oldId}
+      ),
+      update_feedback AS (
+        UPDATE feedback SET user_id = ${newId} WHERE user_id = ${oldId}
+      ),
+      update_deletion_requests AS (
+        UPDATE deletion_requests SET user_id = ${newId} WHERE user_id = ${oldId}
+      ),
+      update_custom_units AS (
+        UPDATE custom_units SET user_id = ${newId} WHERE user_id = ${oldId}
+      )
+    UPDATE user_profiles
+    SET id = ${newId}, updated_at = NOW()
+    WHERE id = ${oldId}
+    RETURNING *
+  `);
+
+  const row = result.rows[0];
+  if (!row) return null;
+
+  return {
+    id: row.id as string,
+    email: row.email as string,
+    displayName: row.display_name as string | null,
+    avatarUrl: row.avatar_url as string | null,
+    role: row.role as DrizzleProfile["role"],
+    languagePreference: row.language_preference as string | null,
+    unitSystemPreference:
+      row.unit_system_preference as DrizzleProfile["unitSystemPreference"],
+    createdAt: row.created_at ? new Date(row.created_at as string) : null,
+    updatedAt: row.updated_at ? new Date(row.updated_at as string) : null,
+  };
+}
+
 export async function GET() {
   const authResult = await requireAuth();
   if (authResult instanceof Response) return authResult;
@@ -35,7 +98,29 @@ export async function GET() {
       .limit(1);
 
     if (!profile) {
-      // Auto-provision profile for authenticated users (replaces old Supabase trigger)
+      // Migration path: look up by email to find a legacy Supabase profile
+      if (user.email) {
+        const [legacyProfile] = await db
+          .select()
+          .from(userProfiles)
+          .where(eq(userProfiles.email, user.email))
+          .limit(1);
+
+        if (legacyProfile) {
+          console.log(
+            `Migrating user profile from Supabase ID ${legacyProfile.id} to Neon Auth ID ${user.id}`,
+          );
+          const migrated = await migrateUserIdToNeonAuth(
+            legacyProfile.id,
+            user.id,
+          );
+          if (migrated) {
+            return NextResponse.json(toSnakeCase(migrated));
+          }
+        }
+      }
+
+      // No legacy profile found — auto-provision for new users
       const displayName =
         user.name || user.email?.split("@")[0] || "User";
 

@@ -17,10 +17,11 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   signInWithGoogle: (options?: { redirectPath?: string | null }) => Promise<void>;
-  signInWithMagicLink: (
-    email: string,
-    options?: { redirectPath?: string | null; locale?: string | null },
-  ) => Promise<{ error?: string }>;
+  // TODO: Re-enable when Neon Auth ships webhook support for custom email templates
+  // signInWithMagicLink: (
+  //   email: string,
+  //   options?: { redirectPath?: string | null; locale?: string | null },
+  // ) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: ProfileUpdatePayload) => Promise<boolean>;
 }
@@ -95,30 +96,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
     [],
   );
 
-  // TODO: When Neon Auth / Better Auth supports custom email sending hooks,
-  // use the `locale` option to send localized magic link emails.
+  // TODO: Re-enable when Neon Auth ships webhook support for custom email templates.
   // See: https://www.better-auth.com/docs/concepts/email
-  const signInWithMagicLink = useCallback(
-    async (
-      email: string,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      _options?: { redirectPath?: string | null; locale?: string | null },
-    ): Promise<{ error?: string }> => {
-      try {
-        const { error } = await authClient.emailOtp.sendVerificationOtp({
-          email,
-          type: "sign-in",
-        });
-        if (error) {
-          return { error: error.message ?? "Failed to send magic link" };
-        }
-        return {};
-      } catch {
-        return { error: "Failed to send magic link" };
-      }
-    },
-    [],
-  );
+  // const signInWithMagicLink = useCallback(
+  //   async (
+  //     email: string,
+  //     _options?: { redirectPath?: string | null; locale?: string | null },
+  //   ): Promise<{ error?: string }> => {
+  //     try {
+  //       const { error } = await authClient.emailOtp.sendVerificationOtp({
+  //         email,
+  //         type: "sign-in",
+  //       });
+  //       if (error) {
+  //         return { error: error.message ?? "Failed to send magic link" };
+  //       }
+  //       return {};
+  //     } catch {
+  //       return { error: "Failed to send magic link" };
+  //     }
+  //   },
+  //   [],
+  // );
 
   const signOut = useCallback(async () => {
     setProfile(null);
@@ -155,7 +154,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     profile,
     loading: isPending || profileLoading,
     signInWithGoogle,
-    signInWithMagicLink,
     signOut,
     updateProfile,
   };

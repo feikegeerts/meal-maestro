@@ -16,7 +16,12 @@ interface MagicLinkFormProps {
 }
 
 export function MagicLinkForm({ className, redirectPath, locale }: MagicLinkFormProps) {
-  const { signInWithMagicLink } = useAuth()
+  // TODO: Re-enable when Neon Auth ships webhook support for custom email templates
+  // const { signInWithMagicLink } = useAuth()
+  const _auth = useAuth() // keep hook call to avoid conditional hook issues
+  const signInWithMagicLink = async (_email: string, _opts?: { redirectPath?: string | null; locale?: string | null }): Promise<{ error?: string }> => {
+    return { error: 'Magic link sign-in is temporarily disabled' }
+  }
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)

@@ -46,6 +46,7 @@ export function MainNav() {
   const router = useRouter();
   const locale = useLocale();
   const { user, profile, signOut } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [, setAdminCheckLoading] = useState(true);
@@ -111,6 +112,9 @@ export function MainNav() {
     setAdminCheckLoading(false);
   }, [user, profile]);
 
+  // Prevent hydration mismatch by deferring auth-dependent rendering to client
+  useEffect(() => { setMounted(true); }, []);
+
   // Close mobile sheet when route changes
   useEffect(() => {
     setSheetOpen(false);
@@ -131,8 +135,11 @@ export function MainNav() {
     },
   ];
 
+  // Gate auth-dependent rendering on mount to prevent hydration mismatch
+  const isAuthenticated = mounted && !!user;
+
   // Show different navigation items based on auth state
-  const displayedItems = user ? navigationItems : publicNavigationItems;
+  const displayedItems = isAuthenticated ? navigationItems : publicNavigationItems;
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -174,7 +181,7 @@ export function MainNav() {
             </NavigationMenu>
 
             {/* User Area - Authenticated or Login Button */}
-            {user ? (
+            {isAuthenticated ? (
               /* Authenticated User Dropdown */
               <DropdownMenu open={userMenuOpen} onOpenChange={handleUserMenuOpenChange}>
                 <DropdownMenuTrigger asChild>
@@ -260,7 +267,7 @@ export function MainNav() {
           {/* Mobile Navigation */}
           <div className="md:hidden flex items-center space-x-2">
             {/* Mobile User Area */}
-            {user ? (
+            {isAuthenticated ? (
               /* Mobile User Avatar - Sheet for authenticated users */
               <Sheet open={userSheetOpen} onOpenChange={handleUserSheetOpenChange}>
                 <SheetTrigger asChild>

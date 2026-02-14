@@ -17,11 +17,13 @@ Meal Maestro runs on Supabase's free tier, which auto-pauses after ~7 days of in
 
 | Phase | Status | Summary |
 |-------|--------|---------|
-| **Phase 1** — Neon + Drizzle Schema | ✅ Done | Neon project created, Drizzle schema defined (`src/db/schema.ts`, `src/db/index.ts`, `drizzle.config.ts`), migrations generated and applied, data migrated from Supabase |
+| **Phase 1** — Neon + Drizzle Schema | ✅ Done | Neon project created, Drizzle schema defined (`src/db/schema.ts`, `src/db/index.ts`, `drizzle.config.ts`), migrations generated and applied. **Data not yet migrated** — schema only. |
 | **Phase 2** — Neon Auth Integration | ✅ Done | `auth-server.ts` rewritten (`requireAuth` returns `{ user }`, no Supabase client), `auth-context.tsx` rewritten with Neon Auth client, `createAuthenticatedClient()` removed, auth callback/pages updated |
 | **Phase 3** — API Routes → Drizzle | ✅ Done | All 14 API routes + 6 services migrated. See details below |
 | **Phase 4** — Storage (→ R2) | ✅ Done | `image-service.ts` rewritten: `@supabase/supabase-js` → `@aws-sdk/client-s3` (S3Client, PutObjectCommand, DeleteObjectCommand). `getStorageStats()` dropped (unused). `extractFilePathFromUrl` supports both R2 and legacy Supabase URLs. Image data migration deferred. |
-| **Phase 5** — Cleanup | ⬜ Not started | Supabase packages, dead files, tests, env vars |
+| **Phase 4b** — Test Rewrites | ✅ Done | All 6 failing test suites rewritten for Drizzle/Neon Auth mocks. `pnpm verify` passes (260 unit + 22 integration tests). See `docs/drizzle-test-mock-patterns.md`. |
+| **Phase 5** — Data Migration | ⬜ Not started | Relational data (Supabase → Neon), images (Supabase Storage → R2), URL rewrite. **Must complete before Phase 6.** |
+| **Phase 6** — Cleanup | ⬜ Not started | Supabase packages, dead files, env vars, user-facing text |
 
 ### Phase 3 — Detailed File Tracker
 
@@ -54,12 +56,13 @@ Meal Maestro runs on Supabase's free tier, which auto-pauses after ~7 days of in
 
 ### Known Follow-ups
 
-- `profile-server-service.ts` — dead code (not imported anywhere), can be deleted in Phase 5
-- `profile-service.ts` — client-side, only used in tests, still imports from `./supabase`
+- `profile-server-service.ts` — dead code (not imported anywhere), delete in Phase 6
+- `profile-service.ts` — client-side, only used in tests, still imports from `./supabase`, delete in Phase 6
 - `delete-account/route.ts` — TODO: implement Neon Auth user deletion via admin API
 - `auth-context.tsx` — TODO: locale parameter for magic link email localization
-- `auth-context.test.tsx`, `auth-server.test.ts` — deleted (tested Supabase-era auth), need rewrite for Neon Auth
-- `recipe-chat-service.test.ts` — 5 tests still reference old Supabase mocks, need Drizzle mocks
+- ~~`auth-context.test.tsx`, `auth-server.test.ts` — deleted (tested Supabase-era auth), need rewrite for Neon Auth~~ ✅ Auth integration test rewritten
+- ~~`recipe-chat-service.test.ts` — 5 tests still reference old Supabase mocks, need Drizzle mocks~~ ✅ All test suites fixed (Phase 4b)
+- User ID mapping on first post-migration sign-in — needs design (Phase 5.4)
 
 ---
 
@@ -101,9 +104,7 @@ Meal Maestro runs on Supabase's free tier, which auto-pauses after ~7 days of in
 4. **Generate and run migrations** with `drizzle-kit`
 
 #### 1.3 Data Migration
-- `pg_dump` from Supabase → `psql` into Neon (data only, not schema)
-- Verify row counts match across all tables
-- User accounts will need to be re-created in Neon Auth (existing users sign in again and get matched by email to their existing `user_profiles`)
+**Moved to Phase 5** — data migration is a separate phase that runs after code migration is complete and before cleanup.
 
 **Key files to create:**
 - `src/db/schema.ts` — Drizzle table definitions
@@ -237,9 +238,9 @@ Neon Auth (via Better Auth) supports custom email sending. Configure to use Rese
 
 ---
 
-### Phase 4: Storage Migration (Supabase Storage → Cloudflare R2)
+### Phase 4: Storage Code Migration (Supabase Storage → Cloudflare R2)
 
-**Goal**: Replace Supabase Storage with S3-compatible R2.
+**Goal**: Rewrite image service code to use R2 instead of Supabase Storage. Data migration handled in Phase 5.
 
 1. **Create R2 bucket**: `meal-maestro-images` with **public read access** (matches current Supabase behavior — images accessible by URL but not discoverable; sets up well for potential recipe sharing later)
 2. **Install**: `@aws-sdk/client-s3`
@@ -249,34 +250,119 @@ Neon Auth (via Better Auth) supports custom email sending. Configure to use Rese
    - `remove()` → `DeleteObjectCommand`
    - `list()` → `ListObjectsV2Command`
    - `getPublicUrl()` → Construct URL from R2 public domain + path
-   - `extractFilePathFromUrl()` → Update regex for R2 URL format
+   - `extractFilePathFromUrl()` → Update regex for R2 URL format (also handles legacy Supabase URLs)
    - Keep all existing error handling, compression, and metadata logic
-4. **Migrate existing images**: Script to download from Supabase Storage → upload to R2
-5. **Update image URLs in database**:
-   ```sql
-   UPDATE recipes SET image_url = REPLACE(image_url,
-     'https://xxx.supabase.co/storage/v1/object/public/recipe-images/',
-     'https://{R2_PUBLIC_DOMAIN}/')
-   WHERE image_url IS NOT NULL;
-   ```
+
+**Note**: Actual image data migration and URL rewrite moved to Phase 5.2 and 5.3.
 
 ---
 
-### Phase 5: Cleanup
+### Phase 5: Data Migration
+
+**Goal**: Move all production data from Supabase to Neon + R2. Supabase must remain live and queryable throughout this phase.
+
+#### 5.1 Relational Data (Supabase Postgres → Neon Postgres)
+
+**Tables to migrate** (10 tables):
+
+| Table | FK Dependencies | Notes |
+|-------|-----------------|-------|
+| `user_profiles` | None (root) | Must be imported first — all other tables reference `user_id` |
+| `recipes` | `user_profiles.id` | Largest table. Contains `image_url` (rewritten in 5.3) |
+| `custom_units` | `user_profiles.id` | |
+| `api_usage` | `user_profiles.id` | Historical data, may be large |
+| `monthly_usage_summary` | Composite PK (`user_id`, `month_start`) | |
+| `usage_alert_events` | None (no FK) | |
+| `feedback` | `user_profiles.id` | |
+| `deletion_requests` | None (no FK, user may be deleted) | |
+| `rate_limit_user` | `user_profiles.id` | Ephemeral — can skip or truncate |
+| `rate_limit_violations` | `user_profiles.id` | Ephemeral — can skip or truncate |
+
+**Approach**:
+1. **Export from Supabase**: `pg_dump --data-only --no-owner --no-privileges` for each table (or full DB)
+2. **Import into Neon**: `psql $DATABASE_URL < dump.sql`
+3. **Import order**: `user_profiles` first, then all dependent tables
+4. **Skip ephemeral tables**: `rate_limit_user`, `rate_limit_ip`, `rate_limit_violations` can be skipped (transient data, auto-cleaned)
+
+**Verification**:
+- Compare row counts: `SELECT count(*) FROM <table>` on both databases
+- Spot-check a few recipes by ID to verify JSON columns (`ingredients`, `sections`, `nutrition`) transferred correctly
+- Verify enum values didn't get mangled (Supabase enums → Drizzle pgEnum)
+
+#### 5.2 Image Data (Supabase Storage → Cloudflare R2)
+
+1. **List all images** in the `recipe-images` Supabase bucket
+2. **Download each image** from Supabase Storage public URL
+3. **Upload to R2** using S3 SDK (`PutObjectCommand`) preserving the same path structure
+4. **Verify**: Confirm each image is accessible via the R2 public URL
+
+**Script approach** (Node.js or shell):
+```bash
+# Pseudocode
+for each recipe with image_url:
+  download from Supabase Storage URL
+  upload to R2 with same key/path
+  verify R2 public URL returns 200
+```
+
+**Considerations**:
+- Preserve the same file paths/keys so the URL rewrite (5.3) is a simple domain swap
+- If Supabase paths differ from R2 paths, build a mapping table
+- Handle images referenced by deleted users gracefully (skip or archive)
+
+#### 5.3 Image URL Rewrite (in Neon DB)
+
+After all images are confirmed in R2, update the database:
+
+```sql
+UPDATE recipes
+SET image_url = REPLACE(
+  image_url,
+  'https://<SUPABASE_PROJECT>.supabase.co/storage/v1/object/public/recipe-images/',
+  '<R2_PUBLIC_URL>/'
+)
+WHERE image_url IS NOT NULL
+  AND image_url LIKE '%supabase.co%';
+```
+
+**Verification**: Query for any remaining Supabase URLs: `SELECT id, image_url FROM recipes WHERE image_url LIKE '%supabase%'` — should return 0 rows.
+
+#### 5.4 User Account Considerations
+
+Neon Auth manages its own user table (`neon_auth.user`). Existing Supabase Auth users won't exist in Neon Auth until they sign in again.
+
+**Strategy**: On first sign-in after migration, the app's profile auto-provisioning in `GET /api/user/profile` matches by email and links the new Neon Auth user ID to the existing `user_profiles` row.
+
+**Risk**: If the user's Supabase `user_profiles.id` (UUID) differs from their new Neon Auth user ID, all FK references break. The profile endpoint needs to handle this ID mapping — update `user_profiles.id` to the new Neon Auth ID and cascade the change, or maintain a mapping.
+
+**TODO**: Investigate whether Neon Auth supports user import (pre-populating users) to avoid the ID mismatch problem entirely.
+
+---
+
+### Phase 6: Cleanup
+
+**Goal**: Remove all Supabase dependencies. Only proceed after Phase 5 is verified.
 
 1. **Remove packages**: `@supabase/supabase-js`, `supabase`, `standardwebhooks`
-2. **Delete files**:
-   - `src/lib/supabase.ts`
-   - `src/lib/profile-secure-service.ts` (RPC-based, no longer needed)
-   - `src/app/api/auth/set-session/route.ts`
-   - `src/app/api/auth/sign-out/route.ts`
-   - `src/app/api/auth/hooks/send-email/route.ts`
+2. **Delete dead files**:
+   - `src/lib/supabase.ts` (if still present)
+   - `src/lib/profile-server-service.ts` (dead code, not imported)
+   - `src/lib/profile-service.ts` (client-side, imports from `./supabase`)
+   - `src/app/api/auth/set-session/route.ts` (already deleted)
+   - `src/app/api/auth/sign-out/route.ts` (already deleted)
+   - `src/app/api/auth/hooks/send-email/route.ts` (already deleted)
    - `docs/supabase-storage-setup.md`
-3. **Update environment variables** in Vercel dashboard:
+3. **Clean up stale references** (19 files still mention "supabase"):
+   - `src/__mocks__/handlers.ts` — remove Supabase URL from MSW handlers
+   - `src/test-support/integration-env-setup.js` — remove `NEXT_PUBLIC_SUPABASE_URL`
+   - `src/lib/image-service.ts` — keep `extractFilePathFromUrl` legacy URL support (needed if any old URLs remain)
+   - `src/messages/*.json`, privacy/about/terms pages — update user-facing text from "Supabase" to "Neon"
+   - Test files — remove leftover Supabase comments
+4. **Update environment variables** in Vercel dashboard:
    - Remove: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_AUTH_WEBHOOK_SECRET`
    - Add: `DATABASE_URL`, `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`
-4. **Update tests**: Replace Supabase mocks with Drizzle/Neon Auth mocks
 5. **Delete `supabase/` directory** (migrations no longer needed — Drizzle manages schema)
+6. **Final verification**: `grep -ri "supabase" src/` should return only the legacy URL handler in `image-service.ts` (if kept)
 
 ---
 
@@ -295,24 +381,26 @@ Neon Auth (via Better Auth) supports custom email sending. Configure to use Rese
 
 ## Verification Plan
 
-1. **After Phase 1**: Connect to Neon, verify all tables exist, query data, verify Neon Auth console shows auth config
-2. **After Phase 2**: Sign in with Google, sign in with magic link, verify session persists, verify existing user sees their recipes
+1. **After Phase 1**: Connect to Neon, verify all tables exist with correct schema, verify Neon Auth console shows auth config
+2. **After Phase 2**: Sign in with Google, sign in with magic link, verify session persists
 3. **After Phase 3**: Full recipe CRUD (create, view, edit, delete), AI chat creates recipe, admin dashboard loads, feedback submission works, usage tracking records costs
-4. **After Phase 4**: Upload recipe image, verify it appears, delete image, verify old images still load with new R2 URLs
-5. **After Phase 5**: `pnpm build` succeeds, `pnpm verify` passes, no Supabase imports remain (`grep -r "supabase" src/` returns nothing)
+4. **After Phase 4**: Upload recipe image, verify it appears, delete image. `pnpm verify` passes (all tests green).
+5. **After Phase 5**: Row counts match between Supabase and Neon for all migrated tables. All recipe images load from R2 URLs. No `%supabase%` URLs remain in `recipes.image_url`. Existing user can sign in and see their recipes.
+6. **After Phase 6**: `pnpm build` succeeds, `pnpm verify` passes, `grep -ri "supabase" src/` returns only the legacy URL handler in `image-service.ts`. Supabase project can be decommissioned.
 
 ---
 
 ## Estimated Effort
 
-| Phase | Days | Notes |
-|-------|------|-------|
-| Phase 1: Neon + Drizzle schema | 2 | Schema definition + data migration |
-| Phase 2: Neon Auth | 2-3 | Simpler than Auth.js — managed service with pre-built components |
-| Phase 3: API route migration | 4-5 | 14 routes + 6 services, mechanical but many files |
-| Phase 4: R2 storage | 1-2 | Isolated to `image-service.ts` + migration script |
-| Phase 5: Cleanup + testing | 2 | Test updates, remove dead code |
-| **Total** | **~11-14 days** | Phases 3 & 4 can partially overlap |
+| Phase | Status | Days | Notes |
+|-------|--------|------|-------|
+| Phase 1: Neon + Drizzle schema | ✅ Done | 2 | Schema definition |
+| Phase 2: Neon Auth | ✅ Done | 2-3 | Managed service with pre-built components |
+| Phase 3: API route migration | ✅ Done | 4-5 | 14 routes + 6 services |
+| Phase 4: R2 storage + test rewrites | ✅ Done | 1-2 | `image-service.ts` rewrite + 6 test suites |
+| Phase 5: Data migration | ⬜ TODO | 1-2 | `pg_dump`/`psql`, image transfer script, URL rewrite, user ID mapping |
+| Phase 6: Cleanup | ⬜ TODO | 1 | Remove packages, dead files, stale references, env vars |
+| **Total** | | **~11-15 days** | Phases 1–4 complete. Phases 5–6 remaining. |
 
 ---
 
