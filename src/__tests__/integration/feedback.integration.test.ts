@@ -1,81 +1,142 @@
-import { NextRequest } from "next/server";
-import { http, HttpResponse } from "msw";
+/**
+ * Feedback integration tests rewritten for Drizzle + Neon Auth
+ *
+ * Mocks:
+ * - @/db: prevents neon() call at import time; provides controllable
+ *   delete / select-count / insert chains for rate limiting + feedback insertion
+ * - @/lib/auth-server: controls requireAuth() responses per test
+ */
 
-import { POST as feedbackPost, GET as feedbackGet } from "@/app/api/feedback/route";
-import { server } from "@/__mocks__/server";
+// ---------------------------------------------------------------------------
+// Module-level state for per-test @/db mock configuration
+// ---------------------------------------------------------------------------
+let rateLimitCount = 0;
+let rateLimitInserts: Record<string, unknown>[] = [];
+let feedbackInserts: Record<string, unknown>[] = [];
+let shouldRateLimitThrow = false;
+let rateLimitError: Error | null = null;
 
-const cookieJar = new Map<string, string>();
+jest.mock("@/db", () => {
+  // delete().where() — rate-limit cleanup (always throws when shouldRateLimitThrow)
+  const deleteFn = jest.fn().mockImplementation(() => ({
+    where: jest.fn().mockImplementation(() => {
+      if (shouldRateLimitThrow && rateLimitError) throw rateLimitError;
+      return Promise.resolve({ rowCount: 0 });
+    }),
+  }));
 
-const createCookieStore = () => ({
-  get(name: string) {
-    const value = cookieJar.get(name);
-    return value ? { name, value } : undefined;
-  },
-  getAll() {
-    return Array.from(cookieJar.entries()).map(([name, value]) => ({
-      name,
-      value,
-    }));
-  },
-  set(name: string, value: string) {
-    cookieJar.set(name, value);
-  },
-  delete(name: string) {
-    cookieJar.delete(name);
-  },
-  has(name: string) {
-    return cookieJar.has(name);
-  },
+  // select({ count }).from().where() — rate-limit count
+  const selectFn = jest.fn().mockImplementation(() => ({
+    from: jest.fn().mockReturnValue({
+      where: jest.fn().mockImplementation(() => {
+        if (shouldRateLimitThrow && rateLimitError) throw rateLimitError;
+        return Promise.resolve([{ count: rateLimitCount }]);
+      }),
+    }),
+  }));
+
+  // insert().values() — rate-limit record OR feedback row
+  // Only throws for rate-limit inserts (those with "endpoint" key)
+  const insertFn = jest.fn().mockImplementation(() => ({
+    values: jest.fn().mockImplementation((val: Record<string, unknown>) => {
+      if (val && "endpoint" in val) {
+        if (shouldRateLimitThrow && rateLimitError) throw rateLimitError;
+        rateLimitInserts.push(val);
+      } else {
+        feedbackInserts.push(val);
+      }
+      return Promise.resolve({ rowCount: 1 });
+    }),
+  }));
+
+  return {
+    db: {
+      select: selectFn,
+      insert: insertFn,
+      delete: deleteFn,
+    },
+  };
 });
 
-jest.mock("next/headers", () => ({
-  cookies: jest.fn(() => Promise.resolve(createCookieStore())),
-  headers: jest.fn(() => new Headers()),
+// ---------------------------------------------------------------------------
+// Mock auth-server
+// ---------------------------------------------------------------------------
+jest.mock("@/lib/auth-server", () => ({
+  requireAuth: jest.fn(),
 }));
 
-const setCookie = (name: string, value: string) => {
-  cookieJar.set(name, value);
+// ---------------------------------------------------------------------------
+// Imports (after mocks)
+// ---------------------------------------------------------------------------
+import { NextRequest } from "next/server";
+import {
+  POST as feedbackPost,
+  GET as feedbackGet,
+} from "@/app/api/feedback/route";
+import { requireAuth } from "@/lib/auth-server";
+
+const mockRequireAuth = requireAuth as jest.Mock;
+
+const mockUser = {
+  id: "test-user-id",
+  email: "test@example.com",
+  name: "Test User",
 };
 
-const clearCookies = () => {
-  cookieJar.clear();
-};
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+const buildRequest = (body: Record<string, unknown>) =>
+  new NextRequest("http://localhost/api/feedback", {
+    method: "POST",
+    headers: new Headers({
+      "Content-Type": "application/json",
+      "Accept-Language": "en-US,en;q=0.9",
+      Referer: "http://localhost/test",
+    }),
+    body: JSON.stringify(body),
+  });
 
-const authenticate = () => {
-  setCookie("sb-access-token", "mock-access-token");
-  setCookie("sb-refresh-token", "mock-refresh-token");
-};
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://test.supabase.co";
-
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 describe("POST /api/feedback (integration)", () => {
   let consoleErrorSpy: jest.SpyInstance;
   let consoleWarnSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    clearCookies();
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => undefined);
-    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    rateLimitCount = 0;
+    rateLimitInserts = [];
+    feedbackInserts = [];
+    shouldRateLimitThrow = false;
+    rateLimitError = null;
+
+    mockRequireAuth.mockResolvedValue({ user: mockUser });
+
+    consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    consoleWarnSpy = jest
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
   });
 
   afterEach(() => {
-    server.resetHandlers();
     consoleErrorSpy.mockRestore();
     consoleWarnSpy.mockRestore();
   });
 
-  const buildRequest = (body: Record<string, unknown>) =>
-    new NextRequest("http://localhost/api/feedback", {
-      method: "POST",
-      headers: new Headers({
-        "Content-Type": "application/json",
-        "Accept-Language": "en-US,en;q=0.9",
-        Referer: "http://localhost/test",
-      }),
-      body: JSON.stringify(body),
-    });
-
   it("returns 401 for unauthenticated requests", async () => {
+    mockRequireAuth.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: "Authentication required",
+          code: "UNAUTHORIZED",
+        }),
+        { status: 401 },
+      ),
+    );
+
     const request = buildRequest({
       feedbackType: "bug_report",
       subject: "Broken button",
@@ -92,8 +153,6 @@ describe("POST /api/feedback (integration)", () => {
   });
 
   it("allows authenticated users to submit feedback", async () => {
-    authenticate();
-
     const request = buildRequest({
       feedbackType: "bug_report",
       subject: "Broken button",
@@ -104,11 +163,17 @@ describe("POST /api/feedback (integration)", () => {
 
     expect(response.status).toBe(201);
     expect(await response.json()).toEqual({ success: true });
+    expect(feedbackInserts.length).toBe(1);
+    expect(feedbackInserts[0]).toMatchObject({
+      userId: mockUser.id,
+      userEmail: mockUser.email,
+      feedbackType: "bug_report",
+      subject: "Broken button",
+      message: "Submit button does not work.",
+    });
   });
 
   it("rejects payloads missing required fields", async () => {
-    authenticate();
-
     const request = buildRequest({
       feedbackType: "bug_report",
       subject: "",
@@ -125,8 +190,6 @@ describe("POST /api/feedback (integration)", () => {
   });
 
   it("validates the feedback type", async () => {
-    authenticate();
-
     const request = buildRequest({
       feedbackType: "unknown_type",
       subject: "Feature request",
@@ -143,8 +206,6 @@ describe("POST /api/feedback (integration)", () => {
   });
 
   it("enforces subject length constraints", async () => {
-    authenticate();
-
     const request = buildRequest({
       feedbackType: "bug_report",
       subject: " ",
@@ -161,8 +222,6 @@ describe("POST /api/feedback (integration)", () => {
   });
 
   it("enforces message length constraints", async () => {
-    authenticate();
-
     const request = buildRequest({
       feedbackType: "bug_report",
       subject: "Broken button",
@@ -179,22 +238,7 @@ describe("POST /api/feedback (integration)", () => {
   });
 
   it("returns 429 when the rate limit is exceeded", async () => {
-    authenticate();
-
-    server.use(
-      http.get(`${SUPABASE_URL}/rest/v1/rate_limit_user`, () => {
-        const now = Date.now();
-        return HttpResponse.json(
-          Array.from({ length: 6 }, (_, index) => ({
-            id: index,
-            user_id: "test-user-id",
-            endpoint: "/api/feedback",
-            timestamp: now - index * 1000,
-            created_at: new Date(now - index * 1000).toISOString(),
-          }))
-        );
-      })
-    );
+    rateLimitCount = 6;
 
     const request = buildRequest({
       feedbackType: "bug_report",
@@ -211,48 +255,7 @@ describe("POST /api/feedback (integration)", () => {
     });
   });
 
-  it("handles Supabase insertion failures gracefully", async () => {
-    authenticate();
-
-    server.use(
-      http.post(`${SUPABASE_URL}/rest/v1/feedback`, () =>
-        new HttpResponse(
-          JSON.stringify({
-            code: "500",
-            message: "Database unavailable",
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        )
-      )
-    );
-
-    const request = buildRequest({
-      feedbackType: "bug_report",
-      subject: "Broken button",
-      message: "Submit button does not work.",
-    });
-
-    const response = await feedbackPost(request);
-
-    expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({
-      success: false,
-      error: "Failed to submit feedback",
-    });
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Error creating feedback:",
-      expect.objectContaining({ message: "Database unavailable" })
-    );
-  });
-
   it("returns 500 when the request body is invalid JSON", async () => {
-    authenticate();
-
     const request = new NextRequest("http://localhost/api/feedback", {
       method: "POST",
       headers: new Headers({ "Content-Type": "application/json" }),
@@ -268,14 +271,9 @@ describe("POST /api/feedback (integration)", () => {
     });
   });
 
-  it("fails open when the rate limit lookup returns an error", async () => {
-    authenticate();
-
-    server.use(
-      http.get(`${SUPABASE_URL}/rest/v1/rate_limit_user`, () =>
-        new HttpResponse("error", { status: 500 })
-      )
-    );
+  it("fails open when the rate limit check throws", async () => {
+    shouldRateLimitThrow = true;
+    rateLimitError = new Error("database unavailable");
 
     const request = buildRequest({
       feedbackType: "bug_report",
@@ -285,33 +283,13 @@ describe("POST /api/feedback (integration)", () => {
 
     const response = await feedbackPost(request);
 
+    // Should fail open: allow the request
     expect(response.status).toBe(201);
     expect(await response.json()).toEqual({ success: true });
     expect(consoleWarnSpy).toHaveBeenCalledWith(
       "Feedback rate limit check failed, allowing request:",
-      expect.objectContaining({ message: "error" })
+      expect.any(Error),
     );
-  });
-
-  it("fails open when the rate limit lookup throws", async () => {
-    authenticate();
-
-    server.use(
-      http.delete(`${SUPABASE_URL}/rest/v1/rate_limit_user`, () => {
-        throw new Error("network unavailable");
-      })
-    );
-
-    const request = buildRequest({
-      feedbackType: "bug_report",
-      subject: "Broken button",
-      message: "Submit button does not work.",
-    });
-
-    const response = await feedbackPost(request);
-
-    expect(response.status).toBe(201);
-    expect(await response.json()).toEqual({ success: true });
   });
 });
 

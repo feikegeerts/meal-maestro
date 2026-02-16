@@ -1,13 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
-import { pricingService } from './pricing-service';
-import { type OpenAIUsageData } from './openai-service';
-import { usageLimitService } from './usage-limit-service';
-
-// Supabase client for usage logging
-const supabaseUrl = process.env.SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { db } from "@/db";
+import { apiUsage } from "@/db/schema";
+import { pricingService } from "./pricing-service";
+import { type OpenAIUsageData } from "./openai-service";
+import { usageLimitService } from "./usage-limit-service";
 
 export interface UsageLogEntry {
   user_id: string;
@@ -40,12 +35,11 @@ export interface UserUsageStats extends UsageStats {
 }
 
 export class UsageTrackingService {
-  
   public async logUsage(
     userId: string,
     endpoint: string,
     usage: OpenAIUsageData,
-    tier: 'standard' | 'batch' | 'flex' | 'priority' = 'standard'
+    tier: "standard" | "batch" | "flex" | "priority" = "standard",
   ): Promise<{
     success: boolean;
     cost?: number;
@@ -63,39 +57,33 @@ export class UsageTrackingService {
         usage.model,
         usage.promptTokens,
         usage.completionTokens,
-        tier
+        tier,
       );
 
-      // Prepare log entry
-      const logEntry: UsageLogEntry = {
-        user_id: userId,
+      // Insert into database
+      await db.insert(apiUsage).values({
+        userId,
         endpoint,
         model: usage.model,
-        prompt_tokens: usage.promptTokens,
-        completion_tokens: usage.completionTokens,
-        tokens_used: usage.totalTokens,
-        calculated_cost: costCalculation.totalCost,
-      };
-
-      // Insert into database
-      const { error } = await supabase
-        .from('api_usage')
-        .insert(logEntry);
-
-      if (error) {
-        console.error('🔴 [UsageTracking] Database error:', error);
-        return { success: false, error: error.message };
-      }
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        tokensUsed: usage.totalTokens,
+        calculatedCost: costCalculation.totalCost.toString(),
+      });
 
       let warningThresholdReached = false;
       let limitReached = false;
 
       let summary;
       try {
-        const result = await usageLimitService.recordUsageEvent(userId, usage, {
-          endpoint,
-          costUsd: costCalculation.totalCost,
-        });
+        const result = await usageLimitService.recordUsageEvent(
+          userId,
+          usage,
+          {
+            endpoint,
+            costUsd: costCalculation.totalCost,
+          },
+        );
 
         warningThresholdReached = result.reachedWarning;
         limitReached = result.reachedLimit;
@@ -104,7 +92,10 @@ export class UsageTrackingService {
           monthStart: result.summary.month_start,
         };
       } catch (aggregationError) {
-        console.error('🔴 [UsageTracking] Failed to aggregate monthly usage:', aggregationError);
+        console.error(
+          "🔴 [UsageTracking] Failed to aggregate monthly usage:",
+          aggregationError,
+        );
       }
 
       return {
@@ -114,12 +105,11 @@ export class UsageTrackingService {
         limitReached,
         summary,
       };
-
     } catch (error) {
-      console.error('🔴 [UsageTracking] Error logging usage:', error);
+      console.error("🔴 [UsageTracking] Error logging usage:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error' 
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }

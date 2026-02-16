@@ -136,7 +136,7 @@
       "causes": [
         "Scheduled maintenance and updates",
         "Technical issues or system failures",
-        "Third-party service dependencies (Google, Supabase, OpenAI, Vercel)",
+        "Third-party service dependencies (Google, Neon, OpenAI, Vercel)",
         "Emergency security measures"
       ],
       "notice": "We will make reasonable efforts to provide advance notice of scheduled maintenance."

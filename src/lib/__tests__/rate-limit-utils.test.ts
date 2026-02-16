@@ -1,5 +1,4 @@
 import { RateLimitManager } from '../rate-limit-utils';
-import { AuthError } from '@supabase/supabase-js';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -33,7 +32,7 @@ describe('RateLimitManager', () => {
 
   describe('analyzeRateLimit', () => {
     it('should detect Supabase email rate limit errors', () => {
-      const error = new Error('email rate limit exceeded') as AuthError;
+      const error = new Error('email rate limit exceeded');
       const result = rateLimitManager.analyzeRateLimit(error);
 
       expect(result.isRateLimited).toBe(true);
@@ -42,7 +41,7 @@ describe('RateLimitManager', () => {
     });
 
     it('should detect over_email_send_rate_limit errors', () => {
-      const error = new Error('over_email_send_rate_limit') as AuthError;
+      const error = new Error('over_email_send_rate_limit');
       const result = rateLimitManager.analyzeRateLimit(error);
 
       expect(result.isRateLimited).toBe(true);
@@ -50,7 +49,7 @@ describe('RateLimitManager', () => {
     });
 
     it('should parse specific time mentions from error messages', () => {
-      const error = new Error('For security purposes, you can only request this once every 60 seconds') as AuthError;
+      const error = new Error('For security purposes, you can only request this once every 60 seconds');
       const result = rateLimitManager.analyzeRateLimit(error);
 
       expect(result.isRateLimited).toBe(true);
@@ -59,7 +58,7 @@ describe('RateLimitManager', () => {
     });
 
     it('should not flag non-rate-limit errors', () => {
-      const error = new Error('Invalid email format') as AuthError;
+      const error = new Error('Invalid email format');
       const result = rateLimitManager.analyzeRateLimit(error);
 
       expect(result.isRateLimited).toBe(false);
@@ -73,7 +72,7 @@ describe('RateLimitManager', () => {
     });
 
     it('should return true when rate limit is active', () => {
-      const error = new Error('rate limit exceeded') as AuthError;
+      const error = new Error('rate limit exceeded');
       rateLimitManager.analyzeRateLimit(error);
 
       expect(rateLimitManager.isCurrentlyRateLimited()).toBe(true);
@@ -81,7 +80,7 @@ describe('RateLimitManager', () => {
 
     it('should return false when rate limit has expired', () => {
       // Manually set an expired rate limit
-      localStorageMock.setItem('supabase_email_rate_limit', JSON.stringify({
+      localStorageMock.setItem('email_rate_limit', JSON.stringify({
         resetTime: Date.now() - 1000, // 1 second ago
         errorCount: 1,
         lastErrorTime: Date.now() - 2000
@@ -94,7 +93,7 @@ describe('RateLimitManager', () => {
   describe('getRemainingWaitTime', () => {
     it('should return correct remaining time', () => {
       const futureResetTime = Date.now() + 60000; // 1 minute from now
-      localStorageMock.setItem('supabase_email_rate_limit', JSON.stringify({
+      localStorageMock.setItem('email_rate_limit', JSON.stringify({
         resetTime: futureResetTime,
         errorCount: 1,
         lastErrorTime: Date.now()
@@ -110,7 +109,7 @@ describe('RateLimitManager', () => {
 
   describe('clearRateLimit', () => {
     it('should clear stored rate limit data', () => {
-      const error = new Error('rate limit exceeded') as AuthError;
+      const error = new Error('rate limit exceeded');
       rateLimitManager.analyzeRateLimit(error);
       
       expect(rateLimitManager.isCurrentlyRateLimited()).toBe(true);
@@ -123,21 +122,21 @@ describe('RateLimitManager', () => {
 
   describe('wait time formatting', () => {
     it('should format seconds correctly', () => {
-      const error = new Error('For security purposes, you can only request this once every 30 seconds') as AuthError;
+      const error = new Error('For security purposes, you can only request this once every 30 seconds');
       const result = rateLimitManager.analyzeRateLimit(error);
       
       expect(result.waitTimeText).toBe('30 seconds');
     });
 
     it('should format minutes correctly', () => {
-      const error = new Error('For security purposes, you can only request this once every 120 seconds') as AuthError;
+      const error = new Error('For security purposes, you can only request this once every 120 seconds');
       const result = rateLimitManager.analyzeRateLimit(error);
       
       expect(result.waitTimeText).toBe('2 minutes');
     });
 
     it('should format hours correctly for Supabase email limits', () => {
-      const error = new Error('over_email_send_rate_limit') as AuthError;
+      const error = new Error('over_email_send_rate_limit');
       const result = rateLimitManager.analyzeRateLimit(error);
       
       expect(result.waitTimeText).toBe('1 hour');
@@ -150,7 +149,7 @@ describe('RateLimitManager', () => {
       rateLimitManager.clearRateLimit();
       
       // Use a generic rate limit error that doesn't have specific time mentions
-      const error = new Error('rate limit exceeded') as AuthError;
+      const error = new Error('rate limit exceeded');
       
       // First error - should get base wait time
       const firstResult = rateLimitManager.analyzeRateLimit(error);
@@ -160,7 +159,7 @@ describe('RateLimitManager', () => {
       
       // Simulate that enough time has passed and we get another error
       // Mock stored data with error count to test escalation
-      localStorageMock.setItem('supabase_email_rate_limit', JSON.stringify({
+      localStorageMock.setItem('email_rate_limit', JSON.stringify({
         resetTime: Date.now() - 1000, // Expired 1 second ago
         errorCount: 1, // One previous error
         lastErrorTime: Date.now() - 2000
@@ -179,7 +178,7 @@ describe('RateLimitManager', () => {
       rateLimitManager.clearRateLimit();
       
       // Use an error with explicit time - should use the explicit time
-      const explicitError = new Error('For security purposes, you can only request this once every 30 seconds') as AuthError;
+      const explicitError = new Error('For security purposes, you can only request this once every 30 seconds');
       const result = rateLimitManager.analyzeRateLimit(explicitError);
       
       expect(result.waitTimeMs).toBe(30 * 1000); // Should be exactly 30 seconds

@@ -24,7 +24,8 @@ Supplementary frequently relevant files:
 - `src/middleware.ts` – middleware logic (auth/i18n)
 - `src/lib/` – domain/business logic utilities
 - `src/contexts/` – React context providers
-- `supabase/migrations/` – database schema & evolution
+- `src/db/schema.ts` – Drizzle ORM schema (source of truth for DB structure)
+- `drizzle/migrations/` – database migrations
 - `src/config/usage-limits.ts` – server-side AI spend thresholds & alert tuning
 
 When modifying or adding tests, also inspect:
@@ -36,15 +37,20 @@ When modifying or adding tests, also inspect:
 
 ## Project Overview (Agent-Focused)
 
-Meal Maestro is an AI‑augmented recipe management platform built on Next.js (App Router) + Supabase + OpenAI. It enables users to store, search, and interact with recipes using conversational AI.
+Meal Maestro is an AI‑augmented recipe management platform built on Next.js (App Router) + Neon (Postgres) + Drizzle ORM + OpenAI. It enables users to store, search, and interact with recipes using conversational AI.
 
 Primary domains:
 
 1. Recipes (CRUD, scaling, unit conversion, tagging, seasonal metadata)
-2. User Auth & Profiles (Supabase auth, Google OAuth PKCE)
+2. User Auth & Profiles (Neon Auth / Better Auth, Google OAuth)
 3. AI Interaction (OpenAI model usage + cost tracking)
-4. Media (Recipe images with compression & upload)
+4. Media (Recipe images with compression & upload via Cloudflare R2)
 5. Settings & Theming (Dark mode, custom units, preferences)
+
+Database & ORM:
+- Database: Neon (Postgres) — schema in `src/db/schema.ts` (Drizzle ORM)
+- Migrations: `drizzle/migrations/` (managed via `drizzle-kit`)
+- Storage: Cloudflare R2 via S3-compatible API (`@aws-sdk/client-s3`)
 
 ---
 
@@ -69,6 +75,12 @@ Environment variables live in `.env.local` (see `README.md` for template). For a
 - React contexts in `src/contexts/` should remain light wrappers over pure utility functions in `src/lib/`.
 - Use absolute imports with `@/` path alias (configured in tsconfig).
 - Keep `types/` purely for type/interface/enum declarations (no business logic). Logic belongs in `lib/`.
+
+### Drizzle ORM camelCase vs API snake_case
+
+**Critical**: The Drizzle schema (`src/db/schema.ts`) uses camelCase column names (`displayName`, `avatarUrl`, `languagePreference`, `unitSystemPreference`, `createdAt`, `updatedAt`), but the frontend types and all API responses use snake_case (`display_name`, `avatar_url`, `language_preference`, etc.).
+
+**Any API route returning Drizzle query results must map camelCase → snake_case** before sending the response. See `src/app/api/user/profile/route.ts` `toSnakeCase()` for the pattern. The frontend `UserProfile` type is defined in `src/lib/profile-types.ts` (snake_case).
 
 ---
 
@@ -98,6 +110,16 @@ Formatting:
 - Add edge case coverage for: empty ingredient lists, scaling >10x, invalid unit conversions, missing auth session.
 - Agents: If you modify logic in `recipe-utils` or auth flows, add or update tests accordingly before finishing.
 
+### Drizzle ORM Test Mocking
+
+Any test that transitively imports `@/db` **must** mock it to prevent `neon()` from running at import time. See `docs/drizzle-test-mock-patterns.md` for full patterns covering:
+
+- Simple chainable mocks (`db.select().from().where()`)
+- Module-level mutable state for per-test DB responses
+- Multi-query dispatch (when code makes multiple different DB calls)
+- Neon Auth (`auth.getSession`) mocking
+- Jest mock hoisting workarounds (`const` vs `let` in factories)
+
 Verification steps for most feature changes:
 
 1. Lint passes (`pnpm lint`)
@@ -123,11 +145,16 @@ When refactoring recipe code:
 
 ---
 
-## Auth Notes (PKCE & Supabase)
+## Auth Notes (Neon Auth)
 
-- Google OAuth uses client-side callback page (`/auth/callback/page.tsx`), not a server action route. Supabase handles PKCE w/ `detectSessionInUrl: true`.
-- Avoid exposing service-role keys in browser context.
-- When modifying auth flows: ensure middleware & RLS assumptions hold.
+- Authentication uses Neon Auth (Better Auth) — NOT Supabase Auth.
+- Google OAuth is configured through the Neon Console; the OAuth callback goes through Neon's auth endpoint.
+- Auth client: `src/lib/auth/client.ts` (browser), `src/lib/auth/server.ts` (server).
+- Auth context: `src/lib/auth-context.tsx` provides `useAuth()` hook with `user`, `profile`, `signIn*`, `signOut`, `updateProfile`.
+- Profile auto-provisioning: `GET /api/user/profile` creates a `user_profiles` row on first access if none exists.
+- `AuthUser` type (`src/lib/auth-server.ts`): `{ id, email?, name?, image? }` — name/image come from Neon Auth session.
+- Avoid exposing secrets in browser context.
+- When modifying auth flows: ensure middleware assumptions hold.
 
 ---
 

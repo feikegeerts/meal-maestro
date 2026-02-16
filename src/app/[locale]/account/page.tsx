@@ -71,7 +71,7 @@ export default function AccountPage() {
                     {t("info.provider")}
                   </label>
                   <p className="text-sm capitalize">
-                    {user.app_metadata?.provider || "email"}
+                    {user.image ? "google" : "email"}
                   </p>
                 </div>
               </div>

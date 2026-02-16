@@ -1,21 +1,11 @@
-import { createClient } from "@supabase/supabase-js";
+import { db } from "@/db";
+import {
+  apiUsage,
+  recipes,
+  monthlyUsageSummary,
+} from "@/db/schema";
+import { eq, gte, lte, isNotNull, count, and } from "drizzle-orm";
 import { type UserUsageStats, type UsageStats } from "./usage-tracking-service";
-
-// Admin service with service role key for full database access
-const supabaseUrl =
-  process.env.SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-if (!supabaseServiceKey) {
-  throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for admin functions");
-}
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
 
 interface ApiUsageRow {
   id: string;
@@ -33,17 +23,11 @@ export class AdminUsageService {
   public async getTotalRecipeCount(): Promise<number> {
     try {
       console.log("🔍 [AdminUsage] Fetching total recipe count...");
-      const { count, error } = await supabaseAdmin
-        .from("recipes")
-        .select("*", { count: "exact", head: true });
+      const [result] = await db.select({ count: count() }).from(recipes);
 
-      if (error) {
-        console.error("🔴 [AdminUsage] Error fetching recipe count:", error);
-        return 0;
-      }
-
-      console.log(`🔍 [AdminUsage] Total recipe count: ${count || 0}`);
-      return count || 0;
+      const total = result?.count ?? 0;
+      console.log(`🔍 [AdminUsage] Total recipe count: ${total}`);
+      return total;
     } catch (error) {
       console.error("🔴 [AdminUsage] Error in getTotalRecipeCount:", error);
       return 0;
@@ -52,42 +36,46 @@ export class AdminUsageService {
 
   public async getAllUsersUsageStats(
     startDate?: string,
-    endDate?: string
+    endDate?: string,
   ): Promise<UserUsageStats[]> {
     try {
-      console.log("🔍 [AdminUsage] Fetching all users usage stats...", { startDate, endDate });
-      let query = supabaseAdmin
-        .from("api_usage")
-        .select("*")
-        .order("timestamp", { ascending: false });
+      console.log("🔍 [AdminUsage] Fetching all users usage stats...", {
+        startDate,
+        endDate,
+      });
 
+      const conditions = [];
       if (startDate) {
-        query = query.gte("timestamp", startDate);
+        conditions.push(gte(apiUsage.timestamp, new Date(startDate)));
       }
       if (endDate) {
-        query = query.lte("timestamp", endDate);
+        conditions.push(lte(apiUsage.timestamp, new Date(endDate)));
       }
 
-      const { data, error } = await query;
+      const rows = await db
+        .select()
+        .from(apiUsage)
+        .where(
+          conditions.length > 0 ? and(...conditions) : undefined,
+        )
+        .orderBy(apiUsage.timestamp);
 
-      if (error) {
-        console.error("🔴 [AdminUsage] Error fetching all users stats:", error);
-        return [];
-      }
+      console.log(
+        `🔍 [AdminUsage] Found ${rows.length} API usage records`,
+      );
 
-      console.log(`🔍 [AdminUsage] Found ${data?.length || 0} API usage records`);
-
-      if (!data || data.length === 0) {
+      if (rows.length === 0) {
         return [];
       }
 
       // Group data by user
       const userDataMap = new Map<string, ApiUsageRow[]>();
-      data.forEach((entry: ApiUsageRow) => {
-        if (!userDataMap.has(entry.user_id)) {
-          userDataMap.set(entry.user_id, []);
+      rows.forEach((entry) => {
+        const row = this.toApiUsageRow(entry);
+        if (!userDataMap.has(row.user_id)) {
+          userDataMap.set(row.user_id, []);
         }
-        userDataMap.get(entry.user_id)!.push(entry);
+        userDataMap.get(row.user_id)!.push(row);
       });
 
       // Calculate stats for each user
@@ -104,7 +92,9 @@ export class AdminUsageService {
         });
       });
 
-      console.log(`🔍 [AdminUsage] Calculated stats for ${userStats.length} users`);
+      console.log(
+        `🔍 [AdminUsage] Calculated stats for ${userStats.length} users`,
+      );
 
       // Sort by total cost (descending) and add ranks
       userStats.sort((a, b) => b.totalCost - a.totalCost);
@@ -116,9 +106,12 @@ export class AdminUsageService {
       const avgCost =
         userStats.reduce((sum, s) => sum + s.totalCost, 0) / userStats.length;
       const avgTokens =
-        userStats.reduce((sum, s) => sum + s.totalTokens, 0) / userStats.length;
+        userStats.reduce((sum, s) => sum + s.totalTokens, 0) /
+        userStats.length;
 
-      console.log(`🔍 [AdminUsage] Average cost: ${avgCost.toFixed(4)}, Average tokens: ${avgTokens.toFixed(0)}`);
+      console.log(
+        `🔍 [AdminUsage] Average cost: ${avgCost.toFixed(4)}, Average tokens: ${avgTokens.toFixed(0)}`,
+      );
 
       userStats.forEach((stats) => {
         stats.isOutlier =
@@ -135,29 +128,23 @@ export class AdminUsageService {
   public async getUserUsageStats(
     userId: string,
     startDate?: string,
-    endDate?: string
+    endDate?: string,
   ): Promise<UserUsageStats | null> {
     try {
-      let query = supabaseAdmin
-        .from("api_usage")
-        .select("*")
-        .eq("user_id", userId);
-
+      const conditions = [eq(apiUsage.userId, userId)];
       if (startDate) {
-        query = query.gte("timestamp", startDate);
+        conditions.push(gte(apiUsage.timestamp, new Date(startDate)));
       }
       if (endDate) {
-        query = query.lte("timestamp", endDate);
+        conditions.push(lte(apiUsage.timestamp, new Date(endDate)));
       }
 
-      const { data, error } = await query;
+      const rows = await db
+        .select()
+        .from(apiUsage)
+        .where(and(...conditions));
 
-      if (error) {
-        console.error("🔴 [AdminUsage] Error fetching user stats:", error);
-        return null;
-      }
-
-      if (!data || data.length === 0) {
+      if (rows.length === 0) {
         return {
           userId,
           totalCalls: 0,
@@ -173,6 +160,7 @@ export class AdminUsageService {
         };
       }
 
+      const data = rows.map((r) => this.toApiUsageRow(r));
       const stats = this.calculateStatsFromData(data);
       return {
         userId,
@@ -191,7 +179,7 @@ export class AdminUsageService {
   public async getUsageByTimeRange(
     startDate: string,
     endDate: string,
-    groupBy: "day" | "week" | "month" = "day"
+    groupBy: "day" | "week" | "month" = "day",
   ): Promise<
     Array<{
       date: string;
@@ -202,38 +190,46 @@ export class AdminUsageService {
     }>
   > {
     try {
-      const { data, error } = await supabaseAdmin
-        .from("api_usage")
-        .select("*")
-        .gte("timestamp", startDate)
-        .lte("timestamp", endDate)
-        .order("timestamp", { ascending: true });
+      const rows = await db
+        .select()
+        .from(apiUsage)
+        .where(
+          and(
+            gte(apiUsage.timestamp, new Date(startDate)),
+            lte(apiUsage.timestamp, new Date(endDate)),
+          ),
+        )
+        .orderBy(apiUsage.timestamp);
 
-      if (error) {
-        console.error("🔴 [AdminUsage] Error fetching time range data:", error);
-        return [];
-      }
-
-      if (!data || data.length === 0) {
+      if (rows.length === 0) {
         return [];
       }
 
       // Group by date period
-      const dateGroups = new Map<string, ApiUsageRow[]>();
-      data.forEach((entry: ApiUsageRow) => {
+      const dateGroups = new Map<
+        string,
+        Array<typeof apiUsage.$inferSelect>
+      >();
+      rows.forEach((entry) => {
         let groupKey: string;
-        const timestamp = new Date(entry.timestamp);
+        const timestamp = entry.timestamp
+          ? new Date(entry.timestamp)
+          : new Date();
 
         switch (groupBy) {
           case "day":
-            groupKey = entry.timestamp.split("T")[0]; // YYYY-MM-DD
+            groupKey = timestamp.toISOString().split("T")[0]; // YYYY-MM-DD
             break;
           case "week":
-            // Get Monday of the week using date-only arithmetic (no time components)
+            // Get Monday of the week using date-only arithmetic
             {
-              const dateOnly = new Date(timestamp.getFullYear(), timestamp.getMonth(), timestamp.getDate());
-              const dayOfWeek = dateOnly.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-              const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert Sunday to 6, others to dayOfWeek - 1
+              const dateOnly = new Date(
+                timestamp.getFullYear(),
+                timestamp.getMonth(),
+                timestamp.getDate(),
+              );
+              const dayOfWeek = dateOnly.getDay();
+              const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
               const mondayDate = new Date(dateOnly);
               mondayDate.setDate(dateOnly.getDate() - daysToSubtract);
               groupKey = mondayDate.toISOString().split("T")[0];
@@ -241,11 +237,11 @@ export class AdminUsageService {
             }
           case "month":
             groupKey = `${timestamp.getFullYear()}-${String(
-              timestamp.getMonth() + 1
-            ).padStart(2, "0")}`; // YYYY-MM
+              timestamp.getMonth() + 1,
+            ).padStart(2, "0")}`;
             break;
           default:
-            groupKey = entry.timestamp.split("T")[0];
+            groupKey = timestamp.toISOString().split("T")[0];
         }
 
         if (!dateGroups.has(groupKey)) {
@@ -255,29 +251,30 @@ export class AdminUsageService {
       });
 
       // Calculate stats for each date group
-      const result = Array.from(dateGroups.entries()).map(([date, entries]) => {
-        const uniqueUsers = new Set(entries.map((e) => e.user_id)).size;
-        const totalCalls = entries.length;
-        const totalTokens = entries.reduce(
-          (sum, e) => sum + (e.tokens_used || 0),
-          0
-        );
-        const totalCost = entries.reduce(
-          (sum, e) => sum + Number(e.calculated_cost || 0),
-          0
-        );
+      const result = Array.from(dateGroups.entries()).map(
+        ([date, entries]) => {
+          const uniqueUsers = new Set(entries.map((e) => e.userId)).size;
+          const totalCalls = entries.length;
+          const totalTokens = entries.reduce(
+            (sum, e) => sum + (e.tokensUsed || 0),
+            0,
+          );
+          const totalCost = entries.reduce(
+            (sum, e) => sum + Number(e.calculatedCost || 0),
+            0,
+          );
 
-        return {
-          date,
-          totalCalls,
-          totalTokens,
-          totalCost,
-          uniqueUsers,
-        };
-      });
+          return {
+            date,
+            totalCalls,
+            totalTokens,
+            totalCost,
+            uniqueUsers,
+          };
+        },
+      );
 
-      const sortedResult = result.sort((a, b) => a.date.localeCompare(b.date));
-      return sortedResult;
+      return result.sort((a, b) => a.date.localeCompare(b.date));
     } catch (error) {
       console.error("🔴 [AdminUsage] Error in getUsageByTimeRange:", error);
       return [];
@@ -288,18 +285,21 @@ export class AdminUsageService {
     const totalCalls = data.length;
     const totalTokens = data.reduce(
       (sum, entry) => sum + (entry.tokens_used || 0),
-      0
+      0,
     );
     const totalCost = data.reduce(
       (sum, entry) => sum + Number(entry.calculated_cost || 0),
-      0
+      0,
     );
 
     // Find most used model
     const modelCounts = new Map<string, number>();
     data.forEach((entry) => {
       if (entry.model) {
-        modelCounts.set(entry.model, (modelCounts.get(entry.model) || 0) + 1);
+        modelCounts.set(
+          entry.model,
+          (modelCounts.get(entry.model) || 0) + 1,
+        );
       }
     });
 
@@ -320,51 +320,53 @@ export class AdminUsageService {
 
   public async getModelUsageStats(
     startDate?: string,
-    endDate?: string
-  ): Promise<Array<{
-    model: string;
-    totalCalls: number;
-    totalTokens: number;
-    totalCost: number;
-    averageTokensPerCall: number;
-    percentageOfTotal: number;
-  }>> {
+    endDate?: string,
+  ): Promise<
+    Array<{
+      model: string;
+      totalCalls: number;
+      totalTokens: number;
+      totalCost: number;
+      averageTokensPerCall: number;
+      percentageOfTotal: number;
+    }>
+  > {
     try {
-      let query = supabaseAdmin.from("api_usage").select("*");
-
+      const conditions = [];
       if (startDate) {
-        query = query.gte("timestamp", startDate);
+        conditions.push(gte(apiUsage.timestamp, new Date(startDate)));
       }
       if (endDate) {
-        query = query.lte("timestamp", endDate);
+        conditions.push(lte(apiUsage.timestamp, new Date(endDate)));
       }
 
-      const { data, error } = await query.order("timestamp", {
-        ascending: false,
-      });
+      const rows = await db
+        .select()
+        .from(apiUsage)
+        .where(
+          conditions.length > 0 ? and(...conditions) : undefined,
+        );
 
-      if (error) {
-        console.error("🔴 [AdminUsage] Error fetching model usage stats:", error);
-        return [];
-      }
-
-      if (!data || data.length === 0) {
+      if (rows.length === 0) {
         return [];
       }
 
       // Group by model and calculate statistics
-      const modelStats = new Map<string, {
-        totalCalls: number;
-        totalTokens: number;
-        totalCost: number;
-      }>();
+      const modelStats = new Map<
+        string,
+        {
+          totalCalls: number;
+          totalTokens: number;
+          totalCost: number;
+        }
+      >();
 
       let grandTotalCalls = 0;
 
-      data.forEach((entry: ApiUsageRow) => {
-        const model = entry.model || 'unknown';
-        const tokens = Number(entry.tokens_used || 0);
-        const cost = Number(entry.calculated_cost || 0);
+      rows.forEach((entry) => {
+        const model = entry.model || "unknown";
+        const tokens = Number(entry.tokensUsed || 0);
+        const cost = Number(entry.calculatedCost || 0);
 
         if (!modelStats.has(model)) {
           modelStats.set(model, {
@@ -389,10 +391,14 @@ export class AdminUsageService {
           totalCalls: stats.totalCalls,
           totalTokens: stats.totalTokens,
           totalCost: stats.totalCost,
-          averageTokensPerCall: stats.totalCalls > 0 ? stats.totalTokens / stats.totalCalls : 0,
-          percentageOfTotal: grandTotalCalls > 0 ? (stats.totalCalls / grandTotalCalls) * 100 : 0,
+          averageTokensPerCall:
+            stats.totalCalls > 0 ? stats.totalTokens / stats.totalCalls : 0,
+          percentageOfTotal:
+            grandTotalCalls > 0
+              ? (stats.totalCalls / grandTotalCalls) * 100
+              : 0,
         }))
-        .sort((a, b) => b.totalCost - a.totalCost); // Sort by cost descending
+        .sort((a, b) => b.totalCost - a.totalCost);
 
       return result;
     } catch (error) {
@@ -411,26 +417,20 @@ export class AdminUsageService {
   }> {
     try {
       console.log("🔍 [AdminUsage] Fetching image storage stats...");
-      const { data, error } = await supabaseAdmin
-        .from("recipes")
-        .select("user_id, image_url, image_metadata")
-        .not("image_url", "is", null);
+      const data = await db
+        .select({
+          userId: recipes.userId,
+          imageUrl: recipes.imageUrl,
+          imageMetadata: recipes.imageMetadata,
+        })
+        .from(recipes)
+        .where(isNotNull(recipes.imageUrl));
 
-      if (error) {
-        console.error("🔴 [AdminUsage] Error fetching image storage stats:", error);
-        return {
-          totalImages: 0,
-          totalStorageMB: 0,
-          totalStorageGB: 0,
-          totalStorageCost: 0,
-          usersWithImages: 0,
-          averageImagesPerUser: 0,
-        };
-      }
+      console.log(
+        `🔍 [AdminUsage] Found ${data.length} recipes with images`,
+      );
 
-      console.log(`🔍 [AdminUsage] Found ${data?.length || 0} recipes with images`);
-
-      if (!data || data.length === 0) {
+      if (data.length === 0) {
         return {
           totalImages: 0,
           totalStorageMB: 0,
@@ -442,23 +442,28 @@ export class AdminUsageService {
       }
 
       const totalImages = data.length;
-      const uniqueUsers = new Set(data.map(recipe => recipe.user_id)).size;
+      const uniqueUsers = new Set(data.map((recipe) => recipe.userId)).size;
 
       // Calculate total storage from compressed sizes in metadata
       let totalStorageBytes = 0;
-      data.forEach(recipe => {
-        if (recipe.image_metadata && recipe.image_metadata.compressedSize) {
-          totalStorageBytes += Number(recipe.image_metadata.compressedSize);
+      data.forEach((recipe) => {
+        const metadata = recipe.imageMetadata as Record<
+          string,
+          unknown
+        > | null;
+        if (metadata && typeof metadata.compressedSize === "number") {
+          totalStorageBytes += metadata.compressedSize;
         }
       });
 
       const totalStorageMB = totalStorageBytes / (1024 * 1024);
       const totalStorageGB = totalStorageMB / 1024;
-      
-      // Supabase storage pricing: $0.021 per GB per month
+
+      // Storage pricing: $0.021 per GB per month
       const totalStorageCost = totalStorageGB * 0.021;
 
-      const averageImagesPerUser = uniqueUsers > 0 ? totalImages / uniqueUsers : 0;
+      const averageImagesPerUser =
+        uniqueUsers > 0 ? totalImages / uniqueUsers : 0;
 
       return {
         totalImages,
@@ -482,7 +487,7 @@ export class AdminUsageService {
   }
 
   public async getMonthlyUsageSummary(
-    monthStart?: string
+    monthStart?: string,
   ): Promise<
     Array<{
       userId: string;
@@ -498,39 +503,51 @@ export class AdminUsageService {
   > {
     try {
       const targetMonthStart =
-        monthStart || new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+        monthStart ||
+        new Date(new Date().getFullYear(), new Date().getMonth(), 1)
           .toISOString()
-          .split('T')[0];
+          .split("T")[0];
 
-      const { data, error } = await supabaseAdmin
-        .from('monthly_usage_summary')
-        .select('*')
-        .eq('month_start', targetMonthStart);
-
-      if (error) {
-        console.error('[AdminUsage] Error fetching monthly summary:', error);
-        return [];
-      }
-
-      if (!data) {
-        return [];
-      }
+      const data = await db
+        .select()
+        .from(monthlyUsageSummary)
+        .where(eq(monthlyUsageSummary.monthStart, targetMonthStart));
 
       return data.map((row) => ({
-        userId: row.user_id,
-        monthStart: row.month_start,
-        totalCost: Number(row.total_cost || 0),
-        totalTokens: Number(row.total_tokens || 0),
-        totalCalls: Number(row.total_calls || 0),
-        warningEmailSentAt: row.warning_email_sent_at,
-        limitEmailSentAt: row.limit_email_sent_at,
-        rateLimitEmailSentAt: row.rate_limit_email_sent_at,
-        limitEnforcedAt: row.limit_enforced_at,
+        userId: row.userId,
+        monthStart: row.monthStart,
+        totalCost: Number(row.totalCost || 0),
+        totalTokens: Number(row.totalTokens || 0),
+        totalCalls: Number(row.totalCalls || 0),
+        warningEmailSentAt: row.warningEmailSentAt?.toISOString() ?? null,
+        limitEmailSentAt: row.limitEmailSentAt?.toISOString() ?? null,
+        rateLimitEmailSentAt:
+          row.rateLimitEmailSentAt?.toISOString() ?? null,
+        limitEnforcedAt: row.limitEnforcedAt?.toISOString() ?? null,
       }));
     } catch (error) {
-      console.error('[AdminUsage] Error in getMonthlyUsageSummary:', error);
+      console.error(
+        "[AdminUsage] Error in getMonthlyUsageSummary:",
+        error,
+      );
       return [];
     }
+  }
+
+  private toApiUsageRow(
+    row: typeof apiUsage.$inferSelect,
+  ): ApiUsageRow {
+    return {
+      id: row.id,
+      user_id: row.userId || "",
+      endpoint: row.endpoint,
+      model: row.model || "",
+      prompt_tokens: row.promptTokens || 0,
+      completion_tokens: row.completionTokens || 0,
+      tokens_used: row.tokensUsed || 0,
+      calculated_cost: Number(row.calculatedCost || 0),
+      timestamp: row.timestamp?.toISOString() || "",
+    };
   }
 }
 

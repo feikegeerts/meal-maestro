@@ -44,6 +44,10 @@
       }
     }
   },
+  "migration": {
+    "title": "Database Migration Complete",
+    "description": "We've migrated to a new database infrastructure. Magic link login and recipe sharing are temporarily unavailable while we finalize the transition."
+  },
   "theme": {
     "theme": "Theme",
     "light": "Light",
@@ -743,7 +747,7 @@
         "title": "Infrastructure Costs",
         "domain": "Domain registration",
         "hosting": "Hosting (Vercel)",
-        "database": "Database (Supabase)",
+        "database": "Database (Neon)",
         "free": "Free",
         "perYear": "year",
         "vercelLimits": {
@@ -753,8 +757,8 @@
           "usage": "Hobby projects only",
           "userLimit": "~100 users"
         },
-        "supabaseLimits": {
-          "title": "Supabase Free Tier Limits:",
+        "neonLimits": {
+          "title": "Neon Free Tier Limits:",
           "bandwidth": "10 GB bandwidth/month",
           "storage": "1 GB file storage",
           "usage": "Hobby projects only",

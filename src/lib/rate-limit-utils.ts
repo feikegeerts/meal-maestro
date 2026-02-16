@@ -1,5 +1,3 @@
-import { AuthError } from '@supabase/supabase-js';
-
 export interface RateLimitInfo {
   isRateLimited: boolean;
   resetTime: number; // Unix timestamp when rate limit resets
@@ -7,7 +5,7 @@ export interface RateLimitInfo {
   waitTimeText: string; // Human readable wait time
 }
 
-const RATE_LIMIT_STORAGE_KEY = 'supabase_email_rate_limit';
+const RATE_LIMIT_STORAGE_KEY = 'email_rate_limit';
 
 interface StoredRateLimitData {
   resetTime: number;
@@ -29,7 +27,7 @@ export class RateLimitManager {
    * Analyzes Supabase auth error to determine if it's rate limited
    * and calculates appropriate wait times
    */
-  analyzeRateLimit(error: AuthError | Error): RateLimitInfo {
+  analyzeRateLimit(error: { message: string }): RateLimitInfo {
     const errorMessage = error.message.toLowerCase();
     const now = Date.now();
     
@@ -109,7 +107,7 @@ export class RateLimitManager {
     }
   }
 
-  private isRateLimitError(error: AuthError | Error): boolean {
+  private isRateLimitError(error: { message: string }): boolean {
     const message = error.message.toLowerCase();
     return (
       message.includes('rate limit') ||

@@ -1,7 +1,17 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { ApplicationError, ErrorCode, type ServiceResult } from './types/error-types';
-import { convertImage, type ImageConversionOptions } from './image-conversion';
-import { IMAGE_COMPRESSION_CONFIG } from './image-compression-config';
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  CopyObjectCommand,
+  HeadObjectCommand,
+} from "@aws-sdk/client-s3";
+import {
+  ApplicationError,
+  ErrorCode,
+  type ServiceResult,
+} from "./types/error-types";
+import { convertImage, type ImageConversionOptions } from "./image-conversion";
+import { IMAGE_COMPRESSION_CONFIG } from "./image-compression-config";
 
 export interface ImageMetadata {
   originalSize: number;
@@ -17,44 +27,57 @@ export interface ImageUploadResult {
   metadata: ImageMetadata;
 }
 
-export interface ImageServiceConfig {
-  supabaseClient?: SupabaseClient;
-  supabaseUrl?: string;
-  supabaseKey?: string;
+function createS3Client(): S3Client {
+  const endpoint = process.env.R2_ENDPOINT;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+
+  if (!endpoint || !accessKeyId || !secretAccessKey) {
+    throw new ApplicationError(
+      ErrorCode.CONFIGURATION_ERROR,
+      "Missing required R2 configuration (R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY)",
+      "ImageService",
+      "createS3Client",
+      {
+        hasEndpoint: !!endpoint,
+        hasAccessKey: !!accessKeyId,
+        hasSecretKey: !!secretAccessKey,
+      },
+    );
+  }
+
+  return new S3Client({
+    region: "auto",
+    endpoint,
+    credentials: {
+      accessKeyId,
+      secretAccessKey,
+    },
+  });
 }
 
 /**
- * Service for managing recipe image operations
+ * Service for managing recipe image operations via Cloudflare R2
  * Handles image upload, compression, storage, and cleanup with enterprise-level error handling
  */
 export class ImageService {
-  private supabase: SupabaseClient;
-  private readonly bucketName = 'recipe-images';
+  private s3: S3Client;
+  private readonly bucketName: string;
+  private readonly publicUrl: string;
 
-  constructor(config?: ImageServiceConfig) {
-    // Use provided authenticated client if available, otherwise create new one
-    if (config?.supabaseClient) {
-      this.supabase = config.supabaseClient;
-    } else {
-      const supabaseUrl = config?.supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = config?.supabaseKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseKey) {
-        throw new ApplicationError(
-          ErrorCode.CONFIGURATION_ERROR,
-          'Missing required Supabase configuration',
-          'ImageService',
-          'constructor',
-          { hasUrl: !!supabaseUrl, hasKey: !!supabaseKey }
-        );
-      }
+  constructor() {
+    this.s3 = createS3Client();
+    this.bucketName = process.env.R2_BUCKET_NAME || "meal-maestro-images";
+    this.publicUrl = process.env.R2_PUBLIC_URL || "";
 
-      this.supabase = createClient(supabaseUrl, supabaseKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      });
+    if (!this.publicUrl) {
+      throw new ApplicationError(
+        ErrorCode.CONFIGURATION_ERROR,
+        "Missing required R2_PUBLIC_URL configuration",
+        "ImageService",
+        "constructor",
+        {},
+      );
     }
   }
 
@@ -65,110 +88,94 @@ export class ImageService {
     recipeId: string,
     userId: string,
     imageBuffer: Buffer,
-    options: Partial<ImageConversionOptions> = {}
+    options: Partial<ImageConversionOptions> = {},
   ): Promise<ServiceResult<ImageUploadResult>> {
     try {
-      // Validate input parameters
       if (!recipeId || !userId || !imageBuffer || imageBuffer.length === 0) {
         throw new ApplicationError(
           ErrorCode.INVALID_INPUT,
-          'Missing required parameters for image upload',
-          'ImageService',
-          'uploadRecipeImage',
-          { recipeId, userId, bufferSize: imageBuffer.length }
+          "Missing required parameters for image upload",
+          "ImageService",
+          "uploadRecipeImage",
+          { recipeId, userId, bufferSize: imageBuffer.length },
         );
       }
 
-      // Validate file size
       if (imageBuffer.length > IMAGE_COMPRESSION_CONFIG.MAX_FILE_SIZE_BYTES) {
         throw new ApplicationError(
           ErrorCode.VALIDATION_ERROR,
           IMAGE_COMPRESSION_CONFIG.ERROR_MESSAGES.FILE_TOO_LARGE,
-          'ImageService',
-          'uploadRecipeImage',
-          { fileSize: imageBuffer.length, maxSize: IMAGE_COMPRESSION_CONFIG.MAX_FILE_SIZE_BYTES }
+          "ImageService",
+          "uploadRecipeImage",
+          {
+            fileSize: imageBuffer.length,
+            maxSize: IMAGE_COMPRESSION_CONFIG.MAX_FILE_SIZE_BYTES,
+          },
         );
       }
 
-      // Process image with Sharp
       const conversionOptions: ImageConversionOptions = {
-        format: 'webp',
-        quality: 85, // High quality for recipe photos
+        format: "webp",
+        quality: 85,
         width: IMAGE_COMPRESSION_CONFIG.MAX_WIDTH,
         height: IMAGE_COMPRESSION_CONFIG.MAX_HEIGHT,
-        ...options
+        ...options,
       };
 
-      const conversionResult = await convertImage(imageBuffer, conversionOptions);
+      const conversionResult = await convertImage(
+        imageBuffer,
+        conversionOptions,
+      );
 
-      // Strip EXIF data for privacy (Sharp does this automatically for WebP)
-      
-      // Generate timestamp-based filename for cache invalidation
       const timestamp = Date.now();
       const filename = `${timestamp}.webp`;
-      const filePath = `${userId}/${recipeId}/${filename}`;
+      const key = `${userId}/${recipeId}/${filename}`;
 
-      // Upload to Supabase Storage
-      const { error: uploadError } = await this.supabase.storage
-        .from(this.bucketName)
-        .upload(filePath, conversionResult.buffer, {
-          contentType: 'image/webp',
-          cacheControl: '3600', // 1 hour cache
-        });
+      await this.s3.send(
+        new PutObjectCommand({
+          Bucket: this.bucketName,
+          Key: key,
+          Body: conversionResult.buffer,
+          ContentType: "image/webp",
+          CacheControl: "public, max-age=3600",
+        }),
+      );
 
-      if (uploadError) {
-        throw new ApplicationError(
-          ErrorCode.EXTERNAL_API_ERROR,
-          `Failed to upload image to storage: ${uploadError.message}`,
-          'ImageService',
-          'uploadRecipeImage',
-          { uploadError, filePath }
-        );
-      }
+      const publicUrl = `${this.publicUrl}/${key}`;
 
-      // Get public URL
-      const { data: { publicUrl } } = this.supabase.storage
-        .from(this.bucketName)
-        .getPublicUrl(filePath);
-
-      // Create metadata object
       const metadata: ImageMetadata = {
         originalSize: conversionResult.originalSize,
         compressedSize: conversionResult.metadata.size,
         compressionRatio: conversionResult.compressionRatio,
         dimensions: {
           width: conversionResult.metadata.width,
-          height: conversionResult.metadata.height
+          height: conversionResult.metadata.height,
         },
         format: conversionResult.metadata.format,
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
       };
 
       return {
         success: true,
         data: {
           url: publicUrl,
-          metadata
-        }
+          metadata,
+        },
       };
-
     } catch (error) {
       if (error instanceof ApplicationError) {
-        return {
-          success: false,
-          error: error
-        };
+        return { success: false, error };
       }
 
       return {
         success: false,
         error: new ApplicationError(
           ErrorCode.INTERNAL_ERROR,
-          'Unexpected error during image upload',
-          'ImageService',
-          'uploadRecipeImage',
-          { originalError: error }
-        )
+          "Unexpected error during image upload",
+          "ImageService",
+          "uploadRecipeImage",
+          { originalError: error },
+        ),
       };
     }
   }
@@ -178,74 +185,67 @@ export class ImageService {
    */
   async deleteRecipeImage(
     imageUrl: string,
-    userId: string
+    userId: string,
   ): Promise<ServiceResult<void>> {
     try {
       if (!imageUrl || !userId) {
         throw new ApplicationError(
           ErrorCode.INVALID_INPUT,
-          'Missing required parameters for image deletion',
-          'ImageService',
-          'deleteRecipeImage',
-          { imageUrl, userId }
+          "Missing required parameters for image deletion",
+          "ImageService",
+          "deleteRecipeImage",
+          { imageUrl, userId },
         );
       }
 
-      // Extract file path from URL
       const filePath = this.extractFilePathFromUrl(imageUrl);
       if (!filePath) {
         throw new ApplicationError(
           ErrorCode.INVALID_INPUT,
-          'Invalid image URL format',
-          'ImageService',
-          'deleteRecipeImage',
-          { imageUrl }
+          "Invalid image URL format",
+          "ImageService",
+          "deleteRecipeImage",
+          { imageUrl },
         );
       }
 
-      // Verify user owns this image path
       if (!filePath.startsWith(`${userId}/`)) {
         throw new ApplicationError(
           ErrorCode.AUTHORIZATION_ERROR,
-          'User not authorized to delete this image',
-          'ImageService',
-          'deleteRecipeImage',
-          { userId, filePath }
+          "User not authorized to delete this image",
+          "ImageService",
+          "deleteRecipeImage",
+          { userId, filePath },
         );
       }
 
-      // Delete from Supabase Storage
-      const { error: deleteError } = await this.supabase.storage
-        .from(this.bucketName)
-        .remove([filePath]);
-
-      if (deleteError) {
+      try {
+        await this.s3.send(
+          new DeleteObjectCommand({
+            Bucket: this.bucketName,
+            Key: filePath,
+          }),
+        );
+      } catch (deleteError) {
         // Log but don't fail - orphaned files will be cleaned up by background job
-        console.warn('Failed to delete image from storage:', deleteError);
+        console.warn("Failed to delete image from storage:", deleteError);
       }
 
-      return {
-        success: true,
-        data: undefined
-      };
-
+      return { success: true, data: undefined };
     } catch (error) {
       if (error instanceof ApplicationError) {
-        return {
-          success: false,
-          error: error
-        };
+        return { success: false, error };
       }
 
       return {
         success: false,
         error: new ApplicationError(
           ErrorCode.INTERNAL_ERROR,
-          'Unexpected error during image deletion',
-          'ImageService',
-          'deleteRecipeImage',
-          { originalError: error }
-        )
+          "Unexpected error during image deletion",
+          "ImageService",
+          "deleteRecipeImage",
+          { originalError: error },
+        ),
       };
     }
   }
@@ -258,12 +258,16 @@ export class ImageService {
     userId: string,
     imageBuffer: Buffer,
     oldImageUrl?: string,
-    options: Partial<ImageConversionOptions> = {}
+    options: Partial<ImageConversionOptions> = {},
   ): Promise<ServiceResult<ImageUploadResult>> {
     try {
-      // Upload new image first
-      const uploadResult = await this.uploadRecipeImage(recipeId, userId, imageBuffer, options);
-      
+      const uploadResult = await this.uploadRecipeImage(
+        recipeId,
+        userId,
+        imageBuffer,
+        options,
+      );
+
       if (!uploadResult.success) {
         return uploadResult;
       }
@@ -274,87 +278,73 @@ export class ImageService {
       }
 
       return uploadResult;
-
     } catch (error) {
       return {
         success: false,
         error: new ApplicationError(
           ErrorCode.INTERNAL_ERROR,
-          'Unexpected error during image replacement',
-          'ImageService',
-          'replaceRecipeImage',
-          { originalError: error }
-        )
+          "Unexpected error during image replacement",
+          "ImageService",
+          "replaceRecipeImage",
+          { originalError: error },
+        ),
       };
     }
   }
 
   /**
-   * Extract file path from Supabase storage URL
+   * Re-key an image URL from an old user ID to a new user ID.
+   * Copies the R2 object to the new key, deletes the old one, and returns the new URL.
+   * Returns null if the URL doesn't need re-keying (already correct or not an R2 URL).
+   */
+  async rekeyImageForUser(
+    imageUrl: string,
+    oldUserId: string,
+    newUserId: string,
+  ): Promise<string | null> {
+    const filePath = this.extractFilePathFromUrl(imageUrl);
+    if (!filePath || !filePath.startsWith(`${oldUserId}/`)) {
+      return null;
+    }
+
+    const restOfPath = filePath.substring(oldUserId.length + 1);
+    const newKey = `${newUserId}/${restOfPath}`;
+
+    // Copy to new key
+    await this.s3.send(
+      new CopyObjectCommand({
+        Bucket: this.bucketName,
+        CopySource: `${this.bucketName}/${filePath}`,
+        Key: newKey,
+      }),
+    );
+
+    // Verify the copy
+    await this.s3.send(
+      new HeadObjectCommand({ Bucket: this.bucketName, Key: newKey }),
+    );
+
+    // Delete old key
+    await this.s3.send(
+      new DeleteObjectCommand({ Bucket: this.bucketName, Key: filePath }),
+    );
+
+    return `${this.publicUrl}/${newKey}`;
+  }
+
+  /**
+   * Extract file path (S3 key) from an R2 image URL.
    */
   private extractFilePathFromUrl(url: string): string | null {
     try {
-      // Supabase storage URLs follow pattern: https://xxx.supabase.co/storage/v1/object/public/bucket/path
-      const match = url.match(/\/storage\/v1\/object\/public\/recipe-images\/(.+)$/);
-      return match ? match[1] : null;
+      if (this.publicUrl && url.startsWith(this.publicUrl)) {
+        const path = url.slice(this.publicUrl.length);
+        return path.startsWith("/") ? path.slice(1) : path;
+      }
+
+      return null;
     } catch {
       return null;
-    }
-  }
-
-  /**
-   * Get storage usage statistics for monitoring
-   */
-  async getStorageStats(userId: string): Promise<ServiceResult<{ fileCount: number; totalSize: number }>> {
-    try {
-      const { data: files, error } = await this.supabase.storage
-        .from(this.bucketName)
-        .list(userId, {
-          limit: 1000, // Adjust based on expected usage
-          sortBy: { column: 'created_at', order: 'desc' }
-        });
-
-      if (error) {
-        throw new ApplicationError(
-          ErrorCode.EXTERNAL_API_ERROR,
-          `Failed to get storage stats: ${error.message}`,
-          'ImageService',
-          'getStorageStats',
-          { error }
-        );
-      }
-
-      const stats = files?.reduce(
-        (acc, file) => ({
-          fileCount: acc.fileCount + 1,
-          totalSize: acc.totalSize + (file.metadata?.size || 0)
-        }),
-        { fileCount: 0, totalSize: 0 }
-      ) || { fileCount: 0, totalSize: 0 };
-
-      return {
-        success: true,
-        data: stats
-      };
-
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        return {
-          success: false,
-          error: error
-        };
-      }
-
-      return {
-        success: false,
-        error: new ApplicationError(
-          ErrorCode.INTERNAL_ERROR,
-          'Unexpected error getting storage stats',
-          'ImageService',
-          'getStorageStats',
-          { originalError: error }
-        )
-      };
     }
   }
 }

@@ -1,9 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-server';
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth-server";
+import { db } from "@/db";
+import { customUnits } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const authResult = await requireAuth();
@@ -12,54 +15,42 @@ export async function DELETE(
       return authResult;
     }
 
-    const { client: supabase, user } = authResult;
+    const { user } = authResult;
 
-    const { id } = await params
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json(
-        { error: 'Custom unit ID is required' },
-        { status: 400 }
-      )
+        { error: "Custom unit ID is required" },
+        { status: 400 },
+      );
     }
 
     // First check if the unit exists and belongs to the user
-    const { data: existingUnit, error: fetchError } = await supabase
-      .from('custom_units')
-      .select('id, user_id, unit_name')
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .single()
+    const [existingUnit] = await db
+      .select({ id: customUnits.id })
+      .from(customUnits)
+      .where(and(eq(customUnits.id, id), eq(customUnits.userId, user.id)))
+      .limit(1);
 
-    if (fetchError || !existingUnit) {
+    if (!existingUnit) {
       return NextResponse.json(
-        { error: 'Custom unit not found' },
-        { status: 404 }
-      )
+        { error: "Custom unit not found" },
+        { status: 404 },
+      );
     }
-
 
     // Delete the custom unit
-    const { error: deleteError } = await supabase
-      .from('custom_units')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', user.id)
+    await db
+      .delete(customUnits)
+      .where(and(eq(customUnits.id, id), eq(customUnits.userId, user.id)));
 
-    if (deleteError) {
-      console.error('Error deleting custom unit:', deleteError)
-      return NextResponse.json(
-        { error: 'Failed to delete custom unit' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Unexpected error in DELETE /api/custom-units/[id]:', error)
+    console.error("Unexpected error in DELETE /api/custom-units/[id]:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

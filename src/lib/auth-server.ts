@@ -1,51 +1,42 @@
-import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing Supabase environment variables");
-}
+import { auth } from "./auth/server";
+import { db } from "@/db";
+import { userProfiles } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export type UserRole = "user" | "admin";
 
 export interface AuthUser {
   id: string;
   email?: string;
+  name?: string;
+  image?: string;
 }
 
 export interface AuthUserWithRole extends AuthUser {
   role: UserRole;
 }
 
+export type AuthResult = {
+  user: AuthUser;
+};
+
+export type AdminAuthResult = {
+  user: AuthUserWithRole;
+};
+
 export async function getAuthenticatedUser(): Promise<AuthUser | null> {
   try {
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get("sb-access-token")?.value;
+    const { data: session } = await auth.getSession();
 
-    if (!accessToken) {
-      return null;
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(accessToken);
-
-    if (error || !user) {
-      // Token is invalid/expired - clear stale cookies and return null
-      // Let client-side handle the refresh to avoid race conditions
-      cookieStore.delete("sb-access-token");
-      cookieStore.delete("sb-refresh-token");
+    if (!session?.user) {
       return null;
     }
 
     return {
-      id: user.id,
-      email: user.email,
+      id: session.user.id,
+      email: session.user.email,
+      name: session.user.name ?? undefined,
+      image: session.user.image ?? undefined,
     };
   } catch (error) {
     console.error("Error getting authenticated user:", error);
@@ -53,37 +44,10 @@ export async function getAuthenticatedUser(): Promise<AuthUser | null> {
   }
 }
 
-export async function createAuthenticatedClient() {
+export async function requireAuth(): Promise<Response | AuthResult> {
   const user = await getAuthenticatedUser();
+
   if (!user) {
-    return null;
-  }
-
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get("sb-access-token")?.value;
-  const refreshToken = cookieStore.get("sb-refresh-token")?.value;
-
-  if (!accessToken) {
-    return null;
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-  await supabase.auth.setSession({
-    access_token: accessToken,
-    refresh_token: refreshToken || "",
-  });
-
-  return {
-    client: supabase,
-    user,
-  };
-}
-
-export async function requireAuth() {
-  const authResult = await createAuthenticatedClient();
-
-  if (!authResult) {
     return new Response(
       JSON.stringify({
         error: "Authentication required",
@@ -92,37 +56,35 @@ export async function requireAuth() {
       {
         status: 401,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
-  return authResult;
+  return { user };
 }
 
 export async function getAuthenticatedUserWithRole(): Promise<AuthUserWithRole | null> {
-  const authResult = await createAuthenticatedClient();
+  const user = await getAuthenticatedUser();
 
-  if (!authResult) {
+  if (!user) {
     return null;
   }
 
-  const { client, user } = authResult;
-
   try {
-    const { data: profile, error } = await client
-      .from("user_profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    const [profile] = await db
+      .select({ role: userProfiles.role })
+      .from(userProfiles)
+      .where(eq(userProfiles.id, user.id))
+      .limit(1);
 
-    if (error || !profile) {
-      console.error("Error fetching user profile:", error);
+    if (!profile) {
+      console.error("User profile not found for:", user.id);
       return null;
     }
 
     return {
       ...user,
-      role: profile.role as UserRole,
+      role: profile.role,
     };
   } catch (error) {
     console.error("Error in getAuthenticatedUserWithRole:", error);
@@ -135,10 +97,10 @@ export async function isUserAdmin(): Promise<boolean> {
   return userWithRole?.role === "admin";
 }
 
-export async function requireAdmin() {
-  const authResult = await createAuthenticatedClient();
+export async function requireAdmin(): Promise<Response | AdminAuthResult> {
+  const user = await getAuthenticatedUser();
 
-  if (!authResult) {
+  if (!user) {
     return new Response(
       JSON.stringify({
         error: "Authentication required",
@@ -147,21 +109,18 @@ export async function requireAdmin() {
       {
         status: 401,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
-  const { client, user } = authResult;
-
   try {
-    const { data: profile, error } = await client
-      .from("user_profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    const [profile] = await db
+      .select({ role: userProfiles.role })
+      .from(userProfiles)
+      .where(eq(userProfiles.id, user.id))
+      .limit(1);
 
-    if (error || !profile) {
-      console.error("Error fetching user profile for admin check:", error);
+    if (!profile) {
       return new Response(
         JSON.stringify({
           error: "Failed to verify permissions",
@@ -170,7 +129,7 @@ export async function requireAdmin() {
         {
           status: 403,
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -183,15 +142,14 @@ export async function requireAdmin() {
         {
           status: 403,
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
     return {
-      client,
       user: {
         ...user,
-        role: profile.role as UserRole,
+        role: profile.role,
       },
     };
   } catch (error) {
@@ -204,7 +162,7 @@ export async function requireAdmin() {
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }

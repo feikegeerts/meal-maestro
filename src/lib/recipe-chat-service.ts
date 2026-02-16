@@ -12,7 +12,9 @@ import {
   FunctionCallResult,
 } from "./function-call-processor";
 import { ChatResponseFormatter, ChatResponse } from "./chat-response-formatter";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { db } from "@/db";
+import { userProfiles, customUnits } from "@/db/schema";
+import { eq, asc } from "drizzle-orm";
 
 // Custom units cache to avoid per-request DB queries
 interface CustomUnitsCache {
@@ -81,22 +83,16 @@ export class RecipeChatService {
   }
   private userId: string;
   private locale: string;
-  private supabaseClient?: SupabaseClient;
   private conversationBuilder?: ConversationBuilder;
   private functionCallProcessor?: FunctionCallProcessor;
   private responseFormatter: ChatResponseFormatter;
   private messages: Record<string, unknown>;
   private unitPreference?: string;
-  private customUnits: string[] = [];
+  private customUnitsData: string[] = [];
 
-  constructor(
-    userId: string,
-    locale: string = "en",
-    supabaseClient?: SupabaseClient
-  ) {
+  constructor(userId: string, locale: string = "en") {
     this.userId = userId;
     this.locale = locale;
-    this.supabaseClient = supabaseClient;
     this.responseFormatter = new ChatResponseFormatter(locale);
     this.messages = this.loadMessages(locale);
   }
@@ -107,77 +103,67 @@ export class RecipeChatService {
     }
 
     let unitPreference = "traditional-metric"; // Default
-    let customUnits: string[] = [];
+    let userCustomUnits: string[] = [];
 
-    // Fetch user's unit preference using authenticated client if available
-    if (this.supabaseClient) {
-      try {
-        const { data: profile, error } = await this.supabaseClient
-          .from("user_profiles")
-          .select("unit_system_preference")
-          .eq("id", this.userId)
-          .maybeSingle();
+    try {
+      const [profile] = await db
+        .select({ unitSystemPreference: userProfiles.unitSystemPreference })
+        .from(userProfiles)
+        .where(eq(userProfiles.id, this.userId))
+        .limit(1);
 
-        if (!error && profile) {
-          unitPreference =
-            profile.unit_system_preference || "traditional-metric";
-        }
-
-        // Fetch custom units for user (with caching to avoid per-request DB hits)
-        const cachedCustomUnits = customUnitsCache.get(this.userId);
-        if (cachedCustomUnits !== null) {
-          customUnits = cachedCustomUnits;
-        } else {
-          try {
-            const { data: unitsData, error: unitsError } =
-              await this.supabaseClient
-                .from("custom_units")
-                .select("unit_name")
-                .eq("user_id", this.userId)
-                .order("unit_name", { ascending: true });
-            if (!unitsError && Array.isArray(unitsData)) {
-              customUnits = unitsData
-                .map((u) => u.unit_name?.trim())
-                .filter(Boolean)
-                .filter((u) => u.length > 0 && u.length <= 20) // Reasonable length limits
-                .filter((u) => /^[a-zA-Z0-9\s\-.]+$/.test(u)) // Allow only safe characters
-                .slice(0, 25); // Match schema limit directly
-
-              // Cache the result for future requests
-              customUnitsCache.set(this.userId, customUnits);
-            }
-          } catch (cuErr) {
-            console.error(
-              "[RecipeChatService] Failed to fetch custom units:",
-              cuErr instanceof Error ? cuErr.message : cuErr
-            );
-            // Continue with empty custom units array - this is non-critical
-            customUnits = [];
-            // Cache empty result to avoid retrying failed requests immediately
-            customUnitsCache.set(this.userId, customUnits);
-          }
-        }
-      } catch (profileErr) {
-        console.error(
-          "[RecipeChatService] Failed to fetch user profile:",
-          profileErr instanceof Error ? profileErr.message : profileErr
-        );
-        // Continue with default unit preference - non-critical for core functionality
+      if (profile?.unitSystemPreference) {
+        unitPreference = profile.unitSystemPreference;
       }
+
+      // Fetch custom units for user (with caching to avoid per-request DB hits)
+      const cachedCustomUnits = customUnitsCache.get(this.userId);
+      if (cachedCustomUnits !== null) {
+        userCustomUnits = cachedCustomUnits;
+      } else {
+        try {
+          const unitsData = await db
+            .select({ unitName: customUnits.unitName })
+            .from(customUnits)
+            .where(eq(customUnits.userId, this.userId))
+            .orderBy(asc(customUnits.unitName));
+
+          userCustomUnits = unitsData
+            .map((u) => u.unitName?.trim())
+            .filter((u): u is string => Boolean(u))
+            .filter((u) => u.length > 0 && u.length <= 20)
+            .filter((u) => /^[a-zA-Z0-9\s\-.]+$/.test(u))
+            .slice(0, 25);
+
+          customUnitsCache.set(this.userId, userCustomUnits);
+        } catch (cuErr) {
+          console.error(
+            "[RecipeChatService] Failed to fetch custom units:",
+            cuErr instanceof Error ? cuErr.message : cuErr,
+          );
+          userCustomUnits = [];
+          customUnitsCache.set(this.userId, userCustomUnits);
+        }
+      }
+    } catch (profileErr) {
+      console.error(
+        "[RecipeChatService] Failed to fetch user profile:",
+        profileErr instanceof Error ? profileErr.message : profileErr,
+      );
     }
 
     this.unitPreference = unitPreference;
-    this.customUnits = customUnits;
+    this.customUnitsData = userCustomUnits;
     this.conversationBuilder = new ConversationBuilder(
       this.locale,
       unitPreference,
-      customUnits
+      userCustomUnits,
     );
     this.functionCallProcessor = new FunctionCallProcessor(
       this.locale,
       unitPreference,
-      customUnits,
-      () => usageLimitService.assertWithinMonthlyLimit(this.userId)
+      userCustomUnits,
+      () => usageLimitService.assertWithinMonthlyLimit(this.userId),
     );
   }
 
@@ -323,7 +309,7 @@ export class RecipeChatService {
       chatMessages,
       FunctionCallProcessor.getAvailableFunctions(
         this.unitPreference,
-        this.customUnits
+        this.customUnitsData
       )
     );
 

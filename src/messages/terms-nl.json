@@ -136,7 +136,7 @@
       "causes": [
         "Gepland onderhoud en updates",
         "Technische problemen of systeemuitval",
-        "Afhankelijkheden van externe services (Google, Supabase, OpenAI, Vercel)",
+        "Afhankelijkheden van externe services (Google, Neon, OpenAI, Vercel)",
         "Noodveiligheidsmaatregelen"
       ],
       "notice": "We zullen redelijke inspanningen leveren om voorafgaande kennisgeving te geven van gepland onderhoud."

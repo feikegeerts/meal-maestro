@@ -37,8 +37,9 @@ function HomeContent() {
   const t = useTranslations("homepage");
 
   const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (error) {
+    try {
+      await signOut();
+    } catch (error) {
       console.error("Error signing out:", error);
     }
   };

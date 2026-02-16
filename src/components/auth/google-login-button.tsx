@@ -42,7 +42,6 @@ interface GoogleLoginButtonProps {
 export function GoogleLoginButton({
   className,
   redirectPath,
-  locale,
 }: GoogleLoginButtonProps) {
   const { signInWithGoogle } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -54,22 +53,13 @@ export function GoogleLoginButton({
     setError(null);
 
     try {
-      const { error } = await signInWithGoogle({
-        redirectPath,
-        locale,
-      });
-
-      if (error) {
-        setError(error.message || "Failed to sign in with Google");
-        console.error("Google sign-in error:", error);
-      }
-      // If successful, the auth state change will be handled by the context
+      await signInWithGoogle({ redirectPath });
+      // Neon Auth redirects to Google — if we get here, something went wrong
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "An unexpected error occurred";
       setError(errorMessage);
       console.error("Unexpected error during Google sign-in:", err);
-    } finally {
       setIsLoading(false);
     }
   };

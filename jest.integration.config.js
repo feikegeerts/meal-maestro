@@ -35,7 +35,7 @@ const customJestConfig = async () => {
   return {
     ...baseConfig,
     transformIgnorePatterns: [
-      "node_modules/(?!.*(next-intl|use-intl|msw|@mswjs/interceptors|until-async)/)",
+      "node_modules/(?!.*(next-intl|use-intl|msw|@mswjs/interceptors|until-async|@neondatabase|better-auth|better-call|nanostores|jose|rou3|@noble)/)",
       "^.+\\.module\\.(css|sass|scss)$",
     ],
   };

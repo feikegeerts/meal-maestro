@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
+import { db } from "@/db";
+import { recipes } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
 import { NutritionService, buildCacheKey } from "@/lib/nutrition-service";
 import { usageLimitService } from "@/lib/usage-limit-service";
 import { usageTrackingService } from "@/lib/usage-tracking-service";
@@ -9,7 +12,7 @@ const nutritionService = new NutritionService();
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const authResult = await requireAuth();
 
@@ -17,14 +20,14 @@ export async function POST(
     return authResult;
   }
 
-  const { user, client: supabase } = authResult;
+  const { user } = authResult;
 
   try {
     const { id: recipeId } = await params;
     if (!recipeId) {
       return NextResponse.json(
         { error: "Recipe ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -32,27 +35,37 @@ export async function POST(
       .json()
       .catch(() => ({ locale: undefined, forceRefresh: false }));
 
-    const { data: recipe, error } = await supabase
-      .from("recipes")
-      .select("id, title, servings, ingredients, nutrition")
-      .eq("id", recipeId)
-      .eq("user_id", user.id)
-      .single();
+    const [recipe] = await db
+      .select({
+        id: recipes.id,
+        title: recipes.title,
+        servings: recipes.servings,
+        ingredients: recipes.ingredients,
+        nutrition: recipes.nutrition,
+      })
+      .from(recipes)
+      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, user.id)))
+      .limit(1);
 
-    if (error || !recipe) {
-      const status = error?.code === "PGRST116" ? 404 : 500;
+    if (!recipe) {
       return NextResponse.json(
-        { error: status === 404 ? "Recipe not found" : "Failed to fetch recipe details" },
-        { status }
+        { error: "Recipe not found" },
+        { status: 404 },
       );
     }
 
     const typedRecipe = recipe as unknown as Recipe;
 
-    if (!Array.isArray(typedRecipe.ingredients) || typedRecipe.ingredients.length === 0) {
+    if (
+      !Array.isArray(typedRecipe.ingredients) ||
+      typedRecipe.ingredients.length === 0
+    ) {
       return NextResponse.json(
-        { error: "Recipe must have at least one ingredient to estimate nutrition" },
-        { status: 400 }
+        {
+          error:
+            "Recipe must have at least one ingredient to estimate nutrition",
+        },
+        { status: 400 },
       );
     }
 
@@ -78,18 +91,19 @@ export async function POST(
 
     await usageLimitService.assertWithinMonthlyLimit(user.id);
 
-    const { nutrition, cacheHit, usage } = await nutritionService.fetchWithChatGPT({
-      recipe: recipeForCache,
-      locale,
-      forceRefresh,
-      cacheKey,
-    });
+    const { nutrition, cacheHit, usage } =
+      await nutritionService.fetchWithChatGPT({
+        recipe: recipeForCache,
+        locale,
+        forceRefresh,
+        cacheKey,
+      });
 
     if (!cacheHit && usage) {
       const usageLog = await usageTrackingService.logUsage(
         user.id,
         "/api/recipes/[id]/nutrition",
-        usage
+        usage,
       );
 
       if (!usageLog.success) {
@@ -100,24 +114,22 @@ export async function POST(
             error:
               "Monthly AI usage limit reached. Nutrition estimates are temporarily unavailable.",
           },
-          { status: 429 }
+          { status: 429 },
         );
       }
     }
 
-    const { data: updated, error: updateError } = await supabase
-      .from("recipes")
-      .update({ nutrition })
-      .eq("id", recipeId)
-      .eq("user_id", user.id)
-      .select("nutrition")
-      .single();
+    const [updated] = await db
+      .update(recipes)
+      .set({ nutrition })
+      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, user.id)))
+      .returning({ nutrition: recipes.nutrition });
 
-    if (updateError || !updated) {
-      console.error("[Nutrition] Failed to persist nutrition results:", updateError);
+    if (!updated) {
+      console.error("[Nutrition] Failed to persist nutrition results");
       return NextResponse.json(
         { error: "Failed to persist nutrition data" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -129,7 +141,7 @@ export async function POST(
     console.error("🔴 [Nutrition] API error:", error);
     return NextResponse.json(
       { error: "Failed to estimate nutrition" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

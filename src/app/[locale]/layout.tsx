@@ -16,6 +16,7 @@ import { routing } from "../i18n/routing";
 import { setRequestLocale } from "next-intl/server";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PWAInstallBanner } from "@/components/pwa/install-banner";
+import { MigrationToast } from "@/components/notifications/migration-toast";
 import { LocalizedWebsiteSchema } from "@/components/seo/localized-website-schema";
 
 export function generateStaticParams() {
@@ -88,8 +89,9 @@ export default async function LocaleLayout({
               <main className="flex-1">{children}</main>
               <Footer />
             </div>
-            <Toaster richColors position="top-right" />
+            <Toaster richColors position="top-right" theme="system" />
             <PWAInstallBanner />
+            <MigrationToast />
             <LocalizedWebsiteSchema />
           </RecipeProvider>
         </AuthProvider>

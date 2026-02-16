@@ -70,9 +70,9 @@
         "title": "Google OAuth",
         "content": "We use Google OAuth for authentication. Google's privacy policy applies to data collected during the authentication process. We only request access to basic profile information (email, name, profile picture)."
       },
-      "supabase": {
-        "title": "Supabase (Database & Auth)",
-        "content": "Your recipe data and account information are stored securely in Supabase's cloud database infrastructure. Supabase operates under their privacy policy and maintains SOC 2 compliance."
+      "neon": {
+        "title": "Neon (Database & Auth)",
+        "content": "Your recipe data and account information are stored securely in Neon's cloud database infrastructure. Neon operates under their privacy policy and maintains SOC 2 compliance."
       },
       "openai": {
         "title": "OpenAI",
