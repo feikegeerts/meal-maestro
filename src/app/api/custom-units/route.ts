@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { customUnits } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 
-export interface CustomUnit {
+export interface CustomUnitResponse {
   id: string;
   user_id: string;
   unit_name: string;
@@ -16,7 +16,18 @@ export interface CreateCustomUnitRequest {
 }
 
 export interface CustomUnitsResponse {
-  units: CustomUnit[];
+  units: CustomUnitResponse[];
+}
+
+type DrizzleCustomUnit = typeof customUnits.$inferSelect;
+
+function toSnakeCase(unit: DrizzleCustomUnit): CustomUnitResponse {
+  return {
+    id: unit.id,
+    user_id: unit.userId,
+    unit_name: unit.unitName,
+    created_at: unit.createdAt?.toISOString() ?? new Date().toISOString(),
+  };
 }
 
 export async function GET() {
@@ -35,7 +46,7 @@ export async function GET() {
       .where(eq(customUnits.userId, user.id))
       .orderBy(asc(customUnits.unitName));
 
-    return NextResponse.json({ units });
+    return NextResponse.json({ units: units.map(toSnakeCase) });
   } catch (error) {
     console.error("Unexpected error in GET /api/custom-units:", error);
     return NextResponse.json(
@@ -105,7 +116,7 @@ export async function POST(request: NextRequest) {
         })
         .returning();
 
-      return NextResponse.json(newUnit, { status: 201 });
+      return NextResponse.json(toSnakeCase(newUnit), { status: 201 });
     } catch (insertError: unknown) {
       // Check for unique constraint violation
       if (
