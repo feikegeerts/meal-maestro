@@ -44,6 +44,10 @@
       }
     }
   },
+  "migration": {
+    "title": "Database Migratie Voltooid",
+    "description": "We zijn gemigreerd naar een nieuwe database-infrastructuur. Inloggen met magic link en recepten delen zijn tijdelijk niet beschikbaar terwijl we de overgang afronden."
+  },
   "theme": {
     "theme": "Thema",
     "light": "Licht",
