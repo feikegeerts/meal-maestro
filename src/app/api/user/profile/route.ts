@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
 import { db } from "@/db";
-import { userProfiles } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { recipes, userProfiles } from "@/db/schema";
+import { and, eq, isNotNull, sql } from "drizzle-orm";
 import type { UserProfile } from "@/lib/profile-types";
+import { ImageService } from "@/lib/image-service";
 
 type DrizzleProfile = typeof userProfiles.$inferSelect;
 
@@ -84,6 +85,50 @@ async function migrateUserIdToNeonAuth(
   };
 }
 
+/**
+ * Re-keys R2 image objects after a user ID migration.
+ * Updates image_url in the database to match the new R2 key.
+ * Best-effort: logs errors but doesn't fail the migration.
+ */
+async function rekeyUserImages(oldId: string, newId: string): Promise<void> {
+  try {
+    const imageService = new ImageService();
+
+    const userRecipes = await db
+      .select({ id: recipes.id, imageUrl: recipes.imageUrl })
+      .from(recipes)
+      .where(and(eq(recipes.userId, newId), isNotNull(recipes.imageUrl)));
+
+    for (const recipe of userRecipes) {
+      if (!recipe.imageUrl) continue;
+
+      try {
+        const newUrl = await imageService.rekeyImageForUser(
+          recipe.imageUrl,
+          oldId,
+          newId,
+        );
+
+        if (newUrl) {
+          await db
+            .update(recipes)
+            .set({ imageUrl: newUrl, updatedAt: new Date() })
+            .where(eq(recipes.id, recipe.id));
+
+          console.log(`Re-keyed image for recipe ${recipe.id}`);
+        }
+      } catch (error) {
+        console.warn(
+          `Failed to re-key image for recipe ${recipe.id}:`,
+          error,
+        );
+      }
+    }
+  } catch (error) {
+    console.warn("Failed to re-key user images:", error);
+  }
+}
+
 export async function GET() {
   const authResult = await requireAuth();
   if (authResult instanceof Response) return authResult;
@@ -115,6 +160,8 @@ export async function GET() {
             user.id,
           );
           if (migrated) {
+            // Re-key R2 image objects from old user ID to new user ID
+            await rekeyUserImages(legacyProfile.id, user.id);
             return NextResponse.json(toSnakeCase(migrated));
           }
         }

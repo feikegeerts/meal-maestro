@@ -2,6 +2,8 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  CopyObjectCommand,
+  HeadObjectCommand,
 } from "@aws-sdk/client-s3";
 import {
   ApplicationError,
@@ -291,24 +293,53 @@ export class ImageService {
   }
 
   /**
-   * Extract file path (S3 key) from an image URL.
-   * Supports both R2 URLs and legacy Supabase Storage URLs.
+   * Re-key an image URL from an old user ID to a new user ID.
+   * Copies the R2 object to the new key, deletes the old one, and returns the new URL.
+   * Returns null if the URL doesn't need re-keying (already correct or not an R2 URL).
+   */
+  async rekeyImageForUser(
+    imageUrl: string,
+    oldUserId: string,
+    newUserId: string,
+  ): Promise<string | null> {
+    const filePath = this.extractFilePathFromUrl(imageUrl);
+    if (!filePath || !filePath.startsWith(`${oldUserId}/`)) {
+      return null;
+    }
+
+    const restOfPath = filePath.substring(oldUserId.length + 1);
+    const newKey = `${newUserId}/${restOfPath}`;
+
+    // Copy to new key
+    await this.s3.send(
+      new CopyObjectCommand({
+        Bucket: this.bucketName,
+        CopySource: `${this.bucketName}/${filePath}`,
+        Key: newKey,
+      }),
+    );
+
+    // Verify the copy
+    await this.s3.send(
+      new HeadObjectCommand({ Bucket: this.bucketName, Key: newKey }),
+    );
+
+    // Delete old key
+    await this.s3.send(
+      new DeleteObjectCommand({ Bucket: this.bucketName, Key: filePath }),
+    );
+
+    return `${this.publicUrl}/${newKey}`;
+  }
+
+  /**
+   * Extract file path (S3 key) from an R2 image URL.
    */
   private extractFilePathFromUrl(url: string): string | null {
     try {
-      // R2 URL: https://<public-domain>/<userId>/<recipeId>/<filename>
       if (this.publicUrl && url.startsWith(this.publicUrl)) {
         const path = url.slice(this.publicUrl.length);
-        // Remove leading slash if present
         return path.startsWith("/") ? path.slice(1) : path;
-      }
-
-      // Legacy Supabase URL: https://xxx.supabase.co/storage/v1/object/public/recipe-images/<path>
-      const supabaseMatch = url.match(
-        /\/storage\/v1\/object\/public\/recipe-images\/(.+)$/,
-      );
-      if (supabaseMatch) {
-        return supabaseMatch[1];
       }
 
       return null;
