@@ -66,6 +66,12 @@ Meal Maestro runs on Supabase's free tier, which auto-pauses after ~7 days of in
 - ~~`auth-context.test.tsx`, `auth-server.test.ts` — deleted (tested Supabase-era auth), need rewrite for Neon Auth~~ ✅ Auth integration test rewritten
 - ~~`recipe-chat-service.test.ts` — 5 tests still reference old Supabase mocks, need Drizzle mocks~~ ✅ All test suites fixed (Phase 4b)
 - User ID mapping on first post-migration sign-in — needs design (Phase 5.4)
+- **Email service still uses Supabase env vars** — needs migrating to Drizzle/Neon before remaining Supabase env vars can be removed:
+  - `configuration-service.ts` uses `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` for user language preference lookup (replace with Drizzle query)
+  - `configuration-service.ts` uses `SUPABASE_WEBHOOK_SECRET` for webhook verification — but the webhook route (`send-email/route.ts`) was already deleted, so this is dead code. Remove `getWebhookConfig()` and the `SUPABASE_WEBHOOK_SECRET` env var
+  - `email-service.ts` validates the Supabase env vars in its health check — update to remove
+  - Test files (`__mocks__/handlers.ts`, `test-support/integration-env-setup.js`) still reference Supabase URLs — clean up
+  - After this migration, remove `@supabase/supabase-js` from `package.json`
 
 ---
 
