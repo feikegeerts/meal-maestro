@@ -2,219 +2,130 @@
 
 ## Overview
 
-The Meal Maestro email system provides localized, custom email templates for Supabase authentication flows using Mustache templating and the Resend email service.
+The Meal Maestro email system provides localized, custom email templates using Mustache templating and the Resend email service. It supports magic link and signup confirmation emails in English and Dutch.
+
+**Current status**: The email infrastructure is fully built and tested, but **dormant in production**. Magic link emails are disabled pending Neon Auth webhook support for custom email templates. See [Future](#future) section.
 
 ## Architecture
 
 ### Components
 
-1. **EmailService** (`/src/lib/email/EmailService.ts`)
+1. **EmailService** (`src/lib/email/email-service.ts`)
    - Main orchestration service
    - Combines template rendering and email delivery
-   - Provides high-level methods: `sendMagicLinkEmail()`, `sendConfirmSignupEmail()`, `sendTestEmail()`
+   - High-level methods: `sendMagicLinkEmail()`, `sendConfirmSignupEmail()`, `sendTestEmail()`
 
-2. **EmailTemplateService** (`/src/lib/email/services/email-template-service.ts`)  
+2. **EmailTemplateService** (`src/lib/email/services/email-template-service.ts`)
    - Mustache template rendering
    - Integrates with LocalizationService for dynamic language detection
    - Template caching for performance
 
-3. **LocalizationService** (`/src/lib/email/services/localization-service.ts`)
+3. **LocalizationService** (`src/lib/email/services/localization-service.ts`)
    - 5-tier language detection fallback system:
-     1. Database `user_profiles.language_preference` (via secure database function)
-     2. User metadata (from Supabase user object)
+     1. Database `user_profiles.language_preference` (via Drizzle query)
+     2. User metadata (from auth user object)
      3. Page locale (from the URL where user initiated the request)
      4. Accept-Language header parsing
      5. Fallback to English
-   - Uses UserProfileService which calls secure database function `get_user_language_preference()`
-   - No service role key required - uses anon key with SECURITY DEFINER function
+   - Uses `ProfileSecureService` for database lookups
 
-4. **EmailDeliveryService** (`/src/lib/email/services/email-delivery-service.ts`)
+4. **EmailDeliveryService** (`src/lib/email/services/email-delivery-service.ts`)
    - Resend API integration
    - Rate limiting awareness
-   - Comprehensive error handling
+   - Error handling
 
-5. **ProfileSecureService** (`/src/lib/profile-secure-service.ts`)
-   - Secure service dedicated to database function operations requiring anon client access
-   - Provides `getLanguagePreference()` method that calls `get_user_language_preference()` function
-   - Uses anon key ONLY with SECURITY DEFINER functions - NO direct table access
-   - Used exclusively by email system and other server-side services for language preferences
+5. **ProfileSecureService** (`src/lib/profile-secure-service.ts`)
+   - Provides `getLanguagePreference()` via Drizzle ORM query
+   - Queries `user_profiles.language_preference` by email
+   - Input validation for email format
 
-## Database Function
-
-The email system uses a secure database function `get_user_language_preference()` to safely retrieve user language preferences without requiring service role keys:
-
-### Function Details
-- **Function Name**: `get_user_language_preference(user_email TEXT)`
-- **Returns**: `TEXT` (language preference or NULL)
-- **Security**: `SECURITY DEFINER` with input validation
-- **Permissions**: Granted to `anon` and `authenticated` roles
-- **Location**: `/supabase/migrations/20250831000000_add_secure_language_preference_function.sql`
-
-### Security Features
-- Input validation for email format and length
-- Basic email regex validation
-- Secure function execution with `SECURITY DEFINER`
-- Direct table access bypasses Row Level Security (RLS) safely
-
-### Usage
-The function is called via the UserProfileService using the anon key:
-```typescript
-const { data, error } = await this.supabase
-  .rpc('get_user_language_preference', { user_email: userEmail });
-```
-
-## Supabase Auth Hook Integration
-
-### Endpoint
-- **URL**: `/api/auth/hooks/send-email`
-- **Method**: POST
-- **Authentication**: Webhook secret verification
-- **Supported Email Types**: `magic_link`, `confirm_signup`
-
-### Configuration in Supabase Dashboard
-
-1. Go to Authentication > Settings > Redirects
-2. Add Site URL: `https://your-domain.com`
-3. Go to Authentication > Settings > Templates
-4. Disable default templates for Magic Link and Confirm Signup
-5. Go to Authentication > Hooks
-6. Add Send Email Hook:
-   - **Type**: HTTP Endpoint (not Postgres Function)
-   - **URL**: `https://your-domain.com/api/auth/hooks/send-email`
-   - **Secret**: Your webhook secret (Supabase will automatically add the required Standard Webhooks headers)
-
-### Environment Variables
-
-```bash
-# Required for email system
-RESEND_API_KEY=re_your_resend_key
-SUPABASE_WEBHOOK_SECRET=your-webhook-secret
-
-# Public variables (already configured)
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-```
+6. **ConfigurationService** (`src/lib/email/services/configuration-service.ts`)
+   - Validates environment variables (Resend, OpenAI)
+   - Singleton pattern for consistent configuration
 
 ## Templates
 
 ### Template Files
-- **Magic Link**: `/src/lib/email/templates/magic-link.mustache`
-- **Confirm Signup**: `/src/lib/email/templates/confirm-signup.mustache`
+- **Magic Link**: `src/lib/email/templates/magic-link.mustache`
+- **Confirm Signup**: `src/lib/email/templates/confirm-signup.mustache`
 
 ### Localization Files
-- **English**: `/src/lib/email/locales/en.json`
-- **Dutch**: `/src/lib/email/locales/nl.json`
+- **English**: `src/lib/email/locales/en.json`
+- **Dutch**: `src/lib/email/locales/nl.json`
 
 ### Template Variables
 - `{{title}}` - Localized email title
-- `{{description}}` - Localized email description  
+- `{{description}}` - Localized email description
 - `{{cta}}` - Localized call-to-action button text
 - `{{confirmationUrl}}` - Dynamic confirmation URL with token
 - `{{brandName}}` - "Meal Maestro"
-- `{{brandEmoji}}` - "🍳"
+- `{{brandEmoji}}` - cooking emoji
 - `{{supportEmail}}` - Support email address
 - `{{currentYear}}` - Current year for copyright
 - `{{footer.contact}}` - Localized footer contact text
 - `{{footer.copyright}}` - Localized footer copyright text
 
-## Testing
+## Environment Variables
 
-### Command Line Testing
 ```bash
-# Test individual email sending
-npx tsx scripts/test-email-sending.ts your-email@example.com
+# Required for email delivery
+RESEND_API_KEY=re_your_resend_key
+RESEND_FROM_EMAIL=Meal Maestro <info@meal-maestro.com>
+RESEND_REPLY_TO=info@meal-maestro.com
 
-# Test auth hook integration (requires dev server)
-npx tsx scripts/test-auth-hook.ts your-email@example.com magic_link
-npx tsx scripts/test-auth-hook.ts your-email@example.com confirm_signup
+# Required for language preference lookup (used by ProfileSecureService)
+DATABASE_URL=<Neon database connection string>
 ```
 
+## Testing
+
 ### API Testing (Development/Preview Only)
+
+The test endpoint at `/api/email/test` is available in non-production environments:
+
 ```bash
 # Health check
 curl http://localhost:3000/api/email/test
 
-# Test magic link
+# Test magic link email
 curl -X POST http://localhost:3000/api/email/test \
   -H "Content-Type: application/json" \
   -d '{
     "type": "magic-link",
-    "to": "your-email@example.com", 
+    "to": "your-email@example.com",
     "confirmationUrl": "https://example.com/auth/callback?token=test123",
     "languagePreference": "nl"
   }'
 ```
 
-### Auth Hook Health Check
+### Script Testing
+
 ```bash
-curl https://your-domain.com/api/auth/hooks/send-email
+npx tsx scripts/test-email-sending.ts your-email@example.com
 ```
 
-## Deployment
+## Future
 
-### Vercel Environment Variables
-Set these in your Vercel dashboard under Settings > Environment Variables:
+When Neon Auth adds webhook support for custom email templates:
 
-- `RESEND_API_KEY` - Your Resend API key  
-- `SUPABASE_WEBHOOK_SECRET` - Secure random string for webhook auth
-- `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anon key
-
-### Production Checklist
-- [ ] Environment variables configured in Vercel
-- [ ] Supabase auth hook configured with production URL
-- [ ] Email templates tested in production
-- [ ] DNS/domain properly configured for email sending
-- [ ] Rate limiting monitored (Resend free tier: 3k emails/month)
+1. Create a new webhook route (e.g., `/api/auth/email-hook/route.ts`) that receives Neon Auth email events
+2. Uncomment the magic link form in `src/components/auth/magic-link-form.tsx` (currently disabled with TODO comment)
+3. Configure Neon Auth to call the webhook endpoint
+4. The email infrastructure will work immediately — all services, templates, and localization are ready
 
 ## Monitoring
 
-### Logs to Monitor
-- Email delivery success/failure rates
-- Language detection accuracy
-- Database query performance  
-- Webhook authentication attempts
-- Template rendering errors
-
 ### Key Metrics
-- Email delivery rate (aim for >99%)
-- Average email delivery time
+- Email delivery rate
 - Language detection accuracy by source
 - Template rendering time
-- Database query response time
 
-## Troubleshooting
+### Troubleshooting
 
-### Common Issues
-
-**Empty database results despite existing users**
-- Cause: Database function `get_user_language_preference()` not properly configured or missing
-- Solution: Ensure the database migration for the secure function has been applied and function has proper permissions
-
-**Webhook authentication failures**
-- Cause: Missing or incorrect `SUPABASE_WEBHOOK_SECRET`
-- Solution: Verify secret matches between Vercel env vars and Supabase hook config
-
-**Template rendering failures**  
+**Template rendering failures**
 - Cause: Missing locale files or template variables
 - Solution: Check template files exist and all required variables are provided
 
 **Email delivery failures**
 - Cause: Invalid Resend API key or rate limiting
-- Solution: Verify API key and monitor usage limits
-
-### Debug Mode
-Set `NODE_ENV=development` to enable detailed logging including:
-- Database query debugging
-- Template variable inspection  
-- Email service configuration validation
-- Webhook payload logging
-
-## Security
-
-- Webhook secret validation prevents unauthorized email sending
-- Database function uses SECURITY DEFINER with input validation for secure access
-- Rate limiting prevents email abuse
-- Input validation on all email addresses and URLs
-- No sensitive data logged in production
-- Uses anon key with secure database functions instead of service role key
+- Solution: Verify API key and monitor usage limits (Resend free tier: 3k emails/month)

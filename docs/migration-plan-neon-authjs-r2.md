@@ -24,8 +24,8 @@ Meal Maestro runs on Supabase's free tier, which auto-pauses after ~7 days of in
 | **Phase 4** — Storage (→ R2)        | ✅ Done        | `image-service.ts` rewritten: `@supabase/supabase-js` → `@aws-sdk/client-s3` (S3Client, PutObjectCommand, DeleteObjectCommand). `getStorageStats()` dropped (unused). `extractFilePathFromUrl` handles R2 URLs only (Supabase URL support removed after Phase 5.3). |
 | **Phase 4b** — Test Rewrites        | ✅ Done        | All 6 failing test suites rewritten for Drizzle/Neon Auth mocks. `pnpm verify` passes (260 unit + 22 integration tests). See `docs/drizzle-test-mock-patterns.md`.                                                                                                       |
 | **Phase 5** — Data Migration        | ✅ Done        | Relational data (Supabase → Neon), images (Supabase Storage → R2). Phase 5.3 (URL rewrite + R2 re-keying) completed via `scripts/migrate-image-urls.ts`. Supabase URL references removed from `image-service.ts` and `next.config.ts`. |
-| \*\*Phase 5.5 - Add keys to vercel  | ⬜ Not started |
-| **Phase 6** — Cleanup               | ⬜ Not started | Supabase packages, dead files, env vars, user-facing text                                                                                                                                                                                                                |
+| **Phase 5.5** — Add keys to Vercel  | ✅ Done        | Neon/R2 env vars configured on Vercel. Old Supabase env vars can be removed from dashboard.                                                                                                                                                                              |
+| **Phase 6** — Cleanup               | ✅ Done        | Removed `@supabase/supabase-js`, `supabase`, `standardwebhooks` packages. Deleted dead files, `supabase/` directory, outdated docs. Cleaned up email service config, test mocks, stale comments. Updated `AGENTS.md`, `email-system.md`, `features.md`.                  |
 
 ### Phase 3 — Detailed File Tracker
 
@@ -430,9 +430,9 @@ Neon Auth manages its own user table (`neon_auth.user`). Existing Supabase Auth 
 | Phase 2: Neon Auth                  | ✅ Done | 2-3             | Managed service with pre-built components                             |
 | Phase 3: API route migration        | ✅ Done | 4-5             | 14 routes + 6 services                                                |
 | Phase 4: R2 storage + test rewrites | ✅ Done | 1-2             | `image-service.ts` rewrite + 6 test suites                            |
-| Phase 5: Data migration             | ⬜ TODO | 1-2             | `pg_dump`/`psql`, image transfer script, URL rewrite, user ID mapping |
-| Phase 6: Cleanup                    | ⬜ TODO | 1               | Remove packages, dead files, stale references, env vars               |
-| **Total**                           |         | **~11-15 days** | Phases 1–4 complete. Phases 5–6 remaining.                            |
+| Phase 5: Data migration             | ✅ Done | 1-2             | `pg_dump`/`psql`, image transfer script, URL rewrite, user ID mapping |
+| Phase 6: Cleanup                    | ✅ Done | 1               | Remove packages, dead files, stale references, env vars               |
+| **Total**                           |         | **~11-15 days** | All phases complete. Migration finished.                              |
 
 ---
 

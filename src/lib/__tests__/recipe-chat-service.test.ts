@@ -51,7 +51,7 @@ jest.mock("@/db", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Other module mocks (unchanged from original, except supabase removed)
+// Other module mocks
 // ---------------------------------------------------------------------------
 
 const buildMessagesMock = jest.fn();

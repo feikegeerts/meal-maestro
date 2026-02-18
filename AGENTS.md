@@ -189,7 +189,7 @@ Add a new recipe field:
 
 1. Update type in `src/types/recipe.ts`.
 2. Adjust parsing/validation in `recipe-utils`.
-3. Migrate DB if persisted (create migration in `supabase/migrations/`).
+3. Migrate DB if persisted (create migration via `drizzle-kit generate` in `drizzle/migrations/`).
 4. Update form component(s) & tests.
 
 Add unit conversion:

@@ -31,7 +31,7 @@ describe('RateLimitManager', () => {
   });
 
   describe('analyzeRateLimit', () => {
-    it('should detect Supabase email rate limit errors', () => {
+    it('should detect email rate limit errors', () => {
       const error = new Error('email rate limit exceeded');
       const result = rateLimitManager.analyzeRateLimit(error);
 
@@ -45,7 +45,7 @@ describe('RateLimitManager', () => {
       const result = rateLimitManager.analyzeRateLimit(error);
 
       expect(result.isRateLimited).toBe(true);
-      expect(result.waitTimeMs).toBe(60 * 60 * 1000); // 1 hour for Supabase email limit
+      expect(result.waitTimeMs).toBe(60 * 60 * 1000); // 1 hour for email rate limit
     });
 
     it('should parse specific time mentions from error messages', () => {
@@ -135,7 +135,7 @@ describe('RateLimitManager', () => {
       expect(result.waitTimeText).toBe('2 minutes');
     });
 
-    it('should format hours correctly for Supabase email limits', () => {
+    it('should format hours correctly for email rate limits', () => {
       const error = new Error('over_email_send_rate_limit');
       const result = rateLimitManager.analyzeRateLimit(error);
       

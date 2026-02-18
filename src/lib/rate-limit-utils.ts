@@ -24,7 +24,7 @@ export class RateLimitManager {
   }
 
   /**
-   * Analyzes Supabase auth error to determine if it's rate limited
+   * Analyzes auth error to determine if it's rate limited
    * and calculates appropriate wait times
    */
   analyzeRateLimit(error: { message: string }): RateLimitInfo {
@@ -140,7 +140,7 @@ export class RateLimitManager {
   private getBaseWaitTime(errorMessage: string): number {
     // Different base wait times for different error patterns
     if (errorMessage.includes('over_email_send_rate_limit')) {
-      // Supabase email rate limit - typically hourly
+      // Email send rate limit - typically hourly
       return 60 * 60 * 1000; // 1 hour
     }
     

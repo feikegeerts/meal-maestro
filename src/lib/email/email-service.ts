@@ -144,15 +144,6 @@ export class EmailService {
       errors.push(`Template service configuration error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
-    // Check environment variables
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      errors.push('NEXT_PUBLIC_SUPABASE_URL is required for user language preference lookup');
-    }
-
-    if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      errors.push('NEXT_PUBLIC_SUPABASE_ANON_KEY is required for user language preference lookup');
-    }
-
     return {
       valid: errors.length === 0,
       errors,
