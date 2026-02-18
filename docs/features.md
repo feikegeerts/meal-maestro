@@ -4,18 +4,16 @@ This document provides an exhaustive list of all implemented features in the Mea
 
 ## Authentication & Security Features
 
-- Google OAuth 2.0 PKCE authentication flow
-- Magic link passwordless authentication
+- Google OAuth 2.0 authentication via Neon Auth (Better Auth)
+- Magic link passwordless authentication (infrastructure ready, pending Neon Auth webhook support)
 - Email validation and formatting
 - Rate limiting protection (60-second cooldown on magic links)
 - Authentication context with global state management
-- Session refresh and token management
-- HTTP-only cookie synchronization for API security
-- Session health monitoring (10-minute intervals)
-- Automatic token refresh with race condition protection
+- Neon Auth session management with cookie-based auth
 - OAuth callback handling with error recovery
 - Server-side session validation
 - API route protection with authentication middleware
+- Application-layer authorization (enforced in API routes and services)
 - Role-based access control (user/admin roles)
 - User profile creation and management
 - User unit system preferences (precise-metric, traditional-metric, us-traditional, mixed)
@@ -27,8 +25,6 @@ This document provides an exhaustive list of all implemented features in the Mea
 - Privacy policy with GDPR rights explanation
 - Terms of service with user rights and responsibilities
 - Multi-step account deletion confirmation process
-- Row Level Security (RLS) policies for data isolation
-- Secure deletion functions with SECURITY DEFINER
 - Input validation and sanitization throughout
 
 ## Recipe Management Features
@@ -64,8 +60,6 @@ This document provides an exhaustive list of all implemented features in the Mea
 - Recipe context management with global state
 - Recipe import from various sources (URL, AI, manual)
 - Drag and drop re-ordering of ingredients
-- Share a recipe link
-- Allow a shared recipe to be stored in own database
 
 ## AI-Powered Features
 
@@ -135,5 +129,5 @@ This document provides an exhaustive list of all implemented features in the Mea
 
 **Total Features Implemented**: 95+ distinct capabilities
 
-_Last Updated: September 2025_  
+_Last Updated: February 2026_
 _Version: Based on codebase analysis_

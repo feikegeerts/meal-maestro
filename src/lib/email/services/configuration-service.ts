@@ -9,15 +9,6 @@ export interface EmailServiceConfig {
   replyToEmail: string;
 }
 
-export interface SupabaseConfig {
-  url: string;
-  anonKey: string;
-}
-
-export interface WebhookConfig {
-  secret: string;
-}
-
 export interface OpenAIConfig {
   apiKey: string;
   model: string;
@@ -82,86 +73,6 @@ export class ConfigurationService {
   }
 
   /**
-   * Gets and validates Supabase configuration
-   */
-  getSupabaseConfig(): SupabaseConfig {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!url || !anonKey) {
-      throw new Error(
-        "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are required"
-      );
-    }
-
-    return {
-      url,
-      anonKey,
-    };
-  }
-
-  /**
-   * Gets and validates webhook configuration
-   */
-  getWebhookConfig(): WebhookConfig {
-    let secret = process.env.SUPABASE_WEBHOOK_SECRET;
-
-    if (!secret) {
-      throw new Error(
-        "SUPABASE_WEBHOOK_SECRET environment variable is required"
-      );
-    }
-
-    // Supabase webhook secrets come with v1, prefix by default
-    // Standard Webhooks library expects raw secret, so remove the prefix
-    if (secret.startsWith("v1,")) {
-      secret = secret.substring(3);
-    }
-
-    // Validate webhook secret format and quality
-    this.validateWebhookSecret(secret);
-
-    return { secret };
-  }
-
-  /**
-   * Validates webhook secret format and security properties
-   */
-  private validateWebhookSecret(secret: string): void {
-    // Check minimum length for security
-    if (secret.length < 32) {
-      console.warn(
-        "⚠️ Webhook secret is shorter than recommended 32 characters"
-      );
-    }
-
-    // Check for obvious weak secrets
-    const weakSecrets = ["test", "secret", "password", "123456", "webhook"];
-    const lowerSecret = secret.toLowerCase();
-    for (const weak of weakSecrets) {
-      if (lowerSecret.includes(weak)) {
-        console.warn(
-          `⚠️ Webhook secret contains potentially weak pattern: ${weak}`
-        );
-        break;
-      }
-    }
-
-    // Check for whitespace issues
-    if (secret !== secret.trim()) {
-      throw new Error("Webhook secret contains leading or trailing whitespace");
-    }
-
-    // Check for basic entropy (should contain mix of characters)
-    const hasLetter = /[a-zA-Z]/.test(secret);
-    const hasNumber = /[0-9]/.test(secret);
-
-    if (!hasLetter && !hasNumber) {
-      console.warn("⚠️ Webhook secret lacks alphanumeric characters");
-    }
-  }
-
-  /**
    * Gets and validates OpenAI configuration
    */
   getOpenAIConfig(): OpenAIConfig {
@@ -200,24 +111,6 @@ export class ConfigurationService {
         `Email service: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
-      );
-    }
-
-    // Validate Supabase configuration
-    try {
-      this.getSupabaseConfig();
-    } catch (error) {
-      errors.push(
-        `Supabase: ${error instanceof Error ? error.message : "Unknown error"}`
-      );
-    }
-
-    // Validate webhook configuration
-    try {
-      this.getWebhookConfig();
-    } catch (error) {
-      errors.push(
-        `Webhook: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     }
 

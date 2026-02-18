@@ -35,7 +35,7 @@ export class LocalizationService {
   /**
    * Detects user language from various sources with fallback chain:
    * 1. Database user_profiles.language_preference
-   * 2. User metadata (from Supabase user object)
+   * 2. User metadata (from auth user object)
    * 3. Page locale (from the URL where user initiated the request)
    * 4. Accept-Language header
    * 5. Fallback to English
@@ -54,7 +54,7 @@ export class LocalizationService {
       return databaseLanguagePreference;
     }
 
-    // Priority 2: User metadata (from Supabase user object)
+    // Priority 2: User metadata (from auth user object)
     if (
       userMetadata &&
       typeof userMetadata === "object" &&
