@@ -25,7 +25,7 @@ Supplementary frequently relevant files:
 - `src/lib/` – domain/business logic utilities
 - `src/contexts/` – React context providers
 - `src/db/schema.ts` – Drizzle ORM schema (source of truth for DB structure)
-- `drizzle/migrations/` – database migrations
+- `drizzle/` – database migrations
 - `src/config/usage-limits.ts` – server-side AI spend thresholds & alert tuning
 
 When modifying or adding tests, also inspect:
@@ -49,7 +49,7 @@ Primary domains:
 
 Database & ORM:
 - Database: Neon (Postgres) — schema in `src/db/schema.ts` (Drizzle ORM)
-- Migrations: `drizzle/migrations/` (managed via `drizzle-kit`)
+- Migrations: `drizzle/` (managed via `drizzle-kit`)
 - Storage: Cloudflare R2 via S3-compatible API (`@aws-sdk/client-s3`)
 
 ---
@@ -189,7 +189,7 @@ Add a new recipe field:
 
 1. Update type in `src/types/recipe.ts`.
 2. Adjust parsing/validation in `recipe-utils`.
-3. Migrate DB if persisted (create migration via `drizzle-kit generate` in `drizzle/migrations/`).
+3. Migrate DB if persisted (create migration via `drizzle-kit generate` in `drizzle/`).
 4. Update form component(s) & tests.
 
 Add unit conversion:
@@ -245,14 +245,17 @@ Automation suggestions (optional future additions):
 
 ## Quick Reference Cheat Sheet
 
-| Action       | Command        |
-| ------------ | -------------- |
-| Install deps | `pnpm install` |
-| Dev server   | `pnpm dev`     |
-| Run tests    | `pnpm test`    |
-| Lint         | `pnpm lint`    |
-| Build prod   | `pnpm build`   |
-| Start prod   | `pnpm start`   |
+| Action               | Command              |
+| -------------------- | -------------------- |
+| Install deps         | `pnpm install`       |
+| Dev server           | `pnpm dev`           |
+| Run tests            | `pnpm test`          |
+| Lint                 | `pnpm lint`          |
+| Build prod           | `pnpm build`         |
+| Start prod           | `pnpm start`         |
+| Generate migration   | `pnpm db:generate`   |
+| Apply migrations     | `pnpm db:migrate`    |
+| Open Drizzle Studio  | `pnpm db:studio`     |
 
 ---
 

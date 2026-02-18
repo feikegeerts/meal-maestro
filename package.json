@@ -15,6 +15,9 @@
     "test:ci": "NODE_ENV=test jest --ci --watchAll=false",
     "test:integration": "jest --config=jest.integration.config.js",
     "verify": "pnpm run type-check && pnpm run lint && pnpm run test:ci && pnpm run test:integration",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
     "prepare": "husky",
     "test:integration:cov": "jest --config=jest.integration.coverage.config.js"
   },
