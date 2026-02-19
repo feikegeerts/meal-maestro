@@ -137,8 +137,6 @@ import {
 import { createChatCompletion } from "../openai-service";
 import * as dbModule from "@/db";
 
-vi.useFakeTimers();
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -223,6 +221,7 @@ describe("RecipeChatService", () => {
   // Spy on the private loadMessages method to prevent require() of .ts locale
   // files in Vitest's ESM runtime (which doesn't support dynamic CJS require).
   beforeAll(() => {
+    vi.useFakeTimers();
     vi.spyOn(RecipeChatService.prototype as unknown as { loadMessages: () => unknown }, "loadMessages").mockReturnValue({});
   });
 
