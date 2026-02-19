@@ -1,25 +1,25 @@
 // ---------------------------------------------------------------------------
 // Mock @/db — must be self-contained (jest.mock is hoisted before const)
 // ---------------------------------------------------------------------------
-jest.mock("@/db", () => {
+vi.mock("@/db", () => {
   // Each query chain stores its own resolved value
   const profileChain = {
-    from: jest.fn().mockReturnThis(),
-    where: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockResolvedValue([]),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockResolvedValue([]),
   };
 
   const customUnitsChain = {
-    from: jest.fn().mockReturnThis(),
-    where: jest.fn().mockReturnThis(),
-    orderBy: jest.fn().mockResolvedValue([]),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    orderBy: vi.fn().mockResolvedValue([]),
   };
 
   // select() returns a builder whose from() switches on the table reference
-  const selectFn = jest.fn().mockImplementation(() => {
+  const selectFn = vi.fn().mockImplementation(() => {
     // Return a proxy that delegates to the right chain via from()
     const proxy = {
-      from: jest.fn().mockImplementation((table: unknown) => {
+      from: vi.fn().mockImplementation((table: unknown) => {
         // Store which table was requested for assertion purposes
         (proxy as Record<string, unknown>).__lastTable = table;
         // The schema objects are imported by the production code. We match by
@@ -54,28 +54,28 @@ jest.mock("@/db", () => {
 // Other module mocks
 // ---------------------------------------------------------------------------
 
-const buildMessagesMock = jest.fn();
-const updateConversationHistoryMock = jest.fn();
-const processFunctionCallMock = jest.fn();
-const formatResponseMock = jest.fn();
-const logUsageMock = jest.fn();
-const assertWithinMonthlyLimitMock = jest.fn();
-const getAvailableFunctionsMock = jest.fn();
-const createChatCompletionMock = jest.fn();
+const buildMessagesMock = vi.fn();
+const updateConversationHistoryMock = vi.fn();
+const processFunctionCallMock = vi.fn();
+const formatResponseMock = vi.fn();
+const logUsageMock = vi.fn();
+const assertWithinMonthlyLimitMock = vi.fn();
+const getAvailableFunctionsMock = vi.fn();
+const createChatCompletionMock = vi.fn();
 
-jest.mock("../conversation-builder", () => {
-  const actual = jest.requireActual("../conversation-builder");
+vi.mock("../conversation-builder", async () => {
+  const actual = await vi.importActual("../conversation-builder");
   return {
     ...actual,
-    ConversationBuilder: jest.fn(),
+    ConversationBuilder: vi.fn(),
   };
 });
 
-jest.mock("../function-call-processor", () => {
-  const actual = jest.requireActual("../function-call-processor");
-  const mockClass = jest.fn();
+vi.mock("../function-call-processor", async () => {
+  const actual = await vi.importActual("../function-call-processor");
+  const mockClass = vi.fn();
   Object.defineProperty(mockClass, "getAvailableFunctions", {
-    value: jest.fn(),
+    value: vi.fn(),
     writable: true,
   });
   return {
@@ -84,44 +84,45 @@ jest.mock("../function-call-processor", () => {
   };
 });
 
-jest.mock("../chat-response-formatter", () => {
-  const actual = jest.requireActual("../chat-response-formatter");
+vi.mock("../chat-response-formatter", async () => {
+  const actual = await vi.importActual("../chat-response-formatter");
   return {
     ...actual,
-    ChatResponseFormatter: jest.fn(),
+    ChatResponseFormatter: vi.fn(),
   };
 });
 
-jest.mock("../usage-tracking-service", () => ({
+vi.mock("../usage-tracking-service", () => ({
   usageTrackingService: {
-    logUsage: jest.fn(),
+    logUsage: vi.fn(),
   },
 }));
 
-jest.mock("@/lib/email/services/email-delivery-service", () => ({
-  EmailDeliveryService: jest.fn(() => ({
-    sendEmail: jest.fn(),
+vi.mock("@/lib/email/services/email-delivery-service", () => ({
+  EmailDeliveryService: vi.fn(() => ({
+    sendEmail: vi.fn(),
   })),
 }));
 
-jest.mock("../usage-limit-service", () => {
-  const actual = jest.requireActual("../usage-limit-service");
+vi.mock("../usage-limit-service", async () => {
+  const actual = await vi.importActual("../usage-limit-service");
   return {
     ...actual,
     usageLimitService: {
-      assertWithinMonthlyLimit: jest.fn(),
+      assertWithinMonthlyLimit: vi.fn(),
     },
   };
 });
 
-jest.mock("../openai-service", () => ({
-  createChatCompletion: jest.fn(),
+vi.mock("../openai-service", () => ({
+  createChatCompletion: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------
 // Imports (after all mocks are declared)
 // ---------------------------------------------------------------------------
 
+import type { Mock, MockedClass, MockedFunction } from "vitest";
 import type { ChatMessage } from "../conversation-builder";
 import type { ChatResponse } from "../chat-response-formatter";
 import { RecipeChatService } from "../recipe-chat-service";
@@ -134,48 +135,46 @@ import {
   MonthlySpendLimitError,
 } from "../usage-limit-service";
 import { createChatCompletion } from "../openai-service";
+import * as dbModule from "@/db";
 
-jest.useFakeTimers();
+vi.useFakeTimers();
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 type BuilderMocks = {
-  buildMessages: jest.Mock;
-  updateConversationHistory: jest.Mock;
+  buildMessages: Mock;
+  updateConversationHistory: Mock;
 };
 
 type ProcessorMocks = {
-  processFunctionCall: jest.Mock;
+  processFunctionCall: Mock;
 };
 
 type FormatterMocks = {
-  formatResponse: jest.Mock;
+  formatResponse: Mock;
 };
 
 interface DbMockChains {
   profileChain: {
-    from: jest.Mock;
-    where: jest.Mock;
-    limit: jest.Mock;
+    from: Mock;
+    where: Mock;
+    limit: Mock;
   };
   customUnitsChain: {
-    from: jest.Mock;
-    where: jest.Mock;
-    orderBy: jest.Mock;
+    from: Mock;
+    where: Mock;
+    orderBy: Mock;
   };
-  selectFn: jest.Mock;
+  selectFn: Mock;
 }
 
 function getDbMocks(): DbMockChains {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { db } = require("@/db") as {
-    db: {
-      select: jest.Mock;
-      __profileChain: DbMockChains["profileChain"];
-      __customUnitsChain: DbMockChains["customUnitsChain"];
-    };
+  const db = dbModule.db as unknown as {
+    select: Mock;
+    __profileChain: DbMockChains["profileChain"];
+    __customUnitsChain: DbMockChains["customUnitsChain"];
   };
   return {
     profileChain: db.__profileChain,
@@ -221,25 +220,31 @@ function setupDrizzleStub(options: DrizzleStubOptions = {}) {
 // ---------------------------------------------------------------------------
 
 describe("RecipeChatService", () => {
+  // Spy on the private loadMessages method to prevent require() of .ts locale
+  // files in Vitest's ESM runtime (which doesn't support dynamic CJS require).
+  beforeAll(() => {
+    vi.spyOn(RecipeChatService.prototype as unknown as { loadMessages: () => unknown }, "loadMessages").mockReturnValue({});
+  });
+
   const ConversationBuilderMock =
-    ConversationBuilder as unknown as jest.MockedClass<
+    ConversationBuilder as unknown as MockedClass<
       typeof ConversationBuilder
     >;
   const FunctionCallProcessorMock =
-    FunctionCallProcessor as unknown as jest.MockedClass<
+    FunctionCallProcessor as unknown as MockedClass<
       typeof FunctionCallProcessor
     >;
   const ChatResponseFormatterMock =
-    ChatResponseFormatter as unknown as jest.MockedClass<
+    ChatResponseFormatter as unknown as MockedClass<
       typeof ChatResponseFormatter
     >;
   const createChatCompletionTypedMock =
-    createChatCompletion as jest.MockedFunction<typeof createChatCompletion>;
-  const logUsageTypedMock = usageTrackingService.logUsage as jest.MockedFunction<
+    createChatCompletion as MockedFunction<typeof createChatCompletion>;
+  const logUsageTypedMock = usageTrackingService.logUsage as MockedFunction<
     typeof usageTrackingService.logUsage
   >;
   const assertWithinMonthlyLimitTypedMock =
-    usageLimitService.assertWithinMonthlyLimit as jest.MockedFunction<
+    usageLimitService.assertWithinMonthlyLimit as MockedFunction<
       typeof usageLimitService.assertWithinMonthlyLimit
     >;
 
@@ -248,7 +253,7 @@ describe("RecipeChatService", () => {
   let formatterMocks: FormatterMocks;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     buildMessagesMock.mockReset();
     updateConversationHistoryMock.mockReset();
@@ -282,12 +287,14 @@ describe("RecipeChatService", () => {
       () => formatterMocks as unknown as ChatResponseFormatter
     );
 
-    createChatCompletionTypedMock.mockImplementation((...args) =>
-      createChatCompletionMock(...args)
+    createChatCompletionTypedMock.mockImplementation(
+      createChatCompletionMock as unknown as typeof createChatCompletion
     );
-    logUsageTypedMock.mockImplementation((...args) => logUsageMock(...args));
-    assertWithinMonthlyLimitTypedMock.mockImplementation((...args) =>
-      assertWithinMonthlyLimitMock(...args)
+    logUsageTypedMock.mockImplementation(
+      logUsageMock as unknown as typeof usageTrackingService.logUsage
+    );
+    assertWithinMonthlyLimitTypedMock.mockImplementation(
+      assertWithinMonthlyLimitMock as unknown as typeof usageLimitService.assertWithinMonthlyLimit
     );
 
     assertWithinMonthlyLimitMock.mockResolvedValue(undefined);
@@ -298,7 +305,7 @@ describe("RecipeChatService", () => {
   });
 
   afterAll(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it("processes a standard chat message and returns formatted response", async () => {
@@ -687,7 +694,7 @@ describe("RecipeChatService", () => {
 
     logUsageMock.mockResolvedValue({ success: true, limitReached: false });
 
-    const consoleErrorSpy = jest
+    const consoleErrorSpy = vi
       .spyOn(console, "error")
       .mockImplementation(() => undefined);
 
@@ -736,7 +743,7 @@ describe("RecipeChatService", () => {
 
     logUsageMock.mockResolvedValue({ success: true, limitReached: false });
 
-    const consoleErrorSpy = jest
+    const consoleErrorSpy = vi
       .spyOn(console, "error")
       .mockImplementation(() => undefined);
 
@@ -758,6 +765,20 @@ describe("RecipeChatService", () => {
   });
 
   it("falls back to English messages when locale file is missing", () => {
+    // Provide English messages for this test (simulates fallback from unknown locale)
+    const loadMessagesSpy = vi.spyOn(
+      RecipeChatService.prototype as unknown as { loadMessages: () => unknown },
+      "loadMessages",
+    );
+    loadMessagesSpy.mockReturnValueOnce({
+      chat: {
+        standardFollowUp:
+          'The user asked: "{message}". I have automatically filled the recipe form with all ingredients and instructions - it\'s completely ready! The form is now filled and the user can view it. Give an appropriate response to their original question. No more function calls.',
+        mixedRequestFollowUp:
+          'The user asked: "{message}". I have automatically extracted the recipe and filled the form - that\'s done! Now the user also wants to know: "{additionalContent}". Give a detailed and helpful response to their additional question. No more function calls.',
+      },
+    });
+
     const service = new RecipeChatService("user-fallback", "xx");
     const translator = service as unknown as {
       t: (key: string) => string;
@@ -861,7 +882,7 @@ describe("RecipeChatService", () => {
       },
     });
 
-    const consoleErrorSpy = jest
+    const consoleErrorSpy = vi
       .spyOn(console, "error")
       .mockImplementation(() => undefined);
 
@@ -903,7 +924,7 @@ describe("RecipeChatService", () => {
 
     logUsageMock.mockResolvedValueOnce({ success: false, error: "db down" });
 
-    const consoleWarnSpy = jest
+    const consoleWarnSpy = vi
       .spyOn(console, "warn")
       .mockImplementation(() => undefined);
 
@@ -983,7 +1004,7 @@ describe("RecipeChatService", () => {
       },
     });
 
-    const consoleErrorSpy = jest
+    const consoleErrorSpy = vi
       .spyOn(console, "error")
       .mockImplementation(() => undefined);
 

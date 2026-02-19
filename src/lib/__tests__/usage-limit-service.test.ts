@@ -1,3 +1,5 @@
+import type { Mock } from 'vitest';
+import * as emailDeliveryMod from '@/lib/email/services/email-delivery-service';
 import type { OpenAIUsageData } from "../openai-service";
 
 // ---------------------------------------------------------------------------
@@ -69,21 +71,21 @@ let insertUpsertResult: DrizzleSummaryRow | null = null;
 // Mock @/db
 // ---------------------------------------------------------------------------
 
-jest.mock("@/db", () => {
-  const selectFn = jest.fn().mockImplementation((fields?: Record<string, unknown>) => {
+vi.mock("@/db", () => {
+  const selectFn = vi.fn().mockImplementation((fields?: Record<string, unknown>) => {
     if (fields && "count" in fields) {
       // count() query for alert events
       return {
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([{ count: selectAlertCountResult }]),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ count: selectAlertCountResult }]),
         }),
       };
     }
     // Full select (getCurrentSummary)
     return {
-      from: jest.fn().mockReturnValue({
-        where: jest.fn().mockReturnValue({
-          limit: jest.fn().mockImplementation(async () => {
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockImplementation(async () => {
             return selectSummaryResult ? [selectSummaryResult] : [];
           }),
         }),
@@ -91,13 +93,13 @@ jest.mock("@/db", () => {
     };
   });
 
-  const insertFn = jest.fn().mockImplementation(() => ({
-    values: jest.fn().mockImplementation((val: Record<string, unknown>) => {
+  const insertFn = vi.fn().mockImplementation(() => ({
+    values: vi.fn().mockImplementation((val: Record<string, unknown>) => {
       if ("monthStart" in val && "totalCost" in val) {
         // Upsert for monthly_usage_summary
         return {
-          onConflictDoUpdate: jest.fn().mockReturnValue({
-            returning: jest.fn().mockImplementation(async () => {
+          onConflictDoUpdate: vi.fn().mockReturnValue({
+            returning: vi.fn().mockImplementation(async () => {
               return insertUpsertResult ? [insertUpsertResult] : [];
             }),
           }),
@@ -109,11 +111,11 @@ jest.mock("@/db", () => {
     }),
   }));
 
-  const updateFn = jest.fn().mockImplementation(() => ({
-    set: jest.fn().mockImplementation((setValues: Record<string, unknown>) => {
+  const updateFn = vi.fn().mockImplementation(() => ({
+    set: vi.fn().mockImplementation((setValues: Record<string, unknown>) => {
       updateSets.push(setValues);
       return {
-        where: jest.fn().mockResolvedValue({ rowCount: 1 }),
+        where: vi.fn().mockResolvedValue({ rowCount: 1 }),
       };
     }),
   }));
@@ -131,10 +133,10 @@ jest.mock("@/db", () => {
 // Mock email delivery
 // ---------------------------------------------------------------------------
 
-jest.mock("@/lib/email/services/email-delivery-service", () => {
-  const mock = jest.fn().mockResolvedValue(undefined);
+vi.mock("@/lib/email/services/email-delivery-service", () => {
+  const mock = vi.fn().mockResolvedValue(undefined);
   return {
-    EmailDeliveryService: jest.fn(() => ({
+    EmailDeliveryService: vi.fn(() => ({
       sendEmail: mock,
     })),
     __sendEmailMock: mock,
@@ -142,12 +144,8 @@ jest.mock("@/lib/email/services/email-delivery-service", () => {
 });
 
 // Access the send email mock for assertions
-function getSendEmailMock(): jest.Mock {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mod = require("@/lib/email/services/email-delivery-service") as {
-    __sendEmailMock: jest.Mock;
-  };
-  return mod.__sendEmailMock;
+function getSendEmailMock(): Mock {
+  return (emailDeliveryMod as unknown as { __sendEmailMock: Mock }).__sendEmailMock;
 }
 
 // ---------------------------------------------------------------------------
@@ -164,7 +162,7 @@ describe("UsageLimitService alerts", () => {
   let usageService: UsageLimitService;
 
   beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(new Date("2024-06-15T12:00:00Z"));
+    vi.useFakeTimers().setSystemTime(new Date("2024-06-15T12:00:00Z"));
     getSendEmailMock().mockClear();
     insertedAlertEvents = [];
     updateSets = [];
@@ -176,7 +174,7 @@ describe("UsageLimitService alerts", () => {
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it("enforces limit and dispatches spend alerts when threshold reached", async () => {

@@ -1,12 +1,13 @@
+import type { Mock } from 'vitest';
 import type { RecipeNutrition } from "@/types/recipe";
 import { NutritionService, buildCacheKey } from "@/lib/nutrition-service";
+import { createChatCompletion } from "@/lib/openai-service";
 
-jest.mock("@/lib/openai-service", () => ({
-  createChatCompletion: jest.fn(),
+vi.mock("@/lib/openai-service", () => ({
+  createChatCompletion: vi.fn(),
 }));
 
-const mockCreateChatCompletion = jest.requireMock("@/lib/openai-service")
-  .createChatCompletion as jest.Mock;
+const mockCreateChatCompletion = vi.mocked(createChatCompletion) as Mock;
 
 const baseRecipe = {
   title: "Test Recipe",
@@ -19,7 +20,7 @@ const baseRecipe = {
 
 describe("NutritionService", () => {
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it("parses AI nutrition response into RecipeNutrition structure", async () => {

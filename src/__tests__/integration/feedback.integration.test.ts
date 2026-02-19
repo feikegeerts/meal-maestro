@@ -16,19 +16,19 @@ let feedbackInserts: Record<string, unknown>[] = [];
 let shouldRateLimitThrow = false;
 let rateLimitError: Error | null = null;
 
-jest.mock("@/db", () => {
+vi.mock("@/db", () => {
   // delete().where() — rate-limit cleanup (always throws when shouldRateLimitThrow)
-  const deleteFn = jest.fn().mockImplementation(() => ({
-    where: jest.fn().mockImplementation(() => {
+  const deleteFn = vi.fn().mockImplementation(() => ({
+    where: vi.fn().mockImplementation(() => {
       if (shouldRateLimitThrow && rateLimitError) throw rateLimitError;
       return Promise.resolve({ rowCount: 0 });
     }),
   }));
 
   // select({ count }).from().where() — rate-limit count
-  const selectFn = jest.fn().mockImplementation(() => ({
-    from: jest.fn().mockReturnValue({
-      where: jest.fn().mockImplementation(() => {
+  const selectFn = vi.fn().mockImplementation(() => ({
+    from: vi.fn().mockReturnValue({
+      where: vi.fn().mockImplementation(() => {
         if (shouldRateLimitThrow && rateLimitError) throw rateLimitError;
         return Promise.resolve([{ count: rateLimitCount }]);
       }),
@@ -37,8 +37,8 @@ jest.mock("@/db", () => {
 
   // insert().values() — rate-limit record OR feedback row
   // Only throws for rate-limit inserts (those with "endpoint" key)
-  const insertFn = jest.fn().mockImplementation(() => ({
-    values: jest.fn().mockImplementation((val: Record<string, unknown>) => {
+  const insertFn = vi.fn().mockImplementation(() => ({
+    values: vi.fn().mockImplementation((val: Record<string, unknown>) => {
       if (val && "endpoint" in val) {
         if (shouldRateLimitThrow && rateLimitError) throw rateLimitError;
         rateLimitInserts.push(val);
@@ -61,13 +61,14 @@ jest.mock("@/db", () => {
 // ---------------------------------------------------------------------------
 // Mock auth-server
 // ---------------------------------------------------------------------------
-jest.mock("@/lib/auth-server", () => ({
-  requireAuth: jest.fn(),
+vi.mock("@/lib/auth-server", () => ({
+  requireAuth: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------
 // Imports (after mocks)
 // ---------------------------------------------------------------------------
+import type { Mock, MockInstance } from "vitest";
 import { NextRequest } from "next/server";
 import {
   POST as feedbackPost,
@@ -75,7 +76,7 @@ import {
 } from "@/app/api/feedback/route";
 import { requireAuth } from "@/lib/auth-server";
 
-const mockRequireAuth = requireAuth as jest.Mock;
+const mockRequireAuth = requireAuth as Mock;
 
 const mockUser = {
   id: "test-user-id",
@@ -101,8 +102,8 @@ const buildRequest = (body: Record<string, unknown>) =>
 // Tests
 // ---------------------------------------------------------------------------
 describe("POST /api/feedback (integration)", () => {
-  let consoleErrorSpy: jest.SpyInstance;
-  let consoleWarnSpy: jest.SpyInstance;
+  let consoleErrorSpy: MockInstance;
+  let consoleWarnSpy: MockInstance;
 
   beforeEach(() => {
     rateLimitCount = 0;
@@ -113,10 +114,10 @@ describe("POST /api/feedback (integration)", () => {
 
     mockRequireAuth.mockResolvedValue({ user: mockUser });
 
-    consoleErrorSpy = jest
+    consoleErrorSpy = vi
       .spyOn(console, "error")
       .mockImplementation(() => undefined);
-    consoleWarnSpy = jest
+    consoleWarnSpy = vi
       .spyOn(console, "warn")
       .mockImplementation(() => undefined);
   });
