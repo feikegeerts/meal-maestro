@@ -1,12 +1,13 @@
+import type { MockedFunction, MockInstance } from 'vitest';
 import type { OpenAI } from 'openai';
 import { FunctionCallProcessor } from '../function-call-processor';
 import { updateRecipeForm, extractRecipeFromUrl } from '../recipe-functions';
 import { createChatCompletion } from '../openai-service';
 
-jest.mock('../recipe-functions', () => ({
-  updateRecipeForm: jest.fn(),
-  extractRecipeFromUrl: jest.fn(),
-  createRecipeFormFunction: jest.fn(() => ({
+vi.mock('../recipe-functions', () => ({
+  updateRecipeForm: vi.fn(),
+  extractRecipeFromUrl: vi.fn(),
+  createRecipeFormFunction: vi.fn(() => ({
     type: 'function',
     function: {
       name: 'update_recipe_form',
@@ -30,24 +31,26 @@ jest.mock('../recipe-functions', () => ({
   },
 }));
 
-jest.mock('../openai-service', () => ({
-  createChatCompletion: jest.fn(),
+vi.mock('../openai-service', () => ({
+  createChatCompletion: vi.fn(),
 }));
 
-jest.mock('../chat-prompts', () => ({
-  getAIProcessingPrompt: jest.fn(() => 'process prompt'),
-  getRecipeRecoveryPrompt: jest.fn(() => 'recovery prompt'),
+vi.mock('../chat-prompts', () => ({
+  getAIProcessingPrompt: vi.fn(() => 'process prompt'),
+  getRecipeRecoveryPrompt: vi.fn(() => 'recovery prompt'),
 }));
 
-const mockedUpdateRecipeForm = updateRecipeForm as jest.MockedFunction<typeof updateRecipeForm>;
-const mockedExtractRecipeFromUrl = extractRecipeFromUrl as jest.MockedFunction<typeof extractRecipeFromUrl>;
-const mockedCreateChatCompletion = createChatCompletion as jest.MockedFunction<typeof createChatCompletion>;
+const mockedUpdateRecipeForm = updateRecipeForm as MockedFunction<typeof updateRecipeForm>;
+const mockedExtractRecipeFromUrl = extractRecipeFromUrl as MockedFunction<typeof extractRecipeFromUrl>;
+const mockedCreateChatCompletion = createChatCompletion as MockedFunction<typeof createChatCompletion>;
 
 describe('FunctionCallProcessor.processFunctionCall', () => {
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: MockInstance;
 
   beforeAll(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    // Spy on loadMessages to prevent require() of .ts locale files in Vitest ESM runtime
+    vi.spyOn(FunctionCallProcessor.prototype as unknown as { loadMessages: () => unknown }, "loadMessages").mockReturnValue({});
   });
 
   afterAll(() => {
@@ -55,7 +58,7 @@ describe('FunctionCallProcessor.processFunctionCall', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     consoleErrorSpy.mockImplementation(() => undefined);
   });
 
@@ -154,7 +157,7 @@ describe('FunctionCallProcessor.processFunctionCall', () => {
       },
     } as unknown as Awaited<ReturnType<typeof createChatCompletion>>);
 
-    const usageGuard = jest.fn().mockResolvedValue(undefined);
+    const usageGuard = vi.fn().mockResolvedValue(undefined);
     const processor = new FunctionCallProcessor('en', 'mixed', ['Jar'], usageGuard);
     const toolCall = buildToolCall('extract_recipe_from_url', { url: 'https://example.com' });
 

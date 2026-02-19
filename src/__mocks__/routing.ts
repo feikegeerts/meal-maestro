@@ -10,15 +10,15 @@ export const defineRouting = (config: { locales: string[]; defaultLocale: string
 // Mock createNavigation function
 export const createNavigation = () => ({
   Link: ({ children }: { children: React.ReactNode }) => children,
-  redirect: jest.fn(),
-  usePathname: jest.fn(() => '/'),
-  useRouter: jest.fn(() => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    back: jest.fn(),
-    forward: jest.fn(),
-    refresh: jest.fn(),
-    prefetch: jest.fn(),
+  redirect: vi.fn(),
+  usePathname: vi.fn(() => '/'),
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
   })),
 });
 
@@ -27,17 +27,17 @@ export const Link = ({ children }: { children: React.ReactNode }) => {
   return children;
 };
 
-export const redirect = jest.fn();
+export const redirect = vi.fn();
 
-export const usePathname = jest.fn(() => '/');
+export const usePathname = vi.fn(() => '/');
 
-export const useRouter = jest.fn(() => ({
-  push: jest.fn(),
-  replace: jest.fn(),
-  back: jest.fn(),
-  forward: jest.fn(),
-  refresh: jest.fn(),
-  prefetch: jest.fn(),
+export const useRouter = vi.fn(() => ({
+  push: vi.fn(),
+  replace: vi.fn(),
+  back: vi.fn(),
+  forward: vi.fn(),
+  refresh: vi.fn(),
+  prefetch: vi.fn(),
 }));
 
 const mockExports = {

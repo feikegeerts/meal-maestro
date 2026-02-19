@@ -6,12 +6,12 @@
  */
 
 // Mock @/db to prevent neon() from being called at import time
-jest.mock("@/db", () => ({
+vi.mock("@/db", () => ({
   db: {
-    select: jest.fn().mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        where: jest.fn().mockReturnValue({
-          limit: jest.fn().mockResolvedValue([]),
+    select: vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([]),
         }),
       }),
     }),
@@ -19,23 +19,24 @@ jest.mock("@/db", () => ({
 }));
 
 // Mock auth.getSession() — the core of Neon Auth
-// Factory-internal jest.fn() avoids hoisting issues with const references.
+// Factory-internal vi.fn() avoids hoisting issues with const references.
 // We access it via the imported `auth` object after import.
-jest.mock("@/lib/auth/server", () => ({
+vi.mock("@/lib/auth/server", () => ({
   auth: {
-    getSession: jest.fn(),
+    getSession: vi.fn(),
   },
 }));
 
+import type { Mock } from "vitest";
 import { requireAuth } from "@/lib/auth-server";
 import { auth } from "@/lib/auth/server";
 
-// auth.getSession is the jest.fn() created inside the factory
-const mockGetSession = auth.getSession as jest.Mock;
+// auth.getSession is the vi.fn() created inside the factory
+const mockGetSession = auth.getSession as Mock;
 
 describe("requireAuth (integration – Neon Auth)", () => {
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     mockGetSession.mockReset();
   });
 
@@ -114,7 +115,7 @@ describe("requireAuth (integration – Neon Auth)", () => {
   });
 
   it("returns 401 when getSession throws an error", async () => {
-    const consoleSpy = jest
+    const consoleSpy = vi
       .spyOn(console, "error")
       .mockImplementation(() => {});
 

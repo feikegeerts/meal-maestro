@@ -1,25 +1,28 @@
+// @vitest-environment node
+import type { Mock, MockInstance } from "vitest";
 import { NextRequest } from "next/server";
 import { POST as chatPost } from "@/app/api/recipes/chat/route";
 import { RecipeChatService } from "@/lib/recipe-chat-service";
 import { MonthlySpendLimitError, usageLimitService } from "@/lib/usage-limit-service";
 import { ChatResponseFormatter } from "@/lib/chat-response-formatter";
+import { requireAuth } from "@/lib/auth-server";
 
 process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || "test-key";
 
-jest.mock("@/lib/auth-server", () => ({
-  requireAuth: jest.fn(),
+vi.mock("@/lib/auth-server", () => ({
+  requireAuth: vi.fn(),
 }));
 
-jest.mock("@/lib/recipe-chat-service", () => {
-  const detectLocale = jest.fn(() => "en");
-  const RecipeChatServiceMock = jest.fn().mockImplementation(() => ({
-    processMessage: jest.fn().mockResolvedValue({ reply: "ok" }),
+vi.mock("@/lib/recipe-chat-service", () => {
+  const detectLocale = vi.fn(() => "en");
+  const RecipeChatServiceMock = vi.fn().mockImplementation(() => ({
+    processMessage: vi.fn().mockResolvedValue({ reply: "ok" }),
   }));
   (RecipeChatServiceMock as unknown as { detectLocale?: typeof detectLocale }).detectLocale = detectLocale;
   return { RecipeChatService: RecipeChatServiceMock };
 });
 
-jest.mock("@/lib/openai-service", () => {
+vi.mock("@/lib/openai-service", () => {
   class OpenAITimeoutError extends Error {
     code = "TIMEOUT_ERROR";
     service = "OpenAI";
@@ -32,9 +35,9 @@ jest.mock("@/lib/openai-service", () => {
   return { OpenAITimeoutError };
 });
 
-jest.mock("@/lib/usage-limit-service", () => ({
+vi.mock("@/lib/usage-limit-service", () => ({
   usageLimitService: {
-    recordRateLimitViolation: jest.fn(),
+    recordRateLimitViolation: vi.fn(),
   },
   MonthlySpendLimitError: class MonthlySpendLimitError extends Error {
     code = "MONTHLY_SPEND_LIMIT_REACHED";
@@ -45,10 +48,9 @@ jest.mock("@/lib/usage-limit-service", () => ({
   },
 }));
 
-const requireAuth = jest.requireMock("@/lib/auth-server").requireAuth as jest.Mock;
-const { OpenAITimeoutError } = jest.requireMock("@/lib/openai-service") as {
-  OpenAITimeoutError: new (message?: string) => Error & { code: string; isRetryable: boolean };
-};
+import { OpenAITimeoutError } from "@/lib/openai-service";
+
+const mockRequireAuth = vi.mocked(requireAuth);
 
 const buildRequest = (body: Record<string, unknown>) =>
   new NextRequest("http://localhost/api/recipes/chat", {
@@ -58,22 +60,21 @@ const buildRequest = (body: Record<string, unknown>) =>
   });
 
 describe("POST /api/recipes/chat (integration)", () => {
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: MockInstance;
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => undefined);
-    requireAuth.mockResolvedValue({
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockRequireAuth.mockResolvedValue({
       user: { id: "user-1" },
-      client: {},
     });
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     consoleErrorSpy.mockRestore();
   });
 
   it("returns 401 when unauthenticated", async () => {
-    requireAuth.mockResolvedValue(new Response("unauthorized", { status: 401 }));
+    mockRequireAuth.mockResolvedValue(new Response("unauthorized", { status: 401 }));
 
     const response = await chatPost(buildRequest({ message: "Hi" }));
     expect(response.status).toBe(401);
@@ -97,11 +98,11 @@ describe("POST /api/recipes/chat (integration)", () => {
   });
 
   it("processes chat message successfully", async () => {
-    const detectLocale = jest
-      .spyOn(RecipeChatService as unknown as { detectLocale: jest.Mock }, "detectLocale")
+    const detectLocale = vi
+      .spyOn(RecipeChatService as unknown as { detectLocale: Mock }, "detectLocale")
       .mockReturnValue("en");
-    const processMessage = jest.fn().mockResolvedValue({ reply: "ok" });
-    (RecipeChatService as unknown as jest.Mock).mockImplementation(() => ({
+    const processMessage = vi.fn().mockResolvedValue({ reply: "ok" });
+    (RecipeChatService as unknown as Mock).mockImplementation(() => ({
       processMessage,
     }));
 
@@ -121,8 +122,8 @@ describe("POST /api/recipes/chat (integration)", () => {
   });
 
   it("returns 422 on OpenAI timeout with retry hint", async () => {
-    (RecipeChatService as unknown as jest.Mock).mockImplementation(() => ({
-      processMessage: jest.fn().mockRejectedValue(new OpenAITimeoutError("timeout")),
+    (RecipeChatService as unknown as Mock).mockImplementation(() => ({
+      processMessage: vi.fn().mockRejectedValue(new OpenAITimeoutError("timeout")),
     }));
 
     const response = await chatPost(buildRequest({ message: "Hello" }));
@@ -134,8 +135,8 @@ describe("POST /api/recipes/chat (integration)", () => {
   });
 
   it("returns 402 on monthly spend limit reached", async () => {
-    (RecipeChatService as unknown as jest.Mock).mockImplementation(() => ({
-      processMessage: jest.fn().mockRejectedValue(new MonthlySpendLimitError(100, 120)),
+    (RecipeChatService as unknown as Mock).mockImplementation(() => ({
+      processMessage: vi.fn().mockRejectedValue(new MonthlySpendLimitError(100, 120)),
     }));
 
     const response = await chatPost(buildRequest({ message: "Hello", locale: "nl" }));
@@ -145,11 +146,11 @@ describe("POST /api/recipes/chat (integration)", () => {
   });
 
   it("records rate limit violation when formatter returns 429", async () => {
-    const formatErrorResponse = jest
+    const formatErrorResponse = vi
       .spyOn(ChatResponseFormatter.prototype, "formatErrorResponse")
       .mockResolvedValue({ error: "Too many requests", status: 429 });
-    (RecipeChatService as unknown as jest.Mock).mockImplementation(() => ({
-      processMessage: jest.fn().mockRejectedValue(new Error("rate limit")),
+    (RecipeChatService as unknown as Mock).mockImplementation(() => ({
+      processMessage: vi.fn().mockRejectedValue(new Error("rate limit")),
     }));
 
     const response = await chatPost(buildRequest({ message: "Hello" }));

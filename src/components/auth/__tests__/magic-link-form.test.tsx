@@ -17,20 +17,20 @@ describe("MagicLinkForm", () => {
 // import { toast } from 'sonner';
 
 // // Mock auth client to avoid ESM dependency chain (@neondatabase/auth → better-auth → jose, nanostores)
-// jest.mock("@/lib/auth/client", () => ({
+// vi.mock("@/lib/auth/client", () => ({
 //   authClient: {
-//     useSession: jest.fn().mockReturnValue({ data: null, isPending: false }),
-//     signIn: { social: jest.fn() },
-//     emailOtp: { sendVerificationOtp: jest.fn().mockResolvedValue({ error: null }) },
-//     signOut: jest.fn(),
+//     useSession: vi.fn().mockReturnValue({ data: null, isPending: false }),
+//     signIn: { social: vi.fn() },
+//     emailOtp: { sendVerificationOtp: vi.fn().mockResolvedValue({ error: null }) },
+//     signOut: vi.fn(),
 //   },
 // }));
 
 // // Mock Sonner toast
-// jest.mock('sonner', () => ({
+// vi.mock('sonner', () => ({
 //   toast: {
-//     error: jest.fn(),
-//     success: jest.fn(),
+//     error: vi.fn(),
+//     success: vi.fn(),
 //   },
 // }));
 
@@ -40,12 +40,12 @@ describe("MagicLinkForm", () => {
 // );
 
 // describe("MagicLinkForm", () => {
-//   let consoleErrorSpy: jest.SpyInstance;
+//   let consoleErrorSpy: MockInstance;
 
 //   beforeEach(() => {
-//     jest.clearAllTimers();
+//     vi.clearAllTimers();
 //     server.resetHandlers();
-//     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+//     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 //   });
 
 //   afterEach(() => {

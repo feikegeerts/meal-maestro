@@ -39,6 +39,21 @@ export default [
     },
   },
   {
+    files: [
+      "**/*.test.{ts,tsx,js}",
+      "**/*.spec.{ts,tsx,js}",
+      "src/__tests__/**",
+      "src/__mocks__/**",
+      "src/test-setup/**",
+      "src/test-support/**",
+    ],
+    languageOptions: {
+      globals: {
+        ...globals.vitest,
+      },
+    },
+  },
+  {
     files: ["next-pwa.d.ts"],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",

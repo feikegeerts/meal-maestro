@@ -8,11 +8,11 @@ import {
   type RecipeInput,
 } from "@/types/recipe";
 
-jest.mock("@/components/recipe-edit/hooks/use-auto-save", () => ({
-  useAutoSave: jest.fn(),
+vi.mock("@/components/recipe-edit/hooks/use-auto-save", () => ({
+  useAutoSave: vi.fn(),
 }));
 
-jest.mock("@/components/recipe-edit/components/basic-information-section", () => ({
+vi.mock("@/components/recipe-edit/components/basic-information-section", () => ({
   BasicInformationSection: ({
     formData,
     onFormDataChange,
@@ -28,13 +28,13 @@ jest.mock("@/components/recipe-edit/components/basic-information-section", () =>
   ),
 }));
 
-jest.mock("@/components/recipe-edit/components/ingredients-section", () => ({
+vi.mock("@/components/recipe-edit/components/ingredients-section", () => ({
   IngredientsSection: ({ loading }: { loading?: boolean }) => (
     <div>{loading ? "ingredients-loading" : "IngredientsSection"}</div>
   ),
 }));
 
-jest.mock("@/components/recipe-edit/components/instructions-section", () => ({
+vi.mock("@/components/recipe-edit/components/instructions-section", () => ({
   InstructionsSection: ({
     onDescriptionChange,
   }: {
@@ -46,7 +46,7 @@ jest.mock("@/components/recipe-edit/components/instructions-section", () => ({
   ),
 }));
 
-jest.mock("@/components/recipe-edit/components/sections-section", () => ({
+vi.mock("@/components/recipe-edit/components/sections-section", () => ({
   SectionsSection: ({ onAddSection }: { onAddSection: () => void }) => (
     <div>
       SectionsSection
@@ -55,15 +55,15 @@ jest.mock("@/components/recipe-edit/components/sections-section", () => ({
   ),
 }));
 
-jest.mock("@/components/recipe-edit/components/categorized-tag-selector", () => ({
+vi.mock("@/components/recipe-edit/components/categorized-tag-selector", () => ({
   CategorizedTagSelector: () => <div>Tags</div>,
 }));
 
-jest.mock("@/components/recipe-edit/components/nutrition-section", () => ({
+vi.mock("@/components/recipe-edit/components/nutrition-section", () => ({
   NutritionSection: () => <div>Nutrition</div>,
 }));
 
-jest.mock("@/components/recipe-edit/components/form-layout-renderer", () => ({
+vi.mock("@/components/recipe-edit/components/form-layout-renderer", () => ({
   FormLayoutRenderer: ({
     children,
   }: {
@@ -96,7 +96,7 @@ const baseRecipe: Recipe = {
 
 describe("RecipeEditForm", () => {
   it("shows validation errors when required fields are empty", async () => {
-    const handleSave = jest.fn().mockResolvedValue(undefined);
+    const handleSave = vi.fn().mockResolvedValue(undefined);
     render(
       <RecipeEditForm
         recipe={{ ...baseRecipe, title: "" }}
@@ -117,7 +117,7 @@ describe("RecipeEditForm", () => {
 
   it("toggles between ingredients and sections modes", () => {
     render(
-      <RecipeEditForm recipe={baseRecipe} onSave={jest.fn()} standalone />
+      <RecipeEditForm recipe={baseRecipe} onSave={vi.fn()} standalone />
     );
 
     expect(screen.getByText("IngredientsSection")).toBeInTheDocument();

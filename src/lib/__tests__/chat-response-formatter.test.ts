@@ -1,11 +1,11 @@
 // Mock @/db to prevent module-level DATABASE_URL initialization
-jest.mock('@/db', () => ({
+vi.mock('@/db', () => ({
   db: {},
 }));
 
-jest.mock('@/lib/email/services/email-delivery-service', () => ({
-  EmailDeliveryService: jest.fn().mockImplementation(() => ({
-    sendEmail: jest.fn(() => Promise.resolve({ success: true })),
+vi.mock('@/lib/email/services/email-delivery-service', () => ({
+  EmailDeliveryService: vi.fn().mockImplementation(() => ({
+    sendEmail: vi.fn(() => Promise.resolve({ success: true })),
   })),
 }));
 
@@ -16,12 +16,12 @@ describe('ChatResponseFormatter – monthly spend limit messaging', () => {
   const fixedDate = new Date('2025-10-15T12:00:00Z');
 
   beforeAll(() => {
-    jest.useFakeTimers();
-    jest.setSystemTime(fixedDate);
+    vi.useFakeTimers();
+    vi.setSystemTime(fixedDate);
   });
 
   afterAll(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('returns the English reset message with next month date', async () => {

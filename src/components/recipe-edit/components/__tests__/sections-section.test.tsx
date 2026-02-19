@@ -10,13 +10,13 @@ const baseSection = {
 
 describe("SectionsSection", () => {
   it("updates section title and hides remove when only one section", () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
 
     render(
       <SectionsSection
         sections={[baseSection]}
         onChange={handleChange}
-        onAddSection={jest.fn()}
+        onAddSection={vi.fn()}
       />
     );
 
@@ -32,13 +32,13 @@ describe("SectionsSection", () => {
   });
 
   it("allows removing additional sections", () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
 
     render(
       <SectionsSection
         sections={[baseSection, { ...baseSection, id: "section-2" }]}
         onChange={handleChange}
-        onAddSection={jest.fn()}
+        onAddSection={vi.fn()}
       />
     );
 
@@ -51,12 +51,12 @@ describe("SectionsSection", () => {
   });
 
   it("invokes add section callback", () => {
-    const handleAdd = jest.fn();
+    const handleAdd = vi.fn();
 
     render(
       <SectionsSection
         sections={[baseSection]}
-        onChange={jest.fn()}
+        onChange={vi.fn()}
         onAddSection={handleAdd}
       />
     );
