@@ -1,3 +1,4 @@
+import type { Mocked } from 'vitest';
 import { RecipeScraper } from '../recipe-scraper';
 import { UrlDetector } from '../url-detector';
 import { SecurityTestUtils } from '../../__mocks__/security-test-utils';
@@ -5,20 +6,20 @@ import { server } from '../../__mocks__/server';
 import { http, HttpResponse } from 'msw';
 
 // Mock the RecipeScraper's internal methods to avoid network calls
-jest.mock('../recipe-scraper', () => {
+vi.mock('../recipe-scraper', () => {
   return {
     RecipeScraper: {
-      scrapeRecipe: jest.fn(),
+      scrapeRecipe: vi.fn(),
     },
   };
 });
 
 // Mock the DNS module for testing DNS rebinding protection
-jest.mock('dns', () => ({
-  lookup: jest.fn()
+vi.mock('dns', () => ({
+  lookup: vi.fn()
 }));
 
-const mockRecipeScraper = RecipeScraper as jest.Mocked<typeof RecipeScraper>;
+const mockRecipeScraper = RecipeScraper as Mocked<typeof RecipeScraper>;
 
 // Circuit breaker state tracking for tests
 const mockCircuitBreakerState = new Map<string, { failures: number; lastFailure: number; blockedUntil: number }>();
@@ -26,7 +27,7 @@ const mockCircuitBreakerState = new Map<string, { failures: number; lastFailure:
 describe('RecipeScraper Security Tests', () => {
   beforeEach(() => {
     SecurityTestUtils.setupDNSMocks();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockCircuitBreakerState.clear();
     
     // Set default mock implementation that simulates security validation and MSW responses
@@ -824,14 +825,14 @@ describe('RecipeScraper Security Tests', () => {
 
     describe('Timeout Protection', () => {
       test('should timeout slow responses', async () => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
         
         const result = await RecipeScraper.scrapeRecipe('https://slow-site.com/recipe');
         expect(result.success).toBe(false);
         expect(result.source).toBe('failed');
         expect(result.error).toContain('too long to respond');
         
-        jest.useRealTimers();
+        vi.useRealTimers();
       });
 
       test('should complete fast responses', async () => {

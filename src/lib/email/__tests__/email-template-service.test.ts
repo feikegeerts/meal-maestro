@@ -1,18 +1,20 @@
+import type { Mock } from 'vitest';
+import * as dbModule from '@/db';
 import { EmailTemplateService } from "../services/email-template-service";
 import type { MagicLinkEmailData, EmailType } from "../types/email-types";
 
 // Mock @/db to prevent neon() from being called at import time.
 // The mock db.select() returns a chainable builder that resolves
 // to a language preference row by default.
-jest.mock("@/db", () => {
+vi.mock("@/db", () => {
   const selectChain = {
-    from: jest.fn().mockReturnThis(),
-    where: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockResolvedValue([{ languagePreference: "en" }]),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockResolvedValue([{ languagePreference: "en" }]),
   };
   return {
     db: {
-      select: jest.fn(() => selectChain),
+      select: vi.fn(() => selectChain),
       __selectChain: selectChain,
     },
   };
@@ -20,17 +22,9 @@ jest.mock("@/db", () => {
 
 // Access the mock chain for per-test overrides
 function getSelectChain() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { db } = require("@/db") as {
-    db: {
-      __selectChain: {
-        from: jest.Mock;
-        where: jest.Mock;
-        limit: jest.Mock;
-      };
-    };
-  };
-  return db.__selectChain;
+  return (dbModule.db as unknown as {
+    __selectChain: { from: Mock; where: Mock; limit: Mock };
+  }).__selectChain;
 }
 
 describe("EmailTemplateService", () => {

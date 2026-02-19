@@ -1,3 +1,4 @@
+import type { MockedFunction } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import {
   getDateLocaleFormat,
@@ -7,12 +8,12 @@ import {
 } from '../date-utils';
 import { useLocale } from 'next-intl';
 
-jest.mock('next-intl', () => ({
-  useLocale: jest.fn(),
+vi.mock('next-intl', () => ({
+  useLocale: vi.fn(),
 }));
 
 describe('date-utils', () => {
-  const mockedUseLocale = useLocale as jest.MockedFunction<typeof useLocale>;
+  const mockedUseLocale = useLocale as MockedFunction<typeof useLocale>;
 
   beforeEach(() => {
     mockedUseLocale.mockReset();

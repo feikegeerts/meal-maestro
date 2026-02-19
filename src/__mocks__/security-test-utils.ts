@@ -6,12 +6,12 @@ export interface MockDNSResult {
 
 export class SecurityTestUtils {
   // DNS mocking utilities
-  static mockDNSLookup = jest.fn<Promise<MockDNSResult>, [string]>();
+  static mockDNSLookup = vi.fn<(hostname: string) => Promise<MockDNSResult>>();
 
   static setupDNSMocks() {
     // Mock DNS resolution for testing
-    jest.doMock('dns', () => ({
-      lookup: jest.fn((hostname: string, callback: (err: Error | null, address?: string, family?: number) => void) => {
+    vi.doMock('dns', () => ({
+      lookup: vi.fn((hostname: string, callback: (err: Error | null, address?: string, family?: number) => void) => {
         SecurityTestUtils.mockDNSLookup(hostname)
           .then((result: MockDNSResult) => callback(null, result.address, result.family))
           .catch((err: Error) => callback(err));
@@ -49,28 +49,28 @@ export class SecurityTestUtils {
 
   // Time mocking for rate limiting and circuit breaker tests
   static mockTime(fixedTime: number) {
-    jest.spyOn(Date, 'now').mockReturnValue(fixedTime);
-    jest.spyOn(global, 'setTimeout').mockImplementation(((callback: () => void) => {
+    vi.spyOn(Date, 'now').mockReturnValue(fixedTime);
+    vi.spyOn(global, 'setTimeout').mockImplementation(((callback: () => void) => {
       if (typeof callback === 'function') {
         // For testing, immediately call timeout callbacks
         callback();
       }
       return { 
-        ref: jest.fn(), 
-        unref: jest.fn(),
-        refresh: jest.fn(),
-        hasRef: jest.fn().mockReturnValue(true),
-        close: jest.fn(),
+        ref: vi.fn(), 
+        unref: vi.fn(),
+        refresh: vi.fn(),
+        hasRef: vi.fn().mockReturnValue(true),
+        close: vi.fn(),
         _onTimeout: callback,
         [Symbol.toPrimitive]: () => 123,
-        [Symbol.dispose]: jest.fn()
+        [Symbol.dispose]: vi.fn()
       } as unknown as NodeJS.Timeout;
     }) as typeof setTimeout);
   }
 
   // Restore time mocks
   static restoreTime() {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   }
 
   // Generate malicious payloads for testing
@@ -236,7 +236,7 @@ export class SecurityTestUtils {
                 const value = new TextEncoder().encode(chunks[index++]);
                 return { done: false, value };
               },
-              releaseLock: jest.fn()
+              releaseLock: vi.fn()
             };
           }
         };
@@ -246,8 +246,8 @@ export class SecurityTestUtils {
 
   // Cleanup utility for test teardown
   static cleanup() {
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
     SecurityTestUtils.mockDNSLookup.mockClear();
   }
 }

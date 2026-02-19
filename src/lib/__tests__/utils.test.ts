@@ -7,12 +7,12 @@ import {
 describe('utils', () => {
   describe('toDateOnlyISOString', () => {
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('returns current date at time of call when no date provided', () => {
       const fixedDate = new Date('2024-05-20T08:15:00.000Z');
-      jest.useFakeTimers().setSystemTime(fixedDate);
+      vi.useFakeTimers().setSystemTime(fixedDate);
 
       const resultIso = toDateOnlyISOString();
       expect(resultIso).toBe(fixedDate.toISOString());

@@ -1,48 +1,35 @@
-/** @jest-environment node */
+// @vitest-environment node
+import type { Mock } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Mock @/db for Drizzle rate-limit operations
+// vi.hoisted() runs before vi.mock() factories, ensuring vi.fn() works reliably
 // ---------------------------------------------------------------------------
 
-let rateLimitCount = 0;
-let rateLimitInserts: Record<string, unknown>[] = [];
+const mockDbState = vi.hoisted(() => ({
+  rateLimitCount: 0,
+  rateLimitInserts: [] as Record<string, unknown>[],
+}));
 
-jest.mock("@/db", () => {
-  const deleteFn = jest.fn().mockImplementation(() => ({
-    where: jest.fn().mockResolvedValue({ rowCount: 0 }),
-  }));
+const mockDb = vi.hoisted(() => ({
+  delete: vi.fn(),
+  select: vi.fn(),
+  insert: vi.fn(),
+}));
 
-  const selectFn = jest.fn().mockImplementation(() => ({
-    from: jest.fn().mockReturnValue({
-      where: jest.fn().mockResolvedValue([{ count: rateLimitCount }]),
-    }),
-  }));
-
-  const insertFn = jest.fn().mockImplementation(() => ({
-    values: jest.fn().mockImplementation((val: Record<string, unknown>) => {
-      rateLimitInserts.push(val);
-      return Promise.resolve({ rowCount: 1 });
-    }),
-  }));
-
-  return {
-    db: {
-      select: selectFn,
-      insert: insertFn,
-      delete: deleteFn,
-    },
-  };
-});
+vi.mock("@/db", () => ({
+  db: mockDb,
+}));
 
 // Mock the auth-server module
-jest.mock("@/lib/auth-server", () => ({
-  requireAuth: jest.fn(),
+vi.mock("@/lib/auth-server", () => ({
+  requireAuth: vi.fn(),
 }));
 
 // Mock the usage tracking service
-jest.mock("@/lib/usage-tracking-service", () => ({
+vi.mock("@/lib/usage-tracking-service", () => ({
   usageTrackingService: {
-    logUsage: jest.fn(),
+    logUsage: vi.fn(),
   },
 }));
 
@@ -58,16 +45,32 @@ import { mockUser } from "../../../../__mocks__/handlers";
 import { requireAuth } from "@/lib/auth-server";
 import { usageTrackingService } from "@/lib/usage-tracking-service";
 
-const mockRequireAuth = requireAuth as jest.Mock;
+const mockRequireAuth = requireAuth as Mock;
 const mockUsageTrackingService = usageTrackingService as {
-  logUsage: jest.Mock;
+  logUsage: Mock;
 };
 
 describe("/api/scrape-recipe API Security Tests", () => {
   beforeEach(() => {
     SecurityTestUtils.setupDNSMocks();
-    rateLimitCount = 0;
-    rateLimitInserts = [];
+    mockDbState.rateLimitCount = 0;
+    mockDbState.rateLimitInserts = [];
+
+    // Configure db mock implementations fresh each test
+    mockDb.delete.mockImplementation(() => ({
+      where: vi.fn().mockResolvedValue({ rowCount: 0 }),
+    }));
+    mockDb.select.mockImplementation(() => ({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([{ count: mockDbState.rateLimitCount }]),
+      }),
+    }));
+    mockDb.insert.mockImplementation(() => ({
+      values: vi.fn().mockImplementation((val: Record<string, unknown>) => {
+        mockDbState.rateLimitInserts.push(val);
+        return Promise.resolve({ rowCount: 1 });
+      }),
+    }));
 
     mockRequireAuth.mockResolvedValue({
       user: mockUser,
@@ -129,7 +132,7 @@ describe("/api/scrape-recipe API Security Tests", () => {
       const now = Date.now();
       SecurityTestUtils.mockTime(now);
 
-      rateLimitCount = 12;
+      mockDbState.rateLimitCount = 12;
 
       const request = new NextRequest(
         "http://localhost:3000/api/scrape-recipe",
@@ -153,7 +156,7 @@ describe("/api/scrape-recipe API Security Tests", () => {
     });
 
     test("should allow requests under rate limit", async () => {
-      rateLimitCount = 5;
+      mockDbState.rateLimitCount = 5;
 
       const request = new NextRequest(
         "http://localhost:3000/api/scrape-recipe",
@@ -166,8 +169,8 @@ describe("/api/scrape-recipe API Security Tests", () => {
       const response = await POST(request);
       expect(response.status).not.toBe(429);
 
-      expect(rateLimitInserts.length).toBeGreaterThanOrEqual(1);
-      expect(rateLimitInserts[0]).toMatchObject({
+      expect(mockDbState.rateLimitInserts.length).toBeGreaterThanOrEqual(1);
+      expect(mockDbState.rateLimitInserts[0]).toMatchObject({
         userId: mockUser.id,
         endpoint: "/api/scrape-recipe",
         timestamp: expect.any(BigInt),
@@ -277,7 +280,7 @@ describe("/api/scrape-recipe API Security Tests", () => {
         error: "Usage tracking failed",
       });
 
-      const consoleWarnSpy = jest
+      const consoleWarnSpy = vi
         .spyOn(console, "warn")
         .mockImplementation(() => {});
 
