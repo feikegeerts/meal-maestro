@@ -557,7 +557,13 @@
     "goToFirstPage": "Go to first page",
     "goToPreviousPage": "Go to previous page",
     "goToNextPage": "Go to next page",
-    "goToLastPage": "Go to last page"
+    "goToLastPage": "Go to last page",
+    "sortBy": "Sort by",
+    "sortNewest": "Newest first",
+    "sortOldest": "Oldest first",
+    "sortTitleAZ": "Title A–Z",
+    "sortTitleZA": "Title Z–A",
+    "sortLastEaten": "Last eaten"
   },
   "datePicker": {
     "selectDate": "Select Date",

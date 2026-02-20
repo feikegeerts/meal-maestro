@@ -88,9 +88,9 @@ export function RecipeDataTable({
     useRecipeTranslations();
 
   const [sorting, setSorting] = React.useState<SortingState>(() =>
-    Array.isArray(initialStoredState?.sorting)
+    Array.isArray(initialStoredState?.sorting) && initialStoredState.sorting.length > 0
       ? (initialStoredState.sorting as SortingState)
-      : []
+      : [{ id: "created_at", desc: true }]
   );
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     () =>
@@ -127,7 +127,7 @@ export function RecipeDataTable({
     const stored = loadStoredTableState();
     if (!stored) return;
 
-    if (Array.isArray(stored.sorting)) {
+    if (Array.isArray(stored.sorting) && stored.sorting.length > 0) {
       setSorting(stored.sorting);
     }
     if (Array.isArray(stored.columnFilters)) {
@@ -443,6 +443,8 @@ export function RecipeDataTable({
         clearFilters={clearFilters}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        sorting={sorting}
+        onSortingChange={setSorting}
       />
 
       {selectedRowCount > 0 && (

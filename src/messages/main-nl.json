@@ -558,7 +558,13 @@
     "goToFirstPage": "Ga naar eerste pagina",
     "goToPreviousPage": "Ga naar vorige pagina",
     "goToNextPage": "Ga naar volgende pagina",
-    "goToLastPage": "Ga naar laatste pagina"
+    "goToLastPage": "Ga naar laatste pagina",
+    "sortBy": "Sorteren op",
+    "sortNewest": "Nieuwste eerst",
+    "sortOldest": "Oudste eerst",
+    "sortTitleAZ": "Titel A–Z",
+    "sortTitleZA": "Titel Z–A",
+    "sortLastEaten": "Laatst gegeten"
   },
   "datePicker": {
     "selectDate": "Selecteer Datum",

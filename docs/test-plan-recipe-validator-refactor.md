@@ -9,23 +9,21 @@ Unit tests cover the service class itself (292 passing); this plan covers manual
 ## 1. Create a recipe (POST `/api/recipes`)
 
 ### Happy path
-- [ ] Fill in all fields (title, ingredients, servings, category, description) and save
-- [ ] Verify the recipe appears correctly in the list and detail view
+
+- [x] Fill in all fields (title, ingredients, servings, category, description) and save
+- [x] Verify the recipe appears correctly in the list and detail view
 
 ### Unit normalization
-- [ ] Add an ingredient with unit `teen` or `teentje` → should save as `clove`
-- [ ] Add an ingredient with unit `el` or `eetlepel` → should save as `tbsp`
-- [ ] Add an ingredient with unit `tl` or `theelepel` → should save as `tsp`
-- [ ] Add an ingredient with unit `stuk`, `stuks`, or `pieces` → should save with `unit: null`
-- [ ] Add an ingredient with an unrecognised unit (e.g. `handful`) → should save with `unit: null`
-- [ ] Add an ingredient with unit `naar smaak` or `to taste` → should be preserved as-is
 
-### Time field behaviour
-- [ ] Enter prep time (10) and cook time (20), leave total time empty → total should save as 30
-- [ ] Enter prep (10), cook (20), and total (60) explicitly → total should save as 60 (not auto-calculated)
-- [ ] Add an ingredient with amount `0` → should save with `amount: null`
+- [x] Add an ingredient with unit `teen` or `teentje` → should save as `clove`
+- [x] Add an ingredient with unit `el` or `eetlepel` → should save as `tbsp`
+- [x] Add an ingredient with unit `tl` or `theelepel` → should save as `tsp`
+- [x] Add an ingredient with unit `stuk`, `stuks`, or `pieces` → should save with `unit: null`
+- [x] Add an ingredient with an unrecognised unit (e.g. `handful`) → should save with `unit: null`
+- [x] Add an ingredient with unit `naar smaak` or `to taste` → should be preserved as-is
 
 ### Sections recipe
+
 - [ ] Create a recipe using sections instead of a flat ingredient list
 - [ ] Verify sections save with correct titles, instructions, and per-section ingredients
 - [ ] Verify Dutch unit normalization applies inside section ingredients too
@@ -53,23 +51,28 @@ Unit tests cover the service class itself (292 passing); this plan covers manual
 ## 3. Edit a recipe (PUT `/api/recipes/[id]`)
 
 ### Unit normalization on edit
+
 - [ ] Change an ingredient unit to `stuks` → should save with `unit: null`
 - [ ] Change an ingredient unit to `el` → should save as `tbsp`
 
 ### Time fields on edit
+
 - [ ] Update prep time and cook time, leave total empty → total should auto-update
 - [ ] Update only cook time → total should recalculate using existing prep time
 
 ### Partial updates
+
 - [ ] Update only the title → all other fields should remain unchanged
 - [ ] Update only servings → other fields unchanged
 
 ### Clearing optional fields
+
 - [ ] Send `reference: ""` → should save as `null`
 - [ ] Send `pairing_wine: ""` → should save as `null`
 - [ ] Send `notes: ""` → should save as `null`
 
-### Section edits
+### Section edits∫
+
 - [ ] Modify a section title → change should persist
 - [ ] Add an ingredient to a section → change should persist
 - [ ] Dutch unit in a section ingredient on edit → should normalize correctly

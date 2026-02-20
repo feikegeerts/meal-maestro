@@ -4,6 +4,7 @@
 
 ## Neon Auth Migration Follow-ups
 
+1. [ ] Implement feature branches on NEON as well and have 1 database per env.
 1. [ ] Implement localized magic link emails via Neon Auth / Better Auth custom email sending hook (currently `locale` is passed through but unused — see `auth-context.tsx` TODO)
 
 ## Quality & Compliance

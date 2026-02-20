@@ -24,9 +24,25 @@ import {
   X,
 } from "lucide-react";
 import { RECIPE_CATEGORIES, RECIPE_SEASONS } from "@/types/recipe";
-import { Table } from "@tanstack/react-table";
+import { Table, SortingState } from "@tanstack/react-table";
 import { Recipe } from "@/types/recipe";
 import { useTranslations } from "next-intl";
+
+const SORT_OPTIONS = [
+  { key: "newest", id: "created_at", desc: true },
+  { key: "oldest", id: "created_at", desc: false },
+  { key: "titleAZ", id: "title", desc: false },
+  { key: "titleZA", id: "title", desc: true },
+  { key: "lastEaten", id: "last_eaten", desc: true },
+] as const;
+
+function getSortKey(sorting: SortingState): string {
+  if (sorting.length !== 1) return "";
+  const [s] = sorting;
+  return (
+    SORT_OPTIONS.find((o) => o.id === s.id && o.desc === s.desc)?.key ?? ""
+  );
+}
 
 interface RecipeTableToolbarProps {
   table: Table<Recipe>;
@@ -36,6 +52,8 @@ interface RecipeTableToolbarProps {
   clearFilters: () => void;
   viewMode: "table" | "grid";
   onViewModeChange: (mode: "table" | "grid") => void;
+  sorting: SortingState;
+  onSortingChange: (sorting: SortingState) => void;
 }
 
 export function RecipeTableToolbar({
@@ -46,6 +64,8 @@ export function RecipeTableToolbar({
   clearFilters,
   viewMode,
   onViewModeChange,
+  sorting,
+  onSortingChange,
 }: RecipeTableToolbarProps) {
   const tTable = useTranslations("recipeTable");
   const tCategories = useTranslations("categories");
@@ -117,6 +137,27 @@ export function RecipeTableToolbar({
                 {tSeasons(season)}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={getSortKey(sorting)}
+          onValueChange={(key) => {
+            const option = SORT_OPTIONS.find((o) => o.key === key);
+            if (option) {
+              onSortingChange([{ id: option.id, desc: option.desc }]);
+            }
+          }}
+        >
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder={tTable("sortBy")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">{tTable("sortNewest")}</SelectItem>
+            <SelectItem value="oldest">{tTable("sortOldest")}</SelectItem>
+            <SelectItem value="titleAZ">{tTable("sortTitleAZ")}</SelectItem>
+            <SelectItem value="titleZA">{tTable("sortTitleZA")}</SelectItem>
+            <SelectItem value="lastEaten">{tTable("sortLastEaten")}</SelectItem>
           </SelectContent>
         </Select>
 
