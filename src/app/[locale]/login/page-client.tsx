@@ -5,6 +5,7 @@ import { useRouter } from "@/app/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { GoogleLoginButton } from "@/components/auth/google-login-button";
+import { EmailPasswordForm } from "@/components/auth/email-password-form";
 // TODO: Re-enable when Neon Auth ships webhook support for custom email templates
 // import { MagicLinkForm } from "@/components/auth/magic-link-form";
 import { PageLoading } from "@/components/ui/page-loading";
@@ -137,6 +138,19 @@ function LoginContent() {
                     redirectPath={callbackRedirectPath}
                     locale={locale}
                   />
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-border" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">
+                        {tAuth("orContinueWith")}
+                      </span>
+                    </div>
+                  </div>
+
+                  <EmailPasswordForm redirectPath={redirectParam ?? "/recipes"} />
                 </div>
 
                 <div className="text-xs text-muted-foreground leading-relaxed">

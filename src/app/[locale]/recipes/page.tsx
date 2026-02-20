@@ -44,6 +44,10 @@ export default function RecipesPage() {
       const response: RecipesResponse = await recipeService.getUserRecipes();
       setRecipesInContext(response.recipes);
     } catch (err) {
+      if (err instanceof Error && err.message === "Authentication required") {
+        router.push("/login");
+        return;
+      }
       console.error("Error loading recipes:", err);
       setError(
         err instanceof Error

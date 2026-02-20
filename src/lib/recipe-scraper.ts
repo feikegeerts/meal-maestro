@@ -247,15 +247,27 @@ export class RecipeScraper {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
 
+    const requestHeaders = {
+      "User-Agent": this.USER_AGENT,
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    };
+
     try {
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent": this.USER_AGENT,
-          Accept:
-            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        },
-        signal: controller.signal,
-      });
+      let response: Response;
+      try {
+        response = await fetch(url, {
+          headers: requestHeaders,
+          signal: controller.signal,
+        });
+      } catch (err) {
+        // In some environments (e.g. jsdom in tests) the AbortSignal type doesn't
+        // match the fetch implementation's expected type. Retry without the signal.
+        if (err instanceof TypeError && String(err).includes("AbortSignal")) {
+          response = await fetch(url, { headers: requestHeaders });
+        } else {
+          throw err;
+        }
+      }
 
       clearTimeout(timeoutId);
 
@@ -278,37 +290,42 @@ export class RecipeScraper {
         throw new Error("Page content too large");
       }
 
-      // Use streaming to prevent memory exhaustion
+      // Use streaming to prevent memory exhaustion when available
       const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error("Unable to read response body");
-      }
+      if (reader) {
+        const decoder = new TextDecoder();
+        let text = "";
+        let totalBytes = 0;
 
-      const decoder = new TextDecoder();
-      let text = "";
-      let totalBytes = 0;
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
 
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
+            if (done) break;
 
-          if (done) break;
+            totalBytes += value.length;
+            if (totalBytes > this.MAX_SIZE_BYTES) {
+              throw new Error("Page content too large");
+            }
 
-          totalBytes += value.length;
-          if (totalBytes > this.MAX_SIZE_BYTES) {
-            throw new Error("Page content too large");
+            text += decoder.decode(value, { stream: true });
           }
 
-          text += decoder.decode(value, { stream: true });
+          // Final decode call
+          text += decoder.decode();
+
+          return text;
+        } finally {
+          reader.releaseLock();
         }
-
-        // Final decode call
-        text += decoder.decode();
-
-        return text;
-      } finally {
-        reader.releaseLock();
       }
+
+      // Fallback for environments without ReadableStream support (e.g. jsdom in tests)
+      const text = await response.text();
+      if (text.length > this.MAX_SIZE_BYTES) {
+        throw new Error("Page content too large");
+      }
+      return text;
     } finally {
       clearTimeout(timeoutId);
     }

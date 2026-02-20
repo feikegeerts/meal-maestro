@@ -4,46 +4,12 @@ import { db } from "@/db";
 import { recipes } from "@/db/schema";
 import { and, desc, eq, ilike, or, sql, inArray, arrayOverlaps } from "drizzle-orm";
 import {
-  RecipeIngredient,
   RecipeSection,
   RecipesResponse,
 } from "@/types/recipe";
 import { toRecipeResponse } from "@/lib/recipe-response-mapper";
-import {
-  MAX_NOTES_LENGTH,
-  MAX_PAIRING_WINE_LENGTH,
-  MAX_REFERENCE_LENGTH,
-  normalizeUtensils,
-} from "@/lib/recipe-utils";
-
-type OptionalNumber = number | null | undefined;
-
-function normalizeTimeField(
-  value: unknown,
-  label: string,
-  errors: string[],
-): OptionalNumber {
-  if (value === undefined) return undefined;
-  if (value === null) return null;
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    errors.push(`${label} must be a number of minutes when provided`);
-    return undefined;
-  }
-  if (!Number.isInteger(numeric)) {
-    errors.push(`${label} must be a whole number of minutes`);
-    return undefined;
-  }
-  if (numeric < 0) {
-    errors.push(`${label} cannot be negative`);
-    return undefined;
-  }
-  return numeric;
-}
-
-function hasKey(body: Record<string, unknown>, key: string): boolean {
-  return Object.prototype.hasOwnProperty.call(body, key);
-}
+import { normalizeUtensils } from "@/lib/recipe-utils";
+import { RecipeValidator } from "@/lib/recipe-validator";
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
@@ -204,9 +170,6 @@ export async function POST(request: NextRequest) {
       nutrition,
       sections,
       reference,
-      prep_time,
-      cook_time,
-      total_time,
       pairing_wine,
       notes,
       utensils,
@@ -216,68 +179,16 @@ export async function POST(request: NextRequest) {
     const bodyRecord = (body || {}) as Record<string, unknown>;
     const validationErrors: string[] = [];
 
-    const normalizedReference =
-      typeof reference === "string" ? reference.trim() : null;
-    if (
-      normalizedReference &&
-      normalizedReference.length > MAX_REFERENCE_LENGTH
-    ) {
-      validationErrors.push(
-        `Reference must be ${MAX_REFERENCE_LENGTH} characters or fewer`,
-      );
-    }
+    const normalizedReference = RecipeValidator.normalizeReference(reference, validationErrors);
+    const normalizedPairingWine = RecipeValidator.normalizePairingWine(pairing_wine, validationErrors);
+    const normalizedNotes = RecipeValidator.normalizeNotes(notes, validationErrors);
+    const normalizedUtensils = normalizeUtensils(utensils, validationErrors) ?? [];
 
-    const normalizedPairingWine =
-      typeof pairing_wine === "string" ? pairing_wine.trim() : null;
-    if (
-      normalizedPairingWine &&
-      normalizedPairingWine.length > MAX_PAIRING_WINE_LENGTH
-    ) {
-      validationErrors.push(
-        `Wine pairing must be ${MAX_PAIRING_WINE_LENGTH} characters or fewer`,
-      );
-    }
-
-    const normalizedNotes = typeof notes === "string" ? notes : null;
-    if (normalizedNotes && normalizedNotes.length > MAX_NOTES_LENGTH) {
-      validationErrors.push(
-        `Notes must be ${MAX_NOTES_LENGTH} characters or fewer`,
-      );
-    }
-    const normalizedUtensils =
-      normalizeUtensils(utensils, validationErrors) ?? [];
-
-    const normalizedPrepTime = normalizeTimeField(
-      prep_time,
-      "Prep time",
-      validationErrors,
-    );
-    const normalizedCookTime = normalizeTimeField(
-      cook_time,
-      "Cook time",
-      validationErrors,
-    );
-    const totalProvided = hasKey(bodyRecord, "total_time");
-    const prepProvided = hasKey(bodyRecord, "prep_time");
-    const cookProvided = hasKey(bodyRecord, "cook_time");
-    let normalizedTotalTime = normalizeTimeField(
-      total_time,
-      "Total time",
-      validationErrors,
-    );
-
-    if (!totalProvided && (prepProvided || cookProvided)) {
-      if (
-        typeof normalizedPrepTime === "number" ||
-        typeof normalizedCookTime === "number"
-      ) {
-        const prepValue =
-          typeof normalizedPrepTime === "number" ? normalizedPrepTime : 0;
-        const cookValue =
-          typeof normalizedCookTime === "number" ? normalizedCookTime : 0;
-        normalizedTotalTime = prepValue + cookValue;
-      }
-    }
+    const {
+      prepTime: normalizedPrepTime,
+      cookTime: normalizedCookTime,
+      totalTime: normalizedTotalTime,
+    } = RecipeValidator.normalizeTimes(bodyRecord, validationErrors);
 
     if (!title || !category || !servings) {
       return NextResponse.json(
@@ -317,90 +228,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (Array.isArray(ingredients)) {
-      for (const ingredient of ingredientsArray) {
-        if (!ingredient.id || !ingredient.name) {
-          return NextResponse.json(
-            { error: "Each ingredient must have an id and name" },
-            { status: 400 },
-          );
-        }
-        // Normalize amount: treat 0 as null for "to taste" scenarios
-        const normalizedAmount =
-          ingredient.amount === 0 ? null : ingredient.amount;
-        if (
-          normalizedAmount !== null &&
-          (typeof normalizedAmount !== "number" || normalizedAmount <= 0)
-        ) {
-          return NextResponse.json(
-            { error: "Ingredient amounts must be positive numbers or null" },
-            { status: 400 },
-          );
-        }
+      const ingredientError = RecipeValidator.validateIngredients(ingredientsArray);
+      if (ingredientError) {
+        return NextResponse.json({ error: ingredientError }, { status: 400 });
       }
     }
 
-    const normalizeIngredient = (
-      ingredient: RecipeIngredient,
-    ): RecipeIngredient => {
-      let normalizedUnit = ingredient.unit;
-
-      // Convert common non-standard units to standard ones or remove them
-      if (typeof normalizedUnit === "string") {
-        switch (normalizedUnit.toLowerCase()) {
-          case "el":
-          case "eetlepel":
-            normalizedUnit = "tbsp";
-            break;
-          case "tl":
-          case "theelepel":
-            normalizedUnit = "tsp";
-            break;
-          case "teen":
-          case "teentje":
-          case "teentjes":
-            normalizedUnit = "clove"; // Convert Dutch garlic clove unit to English
-            break;
-          case "stuk":
-          case "stuks":
-          case "units.stuk":
-          case "pieces":
-            normalizedUnit = null; // Remove unit for countable items
-            break;
-          default: {
-            // Keep valid units, set invalid ones to null
-            const validUnits = [
-              "g",
-              "kg",
-              "ml",
-              "l",
-              "tbsp",
-              "tsp",
-              "clove",
-            ];
-            if (
-              !validUnits.includes(normalizedUnit) &&
-              normalizedUnit !== "naar smaak" &&
-              normalizedUnit !== "to taste"
-            ) {
-              normalizedUnit = null;
-            }
-            break;
-          }
-        }
-      }
-
-      return {
-        ...ingredient,
-        amount:
-          ingredient.amount === 0 || typeof ingredient.amount === "undefined"
-            ? null
-            : ingredient.amount,
-        unit: normalizedUnit,
-      };
-    };
-
     // Normalize ingredient amounts and units
-    const normalizedIngredients = ingredientsArray.map(normalizeIngredient);
+    const normalizedIngredients = ingredientsArray.map(RecipeValidator.normalizeIngredient);
 
     // Validate and normalize sections
     let normalizedSections: RecipeSection[] | undefined;
@@ -413,62 +248,9 @@ export async function POST(request: NextRequest) {
       }
 
       const sectionErrors: string[] = [];
-      normalizedSections = (sections as RecipeSection[]).map(
-        (section, index: number) => {
-          if (!section.id) {
-            sectionErrors.push(`Section ${index + 1} is missing an id`);
-          }
-          if (!section.title || !section.title.trim()) {
-            sectionErrors.push(`Section ${index + 1} title is required`);
-          }
-          if (!section.instructions || !section.instructions.trim()) {
-            sectionErrors.push(
-              `Section ${index + 1} instructions are required`,
-            );
-          }
-          if (
-            !Array.isArray(section.ingredients) ||
-            section.ingredients.length === 0
-          ) {
-            sectionErrors.push(
-              `Section ${index + 1} must include at least one ingredient`,
-            );
-          } else {
-            section.ingredients.forEach(
-              (ingredient: RecipeIngredient, ingredientIndex: number) => {
-                if (!ingredient.id || !ingredient.name) {
-                  sectionErrors.push(
-                    `Section ${index + 1} ingredient ${
-                      ingredientIndex + 1
-                    } must have an id and name`,
-                  );
-                }
-                const normalizedAmount =
-                  ingredient.amount === 0 ? null : ingredient.amount;
-                if (
-                  normalizedAmount !== null &&
-                  (typeof normalizedAmount !== "number" ||
-                    normalizedAmount <= 0)
-                ) {
-                  sectionErrors.push(
-                    `Section ${index + 1} ingredient ${
-                      ingredientIndex + 1
-                    } amounts must be positive numbers or null`,
-                  );
-                }
-              },
-            );
-          }
-
-          return {
-            ...section,
-            title: section.title?.trim?.() ?? section.title,
-            instructions: section.instructions,
-            ingredients: Array.isArray(section.ingredients)
-              ? section.ingredients.map(normalizeIngredient)
-              : [],
-          };
-        },
+      normalizedSections = RecipeValidator.validateAndNormalizeSections(
+        sections as RecipeSection[],
+        sectionErrors,
       );
 
       if (sectionErrors.length > 0) {

@@ -66,19 +66,18 @@ export default function AddRecipePage() {
     
     try {
       const createData: Omit<RecipeInput, 'id'> = {
+        ...recipeData,
         title: recipeData.title!,
         ingredients: recipeData.ingredients!,
         servings: recipeData.servings!,
         description: recipeData.description!,
         category: recipeData.category!,
-        cuisine: recipeData.cuisine,
         diet_types: recipeData.diet_types || [],
         cooking_methods: recipeData.cooking_methods || [],
         dish_types: recipeData.dish_types || [],
         proteins: recipeData.proteins || [],
         occasions: recipeData.occasions || [],
         characteristics: recipeData.characteristics || [],
-        season: recipeData.season,
         sections: recipeData.sections || [],
       };
 
