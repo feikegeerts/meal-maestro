@@ -126,6 +126,7 @@ Verification steps for most feature changes:
 2. Tests green (`pnpm test`)
 3. Type checks (no TS errors in editor or build)
 4. App starts (`pnpm dev`) and affected UI path loads without runtime errors
+5. For UI changes: smoke test using the `agent-browser` skill — test credentials are in `.env.local` (`TEST_USER_EMAIL` / `TEST_USER_PASSWORD`).
 
 ---
 

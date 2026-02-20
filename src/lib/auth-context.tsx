@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  useMemo,
   ReactNode,
 } from "react";
 import { authClient } from "./auth/client";
@@ -17,6 +18,10 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   signInWithGoogle: (options?: { redirectPath?: string | null }) => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error?: string }>;
+  signUpWithEmail: (name: string, email: string, password: string) => Promise<{ error?: string }>;
+  requestPasswordReset: (email: string, redirectTo: string) => Promise<{ error?: string }>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<{ error?: string }>;
   // TODO: Re-enable when Neon Auth ships webhook support for custom email templates
   // signInWithMagicLink: (
   //   email: string,
@@ -37,21 +42,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  const user = sessionData?.user
-    ? {
-        id: sessionData.user.id,
-        email: sessionData.user.email,
-        name: sessionData.user.name ?? undefined,
-        image: sessionData.user.image ?? undefined,
-      }
-    : null;
+  const user = useMemo(
+    () =>
+      sessionData?.user
+        ? {
+            id: sessionData.user.id,
+            email: sessionData.user.email,
+            name: sessionData.user.name ?? undefined,
+            image: sessionData.user.image ?? undefined,
+          }
+        : null,
+    [
+      sessionData?.user?.id,
+      sessionData?.user?.email,
+      sessionData?.user?.name,
+      sessionData?.user?.image,
+    ],
+  );
 
-  const session = sessionData?.session
-    ? {
-        id: sessionData.session.id,
-        expiresAt: sessionData.session.expiresAt,
-      }
-    : null;
+  const session = useMemo(
+    () =>
+      sessionData?.session
+        ? {
+            id: sessionData.session.id,
+            expiresAt: sessionData.session.expiresAt,
+          }
+        : null,
+    [sessionData?.session?.id, sessionData?.session?.expiresAt],
+  );
 
   // Fetch profile when user changes
   useEffect(() => {
@@ -92,6 +110,50 @@ export function AuthProvider({ children }: AuthProviderProps) {
         provider: "google",
         callbackURL: options?.redirectPath ?? "/recipes",
       });
+    },
+    [],
+  );
+
+  const signInWithEmail = useCallback(
+    async (email: string, password: string): Promise<{ error?: string }> => {
+      const { error } = await authClient.signIn.email({ email, password });
+      if (error) {
+        return { error: error.message ?? "Failed to sign in" };
+      }
+      return {};
+    },
+    [],
+  );
+
+  const signUpWithEmail = useCallback(
+    async (name: string, email: string, password: string): Promise<{ error?: string }> => {
+      const { error } = await authClient.signUp.email({ name, email, password });
+      if (error) {
+        return { error: error.message ?? "Failed to create account" };
+      }
+      return {};
+    },
+    [],
+  );
+
+  const requestPasswordReset = useCallback(
+    async (email: string, redirectTo: string): Promise<{ error?: string }> => {
+      const { error } = await authClient.requestPasswordReset({ email, redirectTo });
+      if (error) {
+        return { error: error.message ?? "Failed to send reset email" };
+      }
+      return {};
+    },
+    [],
+  );
+
+  const changePassword = useCallback(
+    async (currentPassword: string, newPassword: string): Promise<{ error?: string }> => {
+      const { error } = await authClient.changePassword({ currentPassword, newPassword });
+      if (error) {
+        return { error: error.message ?? "Failed to change password" };
+      }
+      return {};
     },
     [],
   );
@@ -154,6 +216,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     profile,
     loading: isPending || profileLoading,
     signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    requestPasswordReset,
+    changePassword,
     signOut,
     updateProfile,
   };

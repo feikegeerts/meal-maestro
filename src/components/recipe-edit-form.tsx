@@ -88,7 +88,7 @@ export function RecipeEditForm({
     servings: recipe.servings || 4,
     reference: recipe.reference ?? "",
     prep_time: recipe.prep_time ?? null,
-    cook_time: null,
+    cook_time: recipe.cook_time ?? null,
     total_time: recipe.total_time ?? null,
     pairing_wine: recipe.pairing_wine ?? "",
     utensils: recipe.utensils ?? [],

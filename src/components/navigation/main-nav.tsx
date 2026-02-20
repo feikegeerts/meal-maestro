@@ -85,6 +85,7 @@ export function MainNav() {
     } catch (error) {
       console.error("Error signing out:", error);
     }
+    router.push("/login");
   };
 
   const handleLanguageChange = (newLocale: string) => {
