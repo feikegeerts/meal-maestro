@@ -3,16 +3,13 @@ import { requireAuth } from "@/lib/auth-server";
 import { db } from "@/db";
 import { customUnits } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
+import { parseBody, CustomUnitBodySchema } from "@/lib/request-schemas";
 
 export interface CustomUnitResponse {
   id: string;
   user_id: string;
   unit_name: string;
   created_at: string;
-}
-
-export interface CreateCustomUnitRequest {
-  unit_name: string;
 }
 
 export interface CustomUnitsResponse {
@@ -66,42 +63,18 @@ export async function POST(request: NextRequest) {
 
     const { user } = authResult;
 
-    const body: CreateCustomUnitRequest = await request.json();
+    const parsed = parseBody(CustomUnitBodySchema, await request.json());
+    if (!parsed.success) return parsed.error;
 
-    if (!body.unit_name || typeof body.unit_name !== "string") {
-      return NextResponse.json(
-        { error: "Unit name is required and must be a string" },
-        { status: 400 },
-      );
-    }
+    const unitName = parsed.data.unit_name.trim();
 
-    const unitName = body.unit_name.trim();
-
-    if (unitName.length === 0 || unitName.length > 50) {
-      return NextResponse.json(
-        { error: "Unit name must be between 1 and 50 characters" },
-        { status: 400 },
-      );
-    }
-
-    // Check if it conflicts with standard units
+    // Check if it conflicts with standard units (business logic, not schema concern)
     const standardUnits = ["g", "kg", "ml", "l", "tbsp", "tsp", "clove"];
     if (standardUnits.includes(unitName.toLowerCase())) {
       return NextResponse.json(
         {
           error:
             "Cannot create custom unit with the same name as a standard unit",
-        },
-        { status: 400 },
-      );
-    }
-
-    // Validate unit name format (alphanumeric, spaces, hyphens, dots)
-    if (!/^[a-zA-Z0-9\s.-]+$/.test(unitName)) {
-      return NextResponse.json(
-        {
-          error:
-            "Unit name can only contain letters, numbers, spaces, hyphens, and dots",
         },
         { status: 400 },
       );

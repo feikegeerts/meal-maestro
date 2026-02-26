@@ -3,11 +3,12 @@ import { requireAuth } from "@/lib/auth-server";
 import { db } from "@/db";
 import { recipes } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
-import { RecipeSection } from "@/types/recipe";
+import { RecipeIngredient, RecipeSection } from "@/types/recipe";
 import { toRecipeResponse } from "@/lib/recipe-response-mapper";
 import { ImageService } from "@/lib/image-service";
 import { normalizeUtensils } from "@/lib/recipe-utils";
 import { RecipeValidator } from "@/lib/recipe-validator";
+import { parseBody, RecipePutBodySchema } from "@/lib/request-schemas";
 
 export async function GET(
   request: NextRequest,
@@ -68,7 +69,18 @@ export async function PUT(
 
   try {
     const { id: recipeId } = await params;
-    const body = await request.json();
+
+    if (!recipeId) {
+      return NextResponse.json(
+        { error: "Recipe ID is required" },
+        { status: 400 },
+      );
+    }
+
+    const rawBody = await request.json();
+    const parsed = parseBody(RecipePutBodySchema, rawBody);
+    if (!parsed.success) return parsed.error;
+
     const {
       title,
       ingredients,
@@ -90,17 +102,11 @@ export async function PUT(
       pairing_wine,
       notes,
       utensils,
-    } = body;
-
-    if (!recipeId) {
-      return NextResponse.json(
-        { error: "Recipe ID is required" },
-        { status: 400 },
-      );
-    }
+    } = parsed.data;
 
     const validationErrors: string[] = [];
-    const bodyRecord = (body || {}) as Record<string, unknown>;
+    // Keep raw body for normalizeTimes (uses hasKey to detect which time fields were sent)
+    const bodyRecord = rawBody as Record<string, unknown>;
 
     const normalizedReference = RecipeValidator.normalizeReference(reference, validationErrors);
     const normalizedPairingWine = RecipeValidator.normalizePairingWine(pairing_wine, validationErrors);
@@ -120,32 +126,15 @@ export async function PUT(
     if (title !== undefined) updateData.title = title;
 
     if (ingredients !== undefined) {
-      if (!Array.isArray(ingredients)) {
-        return NextResponse.json(
-          {
-            error:
-              "Ingredients must be an array of structured ingredient objects",
-          },
-          { status: 400 },
-        );
-      }
-
-      const ingredientError = RecipeValidator.validateIngredients(ingredients);
+      const ingredientError = RecipeValidator.validateIngredients(ingredients as RecipeIngredient[]);
       if (ingredientError) {
         return NextResponse.json({ error: ingredientError }, { status: 400 });
       }
 
-      updateData.ingredients = ingredients.map(RecipeValidator.normalizeIngredient);
+      updateData.ingredients = (ingredients as RecipeIngredient[]).map(RecipeValidator.normalizeIngredient);
     }
 
     if (sections !== undefined) {
-      if (!Array.isArray(sections)) {
-        return NextResponse.json(
-          { error: "Sections must be an array when provided" },
-          { status: 400 },
-        );
-      }
-
       const sectionErrors: string[] = [];
       const normalizedSections = RecipeValidator.validateAndNormalizeSections(
         sections as RecipeSection[],
@@ -163,7 +152,7 @@ export async function PUT(
     }
 
     if (servings !== undefined) {
-      const servingsNum = parseInt(servings);
+      const servingsNum = parseInt(String(servings));
       if (isNaN(servingsNum) || servingsNum <= 0 || servingsNum > 100) {
         return NextResponse.json(
           { error: "Servings must be a number between 1 and 100" },

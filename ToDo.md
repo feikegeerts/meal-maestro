@@ -20,7 +20,7 @@
 ### High Priority
 
 1. [x] Extract recipe validation logic out of route files into a `RecipeValidator` service class — `normalizeTimeField()`, `normalizeIngredient()` and the bulk of POST validation in `src/app/api/recipes/route.ts` and `src/app/api/recipes/[id]/route.ts` are duplicated and belong in the service layer
-1. [ ] Add Zod schemas for runtime request validation on API routes — TypeScript provides compile-time safety but requests are currently parsed and cast manually with no runtime guarantees
+1. [x] Add Zod schemas for runtime request validation on API routes — TypeScript provides compile-time safety but requests are currently parsed and cast manually with no runtime guarantees
 1. [ ] Replace in-memory `SimpleRateLimiter` in `src/lib/openai-service.ts` with a DB-backed or Vercel KV solution — the current implementation breaks in multi-instance deployments since each instance maintains its own counter
 
 ### Medium Priority

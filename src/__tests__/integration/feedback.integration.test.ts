@@ -185,8 +185,7 @@ describe("POST /api/feedback (integration)", () => {
 
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({
-      success: false,
-      error: "Feedback type, subject, and message are required",
+      error: "Subject is required; Message is required",
     });
   });
 
@@ -201,7 +200,6 @@ describe("POST /api/feedback (integration)", () => {
 
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({
-      success: false,
       error: "Invalid feedback type",
     });
   });
@@ -217,8 +215,7 @@ describe("POST /api/feedback (integration)", () => {
 
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({
-      success: false,
-      error: "Subject must be between 1 and 200 characters",
+      error: "Subject is required",
     });
   });
 
@@ -233,8 +230,7 @@ describe("POST /api/feedback (integration)", () => {
 
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({
-      success: false,
-      error: "Message must be between 1 and 2000 characters",
+      error: "Message must be 2000 characters or fewer",
     });
   });
 

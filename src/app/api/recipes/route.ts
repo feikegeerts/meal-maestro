@@ -4,12 +4,19 @@ import { db } from "@/db";
 import { recipes } from "@/db/schema";
 import { and, desc, eq, ilike, or, sql, inArray, arrayOverlaps } from "drizzle-orm";
 import {
+  RecipeIngredient,
   RecipeSection,
   RecipesResponse,
 } from "@/types/recipe";
 import { toRecipeResponse } from "@/lib/recipe-response-mapper";
 import { normalizeUtensils } from "@/lib/recipe-utils";
 import { RecipeValidator } from "@/lib/recipe-validator";
+import {
+  parseBody,
+  RecipePostBodySchema,
+  RecipeBulkDeleteBodySchema,
+  RecipeBulkPatchBodySchema,
+} from "@/lib/request-schemas";
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
@@ -152,7 +159,10 @@ export async function POST(request: NextRequest) {
   const { user } = authResult;
 
   try {
-    const body = await request.json();
+    const rawBody = await request.json();
+    const parsed = parseBody(RecipePostBodySchema, rawBody);
+    if (!parsed.success) return parsed.error;
+
     const {
       title,
       ingredients,
@@ -173,10 +183,10 @@ export async function POST(request: NextRequest) {
       pairing_wine,
       notes,
       utensils,
-    } = body;
+    } = parsed.data;
 
     const hasSections = Array.isArray(sections) && sections.length > 0;
-    const bodyRecord = (body || {}) as Record<string, unknown>;
+    const bodyRecord = rawBody as Record<string, unknown>;
     const validationErrors: string[] = [];
 
     const normalizedReference = RecipeValidator.normalizeReference(reference, validationErrors);
@@ -189,13 +199,6 @@ export async function POST(request: NextRequest) {
       cookTime: normalizedCookTime,
       totalTime: normalizedTotalTime,
     } = RecipeValidator.normalizeTimes(bodyRecord, validationErrors);
-
-    if (!title || !category || !servings) {
-      return NextResponse.json(
-        { error: "Missing required fields: title, servings, category" },
-        { status: 400 },
-      );
-    }
 
     if ((!ingredients || ingredients.length === 0) && !hasSections) {
       return NextResponse.json(
@@ -216,37 +219,17 @@ export async function POST(request: NextRequest) {
 
     const ingredientsArray = Array.isArray(ingredients) ? ingredients : [];
 
-    // Validate structured ingredients
-    if (!Array.isArray(ingredients) && !hasSections) {
-      return NextResponse.json(
-        {
-          error:
-            "Ingredients must be an array of structured ingredient objects",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (Array.isArray(ingredients)) {
-      const ingredientError = RecipeValidator.validateIngredients(ingredientsArray);
-      if (ingredientError) {
-        return NextResponse.json({ error: ingredientError }, { status: 400 });
-      }
+    const ingredientError = RecipeValidator.validateIngredients(ingredientsArray as RecipeIngredient[]);
+    if (ingredientError) {
+      return NextResponse.json({ error: ingredientError }, { status: 400 });
     }
 
     // Normalize ingredient amounts and units
-    const normalizedIngredients = ingredientsArray.map(RecipeValidator.normalizeIngredient);
+    const normalizedIngredients = (ingredientsArray as RecipeIngredient[]).map(RecipeValidator.normalizeIngredient);
 
     // Validate and normalize sections
     let normalizedSections: RecipeSection[] | undefined;
     if (hasSections) {
-      if (!Array.isArray(sections)) {
-        return NextResponse.json(
-          { error: "Sections must be an array when provided" },
-          { status: 400 },
-        );
-      }
-
       const sectionErrors: string[] = [];
       normalizedSections = RecipeValidator.validateAndNormalizeSections(
         sections as RecipeSection[],
@@ -287,7 +270,7 @@ export async function POST(request: NextRequest) {
         title,
         ingredients: normalizedIngredients,
         sections: normalizedSections ?? [],
-        servings: parseInt(servings),
+        servings: parseInt(String(servings)),
         description: descriptionToStore,
         reference:
           normalizedReference && normalizedReference.length > 0
@@ -342,15 +325,10 @@ export async function DELETE(request: NextRequest) {
   const { user } = authResult;
 
   try {
-    const body = await request.json();
-    const { ids } = body;
+    const parsed = parseBody(RecipeBulkDeleteBodySchema, await request.json());
+    if (!parsed.success) return parsed.error;
 
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return NextResponse.json(
-        { error: "Recipe IDs array is required" },
-        { status: 400 },
-      );
-    }
+    const { ids } = parsed.data;
 
     const deletedRecipes = await db
       .delete(recipes)
@@ -381,19 +359,13 @@ export async function PATCH(request: NextRequest) {
   const { user } = authResult;
 
   try {
-    const body = await request.json();
-    const { ids, action } = body;
+    const parsed = parseBody(RecipeBulkPatchBodySchema, await request.json());
+    if (!parsed.success) return parsed.error;
 
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return NextResponse.json(
-        { error: "Recipe IDs array is required" },
-        { status: 400 },
-      );
-    }
+    const { ids, action, date } = parsed.data;
 
     if (action === "mark_as_eaten") {
-      const { date } = body;
-      const dateToUse = date || new Date().toISOString();
+      const dateToUse = date ?? new Date().toISOString();
       const updatedRecipes = await db
         .update(recipes)
         .set({ lastEaten: new Date(dateToUse) })
