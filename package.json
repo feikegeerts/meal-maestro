@@ -20,6 +20,7 @@
     "verify": "pnpm run type-check && pnpm run lint && pnpm run test:ci && pnpm run test:integration",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:migrate:prod": "dotenv -e .env.production.local -- drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "prepare": "husky",
     "test:integration:cov": "vitest run --config=vitest.integration.config.ts --coverage"
@@ -86,6 +87,7 @@
     "@vitest/coverage-v8": "^3.0.8",
     "@vitest/ui": "3.2.4",
     "dotenv": "^17.2.4",
+    "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.9",
     "eslint": "^9.39.2",
     "eslint-config-next": "16.1.6",
