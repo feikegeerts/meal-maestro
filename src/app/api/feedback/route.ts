@@ -4,12 +4,7 @@ import { db } from "@/db";
 import { feedback, rateLimitUser } from "@/db/schema";
 import { and, eq, gte, lt, count } from "drizzle-orm";
 import { getAppVersion } from "@/lib/version";
-
-interface FeedbackRequest {
-  feedbackType: string;
-  subject: string;
-  message: string;
-}
+import { parseBody, FeedbackBodySchema } from "@/lib/request-schemas";
 
 interface FeedbackResponse {
   success: boolean;
@@ -46,54 +41,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body: FeedbackRequest = await request.json();
-    const { feedbackType, subject, message } = body;
+    const parsed = parseBody(FeedbackBodySchema, await request.json());
+    if (!parsed.success) return parsed.error;
 
-    // Validate required fields
-    if (!feedbackType || !subject || !message) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Feedback type, subject, and message are required",
-        },
-        { status: 400 },
-      );
-    }
-
-    // Validate feedback type
-    const validTypes = [
-      "bug_report",
-      "feature_request",
-      "general_feedback",
-      "praise",
-    ];
-    if (!validTypes.includes(feedbackType)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid feedback type" },
-        { status: 400 },
-      );
-    }
-
-    // Validate field lengths
-    if (subject.trim().length === 0 || subject.length > 200) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Subject must be between 1 and 200 characters",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (message.trim().length === 0 || message.length > 2000) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Message must be between 1 and 2000 characters",
-        },
-        { status: 400 },
-      );
-    }
+    const { feedbackType, subject, message } = parsed.data;
 
     // Get additional context
     const { version } = getAppVersion();

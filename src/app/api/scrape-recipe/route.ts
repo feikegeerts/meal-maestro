@@ -6,10 +6,7 @@ import { usageTrackingService } from "@/lib/usage-tracking-service";
 import { db } from "@/db";
 import { rateLimitUser } from "@/db/schema";
 import { and, eq, gte, lt, count } from "drizzle-orm";
-
-interface ScrapeRequest {
-  url: string;
-}
+import { parseBody, ScrapeRecipeBodySchema } from "@/lib/request-schemas";
 
 interface ScrapeResponse {
   success: boolean;
@@ -61,17 +58,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body: ScrapeRequest = await request.json();
-    const { url } = body;
+    const parsed = parseBody(ScrapeRecipeBodySchema, await request.json());
+    if (!parsed.success) return parsed.error;
 
-    if (typeof url !== "string" || url === null || url === undefined) {
-      return NextResponse.json(
-        { success: false, error: "URL is required" },
-        { status: 400 },
-      );
-    }
-
-    const trimmedUrl = url.trim();
+    const trimmedUrl = parsed.data.url.trim();
 
     // Validate URL format (including empty string)
     if (trimmedUrl === "" || !UrlDetector.isValidUrl(trimmedUrl)) {

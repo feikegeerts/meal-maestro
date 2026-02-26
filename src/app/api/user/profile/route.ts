@@ -5,6 +5,7 @@ import { recipes, userProfiles } from "@/db/schema";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
 import type { UserProfile } from "@/lib/profile-types";
 import { ImageService } from "@/lib/image-service";
+import { parseBody, UserProfilePatchBodySchema } from "@/lib/request-schemas";
 
 type DrizzleProfile = typeof userProfiles.$inferSelect;
 
@@ -219,40 +220,17 @@ export async function PATCH(request: NextRequest) {
   const { user } = authResult;
 
   try {
-    const body = await request.json();
+    const parsed = parseBody(UserProfilePatchBodySchema, await request.json());
+    if (!parsed.success) return parsed.error;
 
-    // Only allow updating user-editable fields
-    const allowedFields = [
-      "display_name",
-      "avatar_url",
-      "language_preference",
-      "unit_system_preference",
-    ] as const;
-
-    const updates: Record<string, string> = {};
-    for (const field of allowedFields) {
-      if (field in body) {
-        updates[field] = body[field];
-      }
-    }
-
-    if (Object.keys(updates).length === 0) {
-      return NextResponse.json(
-        { error: "No valid fields to update" },
-        { status: 400 },
-      );
-    }
+    const { display_name, avatar_url, language_preference, unit_system_preference } = parsed.data;
 
     // Map snake_case body fields to camelCase Drizzle columns
     const drizzleUpdates: Record<string, string> = {};
-    if ("display_name" in updates)
-      drizzleUpdates.displayName = updates.display_name;
-    if ("avatar_url" in updates)
-      drizzleUpdates.avatarUrl = updates.avatar_url;
-    if ("language_preference" in updates)
-      drizzleUpdates.languagePreference = updates.language_preference;
-    if ("unit_system_preference" in updates)
-      drizzleUpdates.unitSystemPreference = updates.unit_system_preference;
+    if (display_name !== undefined) drizzleUpdates.displayName = display_name;
+    if (avatar_url !== undefined) drizzleUpdates.avatarUrl = avatar_url;
+    if (language_preference !== undefined) drizzleUpdates.languagePreference = language_preference;
+    if (unit_system_preference !== undefined) drizzleUpdates.unitSystemPreference = unit_system_preference;
 
     const [updated] = await db
       .update(userProfiles)
