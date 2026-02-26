@@ -174,7 +174,8 @@ export class ImageService {
           "Unexpected error during image upload",
           "ImageService",
           "uploadRecipeImage",
-          { originalError: error },
+          undefined,
+          error instanceof Error ? error : new Error(String(error)),
         ),
       };
     }
@@ -244,7 +245,8 @@ export class ImageService {
           "Unexpected error during image deletion",
           "ImageService",
           "deleteRecipeImage",
-          { originalError: error },
+          undefined,
+          error instanceof Error ? error : new Error(String(error)),
         ),
       };
     }
@@ -286,7 +288,8 @@ export class ImageService {
           "Unexpected error during image replacement",
           "ImageService",
           "replaceRecipeImage",
-          { originalError: error },
+          undefined,
+          error instanceof Error ? error : new Error(String(error)),
         ),
       };
     }
