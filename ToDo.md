@@ -4,7 +4,6 @@
 
 ## Neon Auth Migration Follow-ups
 
-1. [x] Implement feature branches on NEON as well and have 1 database per env.
 1. [ ] Implement localized magic link emails via Neon Auth / Better Auth custom email sending hook (currently `locale` is passed through but unused — see `auth-context.tsx` TODO)
 
 ## Quality & Compliance
@@ -15,7 +14,7 @@
 
 ## Refactoring
 
-1. [ ] Setup a proper CI/CD pipeline instead of using husky
+1. [ ] Setup a proper CI/CD pipeline instead of using husky including a nice way to update the version of the app, i'm not sure what would be a good automation for this, maybe changeset and manual updates of the version. i don't know. requires an extra investigation
 
 ### High Priority
 

@@ -22,7 +22,6 @@
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:prod": "dotenv -e .env.production.local -- drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "prepare": "husky",
     "test:integration:cov": "vitest run --config=vitest.integration.config.ts --coverage"
   },
   "dependencies": {
@@ -93,9 +92,7 @@
     "eslint-config-next": "16.1.6",
     "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "^16.5.0",
-    "husky": "^9.1.7",
     "jsdom": "^26.0.0",
-    "lint-staged": "^16.2.7",
     "msw": "^2.12.10",
     "next": "16.1.6",
     "tailwindcss": "^4.1.18",
