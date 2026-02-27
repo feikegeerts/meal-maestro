@@ -2,7 +2,6 @@ name: CI/CD
 
 on:
   push:
-    branches: [main, preview]
   pull_request:
     branches: [main]
 
@@ -29,7 +28,7 @@ jobs:
   deploy-preview:
     name: Deploy Preview
     needs: ci
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main')
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -48,6 +47,7 @@ jobs:
       - id: deploy
         run: echo "url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})" >> $GITHUB_OUTPUT
       - uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
         with:
           script: |
             github.rest.issues.createComment({
