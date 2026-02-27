@@ -24,6 +24,7 @@ jobs:
       - run: pnpm run type-check
       - run: pnpm run lint
       - run: pnpm run test:ci
+      - run: pnpm run test:integration
 
   deploy-preview:
     name: Deploy Preview
