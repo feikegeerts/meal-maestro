@@ -1,167 +1,259 @@
-## Tech Stack & Services
-
-### Frontend Technologies
-
-| Technology   | Website                                          | GitHub                                                                             |
-| ------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| React        | [react.dev](https://react.dev)                   | [github.com/facebook/react](https://github.com/facebook/react)                     |
-| Next.js      | [nextjs.org](https://nextjs.org)                 | [github.com/vercel/next.js](https://github.com/vercel/next.js)                     |
-| Tailwind CSS | [tailwindcss.com](https://tailwindcss.com)       | [github.com/tailwindlabs/tailwindcss](https://github.com/tailwindlabs/tailwindcss) |
-| shadcn/ui    | [ui.shadcn.com](https://ui.shadcn.com)           | [github.com/shadcn-ui/ui](https://github.com/shadcn-ui/ui)                         |
-| TypeScript   | [typescriptlang.org](https://typescriptlang.org) | [github.com/microsoft/TypeScript](https://github.com/microsoft/TypeScript)         |
-| Lucide Icons | [lucide.dev](https://lucide.dev)                 | [github.com/lucide-icons/lucide](https://github.com/lucide-icons/lucide)           |
-
-### Development Tools
-
-| Technology  | Website                                                      | GitHub                                                                           |
-| ----------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| pnpm        | [pnpm.io](https://pnpm.io)                                   | [github.com/pnpm/pnpm](https://github.com/pnpm/pnpm)                             |
-| ESLint      | [eslint.org](https://eslint.org)                             | [github.com/eslint/eslint](https://github.com/eslint/eslint)                     |
-| Prettier    | [prettier.io](https://prettier.io)                           | [github.com/prettier/prettier](https://github.com/prettier/prettier)             |
-| Husky       | [typicode.github.io/husky](https://typicode.github.io/husky) | [github.com/typicode/husky](https://github.com/typicode/husky)                   |
-| lint-staged | N/A                                                          | [github.com/lint-staged/lint-staged](https://github.com/lint-staged/lint-staged) |
-| dotenv      | N/A                                                          | [github.com/motdotla/dotenv](https://github.com/motdotla/dotenv)                 |
-
-### Testing Framework
-
-| Technology            | Website                                            | GitHub                                                                                                       |
-| --------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Jest                  | [jestjs.io](https://jestjs.io)                     | [github.com/jestjs/jest](https://github.com/jestjs/jest)                                                     |
-| React Testing Library | [testing-library.com](https://testing-library.com) | [github.com/testing-library/react-testing-library](https://github.com/testing-library/react-testing-library) |
-| Playwright            | [playwright.dev](https://playwright.dev)           | [github.com/microsoft/playwright](https://github.com/microsoft/playwright)                                   |
-| Mock Service Worker   | [mswjs.io](https://mswjs.io)                       | [github.com/mswjs/msw](https://github.com/mswjs/msw)                                                         |
-
-### External Services (Account Required)
-
-| Service        | Purpose                   | Website                                  | Plan                        |
-| -------------- | ------------------------- | ---------------------------------------- | --------------------------- |
-| **Vercel**     | Hosting & Deployment      | [vercel.com](https://vercel.com)         | Free tier                   |
-| **GitHub**     | Code repository           | [github.com](https://github.com)         | Free tier                   |
-| **Supabase**   | Database & Authentication | [supabase.com](https://supabase.com)     | Free tier                   |
-| **TransIP**    | Domain registrar          | [transip.nl](https://transip.nl)         | Paid domain                 |
-| **CloudFlare** | DNS & Email routing       | [cloudflare.com](https://cloudflare.com) | Free tier                   |
-| **Resend**     | SMTP email service        | [resend.com](https://resend.com)         | Free tier (3k emails/month) |
-| **OpenAI**     | AI recipe processing      | [openai.com](https://openai.com)         | Pay-per-use API             |
-
 # Meal Maestro
 
-An AI-powered recipe management system built with Next.js, Supabase, and OpenAI. Built with modern UI components using shadcn/ui and Tailwind CSS v4. Meal Maestro helps you organize, discover, and manage your recipes through natural language conversations.
+> AI-powered recipe management — organize, discover, and chat with your recipes.
+
+**Version**: 3.1.0 &nbsp;|&nbsp; **Stack**: Next.js 16 · Neon · OpenAI · TypeScript
+
+---
+
+## Overview
+
+Meal Maestro is an AI-augmented recipe management platform. Users can store and browse recipes, chat with an AI assistant to create, scale, or modify recipes via natural language, scrape recipes from URLs, and get on-demand nutrition estimates. The app is multilingual (Dutch/English), installable as a PWA, and mobile-first.
+
+---
 
 ## Features
 
-- **AI-Powered Recipe Management**: Natural language recipe operations via OpenAI GPT
-- **User Authentication**: Google OAuth integration with Supabase Auth
-- **Recipe CRUD Operations**: Full recipe lifecycle management
-- **Advanced Search & Filtering**: Multi-criteria recipe discovery
-- **On-Demand Nutrition Estimates**: Fetch AI-generated nutrition summaries for saved recipes when you need them
-- **Cost Tracking**: OpenAI API usage monitoring with per-user monthly caps and automated admin alerts
-- **Responsive Design**: Mobile-first UI with dark mode support
+- **AI recipe chat** — OpenAI function calling drives create, update, scale, and search operations via conversation
+- **Recipe CRUD** — full lifecycle management with categories, seasons, cuisines, diet types, and tags
+- **Recipe web scraping** — import recipes directly from a URL
+- **Nutrition estimates** — on-demand AI-generated nutrition summaries per recipe
+- **Multilingual** — Dutch (default) and English via next-intl
+- **Progressive Web App** — installable, offline-capable (next-pwa / Workbox)
+- **Image management** — Cloudflare R2 storage with client-side and server-side compression
+- **Per-user AI cost tracking & rate limiting** — monthly caps with automated admin email alerts
+- **Admin dashboard** — usage monitoring and feedback moderation
+- **Dark mode** — system-aware theming with manual override
+- **Responsive / mobile-first** design throughout
+
+---
+
+## Tech Stack
+
+### Frontend
+
+| Technology | Version |
+|---|---|
+| React | 19 |
+| Next.js (App Router) | 16 |
+| TypeScript | 5 |
+| Tailwind CSS | v4 |
+| shadcn/ui + Radix UI | — |
+| Lucide Icons | — |
+| TanStack Table | 8 |
+| Recharts | 3 |
+| dnd-kit | — |
+| Zod | 4 |
+| date-fns | 4 |
+| sonner | — |
+
+### Backend & Database
+
+| Technology | Notes |
+|---|---|
+| Neon (PostgreSQL) | Hosted serverless Postgres |
+| Drizzle ORM | Schema in `src/db/schema.ts` |
+| Next.js Route Handlers | Thin API layer |
+
+### Auth & AI
+
+| Technology | Notes |
+|---|---|
+| Neon Auth (Better Auth) | Google OAuth via Neon Console |
+| OpenAI | GPT models — function calling for AI chat |
+
+### Media & Email
+
+| Technology | Notes |
+|---|---|
+| Cloudflare R2 | S3-compatible media storage (`@aws-sdk/client-s3`) |
+| Sharp | Server-side image processing |
+| Resend | Transactional email (admin alerts) |
+
+### Other
+
+| Technology | Notes |
+|---|---|
+| next-intl | i18n — `nl` default, `en` |
+| next-pwa | PWA / Workbox |
+| Vercel Analytics + Speed Insights | — |
+
+### Dev Tools
+
+| Tool | Notes |
+|---|---|
+| Vitest | Unit & integration test runner |
+| React Testing Library | Component tests |
+| MSW | HTTP mocking in tests |
+| ESLint + Prettier | Linting & formatting |
+| drizzle-kit | Migration generation & application |
+| pnpm | Package manager |
+
+### External Services
+
+| Service | Purpose |
+|---|---|
+| Vercel | Hosting & deployment |
+| GitHub | Code repository |
+| Neon | Database + auth |
+| Cloudflare R2 | Media storage |
+| Cloudflare DNS | Domain & email routing |
+| TransIP | Domain registrar |
+| Resend | Email |
+| OpenAI | AI API |
+
+---
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 20.x or later
-- pnpm (recommended) or npm
-- Supabase account
-- OpenAI API key
+- Node.js >= 24
+- pnpm
 
 ### Installation
 
-1. Clone the repository:
-
 ```bash
+# 1. Clone
 git clone https://github.com/your-username/meal-maestro.git
 cd meal-maestro
-```
 
-2. Install dependencies:
-
-```bash
+# 2. Install dependencies
 pnpm install
+
+# 3. Pull environment variables (recommended — requires Vercel access)
+npx vercel env pull .env.local
+
+# 4. Apply database migrations
+pnpm db:migrate
+
+# 5. Start dev server
+pnpm dev
 ```
 
-3. Set up environment variables:
+Open [http://localhost:3000](http://localhost:3000).
 
-Pull environment variables from Vercel (recommended):
+### Environment Variables
+
+The easiest way to get all required variables is:
 
 ```bash
 npx vercel env pull .env.local
 ```
 
-Or manually create `.env.local`:
+Key variable groups: Neon database URL & auth credentials, Cloudflare R2 bucket/keys, OpenAI API key, Resend API key, and app URL. See the Vercel dashboard or ask the maintainer for details.
 
-```bash
-# Database
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
-PUBLIC_SUPABASE_URL=your_supabase_url
-PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# OpenAI
-OPENAI_API_KEY=your_openai_api_key
-OPENAI_MODEL=gpt-4.1-nano or mini
-OPENAI_DAILY_BUDGET=1.00
-```
-
-4. Run the development server:
-
-```bash
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to see the application.
-
-### Database Setup
-
-This project uses Supabase for the database. Run the migrations in the `supabase/migrations/` directory to set up the required tables:
-
-- Recipe management with categories, tags, and seasonal filtering
-- User profiles and authentication
-- Action logging and API usage tracking
-- Row Level Security (RLS) policies for data isolation
+---
 
 ## Project Structure
 
 ```
-meal-maestro/
-├── src/
-│   └── app/                 # Next.js App Router
-│       ├── globals.css      # Global styles
-│       ├── layout.tsx       # Root layout
-│       └── page.tsx         # Home page
-├── supabase/
-│   └── migrations/          # Database migrations
-├── old/                     # Legacy codebase for reference
-└── public/                  # Static assets
+src/
+├── app/
+│   ├── [locale]/              # i18n routes (nl / en)
+│   │   ├── recipes/           # Recipe CRUD UI
+│   │   ├── account/           # User profile & settings
+│   │   └── admin/             # Admin dashboard
+│   ├── api/                   # Route handlers
+│   └── i18n/                  # i18n config & routing
+├── components/                # React components
+├── contexts/                  # React context providers
+├── db/
+│   └── schema.ts              # Drizzle ORM schema (source of truth)
+├── lib/                       # Business logic & utilities
+│   ├── auth/                  # Auth client & server helpers
+│   ├── recipe-*.ts            # Recipe domain services & utils
+│   ├── openai-service.ts      # OpenAI client & function calling
+│   ├── usage-*.ts             # Cost tracking & rate limiting
+│   └── image-service.ts       # Image upload & compression
+├── types/                     # TypeScript type declarations
+└── __tests__/                 # Unit & integration tests
+drizzle/                       # Database migrations
+messages/                      # i18n translation files (nl.json, en.json)
+public/                        # Static assets & PWA manifest
 ```
+
+---
+
+## Database
+
+- **Provider**: Neon (PostgreSQL)
+- **ORM**: Drizzle ORM
+- **Schema**: `src/db/schema.ts` — single source of truth
+- **Migrations**: `drizzle/` directory, managed with drizzle-kit
+- **Key tables**: `user_profiles`, `recipes`, `api_usage`, `monthly_usage_summary`, `feedback`, rate limit tables
+
+> **Important**: The Drizzle schema uses camelCase column names (`displayName`, `avatarUrl`, etc.), but all API responses map these to snake_case (`display_name`, `avatar_url`, etc.) before returning. Any new API route returning DB data must apply this mapping — see `toSnakeCase()` in `src/app/api/user/profile/route.ts`.
+
+---
 
 ## Scripts
 
-- `pnpm dev` - Start development server with Turbopack
-- `pnpm build` - Build for production
-- `pnpm start` - Start production server
-- `pnpm lint` - Run ESLint
+```bash
+pnpm dev                  # Start dev server
+pnpm build                # Build for production
+pnpm start                # Start production server
+pnpm lint                 # Run ESLint
+pnpm lint:fix             # Run ESLint with auto-fix
+pnpm type-check           # TypeScript type checking
+pnpm test                 # Run unit tests (Vitest)
+pnpm test:watch           # Run tests in watch mode
+pnpm test:coverage        # Run tests with coverage report
+pnpm test:ci              # Run tests in CI mode (verbose)
+pnpm test:integration     # Run integration tests
+pnpm verify               # Full check: type-check + lint + tests
+pnpm db:generate          # Generate Drizzle migration
+pnpm db:migrate           # Apply migrations (local)
+pnpm db:migrate:prod      # Apply migrations (production env)
+pnpm db:studio            # Open Drizzle Studio
+```
 
-## Development Workflow
+---
 
-### Branch Strategy
+## Testing
 
-1. **Development**: Work in `preview` branch with multiple commits and iterations
-2. **Testing**: Preview branch automatically deploys to Vercel preview environment
-3. **Release**: When ready, rebase `main` branch onto `preview` and push to production
+- **Framework**: Vitest
+- **Unit tests**: `src/__tests__/` and `src/lib/__tests__/`
+- **Integration tests**: `src/__tests__/integration/`
+- **HTTP mocking**: MSW (Mock Service Worker) — handlers in `src/__mocks__/`
+- **DOM testing**: React Testing Library + `@testing-library/jest-dom`
+- **Coverage threshold**: 65% (branches, functions, lines, statements)
 
-### Version Information
+Run all checks before opening a PR:
 
-- **Current version**: Always available in the About page (reads from `package.json`)
-- Manual version updates in `package.json` when needed
+```bash
+pnpm verify
+```
+
+Any test that transitively imports `@/db` must mock it to prevent Neon from connecting at import time. See [`docs/drizzle-test-mock-patterns.md`](docs/drizzle-test-mock-patterns.md) for the full mocking guide.
+
+---
 
 ## Deployment
 
-This application is optimized for deployment on Vercel:
+- **Platform**: Vercel
+- **AI chat route** has a 60s max duration (configured in `vercel.json`)
+- **Branch strategy**:
+  - `preview` → auto-deploys to Vercel preview environment on push
+  - `main` → production (rebase `preview` onto `main` when releasing)
+- **DB migrations**: run separately via `pnpm db:migrate` or `pnpm db:migrate:prod`
 
-1. Connect your GitHub repository to Vercel
-2. Configure environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
+---
 
-The app includes automatic database migrations and optimized builds for production.
+## Architecture Notes
+
+- **Server components by default** — use `"use client"` only where interactivity requires it
+- **Thin API routes** — route handlers stay under ~50 lines and delegate to services in `src/lib/`
+- **camelCase → snake_case** — all Drizzle query results must be mapped before returning from API routes
+- **Cost tracking** — AI usage is tracked per-user per-month; automated email alerts fire when thresholds are exceeded (see `src/config/usage-limits.ts`)
+- **i18n routing** — all user-facing pages live under `[locale]`; middleware handles locale detection and redirection
+
+---
+
+## Contributing
+
+1. Work in the `preview` branch
+2. Keep commits scoped and in imperative mood (`Add scaling test for fractions`)
+3. Run `pnpm verify` before finishing
+4. If you add a DB migration, note `DB MIGRATION` in the commit body
+5. For agent-specific conventions and deep architectural context, see [`AGENTS.md`](AGENTS.md)
