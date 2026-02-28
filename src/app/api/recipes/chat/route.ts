@@ -5,6 +5,7 @@ import { ChatResponseFormatter } from "@/lib/chat-response-formatter";
 import { OpenAITimeoutError } from "@/lib/openai-service";
 import { MonthlySpendLimitError, usageLimitService } from "@/lib/usage-limit-service";
 import { parseBody, ChatBodySchema } from "@/lib/request-schemas";
+import { checkAIRateLimit } from "@/lib/ai-rate-limit";
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -14,6 +15,21 @@ export async function POST(request: NextRequest) {
   }
 
   const { user } = authResult;
+
+  const rateLimit = await checkAIRateLimit(user.id, "chat");
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: `Rate limit exceeded. Try again in ${rateLimit.retryAfter} seconds.` },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Reset": new Date(rateLimit.resetTime).toISOString(),
+          "Retry-After": rateLimit.retryAfter.toString(),
+        },
+      },
+    );
+  }
+
   let detectedLocale: string | undefined;
 
   try {

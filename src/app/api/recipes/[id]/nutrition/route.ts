@@ -7,6 +7,7 @@ import { NutritionService, buildCacheKey } from "@/lib/nutrition-service";
 import { usageLimitService } from "@/lib/usage-limit-service";
 import { usageTrackingService } from "@/lib/usage-tracking-service";
 import type { Recipe } from "@/types/recipe";
+import { checkAIRateLimit } from "@/lib/ai-rate-limit";
 
 const nutritionService = new NutritionService();
 
@@ -21,6 +22,20 @@ export async function POST(
   }
 
   const { user } = authResult;
+
+  const rateLimit = await checkAIRateLimit(user.id, "nutrition");
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: `Rate limit exceeded. Try again in ${rateLimit.retryAfter} seconds.` },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Reset": new Date(rateLimit.resetTime).toISOString(),
+          "Retry-After": rateLimit.retryAfter.toString(),
+        },
+      },
+    );
+  }
 
   try {
     const { id: recipeId } = await params;

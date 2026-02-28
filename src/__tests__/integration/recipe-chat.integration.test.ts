@@ -35,6 +35,10 @@ vi.mock("@/lib/openai-service", () => {
   return { OpenAITimeoutError };
 });
 
+vi.mock("@/lib/ai-rate-limit", () => ({
+  checkAIRateLimit: vi.fn().mockResolvedValue({ allowed: true, retryAfter: 0, resetTime: 0 }),
+}));
+
 vi.mock("@/lib/usage-limit-service", () => ({
   usageLimitService: {
     recordRateLimitViolation: vi.fn(),

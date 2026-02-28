@@ -47,38 +47,6 @@ export const openai = new OpenAI({
   timeout: 30000, // 30 second timeout
 });
 
-// Simple rate limiter
-class SimpleRateLimiter {
-  private requests: number = 0;
-  private lastReset: number = Date.now();
-  private readonly maxRequestsPerMinute: number = 60;
-
-  isRateLimited(): boolean {
-    const now = Date.now();
-
-    // Reset counter if a minute has passed
-    if (now - this.lastReset > 60000) {
-      this.requests = 0;
-      this.lastReset = now;
-    }
-
-    return this.requests >= this.maxRequestsPerMinute;
-  }
-
-  addRequest(): void {
-    this.requests++;
-  }
-
-  getStats(): { requests: number; maxRequests: number } {
-    return {
-      requests: this.requests,
-      maxRequests: this.maxRequestsPerMinute,
-    };
-  }
-}
-
-export const rateLimiter = new SimpleRateLimiter();
-
 // Helper function to detect if the current request contains images
 // Only checks the last user message to determine if vision model is needed
 function hasImagesInCurrentRequest(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]): boolean {
@@ -102,11 +70,6 @@ export async function createChatCompletion(
   tools?: OpenAI.Chat.Completions.ChatCompletionCreateParams["tools"],
   toolChoice?: OpenAI.Chat.Completions.ChatCompletionCreateParams["tool_choice"]
 ): Promise<OpenAICompletionWithUsage> {
-  // Check rate limit
-  if (rateLimiter.isRateLimited()) {
-    throw new Error("Rate limit exceeded. Please try again later.");
-  }
-
   try {
     // Automatically select model based on current request content only
     const useVisionModel = hasImagesInCurrentRequest(messages);
@@ -129,9 +92,6 @@ export async function createChatCompletion(
     });
 
     const completion = await Promise.race([completionPromise, timeoutPromise]) as OpenAI.Chat.Completions.ChatCompletion;
-
-    // Track the request
-    rateLimiter.addRequest();
 
     // Extract usage data from the response
     const usage: OpenAIUsageData = {
