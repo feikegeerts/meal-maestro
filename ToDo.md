@@ -14,7 +14,7 @@
 
 ## Refactoring
 
-1. [ ] Setup a proper CI/CD pipeline instead of using husky including a nice way to update the version of the app, i'm not sure what would be a good automation for this, maybe changeset and manual updates of the version. i don't know. requires an extra investigation
+1. [x] Setup a proper CI/CD pipeline instead of using husky including a nice way to update the version of the app, i'm not sure what would be a good automation for this, maybe changeset and manual updates of the version. i don't know. requires an extra investigation
 
 ### High Priority
 
