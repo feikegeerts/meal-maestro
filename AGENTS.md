@@ -203,10 +203,33 @@ Add unit conversion:
 
 ## Pull Request / Commit Guidance
 
-- Keep commits scoped & descriptive (imperative mood: "Add scaling test for fractions").
+This project uses **Conventional Commits** + **release-please** for automated versioning. Every commit message must follow the format:
+
+```
+<type>: <description>
+```
+
+| Type | Effect on version |
+|---|---|
+| `feat: ...` | Minor bump |
+| `fix: ...` | Patch bump |
+| `feat!: ...` or `BREAKING CHANGE:` in footer | Major bump |
+| `chore:`, `docs:`, `test:`, `refactor:`, `ci:`, `style:` | No bump |
+
+**Rules:**
+- Keep commits scoped to one logical change.
 - Before finishing: run lint + test.
 - If migration added: mention `DB MIGRATION` in commit body.
 - Reference ToDo item IDs if closing roadmap tasks.
+- **Never manually edit the version** in `package.json` or `README.md` — release-please handles this.
+
+### How releases work
+
+1. Commits land on `main` → release-please GitHub Action runs automatically.
+2. release-please opens/updates a **Release PR** with bumped versions in `package.json` and `README.md`.
+3. Merge the Release PR when ready → git tag (`vX.Y.Z`) and GitHub Release are created automatically.
+
+Relevant config files: `release-please-config.json`, `.release-please-manifest.json`, `.github/workflows/release-please.yml`.
 
 ---
 
