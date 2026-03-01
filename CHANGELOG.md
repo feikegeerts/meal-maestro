@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.2.1](https://github.com/feikegeerts/meal-maestro/compare/v3.2.0...v3.2.1) (2026-03-01)
+
+
+### Bug Fixes
+
+* make tags optional in ChatContext selected_recipe type ([d69c336](https://github.com/feikegeerts/meal-maestro/commit/d69c33624c4e22b4563fbbb422430b4ebc46d5f7))
+* mark tags as optional in ChatBodySchema selected_recipe ([c72a8f1](https://github.com/feikegeerts/meal-maestro/commit/c72a8f1e75ef9586142db802abaa7b22e9a9326b))
+
 ## [3.2.0](https://github.com/feikegeerts/meal-maestro/compare/v3.1.0...v3.2.0) (2026-03-01)
 
 
