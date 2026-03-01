@@ -2,7 +2,7 @@
 
 > AI-powered recipe management — organize, discover, and chat with your recipes.
 
-**Version**: 3.1.0 &nbsp;|&nbsp; **Stack**: Next.js 16 · Neon · OpenAI · TypeScript
+**Version**: 3.2.0 &nbsp;|&nbsp; **Stack**: Next.js 16 · Neon · OpenAI · TypeScript
 
 ---
 
