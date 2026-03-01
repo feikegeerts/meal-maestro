@@ -11,7 +11,7 @@
           "path": "README.md",
           "search-pattern": "\\*\\*Version\\*\\*: [0-9]+\\.[0-9]+\\.[0-9]+"
         }
-      ],
+      ]
     }
   }
 }

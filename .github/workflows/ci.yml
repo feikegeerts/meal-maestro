@@ -2,6 +2,7 @@ name: CI/CD
 
 on:
   push:
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -29,7 +30,7 @@ jobs:
   deploy-preview:
     name: Deploy Preview
     needs: ci
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main')
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
