@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth-server";
 import { db } from "@/db";
 import { recipes } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
+import { recipeAccessCondition } from "@/lib/partnership-service";
 import { RecipeIngredient, RecipeSection } from "@/types/recipe";
 import { toRecipeResponse } from "@/lib/recipe-response-mapper";
 import { ImageService } from "@/lib/image-service";
@@ -32,10 +33,11 @@ export async function GET(
       );
     }
 
+    const accessCondition = await recipeAccessCondition(user.id);
     const [recipe] = await db
       .select()
       .from(recipes)
-      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, user.id)))
+      .where(and(eq(recipes.id, recipeId), accessCondition))
       .limit(1);
 
     if (!recipe) {
@@ -218,10 +220,11 @@ export async function PUT(
       );
     }
 
+    const accessCondition = await recipeAccessCondition(user.id);
     const [recipe] = await db
       .update(recipes)
       .set(updateData)
-      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, user.id)))
+      .where(and(eq(recipes.id, recipeId), accessCondition))
       .returning();
 
     if (!recipe) {
@@ -268,11 +271,13 @@ export async function DELETE(
       );
     }
 
+    const accessCondition = await recipeAccessCondition(user.id);
+
     // First, get the recipe to check if it has an image
     const [recipe] = await db
-      .select({ id: recipes.id, imageUrl: recipes.imageUrl })
+      .select({ id: recipes.id, imageUrl: recipes.imageUrl, userId: recipes.userId })
       .from(recipes)
-      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, user.id)))
+      .where(and(eq(recipes.id, recipeId), accessCondition))
       .limit(1);
 
     if (!recipe) {
@@ -285,13 +290,13 @@ export async function DELETE(
     // Delete the recipe from database
     await db
       .delete(recipes)
-      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, user.id)));
+      .where(and(eq(recipes.id, recipeId), accessCondition));
 
-    // Clean up image if it exists (best effort)
+    // Clean up image if it exists (best effort — use recipe owner's user ID for path)
     if (recipe.imageUrl) {
       const imageDeleteResult = await imageService.deleteRecipeImage(
         recipe.imageUrl,
-        user.id,
+        recipe.userId,
       );
 
       if (!imageDeleteResult.success) {

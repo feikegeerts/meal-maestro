@@ -27,6 +27,26 @@
         "contact": "Questions? Reply to this email or contact us at",
         "copyright": "Meal Maestro"
       }
+    },
+    "partner-invitation-received": {
+      "subject": "{{inviterName}} invited you to share recipes on {{brandName}}",
+      "title": "You have a recipe sharing invitation!",
+      "description": "{{inviterName}} has invited you to share recipes on Meal Maestro. Log in to your account to accept or decline the invitation.",
+      "cta": "View Invitation",
+      "footer": {
+        "contact": "Questions? Reply to this email or contact us at",
+        "copyright": "Meal Maestro"
+      }
+    },
+    "partner-invitation-accepted": {
+      "subject": "{{inviteeName}} accepted your invitation on {{brandName}}",
+      "title": "Your invitation was accepted!",
+      "description": "{{inviteeName}} has accepted your partner invitation. Your recipes are now shared — you can both view, edit, and add recipes together.",
+      "cta": "Go to My Recipes",
+      "footer": {
+        "contact": "Questions? Reply to this email or contact us at",
+        "copyright": "Meal Maestro"
+      }
     }
   }
 }

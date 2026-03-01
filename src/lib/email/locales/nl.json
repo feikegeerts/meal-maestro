@@ -27,6 +27,26 @@
         "contact": "Vragen? Beantwoord deze email of neem contact met ons op via",
         "copyright": "Meal Maestro"
       }
+    },
+    "partner-invitation-received": {
+      "subject": "{{inviterName}} heeft je uitgenodigd om recepten te delen op {{brandName}}",
+      "title": "Je hebt een uitnodiging om recepten te delen!",
+      "description": "{{inviterName}} heeft je uitgenodigd om recepten te delen op Meal Maestro. Log in op je account om de uitnodiging te accepteren of weigeren.",
+      "cta": "Bekijk Uitnodiging",
+      "footer": {
+        "contact": "Vragen? Beantwoord deze email of neem contact met ons op via",
+        "copyright": "Meal Maestro"
+      }
+    },
+    "partner-invitation-accepted": {
+      "subject": "{{inviteeName}} heeft je uitnodiging geaccepteerd op {{brandName}}",
+      "title": "Je uitnodiging is geaccepteerd!",
+      "description": "{{inviteeName}} heeft je partneruitnodiging geaccepteerd. Jullie recepten zijn nu gedeeld — jullie kunnen beiden recepten bekijken, bewerken en toevoegen.",
+      "cta": "Naar Mijn Recepten",
+      "footer": {
+        "contact": "Vragen? Beantwoord deze email of neem contact met ons op via",
+        "copyright": "Meal Maestro"
+      }
     }
   }
 }

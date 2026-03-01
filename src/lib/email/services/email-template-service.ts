@@ -78,12 +78,20 @@ export class EmailTemplateService {
         locale: detectedLocale
       };
       
+      // Pre-process all locale strings through Mustache so variables like
+      // {{inviterName}}, {{brandName}} etc. are expanded before the HTML
+      // template substitutes {{description}}, {{title}}, {{cta}}.
       const processedSubject = Mustache.render(localizedContent.subject, initialContext);
-      
-      // Create the template context with processed subject
+      const processedTitle = Mustache.render(localizedContent.title, initialContext);
+      const processedDescription = Mustache.render(localizedContent.description, initialContext);
+      const processedCta = Mustache.render(localizedContent.cta, initialContext);
+
       const templateContext = {
         ...initialContext,
-        subject: processedSubject // Override subject with processed version
+        subject: processedSubject,
+        title: processedTitle,
+        description: processedDescription,
+        cta: processedCta,
       };
 
       const html = Mustache.render(templateResult.data!, templateContext);

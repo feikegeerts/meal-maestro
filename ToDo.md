@@ -1,3 +1,8 @@
+# Bugs
+
+1. [ ] After uploading an image it's not directly visible in the recipe overview
+1. [ ] Image compression can be towned down a little, image compression is too aggressive
+
 # Post-MVP Development Roadmap
 
 1. [ ] Record videos for the homepage

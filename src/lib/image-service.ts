@@ -296,6 +296,41 @@ export class ImageService {
   }
 
   /**
+   * Copy an image from a source user's storage to a target user's storage.
+   * Unlike rekeyImageForUser, the original is NOT deleted.
+   * Returns the new URL, or null if the URL is not a valid R2 URL under sourceUserId.
+   */
+  async copyImageForUser(
+    imageUrl: string,
+    sourceUserId: string,
+    targetUserId: string,
+    targetRecipeId: string,
+  ): Promise<string | null> {
+    const filePath = this.extractFilePathFromUrl(imageUrl);
+    if (!filePath || !filePath.startsWith(`${sourceUserId}/`)) {
+      return null;
+    }
+
+    const extension = filePath.split(".").pop() ?? "webp";
+    const newKey = `${targetUserId}/${targetRecipeId}/image.${extension}`;
+
+    await this.s3.send(
+      new CopyObjectCommand({
+        Bucket: this.bucketName,
+        CopySource: `${this.bucketName}/${filePath}`,
+        Key: newKey,
+      }),
+    );
+
+    // Verify the copy succeeded
+    await this.s3.send(
+      new HeadObjectCommand({ Bucket: this.bucketName, Key: newKey }),
+    );
+
+    return `${this.publicUrl}/${newKey}`;
+  }
+
+  /**
    * Re-key an image URL from an old user ID to a new user ID.
    * Copies the R2 object to the new key, deletes the old one, and returns the new URL.
    * Returns null if the URL doesn't need re-keying (already correct or not an R2 URL).

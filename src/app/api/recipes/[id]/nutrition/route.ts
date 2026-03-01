@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth-server";
 import { db } from "@/db";
 import { recipes } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
+import { recipeAccessCondition } from "@/lib/partnership-service";
 import { NutritionService, buildCacheKey } from "@/lib/nutrition-service";
 import { usageLimitService } from "@/lib/usage-limit-service";
 import { usageTrackingService } from "@/lib/usage-tracking-service";
@@ -50,6 +51,7 @@ export async function POST(
       .json()
       .catch(() => ({ locale: undefined, forceRefresh: false }));
 
+    const accessCondition = await recipeAccessCondition(user.id);
     const [recipe] = await db
       .select({
         id: recipes.id,
@@ -59,7 +61,7 @@ export async function POST(
         nutrition: recipes.nutrition,
       })
       .from(recipes)
-      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, user.id)))
+      .where(and(eq(recipes.id, recipeId), accessCondition))
       .limit(1);
 
     if (!recipe) {
@@ -137,7 +139,7 @@ export async function POST(
     const [updated] = await db
       .update(recipes)
       .set({ nutrition })
-      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, user.id)))
+      .where(eq(recipes.id, recipeId))
       .returning({ nutrition: recipes.nutrition });
 
     if (!updated) {

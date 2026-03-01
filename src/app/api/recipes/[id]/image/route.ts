@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { recipes } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { ImageService } from "@/lib/image-service";
+import { recipeAccessCondition } from "@/lib/partnership-service";
 import { IMAGE_COMPRESSION_CONFIG } from "@/lib/image-compression-config";
 
 export async function POST(
@@ -30,11 +31,12 @@ export async function POST(
       );
     }
 
-    // Verify recipe ownership
+    // Verify recipe access
+    const accessCondition = await recipeAccessCondition(user.id);
     const [recipe] = await db
-      .select({ id: recipes.id, imageUrl: recipes.imageUrl })
+      .select({ id: recipes.id, imageUrl: recipes.imageUrl, userId: recipes.userId })
       .from(recipes)
-      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, user.id)))
+      .where(and(eq(recipes.id, recipeId), accessCondition))
       .limit(1);
 
     if (!recipe) {
@@ -79,10 +81,10 @@ export async function POST(
     const arrayBuffer = await file.arrayBuffer();
     const imageBuffer = Buffer.from(arrayBuffer);
 
-    // Upload/replace image using service
+    // Upload/replace image using service (use recipe owner's userId for storage path consistency)
     const uploadResult = await imageService.replaceRecipeImage(
       recipeId,
-      user.id,
+      recipe.userId,
       imageBuffer,
       recipe.imageUrl || undefined,
     );
@@ -107,12 +109,12 @@ export async function POST(
         imageMetadata: uploadResult.data!.metadata,
         updatedAt: new Date(),
       })
-      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, user.id)))
+      .where(eq(recipes.id, recipeId))
       .returning({ id: recipes.id });
 
     if (updateResult.length === 0) {
       // Best effort cleanup of uploaded image if database update fails
-      await imageService.deleteRecipeImage(uploadResult.data!.url, user.id);
+      await imageService.deleteRecipeImage(uploadResult.data!.url, recipe.userId);
 
       return NextResponse.json(
         { error: "Failed to save image reference" },
@@ -158,10 +160,11 @@ export async function DELETE(
     }
 
     // Get recipe with current image
+    const accessCondition = await recipeAccessCondition(user.id);
     const [recipe] = await db
-      .select({ id: recipes.id, imageUrl: recipes.imageUrl })
+      .select({ id: recipes.id, imageUrl: recipes.imageUrl, userId: recipes.userId })
       .from(recipes)
-      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, user.id)))
+      .where(and(eq(recipes.id, recipeId), accessCondition))
       .limit(1);
 
     if (!recipe) {
@@ -178,10 +181,10 @@ export async function DELETE(
       );
     }
 
-    // Delete image from storage
+    // Delete image from storage (use recipe owner's userId for path validation)
     const deleteResult = await imageService.deleteRecipeImage(
       recipe.imageUrl,
-      user.id,
+      recipe.userId,
     );
 
     if (!deleteResult.success) {
@@ -201,7 +204,7 @@ export async function DELETE(
         imageMetadata: null,
         updatedAt: new Date(),
       })
-      .where(and(eq(recipes.id, recipeId), eq(recipes.userId, user.id)));
+      .where(eq(recipes.id, recipeId));
 
     return NextResponse.json({
       message: "Image deleted successfully",
