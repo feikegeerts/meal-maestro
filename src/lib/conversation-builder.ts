@@ -37,7 +37,7 @@ export interface ChatContext {
     title: string;
     category: string;
     season?: string;
-    tags: string[];
+    tags?: string[];
     ingredients: string[];
     description: string;
   };
