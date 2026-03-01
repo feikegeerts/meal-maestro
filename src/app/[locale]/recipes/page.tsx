@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "@/app/i18n/routing";
 import { useAuth } from "@/lib/auth-context";
 import { useRecipesQuery } from "@/lib/hooks/use-recipes-query";
@@ -18,6 +19,12 @@ export default function RecipesPage() {
   const t = useTranslations("recipes");
   const { columns } = useRecipeColumns();
 
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/");
+    }
+  }, [loading, user, router]);
+
   const {
     data,
     isLoading: recipesLoading,
@@ -32,8 +39,12 @@ export default function RecipesPage() {
     router.push("/recipes/add");
   };
 
-  if (loading || !user) {
+  if (loading) {
     return <PageLoading />;
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
