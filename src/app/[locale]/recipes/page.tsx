@@ -1,15 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "@/app/i18n/routing";
 import { useAuth } from "@/lib/auth-context";
-import { useRecipes } from "@/contexts/recipe-context";
+import { useRecipesQuery } from "@/lib/hooks/use-recipes-query";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
-import { recipeService } from "@/lib/recipe-service";
-import { RecipesResponse } from "@/types/recipe";
 import { RecipeDataTable } from "@/components/recipes/recipe-data-table";
 import { useRecipeColumns } from "@/components/recipes/recipe-columns";
 import { Plus, RefreshCw } from "lucide-react";
@@ -18,46 +15,18 @@ import { useTranslations } from "next-intl";
 export default function RecipesPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
-  const { recipes: contextRecipes, setRecipes: setRecipesInContext } =
-    useRecipes();
-  const [recipesLoading, setRecipesLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const t = useTranslations("recipes");
   const { columns } = useRecipeColumns();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-      return;
-    }
+  const {
+    data,
+    isLoading: recipesLoading,
+    isError,
+    error,
+    refetch,
+  } = useRecipesQuery();
 
-    // Load recipes when user is available and context is empty
-    if (user && contextRecipes.length === 0) {
-      loadRecipes();
-    }
-  }, [user, loading, contextRecipes.length]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const loadRecipes = async () => {
-    try {
-      setRecipesLoading(true);
-      setError(null);
-      const response: RecipesResponse = await recipeService.getUserRecipes();
-      setRecipesInContext(response.recipes);
-    } catch (err) {
-      if (err instanceof Error && err.message === "Authentication required") {
-        router.push("/login");
-        return;
-      }
-      console.error("Error loading recipes:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : t("loadError") || "Failed to load recipes"
-      );
-    } finally {
-      setRecipesLoading(false);
-    }
-  };
+  const recipes = data?.recipes ?? [];
 
   const handleAddRecipe = () => {
     router.push("/recipes/add");
@@ -72,13 +41,13 @@ export default function RecipesPage() {
       <PageHeader
         title={t("title")}
         subtitle={t("description")}
-        recipes={contextRecipes}
+        recipes={recipes}
         showBackButton={false}
         actions={
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={loadRecipes}
+              onClick={() => refetch()}
               disabled={recipesLoading}
               className="flex items-center gap-2"
             >
@@ -100,12 +69,16 @@ export default function RecipesPage() {
       />
 
       {/* Error State */}
-      {error && (
+      {isError && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6">
-          <p className="text-destructive">{error}</p>
+          <p className="text-destructive">
+            {error instanceof Error
+              ? error.message
+              : t("loadError") || "Failed to load recipes"}
+          </p>
           <Button
             variant="link"
-            onClick={loadRecipes}
+            onClick={() => refetch()}
             className="mt-2 text-destructive hover:text-destructive/80 p-0 h-auto"
           >
             {t("tryAgain")}
@@ -115,7 +88,7 @@ export default function RecipesPage() {
 
       {/* Data Table */}
       <div className="bg-card rounded-lg shadow-lg p-3 sm:p-6">
-        {!recipesLoading && contextRecipes.length === 0 && !error ? (
+        {!recipesLoading && recipes.length === 0 && !isError ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🍽️</div>
             <h3 className="text-xl font-semibold text-foreground mb-2">
@@ -135,7 +108,7 @@ export default function RecipesPage() {
         ) : (
           <RecipeDataTable
             columns={columns}
-            data={contextRecipes}
+            data={recipes}
             loading={recipesLoading}
           />
         )}

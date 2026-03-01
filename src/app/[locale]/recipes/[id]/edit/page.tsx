@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "@/app/i18n/routing";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { useRecipes } from "@/contexts/recipe-context";
-import { CustomUnitsProvider } from "@/contexts/custom-units-context";
+import { useQueryClient } from "@tanstack/react-query";
+import { recipeKeys } from "@/lib/hooks/use-recipes-query";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ export default function EditRecipePage() {
   const { id } = useParams();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { getRecipeById, updateRecipe: updateRecipeInContext } = useRecipes();
+  const queryClient = useQueryClient();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,9 +45,9 @@ export default function EditRecipePage() {
       try {
         setError(null);
 
-        const contextRecipe = getRecipeById(id);
-        if (contextRecipe) {
-          setRecipe(contextRecipe);
+        const cachedRecipe = queryClient.getQueryData<Recipe>(recipeKeys.detail(id));
+        if (cachedRecipe) {
+          setRecipe(cachedRecipe);
           setLoading(false);
           return;
         }
@@ -79,7 +79,7 @@ export default function EditRecipePage() {
     if (user) {
       loadRecipe();
     }
-  }, [id, user, getRecipeById, t]);
+  }, [id, user, queryClient, t]);
 
   const handleSave = async (recipeData: Partial<RecipeInput>) => {
     if (!recipe) return;
@@ -110,7 +110,8 @@ export default function EditRecipePage() {
         updateData
       );
 
-      updateRecipeInContext?.(recipe.id, updatedRecipe);
+      queryClient.setQueryData(recipeKeys.detail(recipe.id), updatedRecipe);
+      queryClient.invalidateQueries({ queryKey: recipeKeys.all });
       return updatedRecipe;
     } catch (error) {
       const message =
@@ -167,27 +168,25 @@ export default function EditRecipePage() {
   }
 
   return (
-    <CustomUnitsProvider>
-      <PageWrapper>
-        <PageHeader
-          title={t("editRecipe")}
-          subtitle={t("updateRecipe", { title: recipe.title })}
-          recipe={recipe}
-          backButtonText={t("backToRecipe")}
-          onBackClick={handleCancel}
-          className="mb-6"
-        />
+    <PageWrapper>
+      <PageHeader
+        title={t("editRecipe")}
+        subtitle={t("updateRecipe", { title: recipe.title })}
+        recipe={recipe}
+        backButtonText={t("backToRecipe")}
+        onBackClick={handleCancel}
+        className="mb-6"
+      />
 
-        {/* Form */}
-        <RecipeEditForm
-          recipe={recipe}
-          onSave={handleSave}
-          loading={saveLoading}
-          includeChat={false}
-          standalone={true}
-          onCancel={handleCancel}
-        />
-      </PageWrapper>
-    </CustomUnitsProvider>
+      {/* Form */}
+      <RecipeEditForm
+        recipe={recipe}
+        onSave={handleSave}
+        loading={saveLoading}
+        includeChat={false}
+        standalone={true}
+        onCancel={handleCancel}
+      />
+    </PageWrapper>
   );
 }

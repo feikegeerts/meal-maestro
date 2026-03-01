@@ -20,17 +20,17 @@
 
 1. [x] Extract recipe validation logic out of route files into a `RecipeValidator` service class — `normalizeTimeField()`, `normalizeIngredient()` and the bulk of POST validation in `src/app/api/recipes/route.ts` and `src/app/api/recipes/[id]/route.ts` are duplicated and belong in the service layer
 1. [x] Add Zod schemas for runtime request validation on API routes — TypeScript provides compile-time safety but requests are currently parsed and cast manually with no runtime guarantees
-1. [ ] Replace in-memory `SimpleRateLimiter` in `src/lib/openai-service.ts` with a DB-backed or Vercel KV solution — the current implementation breaks in multi-instance deployments since each instance maintains its own counter
+1. [x] Replace in-memory `SimpleRateLimiter` in `src/lib/openai-service.ts` with a DB-backed or Vercel KV solution — the current implementation breaks in multi-instance deployments since each instance maintains its own counter
 
 ### Medium Priority
 
-1. [ ] Introduce TanStack Query (React Query) for frontend data fetching — replace the manual `fetch()` + `useState` + cancellation token pattern used throughout (e.g. `auth-context.tsx`, recipe context, `use-user-costs.ts`) with a proper caching and refetch layer
+1. [x] Introduce TanStack Query (React Query) for frontend data fetching — replace the manual `fetch()` + `useState` + cancellation token pattern used throughout (e.g. `auth-context.tsx`, recipe context, `use-user-costs.ts`) with a proper caching and refetch layer
 1. [ ] Wrap account deletion flow in a Drizzle transaction — the current sequential deletes in `src/app/api/user/delete-account/route.ts` leave orphaned data if the process fails midway
 1. [ ] Fix `bigint` comparison in usage tracking — `totalTokens` is typed as `bigint` but is compared as a string in several places in `src/lib/usage-tracking-service.ts` and `src/lib/usage-limit-service.ts`
 
 ### Low Priority
 
-1. [ ] Define an explicit client/server component boundary strategy — nearly everything is a client component because the locale layout wraps all children in `ThemeProvider → NextIntlClientProvider → AuthProvider → RecipeProvider`; isolating the provider boundary would unlock server-side rendering for pages
+1. [ ] Define an explicit client/server component boundary strategy — nearly everything is a client component because the locale layout wraps all children in `ThemeProvider → NextIntlClientProvider → QueryProvider → AuthProvider → CustomUnitsProvider`; isolating the provider boundary would unlock server-side rendering for pages (`RecipeProvider` was removed in the TQ migration)
 1. [ ] Replace `CustomUnitsCacheManager` module-level in-memory cache with a DB query or Vercel KV — the `setInterval` cleanup never fires in short-lived serverless invocations, and the cache is cold on most requests anyway
 
 ---

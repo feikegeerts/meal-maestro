@@ -1,7 +1,7 @@
 import "./globals.css";
 import "./print.css";
 import { AuthProvider } from "@/lib/auth-context";
-import { RecipeProvider } from "@/contexts/recipe-context";
+import { CustomUnitsProvider } from "@/contexts/custom-units-context";
 import { MainNav } from "@/components/navigation/main-nav";
 import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
@@ -18,6 +18,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { PWAInstallBanner } from "@/components/pwa/install-banner";
 import { MigrationToast } from "@/components/notifications/migration-toast";
 import { LocalizedWebsiteSchema } from "@/components/seo/localized-website-schema";
+import { QueryProvider } from "@/components/providers/query-provider";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -82,19 +83,21 @@ export default async function LocaleLayout({
       disableTransitionOnChange
     >
       <NextIntlClientProvider messages={messages}>
-        <AuthProvider>
-          <RecipeProvider>
-            <div className="min-h-screen flex flex-col">
-              <MainNav />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-            <Toaster richColors position="top-right" theme="system" />
-            <PWAInstallBanner />
-            <MigrationToast />
-            <LocalizedWebsiteSchema />
-          </RecipeProvider>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <CustomUnitsProvider>
+              <div className="min-h-screen flex flex-col">
+                <MainNav />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+              <Toaster richColors position="top-right" theme="system" />
+              <PWAInstallBanner />
+              <MigrationToast />
+              <LocalizedWebsiteSchema />
+            </CustomUnitsProvider>
+          </AuthProvider>
+        </QueryProvider>
       </NextIntlClientProvider>
     </ThemeProvider>
   );

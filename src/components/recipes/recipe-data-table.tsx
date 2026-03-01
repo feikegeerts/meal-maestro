@@ -24,8 +24,10 @@ import {
   Trash2,
   Loader2,
 } from "lucide-react";
-import { useRecipes } from "@/contexts/recipe-context";
-import { recipeService } from "@/lib/recipe-service";
+import {
+  useDeleteRecipesMutation,
+  useMarkRecipesAsEatenMutation,
+} from "@/lib/hooks/use-recipes-query";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { useRecipeTranslations } from "@/messages";
@@ -81,7 +83,8 @@ export function RecipeDataTable({
       : "";
 
   const router = useRouter();
-  const { removeRecipes, markRecipesAsEaten } = useRecipes();
+  const deleteRecipesMutation = useDeleteRecipesMutation();
+  const markAsEatenMutation = useMarkRecipesAsEatenMutation();
   const t = useTranslations("toast");
   const tTable = useTranslations("recipeTable");
   const { translateTag, translateCategory, translateSeason } =
@@ -376,8 +379,7 @@ export function RecipeDataTable({
 
     setBulkOperationLoading(true);
     try {
-      const result = await recipeService.deleteRecipes(ids);
-      removeRecipes(result.deletedIds);
+      const result = await deleteRecipesMutation.mutateAsync(ids);
       setRowSelection({});
       const message =
         result.deletedCount === 1
@@ -399,8 +401,7 @@ export function RecipeDataTable({
 
     setBulkOperationLoading(true);
     try {
-      const result = await recipeService.markRecipesAsEaten(ids, date);
-      markRecipesAsEaten(result.updatedIds);
+      const result = await markAsEatenMutation.mutateAsync({ ids, date });
       setRowSelection({});
       const message =
         result.updatedCount === 1

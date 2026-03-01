@@ -3,12 +3,11 @@
 import {
   createContext,
   useContext,
-  useEffect,
-  useState,
   useCallback,
   useMemo,
   ReactNode,
 } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "./auth/client";
 import type { UserProfile, ProfileUpdatePayload } from "./profile-types";
 
@@ -38,9 +37,8 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const queryClient = useQueryClient();
   const { data: sessionData, isPending } = authClient.useSession();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
 
   const user = useMemo(
     () =>
@@ -71,38 +69,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
     [sessionData?.session?.id, sessionData?.session?.expiresAt],
   );
 
-  // Fetch profile when user changes
-  useEffect(() => {
-    if (!user?.id) {
-      setProfile(null);
-      return;
-    }
+  const profileQueryKey = ["user-profile", user?.id];
 
-    let cancelled = false;
-    setProfileLoading(true);
-
-    const fetchProfile = async () => {
-      try {
+  const { data: profile = null, isLoading: profileLoading } =
+    useQuery<UserProfile | null>({
+      queryKey: profileQueryKey,
+      queryFn: async () => {
         const response = await fetch("/api/user/profile");
-        if (response.ok) {
-          const data = await response.json();
-          if (!cancelled) setProfile(data);
-        } else {
-          if (!cancelled) setProfile(null);
-        }
-      } catch {
-        if (!cancelled) setProfile(null);
-      } finally {
-        if (!cancelled) setProfileLoading(false);
+        if (!response.ok) return null;
+        return response.json() as Promise<UserProfile>;
+      },
+      enabled: !!user?.id,
+      staleTime: 10 * 60 * 1000,
+    });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (updates: ProfileUpdatePayload) => {
+      const response = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!response.ok) return null;
+      return response.json() as Promise<UserProfile>;
+    },
+    onSuccess: (updatedProfile) => {
+      if (updatedProfile) {
+        queryClient.setQueryData(profileQueryKey, updatedProfile);
       }
-    };
-
-    fetchProfile();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
+    },
+  });
 
   const signInWithGoogle = useCallback(
     async (options?: { redirectPath?: string | null }) => {
@@ -160,54 +156,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // TODO: Re-enable when Neon Auth ships webhook support for custom email templates.
   // See: https://www.better-auth.com/docs/concepts/email
-  // const signInWithMagicLink = useCallback(
-  //   async (
-  //     email: string,
-  //     _options?: { redirectPath?: string | null; locale?: string | null },
-  //   ): Promise<{ error?: string }> => {
-  //     try {
-  //       const { error } = await authClient.emailOtp.sendVerificationOtp({
-  //         email,
-  //         type: "sign-in",
-  //       });
-  //       if (error) {
-  //         return { error: error.message ?? "Failed to send magic link" };
-  //       }
-  //       return {};
-  //     } catch {
-  //       return { error: "Failed to send magic link" };
-  //     }
-  //   },
-  //   [],
-  // );
 
   const signOut = useCallback(async () => {
-    setProfile(null);
+    queryClient.removeQueries({ queryKey: ["user-profile"] });
     await authClient.signOut();
-  }, []);
+  }, [queryClient]);
 
   const updateProfile = useCallback(
-    async (updates: ProfileUpdatePayload) => {
+    async (updates: ProfileUpdatePayload): Promise<boolean> => {
       if (!user?.id) return false;
-
-      try {
-        const response = await fetch("/api/user/profile", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updates),
-        });
-
-        if (response.ok) {
-          const updatedProfile = await response.json();
-          setProfile(updatedProfile);
-          return true;
-        }
-        return false;
-      } catch {
-        return false;
-      }
+      const result = await updateProfileMutation.mutateAsync(updates).catch(() => null);
+      return result !== null;
     },
-    [user?.id],
+    [user?.id, updateProfileMutation],
   );
 
   const value: AuthContextType = {

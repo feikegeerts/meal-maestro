@@ -138,22 +138,9 @@ if (error.message.includes('timeout')) { ... }
 
 ### 5. Frontend: No Data Fetching Library
 
-The frontend uses manual `fetch()` + `useState` + manual cancellation throughout. The auth context even implements `let cancelled = false` to prevent state updates on unmount — a signal that you're fighting the platform:
+~~The frontend uses manual `fetch()` + `useState` + manual cancellation throughout.~~
 
-```typescript
-// src/lib/auth-context.tsx — manual cancellation
-useEffect(() => {
-  let cancelled = false;
-  fetchProfile().then(data => {
-    if (!cancelled) setProfile(data);
-  });
-  return () => { cancelled = true; };
-}, [user?.id]);
-```
-
-TanStack Query would eliminate this entirely, and additionally provide: automatic cache invalidation, request deduplication, background refetching, retry logic, and loading/error states without manual `useState`. The recipe context would reduce from ~90 lines to a thin wrapper around a query.
-
-**Impact:** Medium. Current approach works but accumulates complexity over time and misses refetch/invalidation correctness in several places.
+**Resolved.** TanStack Query v5 was introduced as the data fetching layer. `RecipeContext` was eliminated (replaced by TQ cache), `auth-context.tsx` profile fetch uses `useQuery`/`useMutation`, `use-user-costs.ts` uses `useQuery` with `staleTime`/`refetchInterval`, and `custom-units-context.tsx` is TQ-backed with the global variable deduplication hack removed. Query keys are documented in `src/lib/hooks/use-recipes-query.ts`.
 
 ### 6. Undefined Client/Server Component Strategy
 
@@ -163,10 +150,13 @@ Nearly the entire application renders as client components because the locale la
 // src/app/[locale]/layout.tsx
 <ThemeProvider>
   <NextIntlClientProvider>
-    <AuthProvider>        // "use client"
-      <RecipeProvider>    // "use client"
-        {children}        // everything is now client-only
+    <QueryProvider>           // "use client"
+      <AuthProvider>          // "use client"
+        <CustomUnitsProvider> // "use client"
+          {children}          // everything is now client-only
 ```
+
+`RecipeProvider` was removed as part of the TanStack Query migration, eliminating one unnecessary client boundary.
 
 This prevents Next.js from rendering any pages on the server, losing the performance and SEO benefits of the App Router. A proper strategy would isolate the client boundary to a dedicated `Providers` component while keeping layouts and pages as server components by default.
 
@@ -207,20 +197,20 @@ The admin endpoint aggregates all user data on every request with no pagination,
 | High | Extract validation → `RecipeValidator` | Medium | `src/app/api/recipes/route.ts`, `src/app/api/recipes/[id]/route.ts` |
 | High | Add Zod request schemas | Medium | All API route files |
 | High | Replace `SimpleRateLimiter` with DB/KV | Low | `src/lib/openai-service.ts` |
-| Medium | Introduce TanStack Query | High | `src/lib/auth-context.tsx`, `src/contexts/`, `src/app/[locale]/recipes/` |
+| ~~Medium~~ | ~~Introduce TanStack Query~~ | ~~High~~ | ~~`src/lib/auth-context.tsx`, `src/contexts/`, `src/app/[locale]/recipes/`~~ | **Done** |
 | Medium | Wrap account deletion in transaction | Low | `src/app/api/user/delete-account/route.ts` |
 | Medium | Fix `bigint` comparisons | Low | `src/lib/usage-tracking-service.ts`, `src/lib/usage-limit-service.ts` |
 | Low | Define client/server component strategy | Medium | `src/app/[locale]/layout.tsx` |
-| Low | Replace `CustomUnitsCacheManager` | Medium | `src/contexts/custom-units-context.tsx` |
+| Low | Replace `CustomUnitsCacheManager` | Medium | `src/lib/recipe-chat-service.ts` |
 
 ---
 
 ## Overall Assessment
 
-The codebase is in a **solid but uneven state**. The backend service layer, database design, and auth patterns are genuinely well-engineered. The frontend data fetching, route validation logic, and in-memory caching are where technical debt is accumulating.
+The codebase is in a **solid but uneven state**. The backend service layer, database design, and auth patterns are genuinely well-engineered. The frontend data fetching has been modernized with TanStack Query; the remaining technical debt is concentrated in route validation logic and server-side caching.
 
 The biggest correctness risk is the combination of no runtime validation + fat routes + no transactions — these create a surface area for subtle data integrity bugs that TypeScript's compile-time safety won't catch.
 
-The bones are good. The main work is finishing what the service layer started: pushing validation out of routes, adopting a data fetching layer on the frontend, and standardizing error handling throughout.
+The bones are good. The main remaining work is pushing validation out of routes and standardizing error handling throughout.
 
-**Architecture score: 7.5/10** — Production-ready, maintainable, with clear paths to improvement.
+**Architecture score: 8/10** — Production-ready, maintainable, with clear paths to improvement.

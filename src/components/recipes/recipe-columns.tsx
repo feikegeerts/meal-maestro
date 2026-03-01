@@ -38,8 +38,10 @@ import { Link } from "@/app/i18n/routing";
 import { useTranslations } from "next-intl";
 import { useRecipeTranslations } from "@/messages";
 import { useLocalizedDateFormatter } from "@/lib/date-utils";
-import { useRecipes } from "@/contexts/recipe-context";
-import { recipeService } from "@/lib/recipe-service";
+import {
+  useUpdateRecipeMutation,
+  useDeleteRecipeMutation,
+} from "@/lib/hooks/use-recipes-query";
 import { toDateOnlyISOString } from "@/lib/utils";
 import { toast } from "sonner";
 import { DateSelectionPopover } from "@/components/ui/date-selection-popover";
@@ -57,7 +59,8 @@ export function useRecipeColumns(): RecipeColumnsResult {
   const { translateCategory, translateSeason, translateTag } =
     useRecipeTranslations();
   const { formatDateWithFallback } = useLocalizedDateFormatter();
-  const { removeRecipe, updateRecipe } = useRecipes();
+  const updateMutation = useUpdateRecipeMutation();
+  const deleteMutation = useDeleteRecipeMutation();
 
   const [recentlyUpdatedRecipes, setRecentlyUpdatedRecipes] = React.useState<
     Set<string>
@@ -66,10 +69,7 @@ export function useRecipeColumns(): RecipeColumnsResult {
   const handleMarkAsEaten = async (recipe: Recipe, date?: Date) => {
     try {
       const dateToUse = toDateOnlyISOString(date);
-      const updatedRecipe = await recipeService.updateRecipe(recipe.id, {
-        last_eaten: dateToUse,
-      });
-      updateRecipe(recipe.id, updatedRecipe.recipe);
+      await updateMutation.mutateAsync({ id: recipe.id, data: { last_eaten: dateToUse } });
       toast.success(tToast("recipeMarkedEaten", { count: 1 }));
 
       // Trigger green fade animation
@@ -97,8 +97,7 @@ export function useRecipeColumns(): RecipeColumnsResult {
     }
 
     try {
-      await recipeService.deleteRecipe(recipe.id);
-      removeRecipe(recipe.id);
+      await deleteMutation.mutateAsync(recipe.id);
       toast.success(tToast("recipeDeleted", { count: 1 }));
     } catch (error) {
       console.error("Error deleting recipe:", error);

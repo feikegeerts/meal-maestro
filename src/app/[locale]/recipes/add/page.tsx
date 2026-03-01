@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "@/app/i18n/routing";
 import { useAuth } from "@/lib/auth-context";
-import { useRecipes } from "@/contexts/recipe-context";
-import { CustomUnitsProvider } from "@/contexts/custom-units-context";
+import { useQueryClient } from "@tanstack/react-query";
+import { recipeKeys } from "@/lib/hooks/use-recipes-query";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageHeader } from "@/components/ui/page-header";
@@ -42,7 +42,7 @@ const createDefaultRecipe = (): Recipe => ({
 export default function AddRecipePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { addRecipe } = useRecipes();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const t = useTranslations('recipes');
   const locale = useLocale();
@@ -82,9 +82,7 @@ export default function AddRecipePage() {
       };
 
       const { recipe: newRecipe } = await recipeService.createRecipe(createData);
-      
-      // Add the new recipe to context
-      addRecipe(newRecipe);
+      queryClient.invalidateQueries({ queryKey: recipeKeys.all });
 
       // Navigate to the newly created recipe's detail page
       router.push(`/recipes/${newRecipe.id}`);
@@ -109,32 +107,30 @@ export default function AddRecipePage() {
   }
 
   return (
-    <CustomUnitsProvider>
-      <PageWrapper>
-        <PageHeader
-          title={t('addNewRecipe')}
-          subtitle={t('createNewRecipe')}
-          backButtonText={t('backToRecipes')}
-          onBackClick={handleCancel}
-          className="mb-6"
-        />
+    <PageWrapper>
+      <PageHeader
+        title={t('addNewRecipe')}
+        subtitle={t('createNewRecipe')}
+        backButtonText={t('backToRecipes')}
+        onBackClick={handleCancel}
+        className="mb-6"
+      />
 
-        {/* Two-column layout for desktop, single column for mobile */}
-        <RecipeEditForm
-          recipe={initialRecipe}
-          onSave={handleSave}
-          loading={loading}
-          includeChat={true}
-          standalone={true}
-          onCancel={handleCancel}
-          layoutMode="two-column"
-          conversationId={conversationId}
-          conversationStore={conversationStore}
-          conversationGreetingContext="recipe-builder"
-          showNutrition={false}
-          enableChatReset
-        />
-      </PageWrapper>
-    </CustomUnitsProvider>
+      {/* Two-column layout for desktop, single column for mobile */}
+      <RecipeEditForm
+        recipe={initialRecipe}
+        onSave={handleSave}
+        loading={loading}
+        includeChat={true}
+        standalone={true}
+        onCancel={handleCancel}
+        layoutMode="two-column"
+        conversationId={conversationId}
+        conversationStore={conversationStore}
+        conversationGreetingContext="recipe-builder"
+        showNutrition={false}
+        enableChatReset
+      />
+    </PageWrapper>
   );
 }

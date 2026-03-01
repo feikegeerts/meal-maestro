@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "@/app/i18n/routing";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { useRecipes } from "@/contexts/recipe-context";
+import {
+  useRecipeQuery,
+  useUpdateRecipeMutation,
+  useDeleteRecipeMutation,
+} from "@/lib/hooks/use-recipes-query";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -26,21 +30,18 @@ import { RecipeDetailView } from "@/components/recipes/recipe-detail-view";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
+  const recipeId = typeof id === "string" ? id : "";
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
-  const {
-    getRecipeById,
-    updateRecipe: updateRecipeInContext,
-    removeRecipe,
-  } = useRecipes();
-  const [recipe, setRecipe] = useState<Recipe | null>(null);
-  const { formatDateWithFallback } = useLocalizedDateFormatter();
+  const { loading: authLoading } = useAuth();
+
+  const { data: recipe, isLoading, isError } = useRecipeQuery(recipeId);
+  const updateMutation = useUpdateRecipeMutation();
+  const deleteMutation = useDeleteRecipeMutation();
+
   const [displayRecipe, setDisplayRecipe] = useState<Recipe | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { formatDateWithFallback } = useLocalizedDateFormatter();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [lastEatenRecentlyUpdated, setLastEatenRecentlyUpdated] =
-    useState(false);
+  const [lastEatenRecentlyUpdated, setLastEatenRecentlyUpdated] = useState(false);
   const t = useTranslations("recipes");
   const tUnits = useTranslations("units");
   const tIngredientPlurals = useTranslations("ingredientPlurals");
@@ -48,141 +49,37 @@ export default function RecipeDetailPage() {
   const locale = useLocale();
   const [nutritionFetching, setNutritionFetching] = useState(false);
   const [nutritionError, setNutritionError] = useState<string | null>(null);
-  const [nutritionCacheHit, setNutritionCacheHit] = useState<boolean | null>(
-    null
-  );
-  const { translateCategory, translateSeason, translateTag } =
-    useRecipeTranslations();
+  const [nutritionCacheHit, setNutritionCacheHit] = useState<boolean | null>(null);
+  const { translateCategory, translateSeason, translateTag } = useRecipeTranslations();
 
-  // Create ingredient formatter service with proper dependency injection
   const ingredientFormatter = useMemo(() => {
-    const translationAdapter = createTranslationAdapter(
-      tUnits,
-      tIngredientPlurals
-    );
+    const translationAdapter = createTranslationAdapter(tUnits, tIngredientPlurals);
     return new IngredientFormatterService(translationAdapter);
   }, [tUnits, tIngredientPlurals]);
-  const recipeId = recipe?.id ?? null;
+
   const canFetchNutrition = useMemo(() => {
-    if (!recipeId) return false;
+    if (!recipe?.id) return false;
     if (!recipe?.servings || recipe.servings <= 0) return false;
     return recipe.ingredients.some(
       (ingredient) => ingredient.name && ingredient.name.trim().length > 0
     );
-  }, [recipeId, recipe]);
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/login");
-      return;
-    }
-  }, [user, authLoading, router, id]);
-
-  useEffect(() => {
-    if (recipeId) {
-      setNutritionCacheHit(null);
-      setNutritionError(null);
-    }
-  }, [recipeId]);
-
-  useEffect(() => {
-    const loadRecipe = async () => {
-      if (!id || typeof id !== "string") {
-        setError(t("invalidRecipeId"));
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setError(null);
-
-        const contextRecipe = getRecipeById(id);
-        if (contextRecipe) {
-          setRecipe(contextRecipe);
-          setDisplayRecipe(contextRecipe);
-          setLoading(false);
-          return;
-        }
-
-        setLoading(true);
-
-        // Fallback to API call
-        const response = await fetch(`/api/recipes/${id}`);
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError(t("recipeNotFound"));
-          } else {
-            setError(t("failedToLoad"));
-          }
-          setLoading(false);
-          return;
-        }
-
-        const data = await response.json();
-        setRecipe(data.recipe);
-        setDisplayRecipe(data.recipe);
-      } catch (error) {
-        console.error("Error loading recipe:", error);
-        setError(t("failedToLoad"));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user?.id) {
-      loadRecipe();
-    }
-  }, [id, user?.id, getRecipeById, t]);
-
-  const updateRecipe = async (
-    updateData: Partial<import("@/types/recipe").RecipeInput>
-  ) => {
-    if (!recipe) throw new Error("Recipe not found");
-
-    const response = await fetch(`/api/recipes/${recipe.id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(updateData),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to update recipe");
-    }
-
-    const data = await response.json();
-
-    // Update context if available
-    updateRecipeInContext?.(recipe.id, data.recipe);
-
-    return data.recipe;
-  };
+  }, [recipe]);
 
   const handleMarkEaten = async (date?: Date) => {
     if (!recipe) return;
 
     try {
       const dateToUse = toDateOnlyISOString(date);
-      const updatedRecipe = await updateRecipe({ last_eaten: dateToUse });
-      setRecipe(updatedRecipe);
-      setDisplayRecipe(updatedRecipe);
-
-      // Trigger green fade animation
+      const result = await updateMutation.mutateAsync({
+        id: recipe.id,
+        data: { last_eaten: dateToUse },
+      });
+      setDisplayRecipe(result.recipe);
       setLastEatenRecentlyUpdated(true);
       setTimeout(() => setLastEatenRecentlyUpdated(false), 2000);
     } catch (error) {
       console.error("Error marking recipe as eaten:", error);
     }
-  };
-
-  const handleMarkEatenToday = () => {
-    handleMarkEaten();
-  };
-
-  const handleMarkEatenOnDate = (date: Date) => {
-    handleMarkEaten(date);
   };
 
   const handleEdit = () => {
@@ -192,23 +89,11 @@ export default function RecipeDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!recipe || !confirm(t("confirmDelete"))) {
-      return;
-    }
+    if (!recipe || !confirm(t("confirmDelete"))) return;
 
     setActionLoading("delete");
     try {
-      const response = await fetch(`/api/recipes/${recipe.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error(t("failedToDelete"));
-      }
-
-      // Update context to remove the deleted recipe
-      removeRecipe(recipe.id);
-
+      await deleteMutation.mutateAsync(recipe.id);
       router.push("/recipes");
     } catch (error) {
       console.error("Error deleting recipe:", error);
@@ -219,22 +104,17 @@ export default function RecipeDetailPage() {
 
   const handleFetchNutrition = useCallback(
     async ({ forceRefresh = false }: { forceRefresh?: boolean } = {}) => {
-      if (!recipeId) return;
+      if (!recipe?.id) return;
 
       setNutritionFetching(true);
       setNutritionError(null);
       setNutritionCacheHit(null);
 
       try {
-        const response = await fetch(`/api/recipes/${recipeId}/nutrition`, {
+        const response = await fetch(`/api/recipes/${recipe.id}/nutrition`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            locale,
-            forceRefresh,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ locale, forceRefresh }),
         });
 
         const payload = await response.json();
@@ -251,13 +131,8 @@ export default function RecipeDetailPage() {
           throw new Error(tNutrition("errorFallback"));
         }
 
-        setRecipe((prev) =>
-          prev && prev.id === recipeId
-            ? { ...prev, nutrition: payload.nutrition }
-            : prev
-        );
         setDisplayRecipe((prev) =>
-          prev && prev.id === recipeId
+          prev && prev.id === recipe.id
             ? { ...prev, nutrition: payload.nutrition }
             : prev
         );
@@ -271,7 +146,7 @@ export default function RecipeDetailPage() {
         setNutritionFetching(false);
       }
     },
-    [recipeId, locale, tNutrition]
+    [recipe?.id, locale, tNutrition]
   );
 
   const handleAddRecipe = () => {
@@ -280,37 +155,15 @@ export default function RecipeDetailPage() {
 
   const handleImageUpdated = (imageUrl: string | null) => {
     if (recipe) {
-      const updatedRecipe = { ...recipe, image_url: imageUrl };
-      setRecipe(updatedRecipe);
-      setDisplayRecipe(updatedRecipe);
-      updateRecipeInContext?.(recipe.id, updatedRecipe);
+      setDisplayRecipe({ ...recipe, image_url: imageUrl });
     }
   };
 
-  if (authLoading || loading) {
+  if (authLoading) {
     return <PageLoading />;
   }
 
-  if (error) {
-    return (
-      <PageWrapper>
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto text-center">
-            <h1 className="text-2xl font-bold text-destructive mb-4">
-              {t("error")}
-            </h1>
-            <p className="text-muted-foreground mb-6">{error}</p>
-            <Button onClick={() => router.push("/recipes")} variant="outline">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t("backToRecipes")}
-            </Button>
-          </div>
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (!recipe) {
+  if (isLoading) {
     return (
       <PageWrapper>
         <div className="container mx-auto px-4 py-8">
@@ -329,6 +182,25 @@ export default function RecipeDetailPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError || !recipe) {
+    return (
+      <PageWrapper>
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto text-center">
+            <h1 className="text-2xl font-bold text-destructive mb-4">
+              {t("error")}
+            </h1>
+            <p className="text-muted-foreground mb-6">{t("failedToLoad")}</p>
+            <Button onClick={() => router.push("/recipes")} variant="outline">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t("backToRecipes")}
+            </Button>
           </div>
         </div>
       </PageWrapper>
@@ -370,8 +242,8 @@ export default function RecipeDetailPage() {
       nutritionCacheHit={nutritionCacheHit}
       lastEatenRecentlyUpdated={lastEatenRecentlyUpdated}
       actionLoading={actionLoading}
-      onMarkAsEatenToday={handleMarkEatenToday}
-      onMarkAsEatenOnDate={handleMarkEatenOnDate}
+      onMarkAsEatenToday={() => handleMarkEaten()}
+      onMarkAsEatenOnDate={(date) => handleMarkEaten(date)}
       onEdit={handleEdit}
       onDelete={handleDelete}
       headerActions={headerActions}
