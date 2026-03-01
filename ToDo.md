@@ -1,7 +1,7 @@
 # Bugs
 
-1. [ ] After uploading an image it's not directly visible in the recipe overview
-1. [ ] Image compression can be towned down a little, image compression is too aggressive
+1. [ ] Shouldn't we only deploy on tag creation. right now every push to main is deployed, and the release please tag creation is just there for the sake of the tag, not sure why it's useful in the current setup.
+1. [ ] Account partner block is not mobile friendly because the button goes outside of the screen on the right but should be going on a new line
 
 # Post-MVP Development Roadmap
 

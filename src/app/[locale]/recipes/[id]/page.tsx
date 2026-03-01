@@ -4,18 +4,20 @@ import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "@/app/i18n/routing";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useRecipeQuery,
   useUpdateRecipeMutation,
   useDeleteRecipeMutation,
+  recipeKeys,
 } from "@/lib/hooks/use-recipes-query";
+import type { Recipe, RecipesResponse } from "@/types/recipe";
 import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Recipe } from "@/types/recipe";
 import { useLocalizedDateFormatter } from "@/lib/date-utils";
 import { ArrowLeft, Plus } from "lucide-react";
 import { toDateOnlyISOString } from "@/lib/utils";
@@ -34,6 +36,7 @@ export default function RecipeDetailPage() {
   const router = useRouter();
   const { loading: authLoading } = useAuth();
 
+  const queryClient = useQueryClient();
   const { data: recipe, isLoading, isError } = useRecipeQuery(recipeId);
   const updateMutation = useUpdateRecipeMutation();
   const deleteMutation = useDeleteRecipeMutation();
@@ -155,7 +158,18 @@ export default function RecipeDetailPage() {
 
   const handleImageUpdated = (imageUrl: string | null) => {
     if (recipe) {
-      setDisplayRecipe({ ...recipe, image_url: imageUrl });
+      const updated = { ...recipe, image_url: imageUrl };
+      setDisplayRecipe(updated);
+      queryClient.setQueryData(recipeKeys.detail(recipe.id), updated);
+      queryClient.setQueryData<RecipesResponse>(recipeKeys.list(), (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          recipes: old.recipes.map((r) =>
+            r.id === recipe.id ? { ...r, image_url: imageUrl } : r,
+          ),
+        };
+      });
     }
   };
 
@@ -251,7 +265,7 @@ export default function RecipeDetailPage() {
       renderImage={
         <RecipeImageUpload
           recipeId={recipe.id}
-          currentImageUrl={recipe.image_url}
+          currentImageUrl={displayRecipeValue.image_url}
           recipeTitle={recipe.title}
           onImageUpdated={handleImageUpdated}
         />
