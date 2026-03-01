@@ -18,6 +18,7 @@ import { DeleteAccountModal } from "@/components/settings/delete-account-modal";
 import { LanguagePreferenceSetting } from "@/components/settings/language-preference-setting";
 import { ThemeMenu } from "@/components/theme-menu";
 import { UnitPreferenceSetting } from "@/components/settings/unit-preference-setting";
+import { PartnerSharingSection } from "@/components/settings/partner-sharing-section";
 
 export default function AccountPage() {
   const t = useTranslations("account");
@@ -96,6 +97,9 @@ export default function AccountPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Partner Sharing */}
+        <PartnerSharingSection />
 
         {/* Danger Zone */}
         <Card className="border-destructive/50">

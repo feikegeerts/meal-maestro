@@ -30,12 +30,29 @@ export interface AdminUsageAlertEmailData extends BaseEmailData {
   limitUsd: number;
 }
 
+export interface PartnerInvitationReceivedEmailData extends BaseEmailData {
+  inviterName: string;
+  appUrl?: string;
+}
+
+export interface PartnerInvitationAcceptedEmailData extends BaseEmailData {
+  inviteeName: string;
+  appUrl?: string;
+}
+
 export type EmailData =
   | MagicLinkEmailData
   | ConfirmSignupEmailData
-  | AdminUsageAlertEmailData;
+  | AdminUsageAlertEmailData
+  | PartnerInvitationReceivedEmailData
+  | PartnerInvitationAcceptedEmailData;
 
-export type EmailType = 'magic-link' | 'confirm-signup' | 'admin-usage-alert';
+export type EmailType =
+  | 'magic-link'
+  | 'confirm-signup'
+  | 'admin-usage-alert'
+  | 'partner-invitation-received'
+  | 'partner-invitation-accepted';
 
 export interface EmailTemplate {
   subject: string;

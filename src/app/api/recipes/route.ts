@@ -11,6 +11,7 @@ import {
 import { toRecipeResponse } from "@/lib/recipe-response-mapper";
 import { normalizeUtensils } from "@/lib/recipe-utils";
 import { RecipeValidator } from "@/lib/recipe-validator";
+import { recipeAccessCondition } from "@/lib/partnership-service";
 import {
   parseBody,
   RecipePostBodySchema,
@@ -65,7 +66,8 @@ export async function GET(request: NextRequest) {
       : 50;
 
     // Build WHERE conditions
-    const conditions = [eq(recipes.userId, user.id)];
+    const accessCondition = await recipeAccessCondition(user.id);
+    const conditions = [accessCondition];
 
     if (category) {
       conditions.push(sql`${recipes.category} = ${category}`);
@@ -330,9 +332,10 @@ export async function DELETE(request: NextRequest) {
 
     const { ids } = parsed.data;
 
+    const accessCondition = await recipeAccessCondition(user.id);
     const deletedRecipes = await db
       .delete(recipes)
-      .where(and(eq(recipes.userId, user.id), inArray(recipes.id, ids)))
+      .where(and(accessCondition, inArray(recipes.id, ids)))
       .returning({ id: recipes.id });
 
     return NextResponse.json({
@@ -366,10 +369,11 @@ export async function PATCH(request: NextRequest) {
 
     if (action === "mark_as_eaten") {
       const dateToUse = date ?? new Date().toISOString();
+      const accessCondition = await recipeAccessCondition(user.id);
       const updatedRecipes = await db
         .update(recipes)
         .set({ lastEaten: new Date(dateToUse) })
-        .where(and(eq(recipes.userId, user.id), inArray(recipes.id, ids)))
+        .where(and(accessCondition, inArray(recipes.id, ids)))
         .returning({ id: recipes.id });
 
       return NextResponse.json({

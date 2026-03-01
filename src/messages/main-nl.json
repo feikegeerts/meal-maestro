@@ -937,6 +937,57 @@
         }
       }
     },
+    "partner": {
+      "title": "Partner Delen",
+      "description": "Deel je recepten met een huisgenoot of partner",
+      "invite": {
+        "title": "Nodig een Partner Uit",
+        "description": "Voer het e-mailadres in van je Meal Maestro partner. Zij ontvangen een uitnodiging om recepten met jou te delen.",
+        "emailLabel": "E-mailadres van partner",
+        "emailPlaceholder": "partner@example.com",
+        "sendButton": "Uitnodiging Sturen",
+        "sending": "Versturen...",
+        "successTitle": "Uitnodiging verstuurd",
+        "successDescription": "Een uitnodiging is verstuurd naar {email}.",
+        "errorNoUser": "Geen Meal Maestro account gevonden met dat e-mailadres.",
+        "errorSelf": "Je kunt jezelf niet uitnodigen.",
+        "errorDuplicate": "Er bestaat al een openstaande uitnodiging voor dit e-mailadres.",
+        "errorAlreadyPartnered": "Je bent al gekoppeld aan deze gebruiker.",
+        "errorMaxPartnerships": "Je hebt al een actieve koppeling."
+      },
+      "invitations": {
+        "receivedTitle": "Ontvangen Uitnodigingen",
+        "sentTitle": "Verstuurde Uitnodigingen",
+        "from": "Van",
+        "to": "Aan",
+        "accept": "Accepteren",
+        "decline": "Weigeren",
+        "cancel": "Uitnodiging Annuleren",
+        "accepting": "Accepteren...",
+        "declining": "Weigeren...",
+        "cancelling": "Annuleren...",
+        "acceptError": "Accepteren van uitnodiging mislukt.",
+        "declineError": "Weigeren van uitnodiging mislukt.",
+        "cancelError": "Annuleren van uitnodiging mislukt."
+      },
+      "current": {
+        "title": "Huidige Partner",
+        "connectedSince": "Gekoppeld sinds {date}",
+        "unlinkButton": "Koppeling Verbreken"
+      },
+      "unlink": {
+        "title": "Koppeling Verbreken",
+        "description": "Weet je zeker dat je de koppeling met je partner wilt verbreken? Je deelt dan geen recepten meer.",
+        "copyRecipesLabel": "Kopieer de recepten van mijn partner naar mijn account",
+        "copyRecipesDescription": "Als dit is aangevinkt, worden alle recepten van je partner gekopieerd naar jouw account voordat de koppeling wordt verbroken.",
+        "cancel": "Annuleren",
+        "confirm": "Verbreken",
+        "unlinking": "Verbreken...",
+        "successTitle": "Koppeling verbroken",
+        "successDescription": "De koppeling met je partner is succesvol verbroken.",
+        "errorTitle": "Verbreken van koppeling mislukt."
+      }
+    },
     "deleteAccountModal": {
       "title": "Account Verwijderen",
       "warning": "Deze actie verwijdert je account permanent en kan niet ongedaan worden gemaakt.",

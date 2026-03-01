@@ -143,6 +143,13 @@ export const characteristicTypeEnum = pgEnum("characteristic_type", [
   "light",
 ]);
 
+export const partnershipStatusEnum = pgEnum("partnership_status", [
+  "pending",
+  "accepted",
+  "declined",
+  "cancelled",
+]);
+
 // ---------------------------------------------------------------------------
 // Tables
 // ---------------------------------------------------------------------------
@@ -455,6 +462,34 @@ export const customUnits = pgTable(
   ],
 );
 
+export const userPartnerships = pgTable(
+  "user_partnerships",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    inviterId: uuid("inviter_id")
+      .notNull()
+      .references(() => userProfiles.id, { onDelete: "cascade" }),
+    inviteeId: uuid("invitee_id")
+      .notNull()
+      .references(() => userProfiles.id, { onDelete: "cascade" }),
+    inviteeEmail: text("invitee_email").notNull(),
+    status: partnershipStatusEnum("status").notNull().default("pending"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("idx_user_partnerships_inviter_id").on(table.inviterId),
+    index("idx_user_partnerships_invitee_id").on(table.inviteeId),
+    index("idx_user_partnerships_status").on(table.status),
+    uniqueIndex("unique_user_partnerships_pair").on(
+      table.inviterId,
+      table.inviteeId,
+    ),
+  ],
+);
+
 // ---------------------------------------------------------------------------
 // Relations
 // ---------------------------------------------------------------------------
@@ -466,6 +501,8 @@ export const userProfilesRelations = relations(userProfiles, ({ many }) => ({
   rateLimitViolations: many(rateLimitViolations),
   feedback: many(feedback),
   customUnits: many(customUnits),
+  sentInvitations: many(userPartnerships, { relationName: "inviter" }),
+  receivedInvitations: many(userPartnerships, { relationName: "invitee" }),
 }));
 
 export const recipesRelations = relations(recipes, ({ one }) => ({
@@ -512,3 +549,19 @@ export const customUnitsRelations = relations(customUnits, ({ one }) => ({
     references: [userProfiles.id],
   }),
 }));
+
+export const userPartnershipsRelations = relations(
+  userPartnerships,
+  ({ one }) => ({
+    inviter: one(userProfiles, {
+      fields: [userPartnerships.inviterId],
+      references: [userProfiles.id],
+      relationName: "inviter",
+    }),
+    invitee: one(userProfiles, {
+      fields: [userPartnerships.inviteeId],
+      references: [userProfiles.id],
+      relationName: "invitee",
+    }),
+  }),
+);

@@ -935,6 +935,57 @@
         }
       }
     },
+    "partner": {
+      "title": "Partner Sharing",
+      "description": "Share your recipes with a household partner",
+      "invite": {
+        "title": "Invite a Partner",
+        "description": "Enter the email address of your Meal Maestro partner. They will receive an invitation to share recipes with you.",
+        "emailLabel": "Partner's email",
+        "emailPlaceholder": "partner@example.com",
+        "sendButton": "Send Invitation",
+        "sending": "Sending...",
+        "successTitle": "Invitation sent",
+        "successDescription": "An invitation has been sent to {email}.",
+        "errorNoUser": "No Meal Maestro account found with that email address.",
+        "errorSelf": "You cannot invite yourself.",
+        "errorDuplicate": "A pending invitation already exists for this email.",
+        "errorAlreadyPartnered": "You are already partnered with this user.",
+        "errorMaxPartnerships": "You already have an active partnership."
+      },
+      "invitations": {
+        "receivedTitle": "Received Invitations",
+        "sentTitle": "Sent Invitations",
+        "from": "From",
+        "to": "To",
+        "accept": "Accept",
+        "decline": "Decline",
+        "cancel": "Cancel Invitation",
+        "accepting": "Accepting...",
+        "declining": "Declining...",
+        "cancelling": "Cancelling...",
+        "acceptError": "Failed to accept invitation.",
+        "declineError": "Failed to decline invitation.",
+        "cancelError": "Failed to cancel invitation."
+      },
+      "current": {
+        "title": "Current Partner",
+        "connectedSince": "Connected since {date}",
+        "unlinkButton": "Unlink Partner"
+      },
+      "unlink": {
+        "title": "Unlink Partner",
+        "description": "Are you sure you want to unlink your partner? You will no longer share recipes.",
+        "copyRecipesLabel": "Copy my partner's recipes to my account",
+        "copyRecipesDescription": "If checked, all of your partner's recipes will be copied to your account before unlinking.",
+        "cancel": "Cancel",
+        "confirm": "Unlink",
+        "unlinking": "Unlinking...",
+        "successTitle": "Partner unlinked",
+        "successDescription": "You have been successfully unlinked from your partner.",
+        "errorTitle": "Failed to unlink partner."
+      }
+    },
     "deleteAccountModal": {
       "title": "Delete Account",
       "warning": "This action will permanently delete your account and cannot be undone.",
