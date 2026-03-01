@@ -133,7 +133,7 @@ export class UsageLimitService {
         target: [monthlyUsageSummary.userId, monthlyUsageSummary.monthStart],
         set: {
           totalCost: sql`${monthlyUsageSummary.totalCost} + ${Math.max(cost, 0)}`,
-          totalTokens: sql`${monthlyUsageSummary.totalTokens} + ${Math.max(tokens, 0)}`,
+          totalTokens: sql`${monthlyUsageSummary.totalTokens} + ${BigInt(Math.max(tokens, 0))}`,
           totalCalls: sql`${monthlyUsageSummary.totalCalls} + 1`,
           updatedAt: new Date(),
         },

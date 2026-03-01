@@ -516,8 +516,8 @@ export class AdminUsageService {
       return data.map((row) => ({
         userId: row.userId,
         monthStart: row.monthStart,
-        totalCost: Number(row.totalCost || 0),
-        totalTokens: Number(row.totalTokens || 0),
+        totalCost: Number(row.totalCost ?? "0"),
+        totalTokens: Number(row.totalTokens),
         totalCalls: Number(row.totalCalls || 0),
         warningEmailSentAt: row.warningEmailSentAt?.toISOString() ?? null,
         limitEmailSentAt: row.limitEmailSentAt?.toISOString() ?? null,
