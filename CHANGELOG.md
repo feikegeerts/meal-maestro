@@ -1,3 +1,10 @@
+## [3.3.2-beta.2](https://github.com/feikegeerts/meal-maestro/compare/v3.3.2-beta.1...v3.3.2-beta.2) (2026-03-02)
+
+
+### Bug Fixes
+
+* preview deployment ([e37426b](https://github.com/feikegeerts/meal-maestro/commit/e37426b8106ba5ead1c96be5286eb6bfe98c9f04))
+
 ## [3.3.2-beta.1](https://github.com/feikegeerts/meal-maestro/compare/v3.3.1...v3.3.2-beta.1) (2026-03-02)
 
 
