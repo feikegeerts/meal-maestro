@@ -1,13 +1,3 @@
-# Bugs
-
-1. [ ] **Migrate from release-please to semantic-release for fully automated CD**
-   - Remove: `release-please.yml`, `release-please-config.json`, `.release-please-manifest.json`
-   - Install dev deps: `semantic-release`, `@semantic-release/commit-analyzer`, `@semantic-release/release-notes-generator`, `@semantic-release/changelog`, `@semantic-release/npm` (no publish), `@semantic-release/git`, `@semantic-release/github`
-   - Add `.releaserc.json` with two branches: `main` (stable) and `preview` (pre-release channel, e.g. `3.4.0-beta.1`)
-   - Update `ci.yml`: add `preview` to push triggers; add `deploy-preview-env` job (push to `preview` → Vercel preview env); add `semantic-release` job that runs after CI on both `main` and `preview` pushes
-   - Result: every push to `main` deploys + bumps version automatically; every push to `preview` deploys to preview.meal-maestro.com + bumps pre-release version; no manual Release PRs
-1. [ ] Account partner block is not mobile friendly because the button goes outside of the screen on the right but should be going on a new line
-
 # Post-MVP Development Roadmap
 
 1. [ ] Record videos for the homepage

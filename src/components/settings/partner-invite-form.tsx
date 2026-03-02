@@ -44,7 +44,7 @@ export function PartnerInviteForm() {
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="space-y-1.5">
         <Label htmlFor="partner-email">{t("emailLabel")}</Label>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Input
             id="partner-email"
             type="email"
