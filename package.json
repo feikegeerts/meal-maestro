@@ -1,6 +1,6 @@
 {
   "name": "meal-maestro",
-  "version": "3.3.2-beta.3",
+  "version": "3.3.2",
   "private": true,
   "engines": {
     "node": ">=24"

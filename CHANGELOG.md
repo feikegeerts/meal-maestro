@@ -1,3 +1,11 @@
+## [3.3.2](https://github.com/feikegeerts/meal-maestro/compare/v3.3.1...v3.3.2) (2026-03-02)
+
+
+### Bug Fixes
+
+* mobile layout of the partner section on the account page ([c17dccf](https://github.com/feikegeerts/meal-maestro/commit/c17dccfe1a05bbd5fc53be4fc4d2245b8fe87328))
+* preview release ([44c45b1](https://github.com/feikegeerts/meal-maestro/commit/44c45b1b812100295197c227e604ecceeb3b2f44))
+
 ## [3.3.2-beta.3](https://github.com/feikegeerts/meal-maestro/compare/v3.3.2-beta.2...v3.3.2-beta.3) (2026-03-02)
 
 
