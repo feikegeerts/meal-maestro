@@ -1,3 +1,10 @@
+## [3.3.1](https://github.com/feikegeerts/meal-maestro/compare/v3.3.0...v3.3.1) (2026-03-02)
+
+
+### Bug Fixes
+
+* Recipe image loading fix ([cfb2a12](https://github.com/feikegeerts/meal-maestro/commit/cfb2a1242d41c2050dd179df3d6d19b55ae5ccbe))
+
 # Changelog
 
 ## [3.3.0](https://github.com/feikegeerts/meal-maestro/compare/v3.2.1...v3.3.0) (2026-03-01)
