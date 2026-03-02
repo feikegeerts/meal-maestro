@@ -61,7 +61,7 @@ jobs:
 
   deploy-preview-env:
     name: Deploy Preview Env
-    needs: semantic-release
+    needs: ci
     if: github.ref == 'refs/heads/preview' && github.event_name == 'push'
     runs-on: ubuntu-latest
     env:
@@ -85,7 +85,7 @@ jobs:
   semantic-release:
     name: Release
     needs: ci
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
