@@ -42,9 +42,9 @@ export function PartnerInviteForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <Label htmlFor="partner-email">{t("emailLabel")}</Label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Input
             id="partner-email"
             type="email"
@@ -54,7 +54,7 @@ export function PartnerInviteForm() {
             disabled={isPending}
             className="flex-1"
           />
-          <Button type="submit" disabled={isPending || !email.trim()}>
+          <Button type="submit" disabled={isPending || !email.trim()} className="w-full sm:w-auto">
             {isPending ? t("sending") : t("sendButton")}
           </Button>
         </div>
