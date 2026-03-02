@@ -58,18 +58,19 @@ export function PendingInvitations({ received, sent }: PendingInvitationsProps) 
           {received.map((inv) => (
             <div
               key={inv.id}
-              className="flex items-center justify-between p-3 rounded-lg border border-border"
+              className="flex flex-col gap-3 p-3 rounded-lg border border-border sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex items-center gap-2">
-                <UserCircle className="h-4 w-4 text-muted-foreground" />
+                <UserCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span className="text-sm">
                   {t("from")}: {inv.partner_display_name ?? inv.partner_email ?? inv.invitee_email}
                 </span>
                 <Badge variant="outline" className="text-xs">pending</Badge>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 sm:shrink-0">
                 <Button
                   size="sm"
+                  className="flex-1 sm:flex-none"
                   onClick={() => handleAccept(inv.id)}
                   disabled={isResponding}
                 >
@@ -78,6 +79,7 @@ export function PendingInvitations({ received, sent }: PendingInvitationsProps) 
                 <Button
                   size="sm"
                   variant="outline"
+                  className="flex-1 sm:flex-none"
                   onClick={() => handleDecline(inv.id)}
                   disabled={isResponding}
                 >
