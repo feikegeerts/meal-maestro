@@ -1,7 +1,28 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(pnpm lint*)",
+      "Bash(pnpm test*)",
+      "Bash(pnpm type-check*)",
+      "Bash(pnpm verify*)",
+      "Bash(pnpm run lint*)",
+      "Bash(pnpm run test*)",
+      "Bash(pnpm run type-check*)",
+      "Bash(pnpm run verify*)",
+      "Bash(pnpm exec tsc*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git show*)",
+      "Bash(git stash list*)",
+      "Bash(corepack*)",
+      "Bash(ls*)",
+      "Bash(find*)",
+      "Bash(which*)",
+      "Bash(command -v*)",
+      "Bash(type *)"
     ]
   }
 }
