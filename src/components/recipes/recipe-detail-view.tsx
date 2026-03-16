@@ -755,45 +755,7 @@ export function RecipeDetailView({
           >
             <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5 print:bg-muted/30 print:border print:border-muted">
               <div className="flex flex-col items-center gap-3 mb-4">
-                <div className="flex flex-wrap items-center justify-center gap-2 w-full">
-                  <h2 className="text-xl font-semibold">{t("ingredients")}</h2>
-                  <div className="print:hidden shrink-0">
-                    {selectionMode ? (
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={exitSelectionMode}
-                          disabled={addToListLoading}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={handleAdd}
-                          disabled={addToListLoading || selectedCount === 0}
-                        >
-                          {addToListLoading ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <ShoppingCart className="mr-2 h-4 w-4" />
-                          )}
-                          {tShopping("addItems", { count: selectedCount })}
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={enterSelectionMode}
-                        title={tShopping("addToList")}
-                      >
-                        <ShoppingCart className="h-4 w-4 sm:mr-2" />
-                        <span className="hidden sm:inline">{tShopping("addToList")}</span>
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                <h2 className="text-xl font-semibold">{t("ingredients")}</h2>
                 {onServingChange && (
                   <div className="max-w-[280px]">
                     <ServingSizeSelector
@@ -831,6 +793,43 @@ export function RecipeDetailView({
                   {renderIngredientList(displayRecipe.ingredients, selectionMode)}
                 </div>
               )}
+
+              <div className="print:hidden flex justify-center mt-4">
+                {selectionMode ? (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={exitSelectionMode}
+                      disabled={addToListLoading}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      {tShopping("cancel")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleAdd}
+                      disabled={addToListLoading || selectedCount === 0}
+                    >
+                      {addToListLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <ShoppingCart className="mr-2 h-4 w-4" />
+                      )}
+                      {tShopping("addItems", { count: selectedCount })}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={enterSelectionMode}
+                  >
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    {tShopping("addToList")}
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="lg:col-span-5">
