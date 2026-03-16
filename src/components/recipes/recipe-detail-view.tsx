@@ -51,6 +51,7 @@ import {
 import { processInstructions } from "@/lib/utils";
 import type { IngredientFormatterService } from "@/utils/ingredient-pluralization";
 import { UrlDetector } from "@/lib/url-detector";
+import { useTranslations } from "next-intl";
 
 interface RecipeDetailViewProps {
   recipe: Recipe;
@@ -129,6 +130,7 @@ export function RecipeDetailView({
   onNavigateBack,
   additionalActionButtons,
 }: RecipeDetailViewProps) {
+  const tShopping = useTranslations("shoppingList");
   const processedInstructions = useMemo(
     () => processInstructions(recipe.description),
     [recipe.description]
@@ -776,7 +778,7 @@ export function RecipeDetailView({
                           ) : (
                             <ShoppingCart className="mr-2 h-4 w-4" />
                           )}
-                          Add {selectedCount} item{selectedCount !== 1 ? "s" : ""}
+                          {tShopping("addItems", { count: selectedCount })}
                         </Button>
                       </div>
                     ) : (
@@ -786,7 +788,7 @@ export function RecipeDetailView({
                         onClick={enterSelectionMode}
                       >
                         <ShoppingCart className="mr-2 h-4 w-4" />
-                        Add to list
+                        {tShopping("addToList")}
                       </Button>
                     )}
                   </div>

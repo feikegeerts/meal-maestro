@@ -54,6 +54,7 @@ export function MainNav() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [userSheetOpen, setUserSheetOpen] = useState(false);
   const t = useTranslations('navigation');
+  const tShopping = useTranslations('shoppingList');
   const tA11y = useTranslations('accessibility');
   const shoppingListCount = useShoppingListCount();
 
@@ -64,12 +65,12 @@ export function MainNav() {
       icon: BookOpen,
     },
     {
-      name: "Shopping List",
+      name: tShopping("navLabel"),
       href: "/shopping-list",
       icon: ShoppingCart,
     },
     {
-      name: "Account",
+      name: t("settings"),
       href: "/account",
       icon: Settings,
     },

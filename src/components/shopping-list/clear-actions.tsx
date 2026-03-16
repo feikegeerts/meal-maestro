@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +29,7 @@ export function ClearActions({
   onClearAll,
   disabled,
 }: ClearActionsProps) {
+  const t = useTranslations("shoppingList");
   return (
     <div className="flex items-center gap-2">
       {hasChecked && (
@@ -37,7 +39,7 @@ export function ClearActions({
           onClick={onClearChecked}
           disabled={disabled}
         >
-          Clear done
+          {t("clearDone")}
         </Button>
       )}
 
@@ -45,21 +47,20 @@ export function ClearActions({
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="outline" size="sm" disabled={disabled}>
-              Clear all
+              {t("clearAll")}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Clear all items?</AlertDialogTitle>
+              <AlertDialogTitle>{t("clearAllTitle")}</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently remove all items from your shopping list.
-                This action cannot be undone.
+                {t("clearAllDescription")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
               <AlertDialogAction onClick={onClearAll}>
-                Clear all
+                {t("clearAll")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "@/app/i18n/routing";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { useAddFromRecipeMutation } from "@/lib/hooks/use-shopping-list-query";
 import type { RecipeIngredient } from "@/types/recipe";
 
@@ -11,6 +12,7 @@ export function useAddToShoppingList(recipeId: string, ingredients: RecipeIngred
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const addFromRecipe = useAddFromRecipeMutation();
   const router = useRouter();
+  const t = useTranslations("shoppingList");
 
   function enterSelectionMode() {
     setSelected(new Set(ingredients.map((i) => i.id)));
@@ -45,15 +47,14 @@ export function useAddToShoppingList(recipeId: string, ingredients: RecipeIngred
       {
         onSuccess: (result) => {
           const parts = [];
-          if (result.added > 0) parts.push(`${result.added} added`);
-          if (result.merged > 0) parts.push(`${result.merged} merged`);
+          if (result.merged > 0) parts.push(t("itemsMerged", { merged: result.merged }));
 
           toast.success(
-            `${selectedIngredients.length} items added to shopping list`,
+            t("itemsAdded", { count: selectedIngredients.length }),
             {
-              description: parts.length > 0 ? parts.join(", ") + " with existing items" : undefined,
+              description: parts.length > 0 ? parts.join(", ") : undefined,
               action: {
-                label: "View list",
+                label: t("viewList"),
                 onClick: () => router.push("/shopping-list"),
               },
             },
@@ -61,7 +62,7 @@ export function useAddToShoppingList(recipeId: string, ingredients: RecipeIngred
           setSelectionMode(false);
         },
         onError: () => {
-          toast.error("Failed to add items to shopping list");
+          toast.error(t("addFailed"));
         },
       },
     );
