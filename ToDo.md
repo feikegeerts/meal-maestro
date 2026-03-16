@@ -22,7 +22,7 @@
 
 ## V2.0 feature requests
 
-1. [ ] Groccery shopping list
+1. [x] Groccery shopping list
 1. [ ] Menu creator functionality that combines multiple recipes, different options, week menu with 7 days, evenening menu with 3 courses
 1. [ ] Tiktok import
 
