@@ -663,6 +663,205 @@ export function createUnitSystem(customUnits: string[] = []): UnitSystem {
   return { standard, custom, all };
 }
 
+// ---- Unit compatibility and merging ----
+
+/**
+ * Unit families used to determine whether two units can be merged.
+ * Units within the same family are compatible; cross-family merging is not supported.
+ */
+const UNIT_FAMILIES: readonly (readonly string[])[] = [
+  ["g", "kg"], // weight metric
+  ["oz", "lb"], // weight imperial
+  ["ml", "l"], // volume metric
+  ["tsp", "tbsp", "cup", "fl oz"], // volume imperial
+] as const;
+
+/**
+ * Returns true if unitA and unitB belong to the same unit family (and can therefore
+ * be merged). Both null counts as compatible; one null is not.
+ */
+export function areUnitsCompatible(
+  unitA: string | null,
+  unitB: string | null
+): boolean {
+  if (unitA === null && unitB === null) return true;
+  if (unitA === null || unitB === null) return false;
+  if (unitA === unitB) return true;
+  return UNIT_FAMILIES.some(
+    (family) => family.includes(unitA) && family.includes(unitB)
+  );
+}
+
+/** Conversion factors to the base unit of each family. */
+const TO_BASE: Record<string, number> = {
+  // weight metric (base: g)
+  g: 1,
+  kg: 1000,
+  // weight imperial (base: oz)
+  oz: 1,
+  lb: 16,
+  // volume metric (base: ml)
+  ml: 1,
+  l: 1000,
+  // volume imperial (base: tsp)
+  tsp: 1,
+  tbsp: 3,
+  cup: 48,
+  "fl oz": 6,
+};
+
+/** Smart conversion for tsp-family: tsp → tbsp → cup.
+ *  Only upgrades to a larger unit when the result divides cleanly (no fractional remainder).
+ */
+function smartTspConversion(amount: number): SmartUnitResult {
+  const tolerance = 1e-9;
+  if (amount >= 48 && Math.abs((amount / 48) % 1) < tolerance) {
+    return { amount: amount / 48, unit: "cup" };
+  }
+  if (amount >= 3 && Math.abs((amount / 3) % 1) < tolerance) {
+    return { amount: amount / 3, unit: "tbsp" };
+  }
+  return { amount, unit: "tsp" };
+}
+
+/**
+ * Merges two amounts with (possibly different) compatible units.
+ * Converts both to a common base, sums, then applies smart unit selection.
+ *
+ * Precondition: unitA and unitB must be compatible (same family).
+ * The caller is responsible for checking areUnitsCompatible first.
+ */
+export function mergeAmounts(
+  amountA: number,
+  unitA: string,
+  amountB: number,
+  unitB: string
+): { amount: number; unit: string } {
+  const factorA = TO_BASE[unitA];
+  const factorB = TO_BASE[unitB];
+
+  if (factorA === undefined || factorB === undefined) {
+    // Unknown units — fall back to simple sum using unitA
+    return { amount: amountA + amountB, unit: unitA };
+  }
+
+  const totalInBase = amountA * factorA + amountB * factorB;
+
+  // Determine which family we're in by checking unitA
+  if (unitA === "g" || unitA === "kg") {
+    return smartWeightConversion(totalInBase, "g");
+  }
+  if (unitA === "oz" || unitA === "lb") {
+    return smartImperialWeightConversion(totalInBase, "oz");
+  }
+  if (unitA === "ml" || unitA === "l") {
+    return smartVolumeConversion(totalInBase, "ml");
+  }
+  if (unitA === "tsp" || unitA === "tbsp" || unitA === "cup" || unitA === "fl oz") {
+    return smartTspConversion(totalInBase);
+  }
+
+  return { amount: amountA + amountB, unit: unitA };
+}
+
+// ---- Ingredient string parser ----
+
+/**
+ * Extended list of recognisable units for freeform ingredient string parsing.
+ * Multi-word units (e.g. "fl oz") must appear before single-word ones.
+ */
+const PARSER_UNITS: readonly string[] = [
+  "fl oz", // must come before "oz"
+  "g",
+  "kg",
+  "ml",
+  "l",
+  "tsp",
+  "tbsp",
+  "cup",
+  "oz",
+  "lb",
+  "cloves",
+  "clove",
+  "slices",
+  "slice",
+  "pieces",
+  "piece",
+  "bunch",
+  "tin",
+  "can",
+];
+
+/**
+ * Parses a natural-language ingredient string into a structured object.
+ *
+ * Handles formats such as:
+ *   "2 onions", "500g flour", "1.5 tbsp olive oil", "1/2 cup sugar", "salt"
+ *
+ * @returns `{ amount, unit, name }` where amount and unit are null when absent.
+ */
+export function parseIngredientString(input: string): {
+  amount: number | null;
+  unit: string | null;
+  name: string;
+} {
+  const trimmed = input.trim();
+  if (!trimmed) return { amount: null, unit: null, name: "" };
+
+  // --- Step 1: Try to extract a leading number (integer, decimal, or fraction) ---
+  // Handles: "2", "0.5", "1.5", "1/2"
+  const numberPattern = /^(\d+\/\d+|\d+\.?\d*)/;
+  const numberMatch = trimmed.match(numberPattern);
+
+  if (!numberMatch) {
+    // No leading number — the whole string is the name
+    return { amount: null, unit: null, name: trimmed };
+  }
+
+  const rawNumber = numberMatch[1];
+  const amount = rawNumber.includes("/")
+    ? (() => {
+        const [num, den] = rawNumber.split("/").map(Number);
+        return num / den;
+      })()
+    : parseFloat(rawNumber);
+
+  // The remainder after the number
+  const remainder = trimmed.slice(rawNumber.length);
+
+  // --- Step 2: Try to match a unit from the remainder ---
+  // The unit may be glued directly to the number ("500g") or separated by a space.
+  // We normalise by stripping a leading space for the unit check.
+  const remainderForUnit = remainder.startsWith(" ")
+    ? remainder.slice(1)
+    : remainder;
+
+  let matchedUnit: string | null = null;
+  let afterUnit = remainderForUnit;
+
+  for (const unit of PARSER_UNITS) {
+    // Unit must match at the start and be followed by a space or end-of-string
+    if (
+      remainderForUnit.toLowerCase().startsWith(unit.toLowerCase()) &&
+      (remainderForUnit.length === unit.length ||
+        remainderForUnit[unit.length] === " ")
+    ) {
+      matchedUnit = unit;
+      afterUnit = remainderForUnit.slice(unit.length);
+      break;
+    }
+  }
+
+  const name = afterUnit.trim();
+
+  if (matchedUnit !== null) {
+    return { amount, unit: matchedUnit, name };
+  }
+
+  // No unit matched — the remainder (which may begin with a word) is the name
+  return { amount, unit: null, name: remainder.trim() };
+}
+
 // Backwards compatibility re-exports for existing imports from types/recipe
 // (Consider removing after updating all call sites)
 export const __deprecated = {
