@@ -754,8 +754,8 @@ export function RecipeDetailView({
             }`}
           >
             <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5 print:bg-muted/30 print:border print:border-muted">
-              <div className="flex flex-col gap-3 mb-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-col items-center gap-3 mb-4">
+                <div className="flex flex-wrap items-center justify-center gap-2 w-full">
                   <h2 className="text-xl font-semibold">{t("ingredients")}</h2>
                   <div className="print:hidden shrink-0">
                     {selectionMode ? (
