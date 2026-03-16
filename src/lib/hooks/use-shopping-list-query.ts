@@ -28,13 +28,23 @@ export function useShoppingListQuery() {
 }
 
 /**
- * Reads the shopping list count from the TanStack Query cache without
- * triggering a fetch. Intended for nav badges.
+ * Returns the count of unchecked items from the shopping list cache.
+ * Uses useQuery with select to stay reactive (re-renders when cache updates)
+ * but does not trigger a fetch if the cache is empty (enabled gated on auth).
  */
 export function useShoppingListCount(): number | undefined {
-  const queryClient = useQueryClient();
-  const items = queryClient.getQueryData<ShoppingListItem[]>(SHOPPING_LIST_KEY);
-  return items?.length;
+  const { user } = useAuth();
+  const { data: count } = useQuery({
+    queryKey: SHOPPING_LIST_KEY,
+    queryFn: () => shoppingListClientService.getList(),
+    enabled: !!user,
+    staleTime: 60_000,
+    select: (items) => items.filter((item) => !item.checked).length,
+    // Don't refetch just for the badge — piggyback on the main query's cache
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+  return count;
 }
 
 // ---------------------------------------------------------------------------
