@@ -997,5 +997,24 @@
       "success": "Account successfully deleted. You will be signed out.",
       "error": "Failed to delete account. Please try again."
     }
+  },
+  "shoppingList": {
+    "title": "Shopping List",
+    "navLabel": "Shopping List",
+    "addPlaceholder": "Add an item... (e.g., 2 onions, 500g flour)",
+    "emptyTitle": "Your shopping list is empty.",
+    "emptyDescription": "Add items above or from any recipe page.",
+    "done": "Done",
+    "clearDone": "Clear done",
+    "clearAll": "Clear all",
+    "clearAllTitle": "Clear entire shopping list?",
+    "clearAllDescription": "This will remove all items from your shopping list. This action cannot be undone.",
+    "cancel": "Cancel",
+    "addToList": "Add to list",
+    "addItems": "Add {count} items",
+    "itemsAdded": "{count} items added to shopping list",
+    "itemsMerged": "{merged} merged with existing items",
+    "addFailed": "Failed to add items to shopping list",
+    "viewList": "View list"
   }
 }
