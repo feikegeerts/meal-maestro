@@ -490,6 +490,36 @@ export const userPartnerships = pgTable(
   ],
 );
 
+export const shoppingListItems = pgTable(
+  "shopping_list_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => userProfiles.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    amount: decimal("amount", { precision: 8, scale: 3 }),
+    unit: text("unit"),
+    notes: text("notes"),
+    recipeId: uuid("recipe_id").references(() => recipes.id, {
+      onDelete: "set null",
+    }),
+    checked: boolean("checked").notNull().default(false),
+    sortOrder: integer("sort_order").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("idx_shopping_list_items_user_checked_sort").on(
+      table.userId,
+      table.checked,
+      table.sortOrder,
+    ),
+  ],
+);
+
 // ---------------------------------------------------------------------------
 // Relations
 // ---------------------------------------------------------------------------
@@ -503,6 +533,7 @@ export const userProfilesRelations = relations(userProfiles, ({ many }) => ({
   customUnits: many(customUnits),
   sentInvitations: many(userPartnerships, { relationName: "inviter" }),
   receivedInvitations: many(userPartnerships, { relationName: "invitee" }),
+  shoppingListItems: many(shoppingListItems),
 }));
 
 export const recipesRelations = relations(recipes, ({ one }) => ({
@@ -562,6 +593,20 @@ export const userPartnershipsRelations = relations(
       fields: [userPartnerships.inviteeId],
       references: [userProfiles.id],
       relationName: "invitee",
+    }),
+  }),
+);
+
+export const shoppingListItemsRelations = relations(
+  shoppingListItems,
+  ({ one }) => ({
+    user: one(userProfiles, {
+      fields: [shoppingListItems.userId],
+      references: [userProfiles.id],
+    }),
+    recipe: one(recipes, {
+      fields: [shoppingListItems.recipeId],
+      references: [recipes.id],
     }),
   }),
 );
