@@ -33,6 +33,7 @@ import {
   useClearAllMutation,
 } from "@/lib/hooks/use-shopping-list-query";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export function ShoppingListPage() {
   const { data: items = [], isLoading } = useShoppingListQuery();
@@ -43,6 +44,7 @@ export function ShoppingListPage() {
   const clearChecked = useClearCheckedMutation();
   const clearAll = useClearAllMutation();
 
+  const t = useTranslations("shoppingList");
   const [checkedSectionOpen, setCheckedSectionOpen] = useState(true);
 
   const sensors = useSensors(
@@ -150,7 +152,7 @@ export function ShoppingListPage() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <ShoppingCart className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">Shopping List</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t("title")}</h1>
         </div>
         <ClearActions
           hasChecked={hasChecked}
@@ -182,9 +184,9 @@ export function ShoppingListPage() {
       {!isLoading && !hasItems && (
         <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
           <ShoppingCart className="h-12 w-12 mb-4 opacity-30" />
-          <p className="text-lg font-medium">Your shopping list is empty</p>
+          <p className="text-lg font-medium">{t("emptyTitle")}</p>
           <p className="text-sm mt-1">
-            Add items above or add ingredients from a recipe.
+            {t("emptyDescription")}
           </p>
         </div>
       )}
@@ -227,7 +229,7 @@ export function ShoppingListPage() {
             ) : (
               <ChevronRight className="h-4 w-4" />
             )}
-            Done ({checkedItems.length})
+            {t("done")} ({checkedItems.length})
           </button>
 
           {checkedSectionOpen && (

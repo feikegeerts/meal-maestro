@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { parseIngredientString } from "@/lib/recipe-utils";
+import { useTranslations } from "next-intl";
 
 interface AddItemBarProps {
   onAdd: (item: { name: string; amount: number | null; unit: string | null }) => void;
@@ -12,6 +13,7 @@ interface AddItemBarProps {
 }
 
 export function AddItemBar({ onAdd, disabled }: AddItemBarProps) {
+  const t = useTranslations("shoppingList");
   const [value, setValue] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,7 +35,7 @@ export function AddItemBar({ onAdd, disabled }: AddItemBarProps) {
       <Input
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Add item… e.g. 2 cups flour"
+        placeholder={t("addPlaceholder")}
         disabled={disabled}
         className="flex-1"
         aria-label="New shopping list item"
