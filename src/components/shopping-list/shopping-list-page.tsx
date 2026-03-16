@@ -135,11 +135,11 @@ export function ShoppingListPage() {
     });
   };
 
+  // Reorder excluded — it's optimistic and shouldn't disable the UI
   const isMutating =
     addItem.isPending ||
     toggleItem.isPending ||
     deleteItem.isPending ||
-    reorderItems.isPending ||
     clearChecked.isPending ||
     clearAll.isPending;
 
