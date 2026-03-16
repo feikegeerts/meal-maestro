@@ -999,5 +999,24 @@
       "success": "Account succesvol verwijderd. Je wordt uitgelogd.",
       "error": "Verwijderen van account mislukt. Probeer het opnieuw."
     }
+  },
+  "shoppingList": {
+    "title": "Boodschappenlijst",
+    "navLabel": "Boodschappen",
+    "addPlaceholder": "Voeg een item toe... (bijv. 2 uien, 500g bloem)",
+    "emptyTitle": "Je boodschappenlijst is leeg.",
+    "emptyDescription": "Voeg items toe hierboven of vanuit een recept.",
+    "done": "Klaar",
+    "clearDone": "Verwijder afgevinkt",
+    "clearAll": "Alles wissen",
+    "clearAllTitle": "Hele boodschappenlijst wissen?",
+    "clearAllDescription": "Dit verwijdert alle items van je boodschappenlijst. Deze actie kan niet ongedaan worden gemaakt.",
+    "cancel": "Annuleren",
+    "addToList": "Toevoegen aan lijst",
+    "addItems": "{count} items toevoegen",
+    "itemsAdded": "{count} items toegevoegd aan boodschappenlijst",
+    "itemsMerged": "{merged} samengevoegd met bestaande items",
+    "addFailed": "Kon items niet toevoegen aan boodschappenlijst",
+    "viewList": "Bekijk lijst"
   }
 }
