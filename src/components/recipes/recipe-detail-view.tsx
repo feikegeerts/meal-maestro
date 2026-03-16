@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
@@ -11,16 +12,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ServingSizeSelector } from "@/components/serving-size-selector";
 import { MarkAsEatenSplitButton } from "@/components/recipes/mark-as-eaten-split-button";
+import { useAddToShoppingList } from "@/components/recipes/add-to-shopping-list";
 import {
   ArrowLeft,
   Calendar,
   CalendarDays,
   Clock,
   Edit,
+  Loader2,
   Printer,
+  ShoppingCart,
   Tag,
   Trash2,
-  Loader2,
   RefreshCcw,
   Sparkles,
   AlertTriangle,
@@ -30,6 +33,7 @@ import {
   Wine,
   Slice,
   Utensils,
+  X,
 } from "lucide-react";
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import type {
@@ -145,7 +149,26 @@ export function RecipeDetailView({
   );
   const hasSections =
     Array.isArray(displayRecipe.sections) && displayRecipe.sections.length > 0;
-  const renderIngredientList = (ingredients: RecipeIngredient[]) => {
+
+  const allIngredients = useMemo(() => {
+    if (hasSections && displayRecipe.sections) {
+      return displayRecipe.sections.flatMap((s) => s.ingredients);
+    }
+    return displayRecipe.ingredients;
+  }, [hasSections, displayRecipe.sections, displayRecipe.ingredients]);
+
+  const {
+    selectionMode,
+    selected,
+    selectedCount,
+    isLoading: addToListLoading,
+    enterSelectionMode,
+    exitSelectionMode,
+    toggleIngredient,
+    handleAdd,
+  } = useAddToShoppingList(recipe.id, allIngredients);
+
+  const renderIngredientList = (ingredients: RecipeIngredient[], showCheckboxes = false) => {
     if (!ingredients || ingredients.length === 0) {
       return (
         <p className="text-sm text-muted-foreground">{t("ingredients")}</p>
@@ -201,6 +224,34 @@ export function RecipeDetailView({
 
       if (ingredient.notes) {
         ingredientNameWithNotes += ` (${ingredient.notes})`;
+      }
+
+      if (showCheckboxes) {
+        return (
+          <div
+            key={`${ingredient.id}-${index}`}
+            className="grid grid-cols-12 gap-3 items-start py-1"
+          >
+            <div className="col-span-1 flex justify-end pt-0.5">
+              <Checkbox
+                id={`ingredient-${ingredient.id}`}
+                checked={selected.has(ingredient.id)}
+                onCheckedChange={() => toggleIngredient(ingredient.id)}
+              />
+            </div>
+            <div className="col-span-3 text-right">
+              <span className="font-semibold text-sm">{amountText}</span>
+            </div>
+            <div className="col-span-8">
+              <label
+                htmlFor={`ingredient-${ingredient.id}`}
+                className="text-sm leading-relaxed cursor-pointer"
+              >
+                {ingredientNameWithNotes}
+              </label>
+            </div>
+          </div>
+        );
       }
 
       return (
@@ -702,7 +753,44 @@ export function RecipeDetailView({
           >
             <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5 print:bg-muted/30 print:border print:border-muted">
               <div className="flex flex-col gap-3 mb-4">
-                <h2 className="text-xl font-semibold">{t("ingredients")}</h2>
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="text-xl font-semibold">{t("ingredients")}</h2>
+                  <div className="print:hidden">
+                    {selectionMode ? (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={exitSelectionMode}
+                          disabled={addToListLoading}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleAdd}
+                          disabled={addToListLoading || selectedCount === 0}
+                        >
+                          {addToListLoading ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <ShoppingCart className="mr-2 h-4 w-4" />
+                          )}
+                          Add {selectedCount} item{selectedCount !== 1 ? "s" : ""}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={enterSelectionMode}
+                      >
+                        <ShoppingCart className="mr-2 h-4 w-4" />
+                        Add to list
+                      </Button>
+                    )}
+                  </div>
+                </div>
                 {onServingChange && (
                   <div className="max-w-[280px]">
                     <ServingSizeSelector
@@ -731,13 +819,13 @@ export function RecipeDetailView({
                           <div className="h-px w-full bg-muted" />
                         </div>
                       ) : null}
-                      {renderIngredientList(section.ingredients)}
+                      {renderIngredientList(section.ingredients, selectionMode)}
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="space-y-1">
-                  {renderIngredientList(displayRecipe.ingredients)}
+                  {renderIngredientList(displayRecipe.ingredients, selectionMode)}
                 </div>
               )}
             </div>
