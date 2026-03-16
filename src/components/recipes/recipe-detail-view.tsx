@@ -755,9 +755,9 @@ export function RecipeDetailView({
           >
             <div className="lg:col-span-2 bg-primary/10 rounded-lg p-5 print:bg-muted/30 print:border print:border-muted">
               <div className="flex flex-col gap-3 mb-4">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-xl font-semibold">{t("ingredients")}</h2>
-                  <div className="print:hidden">
+                  <div className="print:hidden shrink-0">
                     {selectionMode ? (
                       <div className="flex items-center gap-2">
                         <Button
@@ -786,9 +786,10 @@ export function RecipeDetailView({
                         variant="outline"
                         size="sm"
                         onClick={enterSelectionMode}
+                        title={tShopping("addToList")}
                       >
-                        <ShoppingCart className="mr-2 h-4 w-4" />
-                        {tShopping("addToList")}
+                        <ShoppingCart className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">{tShopping("addToList")}</span>
                       </Button>
                     )}
                   </div>
