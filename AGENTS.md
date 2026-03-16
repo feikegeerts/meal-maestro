@@ -51,6 +51,7 @@ Database & ORM:
 - Database: Neon (Postgres) — schema in `src/db/schema.ts` (Drizzle ORM)
 - Migrations: `drizzle/` (managed via `drizzle-kit`)
 - Storage: Cloudflare R2 via S3-compatible API (`@aws-sdk/client-s3`)
+- **CRITICAL: The Neon HTTP driver (`neon-http`) does NOT support `db.transaction()`.** Any code that needs multiple related writes must use individual queries. Do not wrap Drizzle calls in `db.transaction()` — it will throw at runtime.
 
 ---
 
