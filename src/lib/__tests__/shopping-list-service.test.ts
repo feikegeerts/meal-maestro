@@ -521,7 +521,7 @@ describe("reorderItems", () => {
     });
   });
 
-  it("uses a transaction and assigns sequential sortOrders", async () => {
+  it("assigns sequential sortOrders via individual updates", async () => {
     (db.select as Mock).mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockResolvedValue([
@@ -532,21 +532,16 @@ describe("reorderItems", () => {
     });
 
     const setCalls: object[] = [];
-    const txUpdateFn = vi.fn().mockImplementation(() => ({
+    (db.update as Mock).mockImplementation(() => ({
       set: vi.fn().mockImplementation((data: object) => {
         setCalls.push(data);
         return { where: vi.fn().mockResolvedValue([]) };
       }),
     }));
 
-    (db.transaction as Mock).mockImplementation(async (cb: (tx: { update: typeof txUpdateFn }) => Promise<void>) => {
-      await cb({ update: txUpdateFn });
-    });
-
     await reorderItems("user-a", ["item-1", "item-2"]);
 
-    expect(db.transaction).toHaveBeenCalledOnce();
-    expect(txUpdateFn).toHaveBeenCalledTimes(2);
+    expect(db.update).toHaveBeenCalledTimes(2);
     expect(setCalls[0]).toMatchObject({ sortOrder: 0 });
     expect(setCalls[1]).toMatchObject({ sortOrder: 1 });
   });

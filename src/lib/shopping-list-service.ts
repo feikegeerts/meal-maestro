@@ -235,14 +235,14 @@ export async function reorderItems(
     }
   }
 
-  await db.transaction(async (tx) => {
-    for (let i = 0; i < itemIds.length; i++) {
-      await tx
-        .update(shoppingListItems)
-        .set({ sortOrder: i })
-        .where(eq(shoppingListItems.id, itemIds[i]));
-    }
-  });
+  // Neon HTTP driver does not support transactions — use individual updates.
+  // Partial failure is benign: a subsequent reorder corrects sort orders.
+  for (let i = 0; i < itemIds.length; i++) {
+    await db
+      .update(shoppingListItems)
+      .set({ sortOrder: i })
+      .where(eq(shoppingListItems.id, itemIds[i]));
+  }
 }
 
 export async function clearChecked(userId: string): Promise<void> {
