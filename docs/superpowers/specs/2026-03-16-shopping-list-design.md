@@ -34,20 +34,22 @@ A hybrid shopping list feature for Meal Maestro that lets users add recipe ingre
 | `id`        | uuid      | PK, default `gen_random_uuid()`                  |
 | `userId`    | uuid      | FK → `users(id)`, NOT NULL                       |
 | `name`      | text      | NOT NULL                                         |
-| `amount`    | numeric   | nullable                                         |
+| `amount`    | numeric(8,3) | nullable                                      |
 | `unit`      | text      | nullable                                         |
+| `notes`     | text      | nullable                                         |
 | `recipeId`  | uuid      | FK → `recipes(id)` ON DELETE SET NULL, nullable   |
 | `checked`   | boolean   | default `false`                                  |
 | `sortOrder` | integer   | NOT NULL                                         |
 | `createdAt` | timestamp | default `now()`                                  |
-| `updatedAt` | timestamp | default `now()`                                  |
+| `updatedAt` | timestamp | default `now()`, `$onUpdate(() => new Date())`   |
 
 **Index:** Composite on `(userId, checked, sortOrder)` — covers the primary query pattern.
 
 ### Design decisions
 
 - **`userId`** is the item owner. Partner access is resolved at query time using `getPartnerUserIds()` — no row duplication.
-- **`recipeId`** is nullable (`null` = freeform item). `ON DELETE SET NULL` means deleting a recipe does not remove the shopping list item.
+- **`recipeId`** is nullable (`null` = freeform item). `ON DELETE SET NULL` means deleting a recipe does not remove the shopping list item. **Known limitation:** if a partnership is dissolved and recipes become inaccessible, `recipeId` may point to an inaccessible recipe. This is acceptable because shopping list items are ephemeral — the `recipeId` is informational only and the item remains usable without it.
+- **`notes`** preserves recipe ingredient notes (e.g., "boneless, skinless", "finely diced") which can carry important shopping context.
 - **`sortOrder`** is an integer for drag-and-drop ordering. Reordering updates sort orders in a batch.
 - **No parent `shopping_lists` table** — since there is only one active list per user/household, the items table *is* the list. A parent table can be introduced later if multiple/named lists are needed.
 - Checked items keep their `sortOrder` within the done section so they don't jumble when unchecked.
@@ -59,7 +61,7 @@ When a user adds ingredients from a recipe to the shopping list:
 1. Fetch all **unchecked** items for the user's household (via `getPartnerUserIds()`)
 2. For each ingredient from the recipe:
    - **Name match:** case-insensitive, trimmed. "Onion" matches "onion".
-   - **Unit compatibility check:** Can the units be combined? "g" + "kg" → yes (convert via existing `recipe-utils.ts` utilities). "cloves" + "g" → no.
+   - **Unit compatibility check:** Can the units be combined? "g" + "kg" → yes (convert). "cloves" + "g" → no. Requires new utility functions (see "New Utilities" section below).
    - **Match + compatible units:** Update existing item's amount (converted to the larger unit where sensible).
    - **Match + incompatible units:** Add as a new item.
    - **No match:** Insert new item with `sortOrder` at the end of unchecked items.
@@ -77,6 +79,40 @@ When a user adds ingredients from a recipe to the shopping list:
 - **Sectioned ingredients:** Flatten all sections, merge each ingredient the same way.
 - **Ingredients with no amount** (e.g., "salt to taste"): Added as-is, no merge on these.
 
+## New Utilities Required
+
+### Unit compatibility and conversion (`src/lib/recipe-utils.ts`)
+
+The existing `smartWeightConversion` and `smartVolumeConversion` functions handle single-unit conversions but there is no general-purpose compatibility check or cross-unit merging function. The following new functions are needed:
+
+- **`areUnitsCompatible(unitA: string, unitB: string): boolean`** — Returns true if both units belong to the same family. Unit families:
+  - Weight metric: g, kg
+  - Weight imperial: oz, lb
+  - Volume metric: ml, l
+  - Volume imperial: tsp, tbsp, cup, fl oz
+  - Count: pieces, cloves, slices, etc. (only compatible with exact same unit)
+- **`mergeAmounts(amountA: number, unitA: string, amountB: number, unitB: string): { amount: number; unit: string }`** — Converts both amounts to the same unit (preferring the larger unit for readability, e.g., 1500g → 1.5kg) and returns the sum.
+
+### Ingredient string parser (`src/lib/recipe-utils.ts`)
+
+There is no existing natural language ingredient parser in the codebase. A new function is needed for the freeform add bar:
+
+- **`parseIngredientString(input: string): { amount: number | null; unit: string | null; name: string }`** — Parses strings like "2 onions", "500g flour", "1.5 tbsp olive oil" into structured data. The parser should handle:
+  - Leading numbers (integer, decimal, fraction): "2", "0.5", "1/2"
+  - Optional unit immediately after or separated by space: "500g", "2 tbsp"
+  - Remainder as name
+  - No amount: "salt" → `{ amount: null, unit: null, name: "salt" }`
+
+## Authorisation
+
+All item-level mutations (`updateItem`, `deleteItem`, `toggleItem`) verify that `item.userId` is in the set returned by `getPartnerUserIds(callerUserId)` before proceeding. This ensures users can only mutate items belonging to their household.
+
+Zod validation schemas are required for all API request bodies, particularly:
+- `AddFromRecipeSchema` — validates `recipeId` (uuid) and `ingredients` array
+- `AddFreeformItemSchema` — validates `name` (non-empty string), optional `amount` and `unit`
+- `UpdateItemSchema` — validates partial updates to name/amount/unit/checked
+- `ReorderItemsSchema` — validates array of item IDs
+
 ## Service Layer
 
 **File:** `src/lib/shopping-list-service.ts`
@@ -87,7 +123,7 @@ When a user adds ingredients from a recipe to the shopping list:
 | `addFromRecipe(userId, recipeId, ingredients)` | Merge logic as described above. Accepts scaled ingredients as displayed on screen            |
 | `addFreeformItem(userId, name, amount?, unit?)` | Add a manual item, sortOrder at end of unchecked items                                     |
 | `toggleItem(userId, itemId)`                  | Toggle checked state. Checking → move sortOrder to end of checked section. Unchecking → end of unchecked section |
-| `reorderItems(userId, itemIds)`               | Batch update sortOrder based on new array order. Operates within unchecked or checked section |
+| `reorderItems(userId, itemIds)`               | Client sends the complete ordered list of item IDs for the relevant section (unchecked or checked). Server assigns `sortOrder` values sequentially based on array position. Items not in the list retain their existing `sortOrder`. |
 | `updateItem(userId, itemId, updates)`         | Edit name/amount/unit of an existing item                                                   |
 | `deleteItem(userId, itemId)`                  | Remove a single item                                                                        |
 | `clearChecked(userId)`                        | Delete all checked items for household                                                      |
@@ -139,9 +175,9 @@ All mutations use optimistic updates for snappy UI, with rollback on error.
 
 ### Shopping List Page (`/shopping-list`)
 
-- **Navigation:** New link in main nav between Recipes and Account. Shows a badge with the unchecked item count (sourced from TanStack Query cache).
+- **Navigation:** New link in main nav between Recipes and Account. Shows a badge with the unchecked item count. The badge only renders after the shopping list query has been fetched at least once in the session (no separate count endpoint needed — the full list query is lightweight).
 - **Header:** "Shopping List" title + "Clear done" and "Clear all" action buttons. "Clear all" requires a confirmation dialog.
-- **Freeform add bar:** A text input where users type naturally (e.g., "2 onions", "500g flour"). The existing ingredient parsing logic in `recipe-utils.ts` extracts amount/unit from the string. Plus an "Add" button.
+- **Freeform add bar:** A text input where users type naturally (e.g., "2 onions", "500g flour"). The new `parseIngredientString()` function (see "New Utilities" section) extracts amount/unit from the string. Plus an "Add" button.
 - **Unchecked items section:** Drag-and-drop reorderable list. Each item shows: checkbox, amount+unit (highlighted), name, and a drag handle. Tapping an item could expand it for inline editing. Reuses existing drag-and-drop components from the ingredient input.
 - **Done section:** Collapsible, with a "Done (N)" header. Checked items shown with strikethrough at lower opacity. Items can be unchecked to move them back to the active section.
 
@@ -157,13 +193,12 @@ Implementation: All service functions use `getPartnerUserIds(userId)` to resolve
 
 No opt-in UI is needed — sharing follows the existing partnership relationship.
 
-## Components to Reuse
+## Components and Libraries to Reuse
 
-- **Drag-and-drop:** Existing ingredient drag-and-drop components (desktop + mobile variants)
-- **Ingredient parsing:** `recipe-utils.ts` parsing logic for extracting amount/unit from natural language input
-- **Unit conversion:** Existing unit conversion utilities for merge logic
-- **Toast notifications:** Existing toast/notification system
-- **Partnership access:** `getPartnerUserIds()` from `partnership-service.ts`
+- **Drag-and-drop libraries:** `@dnd-kit/core` and `@dnd-kit/sortable` (already installed). Note: the existing `use-drag-and-drop.ts` hook is tightly coupled to recipe ingredient editing (local form state). A new `useShoppingListDragAndDrop` hook is needed that works with server state via TanStack Query mutations.
+- **Unit conversion utilities:** `smartWeightConversion` / `smartVolumeConversion` in `recipe-utils.ts` as building blocks for the new merge functions.
+- **Toast notifications:** Existing toast/notification system.
+- **Partnership access:** `getPartnerUserIds()` from `partnership-service.ts`.
 
 ## Files to Create or Modify
 
@@ -192,6 +227,7 @@ No opt-in UI is needed — sharing follows the existing partnership relationship
 
 | File | Change |
 |------|--------|
+| `src/lib/recipe-utils.ts` | Add `areUnitsCompatible()`, `mergeAmounts()`, `parseIngredientString()` |
 | `src/components/navigation/main-nav.tsx` | Add Shopping List nav link with badge |
 | `src/app/[locale]/recipes/[id]/page.tsx` | Integrate "Add to list" button + selection mode |
-| `src/messages/*.json` | Add translations for shopping list UI strings |
+| `src/messages/main-en.json`, `src/messages/main-nl.json` (etc.) | Add shopping list translation strings to existing namespace files |
