@@ -2,12 +2,13 @@
 
 import { Link, usePathname, useRouter } from "@/app/i18n/routing";
 import { useState, useEffect } from "react";
-import { BookOpen, Menu, LogOut, User, Shield, Globe, Info, Settings } from "lucide-react";
+import { BookOpen, Menu, LogOut, User, Shield, Globe, Info, Settings, ShoppingCart } from "lucide-react";
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import { useTranslations, useLocale } from 'next-intl';
+import { useShoppingListCount } from "@/lib/hooks/use-shopping-list-query";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -54,12 +55,18 @@ export function MainNav() {
   const [userSheetOpen, setUserSheetOpen] = useState(false);
   const t = useTranslations('navigation');
   const tA11y = useTranslations('accessibility');
+  const shoppingListCount = useShoppingListCount();
 
   const baseNavigationItems = [
     {
       name: t('recipes'),
       href: "/recipes",
       icon: BookOpen,
+    },
+    {
+      name: "Shopping List",
+      href: "/shopping-list",
+      icon: ShoppingCart,
     },
     {
       name: "Account",
@@ -159,6 +166,10 @@ export function MainNav() {
                 {displayedItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
+                  const isShoppingList = item.href === "/shopping-list";
+                  const badgeCount = isShoppingList && shoppingListCount && shoppingListCount > 0
+                    ? shoppingListCount
+                    : null;
 
                   return (
                     <NavigationMenuItem key={item.href}>
@@ -173,6 +184,11 @@ export function MainNav() {
                         >
                           <Icon className="h-4 w-4" />
                           <span>{item.name}</span>
+                          {badgeCount !== null && (
+                            <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium leading-none text-primary-foreground">
+                              {badgeCount}
+                            </span>
+                          )}
                         </Link>
                       </NavigationMenuLink>
                     </NavigationMenuItem>
@@ -375,6 +391,10 @@ export function MainNav() {
                   {displayedItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
+                    const isShoppingList = item.href === "/shopping-list";
+                    const badgeCount = isShoppingList && shoppingListCount && shoppingListCount > 0
+                      ? shoppingListCount
+                      : null;
 
                     return (
                       <Link
@@ -389,6 +409,11 @@ export function MainNav() {
                       >
                         <Icon className="h-5 w-5 flex-shrink-0" />
                         <span className="flex-1">{item.name}</span>
+                        {badgeCount !== null && (
+                          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium leading-none text-primary-foreground">
+                            {badgeCount}
+                          </span>
+                        )}
                       </Link>
                     );
                   })}
