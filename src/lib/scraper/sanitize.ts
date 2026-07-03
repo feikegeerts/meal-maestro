@@ -5,18 +5,25 @@ export function sanitizeText(text: string): string {
   // Remove potentially dangerous tags. We avoid the 's' (dotAll) flag for broader TS target compatibility.
   // '[\s\S]*?' is used to simulate dotAll non-greedy matches.
   // Note: Use <\/script[\s>] to match both </script> and </script > (with space)
-  return text
-    .replace(/<script[^>]*>[\s\S]*?<\/script[\s>]/gi, "")
-    .replace(/<iframe[^>]*>[\s\S]*?<\/iframe[\s>]/gi, "")
-    .replace(/<object[^>]*>[\s\S]*?<\/object[\s>]/gi, "")
-    .replace(/<embed[^>]*>/gi, "")
-    .replace(/<script[^>]*>/gi, "")
-    .replace(/<iframe[^>]*>/gi, "")
-    .replace(/<object[^>]*>/gi, "")
-    .replace(/javascript:/gi, "")
-    .replace(/vbscript:/gi, "")
-    .replace(/data:/gi, "")
-    .trim();
+  // Apply repeatedly until stable to avoid incomplete multi-character sanitization.
+  let current = text;
+  let previous: string;
+  do {
+    previous = current;
+    current = current
+      .replace(/<script[^>]*>[\s\S]*?<\/script[\s>]/gi, "")
+      .replace(/<iframe[^>]*>[\s\S]*?<\/iframe[\s>]/gi, "")
+      .replace(/<object[^>]*>[\s\S]*?<\/object[\s>]/gi, "")
+      .replace(/<embed[^>]*>/gi, "")
+      .replace(/<script[^>]*>/gi, "")
+      .replace(/<iframe[^>]*>/gi, "")
+      .replace(/<object[^>]*>/gi, "")
+      .replace(/javascript:/gi, "")
+      .replace(/vbscript:/gi, "")
+      .replace(/data:/gi, "");
+  } while (current !== previous);
+
+  return current.trim();
 }
 
 const DANGEROUS_URL_SCHEMES = /^(javascript|vbscript|data):/i;
