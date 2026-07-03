@@ -6,6 +6,13 @@
 * mobile layout of the partner section on the account page ([c17dccf](https://github.com/feikegeerts/meal-maestro/commit/c17dccfe1a05bbd5fc53be4fc4d2245b8fe87328))
 * preview release ([44c45b1](https://github.com/feikegeerts/meal-maestro/commit/44c45b1b812100295197c227e604ecceeb3b2f44))
 
+## [3.5.1](https://github.com/feikegeerts/meal-maestro/compare/v3.5.0...v3.5.1) (2026-07-03)
+
+
+### Bug Fixes
+
+* resolve code scanning security alerts ([02b1424](https://github.com/feikegeerts/meal-maestro/commit/02b142432febff4a0f2ff7284dfc20f638389289))
+
 ## [3.5.0](https://github.com/feikegeerts/meal-maestro/compare/v3.4.0...v3.5.0) (2026-07-03)
 
 
