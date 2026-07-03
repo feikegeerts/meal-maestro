@@ -4,7 +4,7 @@ const MAX_JSON_LENGTH = 100_000;
 export function sanitizeText(text: string): string {
   // Remove potentially dangerous tags. We avoid the 's' (dotAll) flag for broader TS target compatibility.
   // '[\s\S]*?' is used to simulate dotAll non-greedy matches.
-  // Note: Use <\/script[\s>] to match both </script> and </script > (with space)
+  // Closing tags are matched as </tag\s*> to consume the full delimiter reliably.
   // Apply repeatedly until stable to avoid incomplete multi-character sanitization.
   let current = text;
   let previous: string;
