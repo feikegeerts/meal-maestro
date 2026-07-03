@@ -1,36 +1,16 @@
 // Limit for JSON-LD script content
 const MAX_JSON_LENGTH = 100_000;
 
-export function sanitizeText(text: string): string {
-  // Remove potentially dangerous tags. We avoid the 's' (dotAll) flag for broader TS target compatibility.
-  // '[\s\S]*?' is used to simulate dotAll non-greedy matches.
-  // Closing tags are matched as </tag\s*> to consume the full delimiter reliably.
-  // Apply repeatedly until stable to avoid incomplete multi-character sanitization.
-  let current = text;
-  let previous: string;
-  do {
-    previous = current;
-    current = current
-      .replace(/<script[^>]*>[\s\S]*?<\/script\s*>/gi, "")
-      .replace(/<iframe[^>]*>[\s\S]*?<\/iframe\s*>/gi, "")
-      .replace(/<object[^>]*>[\s\S]*?<\/object\s*>/gi, "")
-      .replace(/<embed[^>]*>/gi, "")
-      .replace(/<script[^>]*>/gi, "")
-      .replace(/<iframe[^>]*>/gi, "")
-      .replace(/<object[^>]*>/gi, "")
-      .replace(/javascript:/gi, "")
-      .replace(/vbscript:/gi, "")
-      .replace(/data:/gi, "")
-      .replace(/[<>]/g, "");
-  } while (current !== previous);
+import sanitizeHtml from "sanitize-html";
 
-  return current
-    .trim()
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+export function sanitizeText(text: string): string {
+  // Use sanitize-html library for robust HTML sanitization
+  // This removes all HTML tags and dangerous protocols
+  return sanitizeHtml(text, {
+    allowedTags: [],
+    allowedAttributes: {},
+    disallowedTagsMode: "discard",
+  }).trim();
 }
 
 const DANGEROUS_URL_SCHEMES = /^(javascript|vbscript|data):/i;
