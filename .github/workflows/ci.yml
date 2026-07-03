@@ -28,60 +28,6 @@ jobs:
       - run: pnpm run test:ci
       - run: pnpm run test:integration
 
-  deploy-preview:
-    name: Deploy Preview
-    needs: ci
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm add -g vercel@latest
-      - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-      - run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-      - id: deploy
-        run: echo "url=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }})" >> $GITHUB_OUTPUT
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `✅ Preview deployed: ${{ steps.deploy.outputs.url }}`
-            })
-
-  deploy-preview-env:
-    name: Deploy Preview Env
-    needs: ci
-    if: github.ref == 'refs/heads/preview' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: preview
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm add -g vercel@latest
-      - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-      - run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-      - run: vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }}
-
   semantic-release:
     name: Release
     needs: ci
@@ -105,25 +51,4 @@ jobs:
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
 
-  deploy-production:
-    name: Deploy Production
-    needs: semantic-release
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm add -g vercel@latest
-      - run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      - run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-      - run: vercel deploy --prebuilt --prod --archive=tgz --token=${{ secrets.VERCEL_TOKEN }}
+  
