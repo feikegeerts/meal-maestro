@@ -122,7 +122,7 @@ describe('RecipeScraper Security Tests', () => {
       }
       
       // Handle circuit breaker scenarios before making any fetch calls
-      if (url.includes('exponential-backoff-test.com')) {
+      if (urlObj.hostname === 'exponential-backoff-test.com') {
         const domain = new URL(url).hostname;
         if (!mockCircuitBreakerState.has(domain)) {
           mockCircuitBreakerState.set(domain, { failures: 0, lastFailure: 0, blockedUntil: 0 });
@@ -177,7 +177,7 @@ describe('RecipeScraper Security Tests', () => {
           };
         }
         
-        if (url.includes('test-error-site.com')) {
+        if (urlObj.hostname === 'test-error-site.com') {
           return {
             success: false,
             source: 'failed' as const,
@@ -193,7 +193,7 @@ describe('RecipeScraper Security Tests', () => {
           };
         }
 
-        if (url.includes('network-error') || url.includes('connection-error') || url.includes('network-error-site.com')) {
+        if (url.includes('network-error') || url.includes('connection-error') || urlObj.hostname === 'network-error-site.com') {
           return {
             success: false,
             source: 'failed' as const,
@@ -202,7 +202,7 @@ describe('RecipeScraper Security Tests', () => {
         }
 
         // Circuit breaker simulation 
-        if (url.includes('failing-domain.com')) {
+        if (urlObj.hostname === 'failing-domain.com') {
           const domain = new URL(url).hostname;
           if (!mockCircuitBreakerState.has(domain)) {
             mockCircuitBreakerState.set(domain, { failures: 0, lastFailure: 0, blockedUntil: 0 });
@@ -244,7 +244,7 @@ describe('RecipeScraper Security Tests', () => {
         }
 
         // Handle MSW responses for known test URLs
-        if (url.includes('large-json-site.com')) {
+        if (urlObj.hostname === 'large-json-site.com') {
           return {
             success: false,
             source: 'failed' as const,
@@ -252,7 +252,7 @@ describe('RecipeScraper Security Tests', () => {
           };
         }
 
-        if (url.includes('normal-json-site.com')) {
+        if (urlObj.hostname === 'normal-json-site.com') {
           return {
             success: true,
             source: 'json-ld' as const,
@@ -265,7 +265,7 @@ describe('RecipeScraper Security Tests', () => {
           };
         }
 
-        if (url.includes('iframe-injection.com')) {
+        if (urlObj.hostname === 'iframe-injection.com') {
           return {
             success: true,
             source: 'json-ld' as const,
@@ -279,7 +279,7 @@ describe('RecipeScraper Security Tests', () => {
           };
         }
 
-        if (url.includes('constructor-pollution.com')) {
+        if (urlObj.hostname === 'constructor-pollution.com') {
           return {
             success: true,
             source: 'json-ld' as const,
@@ -292,7 +292,7 @@ describe('RecipeScraper Security Tests', () => {
           };
         }
 
-        if (url.includes('nested-pollution.com')) {
+        if (urlObj.hostname === 'nested-pollution.com') {
           return {
             success: true,
             source: 'json-ld' as const,
