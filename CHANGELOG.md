@@ -6,6 +6,14 @@
 * mobile layout of the partner section on the account page ([c17dccf](https://github.com/feikegeerts/meal-maestro/commit/c17dccfe1a05bbd5fc53be4fc4d2245b8fe87328))
 * preview release ([44c45b1](https://github.com/feikegeerts/meal-maestro/commit/44c45b1b812100295197c227e604ecceeb3b2f44))
 
+## [3.5.2](https://github.com/feikegeerts/meal-maestro/compare/v3.5.1...v3.5.2) (2026-07-03)
+
+
+### Bug Fixes
+
+* run CI on PRs targeting preview branch ([67a29fe](https://github.com/feikegeerts/meal-maestro/commit/67a29feb9caaa840251df69af1a3fa8253ea0396))
+* use sanitize-html library for robust HTML sanitization ([cf6fe87](https://github.com/feikegeerts/meal-maestro/commit/cf6fe87ea09bb1330383c0dc3fe077dcc7b93d91))
+
 ## [3.5.1](https://github.com/feikegeerts/meal-maestro/compare/v3.5.0...v3.5.1) (2026-07-03)
 
 
