@@ -11,19 +11,26 @@ export function sanitizeText(text: string): string {
   do {
     previous = current;
     current = current
-      .replace(/<script[^>]*>[\s\S]*?<\/script[\s>]/gi, "")
-      .replace(/<iframe[^>]*>[\s\S]*?<\/iframe[\s>]/gi, "")
-      .replace(/<object[^>]*>[\s\S]*?<\/object[\s>]/gi, "")
+      .replace(/<script[^>]*>[\s\S]*?<\/script\s*>/gi, "")
+      .replace(/<iframe[^>]*>[\s\S]*?<\/iframe\s*>/gi, "")
+      .replace(/<object[^>]*>[\s\S]*?<\/object\s*>/gi, "")
       .replace(/<embed[^>]*>/gi, "")
       .replace(/<script[^>]*>/gi, "")
       .replace(/<iframe[^>]*>/gi, "")
       .replace(/<object[^>]*>/gi, "")
       .replace(/javascript:/gi, "")
       .replace(/vbscript:/gi, "")
-      .replace(/data:/gi, "");
+      .replace(/data:/gi, "")
+      .replace(/[<>]/g, "");
   } while (current !== previous);
 
-  return current.trim();
+  return current
+    .trim()
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 const DANGEROUS_URL_SCHEMES = /^(javascript|vbscript|data):/i;
