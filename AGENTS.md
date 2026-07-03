@@ -204,7 +204,7 @@ Add unit conversion:
 
 ## Pull Request / Commit Guidance
 
-This project uses **Conventional Commits** + **semantic-release** for automated versioning. Every commit message must follow the format:
+This project uses **Conventional Commits** + **release-please** for automated versioning. Every commit message must follow the format:
 
 ```
 <type>: <description>
@@ -222,14 +222,17 @@ This project uses **Conventional Commits** + **semantic-release** for automated 
 - Before finishing: run lint + test.
 - If migration added: mention `DB MIGRATION` in commit body.
 - Reference ToDo item IDs if closing roadmap tasks.
-- **Never manually edit the version** in `package.json` — semantic-release handles this automatically.
+- **Never manually edit the version** in `package.json` — release-please handles this automatically via its Release PR.
 
 ### How releases work
 
-1. Commits land on `main` → CI runs, then the semantic-release job executes automatically.
-2. semantic-release analyzes commits, bumps `package.json`, updates `CHANGELOG.md`, creates a git tag (`vX.Y.Z`), and publishes a GitHub Release — all in one step (no separate Release PR).
+1. Commits land on `main` (via PR merge) → the `release-please` workflow runs automatically.
+2. release-please analyzes commits since the last release and opens (or updates) a `chore(main): release X.Y.Z` PR that bumps `package.json`, updates `CHANGELOG.md`, and updates `.release-please-manifest.json`.
+3. Merging that Release PR causes release-please to create the `vX.Y.Z` git tag and publish a GitHub Release.
 
-Relevant config files: `.releaserc.json`, `.github/workflows/ci.yml`.
+This PR-based flow naturally respects branch protection rules (no direct pushes to `main` by the bot).
+
+Relevant config files: `release-please-config.json`, `.release-please-manifest.json`, `.github/workflows/release-please.yml`.
 
 ---
 
