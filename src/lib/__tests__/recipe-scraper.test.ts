@@ -322,7 +322,10 @@ describe('RecipeScraper Security Tests', () => {
         }
 
         // Handle specific sites that should have suggestions
-        if (url.includes('bbcgoodfood.com') || url.includes('bbc.co.uk')) {
+        const hostnameMatches = (domain: string) => 
+          urlObj.hostname === domain || urlObj.hostname.endsWith(`.${domain}`);
+        
+        if (hostnameMatches('bbcgoodfood.com') || hostnameMatches('bbc.co.uk')) {
           return {
             success: false,
             source: 'failed' as const,
@@ -334,8 +337,8 @@ describe('RecipeScraper Security Tests', () => {
           };
         }
 
-        if (url.includes('youtube.com') || url.includes('instagram.com') || 
-            url.includes('facebook.com') || url.includes('pinterest.com')) {
+        if (hostnameMatches('youtube.com') || hostnameMatches('instagram.com') || 
+            hostnameMatches('facebook.com') || hostnameMatches('pinterest.com')) {
           return {
             success: false,
             source: 'failed' as const,
@@ -349,8 +352,8 @@ describe('RecipeScraper Security Tests', () => {
         }
 
         // Check for blocked sites that should provide domain-specific suggestions
-        if (url.includes('food.com') || url.includes('tasty.co') || 
-            url.includes('foodnetwork.com') || url.includes('epicurious.com')) {
+        if (hostnameMatches('food.com') || hostnameMatches('tasty.co') || 
+            hostnameMatches('foodnetwork.com') || hostnameMatches('epicurious.com')) {
           return {
             success: false,
             source: 'failed' as const,
@@ -363,7 +366,7 @@ describe('RecipeScraper Security Tests', () => {
         }
 
         // Handle AH.nl specifically (from MSW handler)
-        if (url.includes('ah.nl')) {
+        if (hostnameMatches('ah.nl')) {
           return {
             success: false,
             source: 'failed' as const,
@@ -375,7 +378,7 @@ describe('RecipeScraper Security Tests', () => {
           };
         }
 
-        if (url.includes('marmiton.org')) {
+        if (hostnameMatches('marmiton.org')) {
           return {
             success: false,
             source: 'failed' as const,
@@ -386,7 +389,7 @@ describe('RecipeScraper Security Tests', () => {
           };
         }
 
-        if (url.includes('chefkoch.de')) {
+        if (hostnameMatches('chefkoch.de')) {
           return {
             success: false,
             source: 'failed' as const,
@@ -398,7 +401,7 @@ describe('RecipeScraper Security Tests', () => {
         }
 
         // Handle detailed-error-site specifically
-        if (url.includes('detailed-error-site.com')) {
+        if (hostnameMatches('detailed-error-site.com')) {
           return {
             success: false,
             source: 'failed' as const,

@@ -202,12 +202,7 @@ export default function AboutPage() {
                       >
                         <div className="flex flex-col items-center space-y-3">
                           <div
-                            className={`p-3 rounded-xl ${color
-                              .replace("text-", "text-")
-                              .replace(
-                                "bg-",
-                                "bg-",
-                              )} transition-all duration-300 group-hover:scale-125 group-hover:rotate-12`}
+                            className={`p-3 rounded-xl ${color} transition-all duration-300 group-hover:scale-125 group-hover:rotate-12`}
                           >
                             <Icon className="h-6 w-6 transition-all duration-300" />
                           </div>
