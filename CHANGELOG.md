@@ -6,6 +6,13 @@
 * mobile layout of the partner section on the account page ([c17dccf](https://github.com/feikegeerts/meal-maestro/commit/c17dccfe1a05bbd5fc53be4fc4d2245b8fe87328))
 * preview release ([44c45b1](https://github.com/feikegeerts/meal-maestro/commit/44c45b1b812100295197c227e604ecceeb3b2f44))
 
+## [3.5.3](https://github.com/feikegeerts/meal-maestro/compare/v3.5.2...v3.5.3) (2026-07-27)
+
+
+### Bug Fixes
+
+* add 180x180 apple-touch-icon with solid background for iOS PWA ([3ea33c8](https://github.com/feikegeerts/meal-maestro/commit/3ea33c89ec7a4632844becdb304a135d483d3069))
+
 ## [3.5.2](https://github.com/feikegeerts/meal-maestro/compare/v3.5.1...v3.5.2) (2026-07-03)
 
 
