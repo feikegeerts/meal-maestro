@@ -3,6 +3,8 @@
 import { useTranslations } from "next-intl";
 import { LocalizedJsonLdSchema } from "./localized-json-ld-schema";
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://meal-maestro.com";
+
 export function LocalizedWebsiteSchema() {
   const t = useTranslations("seo");
 
@@ -10,7 +12,7 @@ export function LocalizedWebsiteSchema() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: t("global.siteName"),
-    url: "https://meal-maestro.com",
+    url: BASE_URL,
     description: t("global.description"),
     publisher: {
       "@type": "Organization",
@@ -18,7 +20,7 @@ export function LocalizedWebsiteSchema() {
     },
     potentialAction: {
       "@type": "SearchAction",
-      target: "https://meal-maestro.com/recipes?search={search_term_string}",
+      target: `${BASE_URL}/recipes?search={search_term_string}`,
       "query-input": "required name=search_term_string"
     }
   };

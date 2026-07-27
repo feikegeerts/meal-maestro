@@ -1,5 +1,8 @@
 "use client";
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://meal-maestro.com";
+const OG_IMAGE = `${BASE_URL}/icon-512x512.png`;
+
 interface JsonLdSchemaProps {
   schema: Record<string, unknown>;
 }
@@ -18,8 +21,8 @@ export const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Meal Maestro",
-  url: "https://meal-maestro.com",
-  logo: "https://meal-maestro.com/icon-512x512.png",
+  url: BASE_URL,
+  logo: OG_IMAGE,
   description: "AI-powered recipe management app that helps you organize, discover, and manage your recipes with natural language processing.",
   sameAs: [
     "https://twitter.com/mealmaestro"
@@ -36,7 +39,7 @@ export const softwareApplicationSchema = {
   "@type": "SoftwareApplication",
   name: "Meal Maestro",
   description: "AI-powered recipe management app that helps you organize, discover, and manage your recipes with natural language processing. Privacy-focused with no ads or subscriptions.",
-  url: "https://meal-maestro.com",
+  url: BASE_URL,
   operatingSystem: "Web Browser, iOS, Android",
   applicationCategory: "LifestyleApplication",
   aggregateRating: {
@@ -56,7 +59,7 @@ export const softwareApplicationSchema = {
   },
   genre: ["Recipe Management", "Cooking", "Meal Planning", "AI Assistant"],
   keywords: "recipe management, AI recipe organizer, digital cookbook, meal planning, cooking app",
-  screenshot: "https://meal-maestro.com/icon-512x512.png",
+  screenshot: OG_IMAGE,
   featureList: [
     "AI-powered recipe processing",
     "Natural language recipe management",
@@ -71,7 +74,7 @@ export const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "Meal Maestro",
-  url: "https://meal-maestro.com",
+  url: BASE_URL,
   description: "AI-powered recipe management app",
   publisher: {
     "@type": "Organization",
@@ -79,7 +82,7 @@ export const websiteSchema = {
   },
   potentialAction: {
     "@type": "SearchAction",
-    target: "https://meal-maestro.com/recipes?search={search_term_string}",
+    target: `${BASE_URL}/recipes?search={search_term_string}`,
     "query-input": "required name=search_term_string"
   }
 };

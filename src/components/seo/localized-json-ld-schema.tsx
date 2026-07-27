@@ -2,6 +2,9 @@
 
 import { useTranslations } from "next-intl";
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://meal-maestro.com";
+const OG_IMAGE = `${BASE_URL}/icon-512x512.png`;
+
 interface LocalizedJsonLdSchemaProps {
   schema: Record<string, unknown>;
 }
@@ -23,8 +26,8 @@ export function useLocalizedSchemas() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: t("global.siteName"),
-    url: "https://meal-maestro.com",
-    logo: "https://meal-maestro.com/icon-512x512.png",
+    url: BASE_URL,
+    logo: OG_IMAGE,
     description: t("schema.organization.description"),
     sameAs: [],
     contactPoint: {
@@ -39,7 +42,7 @@ export function useLocalizedSchemas() {
     "@type": "SoftwareApplication",
     name: t("global.siteName"),
     description: t("schema.softwareApplication.description"),
-    url: "https://meal-maestro.com",
+    url: BASE_URL,
     operatingSystem: "Web Browser, iOS, Android",
     applicationCategory: "LifestyleApplication",
     offers: {
@@ -54,7 +57,7 @@ export function useLocalizedSchemas() {
     },
     genre: ["Recipe Management", "Cooking", "Meal Planning", "AI Assistant"],
     keywords: t("global.keywords"),
-    screenshot: "https://meal-maestro.com/icon-512x512.png",
+    screenshot: OG_IMAGE,
     featureList: t.raw("schema.softwareApplication.featureList")
   };
 
@@ -62,7 +65,7 @@ export function useLocalizedSchemas() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: t("global.siteName"),
-    url: "https://meal-maestro.com",
+    url: BASE_URL,
     description: t("global.description"),
     publisher: {
       "@type": "Organization",
@@ -70,7 +73,7 @@ export function useLocalizedSchemas() {
     },
     potentialAction: {
       "@type": "SearchAction",
-      target: "https://meal-maestro.com/recipes?search={search_term_string}",
+      target: `${BASE_URL}/recipes?search={search_term_string}`,
       "query-input": "required name=search_term_string"
     }
   };

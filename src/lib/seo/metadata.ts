@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { routing } from "@/app/i18n/routing";
 
-const BASE_URL = "https://meal-maestro.com";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://meal-maestro.com";
 const OG_IMAGE = `${BASE_URL}/icon-512x512.png`;
 
 interface BuildLocalizedMetadataOptions {

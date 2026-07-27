@@ -1,6 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "lsp": {
-    "typescript": true
-  }
+  "lsp": true,
+  "model": "opencode-go/minimax-m3"
 }

@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://meal-maestro.com",
+  ),
   title: {
     default: "Meal Maestro - AI-Powered Recipe Management App",
     template: "%s | Meal Maestro",
@@ -37,14 +40,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://meal-maestro.com",
+    url: "/",
     siteName: "Meal Maestro",
     title: "Meal Maestro - AI-Powered Recipe Management App",
     description:
       "Privacy-focused AI recipe management app. Organize your recipes with natural language processing. No ads, no subscriptions.",
     images: [
       {
-        url: "https://meal-maestro.com/icon-512x512.png",
+        url: "/icon-512x512.png",
         width: 512,
         height: 512,
         alt: "Meal Maestro App Icon",

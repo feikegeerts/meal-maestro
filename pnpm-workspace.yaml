@@ -1,2 +1,9 @@
 onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@swc/core'
+  - core-js
+  - esbuild
+  - msw
+  - sharp
   - supabase
+  - unrs-resolver

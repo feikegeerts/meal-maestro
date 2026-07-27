@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { routing } from './i18n/routing'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://meal-maestro.com'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://meal-maestro.com'
 
   // Generate localized URLs for each page
   const generateLocalizedUrls = (path: string) => {
