@@ -33,7 +33,11 @@ export const metadata: Metadata = {
   publisher: "Meal Maestro",
   icons: {
     icon: "/chef-hat-sparkle.svg",
-    apple: "/icon-192x192.png",
+    apple: {
+      url: "/apple-touch-icon.png",
+      sizes: "180x180",
+      type: "image/png",
+    },
   },
   manifest: "/manifest.json",
   openGraph: {
