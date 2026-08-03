@@ -17,12 +17,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Filter,
   LayoutGrid,
   List,
   Search,
   Settings,
   X,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { RECIPE_CATEGORIES, RECIPE_SEASONS } from "@/types/recipe";
 import { Table, SortingState } from "@tanstack/react-table";
 import { Recipe } from "@/types/recipe";
@@ -50,6 +52,8 @@ interface RecipeTableToolbarProps {
   onSearchChange: (value: string) => void;
   hasFilters: boolean;
   clearFilters: () => void;
+  filteredCount: number;
+  totalCount: number;
   viewMode: "table" | "grid";
   onViewModeChange: (mode: "table" | "grid") => void;
   sorting: SortingState;
@@ -62,6 +66,8 @@ export function RecipeTableToolbar({
   onSearchChange,
   hasFilters,
   clearFilters,
+  filteredCount,
+  totalCount,
   viewMode,
   onViewModeChange,
   sorting,
@@ -82,6 +88,41 @@ export function RecipeTableToolbar({
           className="pl-10"
         />
       </div>
+
+      {hasFilters && (
+        <div
+          className="flex flex-wrap items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="flex items-center gap-1 font-medium text-primary">
+            <Filter className="h-4 w-4" aria-hidden="true" />
+            {tTable("activeFilters")}
+          </span>
+          {searchInput.trim() && (
+            <Badge variant="secondary" className="max-w-full">
+              <span className="truncate">
+                {tTable("searchFilter", { query: searchInput.trim() })}
+              </span>
+            </Badge>
+          )}
+          <span className="text-muted-foreground">
+            {tTable("matchingRecipes", {
+              count: filteredCount,
+              total: totalCount,
+            })}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            className="ml-auto h-7 px-2"
+          >
+            <X className="mr-1 h-3.5 w-3.5" />
+            {tTable("clear")}
+          </Button>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <Select
@@ -160,13 +201,6 @@ export function RecipeTableToolbar({
             <SelectItem value="lastEaten">{tTable("sortLastEaten")}</SelectItem>
           </SelectContent>
         </Select>
-
-        {hasFilters && (
-          <Button variant="ghost" onClick={clearFilters} className="h-10 px-3">
-            <X className="mr-2 h-4 w-4" />
-            {tTable("clear")}
-          </Button>
-        )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

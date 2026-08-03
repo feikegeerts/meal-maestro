@@ -31,6 +31,14 @@ import {
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { useRecipeTranslations } from "@/messages";
+import { useAuth } from "@/lib/auth-context";
+import {
+  clearRecipeTableFilters,
+  loadRecipeTableFilters,
+  loadRecipeTablePreferences,
+  saveRecipeTableFilters,
+  saveRecipeTablePreferences,
+} from "@/lib/recipe-table-state";
 import {
   RecipeCategory,
   RecipeSeason,
@@ -48,20 +56,6 @@ import { RecipeGridView } from "./recipe-grid-view";
 import { RecipeTableView } from "./recipe-table-view";
 import { RecipeTableToolbar } from "./recipe-table-toolbar";
 
-const TABLE_STATE_STORAGE_KEY = "recipeTableState";
-
-function loadStoredTableState() {
-  if (typeof window === "undefined") return null;
-  try {
-    const stored = window.localStorage.getItem(TABLE_STATE_STORAGE_KEY);
-    if (!stored) return null;
-    return JSON.parse(stored);
-  } catch (error) {
-    console.error("Failed to parse stored recipe table state", error);
-    return null;
-  }
-}
-
 interface DataTableProps {
   columns: ColumnDef<Recipe, unknown>[];
   data: Recipe[];
@@ -73,13 +67,17 @@ export function RecipeDataTable({
   data,
   loading = false,
 }: DataTableProps) {
+  const { user } = useAuth();
+  const userId = user?.id;
   const initialStoredState =
-    typeof window !== "undefined" ? loadStoredTableState() : null;
+    typeof window !== "undefined" ? loadRecipeTablePreferences() : null;
+  const initialStoredFilterState =
+    typeof window !== "undefined"
+      ? loadRecipeTableFilters(userId)
+      : null;
   const initialSearch =
-    typeof initialStoredState?.searchInput === "string"
-      ? initialStoredState.searchInput
-      : typeof initialStoredState?.globalFilter === "string"
-      ? initialStoredState.globalFilter
+    typeof initialStoredFilterState?.searchInput === "string"
+      ? initialStoredFilterState.searchInput
       : "";
 
   const router = useRouter();
@@ -97,8 +95,8 @@ export function RecipeDataTable({
   );
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     () =>
-      Array.isArray(initialStoredState?.columnFilters)
-        ? (initialStoredState.columnFilters as ColumnFiltersState)
+      Array.isArray(initialStoredFilterState?.columnFilters)
+        ? (initialStoredFilterState.columnFilters as ColumnFiltersState)
         : []
   );
   const [columnVisibility, setColumnVisibility] =
@@ -127,50 +125,17 @@ export function RecipeDataTable({
   }, [searchInput]);
 
   React.useEffect(() => {
-    const stored = loadStoredTableState();
-    if (!stored) return;
-
-    if (Array.isArray(stored.sorting) && stored.sorting.length > 0) {
-      setSorting(stored.sorting);
-    }
-    if (Array.isArray(stored.columnFilters)) {
-      setColumnFilters(stored.columnFilters);
-    }
-
-    const persistedSearch =
-      typeof stored.searchInput === "string"
-        ? stored.searchInput
-        : typeof stored.globalFilter === "string"
-        ? stored.globalFilter
-        : "";
-
-    if (persistedSearch) {
-      setSearchInput(persistedSearch);
-      setGlobalFilter(persistedSearch);
-    }
-  }, []);
-
-  React.useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem("recipeViewMode", viewMode);
   }, [viewMode]);
 
   React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const stateToPersist = {
-        sorting,
-        columnFilters,
-        searchInput,
-      };
-      window.localStorage.setItem(
-        TABLE_STATE_STORAGE_KEY,
-        JSON.stringify(stateToPersist)
-      );
-    } catch (error) {
-      console.error("Failed to persist recipe table state", error);
-    }
-  }, [sorting, columnFilters, searchInput]);
+    saveRecipeTablePreferences(sorting);
+  }, [sorting]);
+
+  React.useEffect(() => {
+    saveRecipeTableFilters(userId, { searchInput, columnFilters });
+  }, [columnFilters, searchInput, userId]);
 
   const table = useReactTable({
     data,
@@ -347,12 +312,13 @@ export function RecipeDataTable({
   });
 
   const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
-  const hasFilters = globalFilter || columnFilters.length > 0;
+  const hasFilters = searchInput.trim().length > 0 || columnFilters.length > 0;
 
   const clearFilters = () => {
     setGlobalFilter("");
     setSearchInput("");
     setColumnFilters([]);
+    clearRecipeTableFilters(userId);
   };
 
   const handleRowClick = (recipe: Recipe) => {
@@ -442,6 +408,8 @@ export function RecipeDataTable({
         onSearchChange={setSearchInput}
         hasFilters={!!hasFilters}
         clearFilters={clearFilters}
+        filteredCount={table.getFilteredRowModel().rows.length}
+        totalCount={data.length}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         sorting={sorting}
