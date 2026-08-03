@@ -6,6 +6,18 @@
 * mobile layout of the partner section on the account page ([c17dccf](https://github.com/feikegeerts/meal-maestro/commit/c17dccfe1a05bbd5fc53be4fc4d2245b8fe87328))
 * preview release ([44c45b1](https://github.com/feikegeerts/meal-maestro/commit/44c45b1b812100295197c227e604ecceeb3b2f44))
 
+## [3.6.0](https://github.com/feikegeerts/meal-maestro/compare/v3.5.3...v3.6.0) (2026-08-03)
+
+
+### Features
+
+* persist recipe table filter state ([2b36982](https://github.com/feikegeerts/meal-maestro/commit/2b36982a7b71cb7ceda92d7de05d49e6c1656216))
+
+
+### Bug Fixes
+
+* remove obsolete migration notification ([50f69dd](https://github.com/feikegeerts/meal-maestro/commit/50f69dd57caab274e87ee82f3c655d1c9aed85ef))
+
 ## [3.5.3](https://github.com/feikegeerts/meal-maestro/compare/v3.5.2...v3.5.3) (2026-07-27)
 
 
