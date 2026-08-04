@@ -6,6 +6,18 @@
 * mobile layout of the partner section on the account page ([c17dccf](https://github.com/feikegeerts/meal-maestro/commit/c17dccfe1a05bbd5fc53be4fc4d2245b8fe87328))
 * preview release ([44c45b1](https://github.com/feikegeerts/meal-maestro/commit/44c45b1b812100295197c227e604ecceeb3b2f44))
 
+## [3.7.0](https://github.com/feikegeerts/meal-maestro/compare/v3.6.0...v3.7.0) (2026-08-04)
+
+
+### Features
+
+* switch assistant to GPT-5.6 Luna ([42752c7](https://github.com/feikegeerts/meal-maestro/commit/42752c7f116c0bad70ceac4756dcb016d198538d))
+
+
+### Bug Fixes
+
+* stabilize locale-aware post-login routing ([2662e7c](https://github.com/feikegeerts/meal-maestro/commit/2662e7ce0ae6e7f194a940065c8e5eb4d96bb9b2))
+
 ## [3.6.0](https://github.com/feikegeerts/meal-maestro/compare/v3.5.3...v3.6.0) (2026-08-03)
 
 
