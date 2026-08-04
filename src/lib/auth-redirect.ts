@@ -93,6 +93,12 @@ type LocaleAwarePathOptions = {
   defaultLocale: string;
 };
 
+export type LocaleAwareNavigationTarget = {
+  path: string;
+  pathname: string;
+  locale: string;
+};
+
 export const resolveLocaleAwarePath = ({
   path,
   locale,
@@ -125,4 +131,26 @@ export const resolveLocaleAwarePath = ({
   }
 
   return { path: `/${normalizedLocale}${sanitizedPath}`, locale: normalizedLocale };
+};
+
+export const resolveLocaleAwareNavigationTarget = (
+  options: LocaleAwarePathOptions,
+): LocaleAwareNavigationTarget => {
+  const resolved = resolveLocaleAwarePath(options);
+  const localePrefix = `/${resolved.locale}`;
+
+  let pathname = resolved.path;
+  if (pathname === localePrefix) {
+    pathname = "/";
+  } else if (
+    pathname.startsWith(`${localePrefix}/`) ||
+    pathname.startsWith(`${localePrefix}?`)
+  ) {
+    pathname = pathname.slice(localePrefix.length);
+  }
+
+  return {
+    ...resolved,
+    pathname,
+  };
 };

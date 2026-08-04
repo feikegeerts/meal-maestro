@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "@/app/i18n/routing";
 import { useAuth } from "@/lib/auth-context";
 import { useRecipesQuery } from "@/lib/hooks/use-recipes-query";
@@ -16,12 +16,14 @@ import { useTranslations } from "next-intl";
 export default function RecipesPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const hasRedirected = useRef(false);
   const t = useTranslations("recipes");
   const { columns } = useRecipeColumns();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/");
+    if (!loading && !user && !hasRedirected.current) {
+      hasRedirected.current = true;
+      router.replace("/login?redirectTo=/recipes");
     }
   }, [loading, user, router]);
 
