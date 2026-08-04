@@ -30,9 +30,9 @@ export class OpenAITimeoutError extends ApplicationError {
 
 // OpenAI Configuration
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
-const OPENAI_TEXT_MODEL = "gpt-4.1-mini"; // For text-only conversations
-const OPENAI_VISION_MODEL = "gpt-4o"; // For conversations with images
-const OPENAI_MAX_TOKENS = parseInt("2000", 10);
+const OPENAI_TEXT_MODEL = "gpt-5.6-luna"; // For text-only conversations
+const OPENAI_VISION_MODEL = "gpt-5.6-luna"; // GPT-5.6 Luna also supports image input
+const OPENAI_MAX_COMPLETION_TOKENS = parseInt("2000", 10);
 const OPENAI_TEMPERATURE = parseFloat("0.9");
 
 if (!OPENAI_API_KEY) {
@@ -83,7 +83,7 @@ export async function createChatCompletion(
       messages,
       tools,
       tool_choice: toolChoice || (tools ? "auto" : undefined),
-      max_tokens: OPENAI_MAX_TOKENS,
+      max_completion_tokens: OPENAI_MAX_COMPLETION_TOKENS,
       temperature: OPENAI_TEMPERATURE,
     });
 

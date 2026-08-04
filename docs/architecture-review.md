@@ -16,7 +16,7 @@ Meal Maestro is a Next.js 16 + React 19 application using the App Router, deploy
 | Language | TypeScript 5.9.3 (strict mode) |
 | Database | Neon (Postgres) via Drizzle ORM 0.45.1 |
 | Auth | Neon Auth / Better Auth 0.2.0-beta.1 |
-| AI | OpenAI API 6.0.0 (gpt-4.1-mini + gpt-4o) |
+| AI | OpenAI API 6.0.0 (gpt-5.6-luna) |
 | Storage | Cloudflare R2 via AWS SDK S3 |
 | Email | Resend |
 | Styling | Tailwind CSS v4 + shadcn/ui |
