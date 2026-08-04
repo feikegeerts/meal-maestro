@@ -12,6 +12,9 @@ export interface ModelPricingConfig {
 
 export const OPENAI_PRICING: Record<string, ModelPricingConfig> = {
   // GPT-5 Series
+  'gpt-5.6-luna': {
+    standard: { input: 0.20, cached_input: 0.02, output: 1.20 }
+  },
   'gpt-5': {
     standard: { input: 1.25, cached_input: 0.125, output: 10.00 },
     batch: { input: 0.625, cached_input: 0.0625, output: 5.00 },
