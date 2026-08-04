@@ -1,6 +1,7 @@
 import {
   consumePendingAuthRedirect,
   getPendingAuthRedirect,
+  resolveLocaleAwareNavigationTarget,
   resolveLocaleAwarePath,
   sanitizeRedirectPath,
   setPendingAuthRedirect,
@@ -81,6 +82,49 @@ describe("auth-redirect utilities", () => {
       defaultLocale,
     });
     expect(resolvedQuery).toEqual({ path: "/en?foo=bar", locale: "en" });
+  });
+
+  it("creates next-intl navigation targets without duplicating locale prefixes", () => {
+    const locales = ["nl", "en"] as const;
+
+    expect(
+      resolveLocaleAwareNavigationTarget({
+        path: "/recipes",
+        locale: "en",
+        availableLocales: locales,
+        defaultLocale: "nl",
+      }),
+    ).toEqual({
+      path: "/en/recipes",
+      pathname: "/recipes",
+      locale: "en",
+    });
+
+    expect(
+      resolveLocaleAwareNavigationTarget({
+        path: "/en/recipes?filter=favorites",
+        locale: "nl",
+        availableLocales: locales,
+        defaultLocale: "nl",
+      }),
+    ).toEqual({
+      path: "/en/recipes?filter=favorites",
+      pathname: "/recipes?filter=favorites",
+      locale: "en",
+    });
+
+    expect(
+      resolveLocaleAwareNavigationTarget({
+        path: "/",
+        locale: "en",
+        availableLocales: locales,
+        defaultLocale: "nl",
+      }),
+    ).toEqual({
+      path: "/en",
+      pathname: "/",
+      locale: "en",
+    });
   });
 
   it("clears pending redirects", () => {

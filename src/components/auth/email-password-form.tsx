@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "@/app/i18n/routing";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +9,8 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import Link from "next/link";
 
-interface EmailPasswordFormProps {
-  redirectPath?: string | null;
-}
-
-export function EmailPasswordForm({ redirectPath }: EmailPasswordFormProps) {
+export function EmailPasswordForm() {
   const { signInWithEmail, signUpWithEmail } = useAuth();
-  const router = useRouter();
   const t = useTranslations("auth");
 
   const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
@@ -67,7 +61,6 @@ export function EmailPasswordForm({ redirectPath }: EmailPasswordFormProps) {
         }
       }
 
-      router.push(redirectPath ?? "/recipes");
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useRouter } from "@/app/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -12,7 +12,10 @@ import { PageLoading } from "@/components/ui/page-loading";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ChefHatIcon } from "@/components/ui/chef-hat-icon";
 import { useLocale, useTranslations } from 'next-intl';
-import { sanitizeRedirectPath, resolveLocaleAwarePath } from "@/lib/auth-redirect";
+import {
+  sanitizeRedirectPath,
+  resolveLocaleAwareNavigationTarget,
+} from "@/lib/auth-redirect";
 import { routing } from "@/app/i18n/routing";
 
 function LoginContent() {
@@ -29,24 +32,28 @@ function LoginContent() {
     return sanitizeRedirectPath(raw);
   }, [searchParams]);
 
-  const callbackRedirectPath = useMemo(() => {
+  const postLoginTarget = useMemo(() => {
     const basePath = redirectParam ?? '/recipes';
-    const { path } = resolveLocaleAwarePath({
+    return resolveLocaleAwareNavigationTarget({
       path: basePath,
       locale,
       availableLocales: routing.locales,
       defaultLocale: routing.defaultLocale,
     });
-    return path;
   }, [redirectParam, locale]);
 
+  const hasRedirected = useRef(false);
+
   useEffect(() => {
-    // Redirect authenticated users to recipes
-    if (!loading && user) {
-      router.push(redirectParam ?? '/recipes');
+    // Wait for the confirmed session before leaving the login page.
+    if (!loading && user && !hasRedirected.current) {
+      hasRedirected.current = true;
+      router.replace(postLoginTarget.pathname, {
+        locale: postLoginTarget.locale,
+      });
       return;
     }
-  }, [user, loading, router, redirectParam]);
+  }, [user, loading, router, postLoginTarget]);
 
   useEffect(() => {
     // Handle authentication errors from callback
@@ -135,7 +142,7 @@ function LoginContent() {
 
                 <div className="space-y-4">
                   <GoogleLoginButton
-                    redirectPath={callbackRedirectPath}
+                    redirectPath={postLoginTarget.path}
                     locale={locale}
                   />
 
@@ -150,7 +157,7 @@ function LoginContent() {
                     </div>
                   </div>
 
-                  <EmailPasswordForm redirectPath={redirectParam ?? "/recipes"} />
+                  <EmailPasswordForm />
                 </div>
 
                 <div className="text-xs text-muted-foreground leading-relaxed">

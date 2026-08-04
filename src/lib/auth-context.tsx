@@ -38,7 +38,12 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const queryClient = useQueryClient();
-  const { data: sessionData, isPending } = authClient.useSession();
+  const {
+    data: sessionData,
+    isPending,
+    isRefetching,
+    refetch: refetchSession,
+  } = authClient.useSession();
 
   const user = useMemo(
     () =>
@@ -51,10 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         : null,
     [
-      sessionData?.user?.id,
-      sessionData?.user?.email,
-      sessionData?.user?.name,
-      sessionData?.user?.image,
+      sessionData?.user,
     ],
   );
 
@@ -66,7 +68,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             expiresAt: sessionData.session.expiresAt,
           }
         : null,
-    [sessionData?.session?.id, sessionData?.session?.expiresAt],
+    [sessionData?.session],
   );
 
   const profileQueryKey = ["user-profile", user?.id];
@@ -116,9 +118,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error) {
         return { error: error.message ?? "Failed to sign in" };
       }
+      await refetchSession({ query: { disableCookieCache: true } });
       return {};
     },
-    [],
+    [refetchSession],
   );
 
   const signUpWithEmail = useCallback(
@@ -127,9 +130,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error) {
         return { error: error.message ?? "Failed to create account" };
       }
+      await refetchSession({ query: { disableCookieCache: true } });
       return {};
     },
-    [],
+    [refetchSession],
   );
 
   const requestPasswordReset = useCallback(
@@ -175,7 +179,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     session,
     profile,
-    loading: isPending || profileLoading,
+    loading: isPending || isRefetching || profileLoading,
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
