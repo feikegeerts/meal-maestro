@@ -5,7 +5,7 @@
 ## Neon Auth Migration Follow-ups
 
 1. [ ] Implement localized magic link emails via Neon Auth / Better Auth custom email sending hook (currently `locale` is passed through but unused — see `auth-context.tsx` TODO)
-1. [ ] Keep PWA authentication sessions alive for returning users — investigate session expiry and target at least 30 days of inactivity
+1. [x] Keep PWA authentication sessions alive for returning users — support Neon Auth's 7-day sliding session, refresh on PWA resume, and handle expiry gracefully (30-day lifetime unavailable in Managed Neon Auth)
 1. [x] Fix post-login routing so users reliably land on the locale-aware `/recipes` page instead of being sent back to the homepage
 
 ## AI & Operations
