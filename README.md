@@ -235,8 +235,36 @@ Any test that transitively imports `@/db` must mock it to prevent Neon from conn
 - **AI chat route** has a 60s max duration (configured in `vercel.json`)
 - **Branch strategy**:
   - `preview` → auto-deploys to Vercel preview environment on push
-  - `main` → production (rebase `preview` onto `main` when releasing)
+  - `main` → production after the `preview` → `main` pull request is merged
 - **DB migrations**: run separately via `pnpm db:migrate` or `pnpm db:migrate:prod`
+
+### Releases
+
+Releases use the package version already merged into `main`. Prepare a release on
+`preview` immediately before opening the production pull request:
+
+```bash
+pnpm version minor --no-git-tag-version
+git add package.json
+git commit -m "chore: prepare release 3.7.0"
+git push origin preview
+```
+
+Use `patch`, `minor`, or `major` as appropriate, and replace `3.7.0` with the
+version written to `package.json`. The `--no-git-tag-version` flag updates only
+`package.json`; it prevents a release tag from being created on `preview`.
+
+After the `preview` → `main` pull request is merged and the `CI/CD` workflow
+passes:
+
+1. CI deploys the merged version to production.
+2. `.github/workflows/release.yml` reads the version from `package.json`.
+3. The workflow creates the matching `v<version>` tag and GitHub Release on the
+   exact `main` commit.
+
+The workflow is idempotent and skips releases that already exist. GitHub
+generated release notes are the source of truth for new releases; the committed
+`CHANGELOG.md` remains historical unless updated manually.
 
 ---
 

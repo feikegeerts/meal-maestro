@@ -12,7 +12,7 @@
 ## AI & Operations
 
 1. [x] Switch the AI assistant to `gpt-5.6-luna` for text and image requests
-1. [ ] Replace the release-please preview → main → approval loop with a simpler release workflow for solo development
+1. [x] Use a lightweight release workflow for solo development
 
 ## Quality & Compliance
 
