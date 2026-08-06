@@ -204,35 +204,38 @@ Add unit conversion:
 
 ## Pull Request / Commit Guidance
 
-This project uses **Conventional Commits** + **release-please** for automated versioning. Every commit message must follow the format:
+This project uses **Conventional Commits** for readable history and GitHub-generated release notes. Version bumps are selected explicitly during release preparation. Every commit message must follow the format:
 
 ```
 <type>: <description>
 ```
 
-| Type | Effect on version |
+| Type | Release-note section |
 |---|---|
-| `feat: ...` | Minor bump |
-| `fix: ...` | Patch bump |
-| `feat!: ...` or `BREAKING CHANGE:` in footer | Major bump |
-| `chore:`, `docs:`, `test:`, `refactor:`, `ci:`, `style:` | No bump |
+| `feat: ...` | Features |
+| `fix: ...` | Bug Fixes |
+| `feat!: ...` or `BREAKING CHANGE:` in footer | Breaking changes |
+| `chore:`, `docs:`, `test:`, `refactor:`, `ci:`, `style:` | Other changes |
 
 **Rules:**
 - Keep commits scoped to one logical change.
 - Before finishing: run lint + test.
 - If migration added: mention `DB MIGRATION` in commit body.
 - Reference ToDo item IDs if closing roadmap tasks.
-- **Never manually edit the version** in `package.json` — release-please handles this automatically via its Release PR.
+- Select release versions explicitly with `pnpm version patch|minor|major --no-git-tag-version`.
+- Do not create or push release tags from `preview`; the release workflow tags the merged `main` commit.
 
 ### How releases work
 
-1. Commits land on `main` (via PR merge) → the `release-please` workflow runs automatically.
-2. release-please analyzes commits since the last release and opens (or updates) a `chore(main): release X.Y.Z` PR that bumps `package.json`, updates `CHANGELOG.md`, and updates `.release-please-manifest.json`.
-3. Merging that Release PR causes release-please to create the `vX.Y.Z` git tag and publish a GitHub Release.
+1. Develop and validate changes on `preview`.
+2. Before the production PR, run `pnpm version <patch|minor|major> --no-git-tag-version` on `preview`, commit the package version, and push it.
+3. Merge the `preview` → `main` pull request after CI passes.
+4. After the `CI/CD` workflow succeeds for the `main` push, the `Release` workflow reads `package.json`, creates `v<version>` on the exact `main` commit, and publishes a GitHub Release with generated notes.
+5. If that release already exists, the workflow exits successfully without creating a duplicate.
 
-This PR-based flow naturally respects branch protection rules (no direct pushes to `main` by the bot).
+There is no generated release PR or release approval step. The existing `preview` → `main` pull request remains the sole production gate. New release notes are maintained by GitHub Releases rather than by an automated commit to `CHANGELOG.md`.
 
-Relevant config files: `release-please-config.json`, `.release-please-manifest.json`, `.github/workflows/release-please.yml`.
+Relevant workflow: `.github/workflows/release.yml`.
 
 ---
 

@@ -12,10 +12,25 @@ const authClientMocks = vi.hoisted(() => ({
   changePassword: vi.fn(),
 }));
 
+const authState = vi.hoisted(() => ({
+  data: null as {
+    user: {
+      id: string;
+      email: string;
+      name: string | null;
+      image: string | null;
+    };
+    session: {
+      id: string;
+      expiresAt: Date;
+    };
+  } | null,
+}));
+
 vi.mock("@/lib/auth/client", () => ({
   authClient: {
     useSession: () => ({
-      data: null,
+      data: authState.data,
       isPending: false,
       isRefetching: false,
       refetch: authClientMocks.refetchSession,
@@ -51,18 +66,33 @@ function renderProbe() {
     defaultOptions: { queries: { retry: false } },
   });
 
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <SignInProbe />
-      </AuthProvider>
-    </QueryClientProvider>,
-  );
+  return {
+    ...render(
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <SignInProbe />
+        </AuthProvider>
+      </QueryClientProvider>,
+    ),
+    queryClient,
+  };
 }
 
 describe("AuthProvider session handoff", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    authState.data = null;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: vi.fn().mockResolvedValue({}),
+      }),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("refreshes the session after a successful email sign-in", async () => {
@@ -74,10 +104,93 @@ describe("AuthProvider session handoff", () => {
       expect(authClientMocks.signInEmail).toHaveBeenCalledWith({
         email: "user@example.com",
         password: "password123",
+        rememberMe: true,
       });
       expect(authClientMocks.refetchSession).toHaveBeenCalledWith({
         query: { disableCookieCache: true },
       });
+    });
+  });
+
+  it("refreshes an authenticated session when the app resumes", async () => {
+    authState.data = {
+      user: {
+        id: "user-1",
+        email: "user@example.com",
+        name: "Test User",
+        image: null,
+      },
+      session: {
+        id: "session-1",
+        expiresAt: new Date("2026-08-13T20:17:03.000Z"),
+      },
+    };
+
+    renderProbe();
+    fireEvent(window, new Event("pageshow"));
+
+    await waitFor(() => {
+      expect(authClientMocks.refetchSession).toHaveBeenCalledWith({
+        query: { disableCookieCache: true },
+      });
+    });
+  });
+
+  it("throttles duplicate resume refreshes", async () => {
+    authState.data = {
+      user: {
+        id: "user-1",
+        email: "user@example.com",
+        name: "Test User",
+        image: null,
+      },
+      session: {
+        id: "session-1",
+        expiresAt: new Date("2026-08-13T20:17:03.000Z"),
+      },
+    };
+
+    renderProbe();
+    fireEvent(window, new Event("pageshow"));
+    fireEvent(window, new Event("focus"));
+
+    await waitFor(() => {
+      expect(authClientMocks.refetchSession).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("clears authenticated query data when the session changes user", async () => {
+    authState.data = {
+      user: {
+        id: "user-1",
+        email: "user@example.com",
+        name: "Test User",
+        image: null,
+      },
+      session: {
+        id: "session-1",
+        expiresAt: new Date("2026-08-13T20:17:03.000Z"),
+      },
+    };
+
+    const view = renderProbe();
+    view.queryClient.setQueryData(["recipes"], { recipes: ["private"] });
+    view.queryClient.setQueryData(["custom-units", "user-1"], ["private"]);
+
+    authState.data = null;
+    view.rerender(
+      <QueryClientProvider client={view.queryClient}>
+        <AuthProvider>
+          <SignInProbe />
+        </AuthProvider>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(view.queryClient.getQueryData(["recipes"])).toBeUndefined();
+      expect(
+        view.queryClient.getQueryData(["custom-units", "user-1"]),
+      ).toBeUndefined();
     });
   });
 });

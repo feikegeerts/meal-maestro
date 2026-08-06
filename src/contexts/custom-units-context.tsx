@@ -4,6 +4,7 @@ import React, { createContext, useContext } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CustomUnit, UnitSystem } from "@/types/recipe";
 import { createUnitSystem } from "@/lib/recipe-utils";
+import { useAuth } from "@/lib/auth-context";
 
 interface CustomUnitsContextValue {
   customUnits: CustomUnit[];
@@ -25,9 +26,10 @@ export function CustomUnitsProvider({
   children: React.ReactNode;
 }) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: customUnits = [], isLoading, error: queryError } = useQuery<CustomUnit[]>({
-    queryKey: CUSTOM_UNITS_KEY,
+    queryKey: [...CUSTOM_UNITS_KEY, user?.id],
     queryFn: async () => {
       const response = await fetch("/api/custom-units");
       if (!response.ok) {
@@ -37,6 +39,7 @@ export function CustomUnitsProvider({
       const data = await response.json();
       return Array.isArray(data.units) ? data.units : [];
     },
+    enabled: !!user?.id,
     staleTime: Infinity,
   });
 

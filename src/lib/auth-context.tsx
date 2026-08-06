@@ -4,12 +4,25 @@ import {
   createContext,
   useContext,
   useCallback,
+  useEffect,
   useMemo,
+  useRef,
   ReactNode,
 } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "./auth/client";
 import type { UserProfile, ProfileUpdatePayload } from "./profile-types";
+
+const SESSION_REFRESH_THROTTLE_MS = 60 * 1000;
+const AUTHENTICATED_QUERY_KEY_PREFIXES = [
+  ["user-profile"],
+  ["recipes"],
+  ["recipe"],
+  ["shopping-list"],
+  ["custom-units"],
+  ["partnerships"],
+  ["user-costs"],
+] as const;
 
 interface AuthContextType {
   user: { id: string; email?: string; name?: string; image?: string } | null;
@@ -38,6 +51,9 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const queryClient = useQueryClient();
+  const previousUserId = useRef<string | null>(null);
+  const lastSessionRefreshAt = useRef(0);
+  const sessionRefreshInFlight = useRef<Promise<void> | null>(null);
   const {
     data: sessionData,
     isPending,
@@ -70,6 +86,80 @@ export function AuthProvider({ children }: AuthProviderProps) {
         : null,
     [sessionData?.session],
   );
+
+  const clearAuthenticatedQueries = useCallback(() => {
+    for (const queryKey of AUTHENTICATED_QUERY_KEY_PREFIXES) {
+      queryClient.removeQueries({ queryKey });
+    }
+  }, [queryClient]);
+
+  useEffect(() => {
+    const currentUserId = user?.id ?? null;
+    const previousId = previousUserId.current;
+
+    if (previousId && previousId !== currentUserId) {
+      clearAuthenticatedQueries();
+    }
+
+    previousUserId.current = currentUserId;
+  }, [clearAuthenticatedQueries, user?.id]);
+
+  const refreshSessionOnResume = useCallback(async () => {
+    if (!user?.id) return;
+
+    if (sessionRefreshInFlight.current) {
+      await sessionRefreshInFlight.current;
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastSessionRefreshAt.current < SESSION_REFRESH_THROTTLE_MS) {
+      return;
+    }
+
+    lastSessionRefreshAt.current = now;
+    const refreshPromise = (async () => {
+      try {
+        await refetchSession({ query: { disableCookieCache: true } });
+      } catch {
+        // Keep the current state during transient offline or network failures.
+      }
+    })();
+
+    sessionRefreshInFlight.current = refreshPromise;
+    try {
+      await refreshPromise;
+    } finally {
+      if (sessionRefreshInFlight.current === refreshPromise) {
+        sessionRefreshInFlight.current = null;
+      }
+    }
+  }, [refetchSession, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const handleResume = () => {
+      void refreshSessionOnResume();
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        handleResume();
+      }
+    };
+
+    window.addEventListener("pageshow", handleResume);
+    window.addEventListener("focus", handleResume);
+    window.addEventListener("online", handleResume);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("pageshow", handleResume);
+      window.removeEventListener("focus", handleResume);
+      window.removeEventListener("online", handleResume);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [refreshSessionOnResume, user?.id]);
 
   const profileQueryKey = ["user-profile", user?.id];
 
@@ -114,7 +204,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signInWithEmail = useCallback(
     async (email: string, password: string): Promise<{ error?: string }> => {
-      const { error } = await authClient.signIn.email({ email, password });
+      const { error } = await authClient.signIn.email({
+        email,
+        password,
+        rememberMe: true,
+      });
       if (error) {
         return { error: error.message ?? "Failed to sign in" };
       }
@@ -162,9 +256,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // See: https://www.better-auth.com/docs/concepts/email
 
   const signOut = useCallback(async () => {
-    queryClient.removeQueries({ queryKey: ["user-profile"] });
+    clearAuthenticatedQueries();
     await authClient.signOut();
-  }, [queryClient]);
+  }, [clearAuthenticatedQueries]);
 
   const updateProfile = useCallback(
     async (updates: ProfileUpdatePayload): Promise<boolean> => {

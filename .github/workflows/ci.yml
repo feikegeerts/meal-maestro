@@ -5,6 +5,7 @@ on:
     branches: [main, preview]
   pull_request:
     branches: [main, preview]
+  workflow_dispatch:
 
 permissions:
   contents: write
