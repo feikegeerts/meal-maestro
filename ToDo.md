@@ -1,10 +1,11 @@
 # Post-MVP Development Roadmap
 
 1. [ ] Record videos for the homepage
+1. [ ] Add markdown support for recipe description instead of default text area
 
 ## Neon Auth Migration Follow-ups
 
-1. [ ] Implement localized magic link emails via Neon Auth / Better Auth custom email sending hook (currently `locale` is passed through but unused — see `auth-context.tsx` TODO)
+1. [ ] Implement localized magic link emails via Neon Auth / Better Auth custom email sending hook (currently `locale` is passed through but unused — see `auth-context.tsx` TODO) - not really needed anymore with the current users (just me, my wife and my dad)
 1. [x] Keep PWA authentication sessions alive for returning users — support Neon Auth's 7-day sliding session, refresh on PWA resume, and handle expiry gracefully (30-day lifetime unavailable in Managed Neon Auth)
 1. [x] Fix post-login routing so users reliably land on the locale-aware `/recipes` page instead of being sent back to the homepage
 
@@ -18,7 +19,6 @@
 1. [ ] Add integration test to test the usage limit emails that need to be send when the limit is almost reached.
 1. [ ] Add more integration tests (run via `pnpm verify` in CI; keep them fast and focused on auth flows, recipe sharing/import, and key edit paths). Maintain ≥65% coverage for libs/api/components.
 1. [ ] Set up Playwright for e2e regression testing — cover core flows (login, add recipe, edit recipe) so regressions are caught automatically in CI.
-
 
 ### Low Priority
 
