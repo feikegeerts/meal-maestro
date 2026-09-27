@@ -5,13 +5,11 @@ import {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
-  VisibilityState,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
+  ColumnVisibilityState,
+  useTable,
 } from "@tanstack/react-table";
+import { recipeTableFeatures } from "./recipe-table-config";
+import type { RecipeTableFeatures } from "./recipe-table-config";
 import { Recipe } from "@/types/recipe";
 import { useRouter } from "@/app/i18n/routing";
 import { Button } from "@/components/ui/button";
@@ -57,7 +55,7 @@ import { RecipeTableView } from "./recipe-table-view";
 import { RecipeTableToolbar } from "./recipe-table-toolbar";
 
 interface DataTableProps {
-  columns: ColumnDef<Recipe, unknown>[];
+  columns: ColumnDef<RecipeTableFeatures, Recipe, unknown>[];
   data: Recipe[];
   loading?: boolean;
 }
@@ -100,7 +98,7 @@ export function RecipeDataTable({
         : []
   );
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<ColumnVisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState(initialSearch);
   const [searchInput, setSearchInput] = React.useState(initialSearch);
@@ -137,24 +135,21 @@ export function RecipeDataTable({
     saveRecipeTableFilters(userId, { searchInput, columnFilters });
   }, [columnFilters, searchInput, userId]);
 
-  const table = useReactTable({
+  const table = useTable({
+    features: recipeTableFeatures,
     data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     initialState: {
       pagination: {
+        pageIndex: 0,
         pageSize: 30,
       },
     },
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
-    enableColumnResizing: false,
     globalFilterFn: (row, _columnId, filterValue) => {
       const searchValue =
         typeof filterValue === "string"
@@ -497,7 +492,7 @@ export function RecipeDataTable({
             <p className="text-sm font-medium">{tTable("rowsPerPage")}</p>
             <select
               className="h-8 w-[70px] rounded-md border border-input bg-background px-2 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              value={table.getState().pagination.pageSize}
+              value={table.state.pagination.pageSize}
               onChange={(e) => table.setPageSize(Number(e.target.value))}
             >
               {[10, 20, 30, 40, 50].map((pageSize) => (
@@ -509,7 +504,7 @@ export function RecipeDataTable({
           </div>
           <div className="flex w-[100px] items-center justify-center text-sm font-medium">
             {tTable("page", {
-              current: table.getState().pagination.pageIndex + 1,
+              current: table.state.pagination.pageIndex + 1,
               total: table.getPageCount(),
             })}
           </div>

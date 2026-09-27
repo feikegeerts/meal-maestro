@@ -7,14 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarClock } from "lucide-react";
-import { Table } from "@tanstack/react-table";
+import type { Table } from "@tanstack/react-table";
+import type { RecipeTableFeatures } from "./recipe-table-config";
 import { Recipe, RecipeCategory, RecipeSeason } from "@/types/recipe";
 import { useTranslations } from "next-intl";
 import { useLocalizedDateFormatter } from "@/lib/date-utils";
 import { getTagLabels, TagTranslator } from "./recipe-table-helpers";
 
 interface RecipeGridViewProps {
-  table: Table<Recipe>;
+  table: Table<RecipeTableFeatures, Recipe>;
   loading?: boolean;
   onRowMouseEnter: (recipeId: string) => void;
   onRowClick: (recipe: Recipe) => void;

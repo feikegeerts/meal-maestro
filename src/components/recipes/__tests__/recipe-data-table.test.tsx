@@ -1,6 +1,8 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ColumnDef } from "@tanstack/react-table";
 import { RecipeDataTable } from "@/components/recipes/recipe-data-table";
+import type { RecipeTableFeatures } from "@/components/recipes/recipe-table-config";
 import {
   getRecipeTableFilterStorageKey,
   saveRecipeTableFilters,
@@ -23,7 +25,7 @@ vi.mock("@/lib/hooks/use-recipes-query", () => ({
   useMarkRecipesAsEatenMutation: () => ({ mutateAsync: vi.fn() }),
 }));
 
-const columns: ColumnDef<Recipe, unknown>[] = [
+const columns: ColumnDef<RecipeTableFeatures, Recipe, unknown>[] = [
   {
     accessorKey: "title",
     header: "Title",
@@ -31,6 +33,21 @@ const columns: ColumnDef<Recipe, unknown>[] = [
   {
     accessorKey: "category",
     header: "Category",
+    filterFn: (row, id, value: string[]) => value.includes(row.getValue(id)),
+  },
+];
+
+const sortableColumns: ColumnDef<RecipeTableFeatures, Recipe, unknown>[] = [
+  {
+    accessorKey: "title",
+    header: ({ column }) => (
+      <button
+        type="button"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Sort title
+      </button>
+    ),
   },
 ];
 
@@ -55,9 +72,23 @@ const recipes: Recipe[] = [
   },
 ];
 
-function renderTable() {
+const categoryRecipes = [
+  recipes[0],
+  { ...recipes[1], category: RecipeCategory.DESSERT },
+];
+
+const paginatedRecipes = Array.from({ length: 35 }, (_, index) => ({
+  ...recipes[index % recipes.length],
+  id: `recipe-${index + 1}`,
+  title: `Recipe ${String(35 - index).padStart(2, "0")}`,
+}));
+
+function renderTable(
+  data: Recipe[] = recipes,
+  tableColumns: ColumnDef<RecipeTableFeatures, Recipe, unknown>[] = columns,
+) {
   localStorage.setItem("recipeViewMode", "table");
-  return render(<RecipeDataTable columns={columns} data={recipes} />);
+  return render(<RecipeDataTable columns={tableColumns} data={data} />);
 }
 
 describe("RecipeDataTable filter state", () => {
@@ -117,5 +148,71 @@ describe("RecipeDataTable filter state", () => {
 
     expect(screen.getByDisplayValue("")).toBeInTheDocument();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("sorts rows and paginates the sorted result", () => {
+    renderTable(paginatedRecipes, sortableColumns);
+
+    expect(screen.getByText("Recipe 35")).toBeInTheDocument();
+    expect(screen.queryByText("Recipe 05")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sort title" }));
+
+    expect(screen.getByText("Recipe 01")).toBeInTheDocument();
+    expect(screen.queryByText("Recipe 31")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "goToNextPage" }));
+
+    expect(screen.getByText("Recipe 31")).toBeInTheDocument();
+    expect(screen.getByText("Recipe 35")).toBeInTheDocument();
+    expect(screen.queryByText("Recipe 01")).not.toBeInTheDocument();
+  });
+
+  it("filters rows by the selected category", () => {
+    renderTable(categoryRecipes);
+
+    fireEvent.click(screen.getAllByRole("combobox")[0]);
+    fireEvent.click(screen.getByRole("option", { name: "dessert" }));
+
+    expect(screen.getByText("Tomato Soup")).toBeInTheDocument();
+    expect(screen.queryByText("Spaghetti Carbonara")).not.toBeInTheDocument();
+  });
+
+  it("hides and restores a column from View Options", async () => {
+    const user = userEvent.setup();
+    renderTable();
+
+    await user.click(screen.getByRole("button", { name: "viewOptions" }));
+    await user.click(
+      screen.getByRole("menuitemcheckbox", { name: "category" }),
+    );
+
+    expect(
+      screen.queryByRole("columnheader", { name: "Category" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "viewOptions" }));
+    await user.click(
+      screen.getByRole("menuitemcheckbox", { name: "category" }),
+    );
+
+    expect(
+      screen.getByRole("columnheader", { name: "Category" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps row selection when switching between grid and table views", () => {
+    renderTable();
+
+    fireEvent.click(screen.getByTitle("tileView"));
+    fireEvent.click(screen.getAllByRole("checkbox", { name: "selectRow" })[0]);
+
+    expect(screen.getAllByText(/rowsSelected/)[0]).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTitle("listView"));
+
+    expect(
+      screen.getByRole("row", { name: /Spaghetti Carbonara/ }),
+    ).toHaveAttribute("data-state", "selected");
   });
 });

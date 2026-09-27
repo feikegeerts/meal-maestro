@@ -53,10 +53,4 @@ export default [
       },
     },
   },
-  {
-    files: ["next-pwa.d.ts"],
-    rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-    },
-  },
 ];

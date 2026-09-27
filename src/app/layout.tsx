@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { routing } from "./i18n/routing";
+import { ServiceWorkerProvider } from "@/components/pwa/service-worker-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -85,7 +86,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ServiceWorkerProvider>{children}</ServiceWorkerProvider>
         <Analytics />
         <SpeedInsights />
       </body>

@@ -15,9 +15,9 @@ vi.mock("@/lib/auth-server", () => ({
 
 vi.mock("@/lib/recipe-chat-service", () => {
   const detectLocale = vi.fn(() => "en");
-  const RecipeChatServiceMock = vi.fn().mockImplementation(() => ({
-    processMessage: vi.fn().mockResolvedValue({ reply: "ok" }),
-  }));
+  const RecipeChatServiceMock = vi.fn().mockImplementation(function () {
+    return { processMessage: vi.fn().mockResolvedValue({ reply: "ok" }) };
+  });
   (RecipeChatServiceMock as unknown as { detectLocale?: typeof detectLocale }).detectLocale = detectLocale;
   return { RecipeChatService: RecipeChatServiceMock };
 });
@@ -106,9 +106,9 @@ describe("POST /api/recipes/chat (integration)", () => {
       .spyOn(RecipeChatService as unknown as { detectLocale: Mock }, "detectLocale")
       .mockReturnValue("en");
     const processMessage = vi.fn().mockResolvedValue({ reply: "ok" });
-    (RecipeChatService as unknown as Mock).mockImplementation(() => ({
-      processMessage,
-    }));
+    (RecipeChatService as unknown as Mock).mockImplementation(function () {
+      return { processMessage };
+    });
 
     const response = await chatPost(
       buildRequest({
@@ -126,9 +126,11 @@ describe("POST /api/recipes/chat (integration)", () => {
   });
 
   it("returns 422 on OpenAI timeout with retry hint", async () => {
-    (RecipeChatService as unknown as Mock).mockImplementation(() => ({
-      processMessage: vi.fn().mockRejectedValue(new OpenAITimeoutError("timeout")),
-    }));
+    (RecipeChatService as unknown as Mock).mockImplementation(function () {
+      return {
+        processMessage: vi.fn().mockRejectedValue(new OpenAITimeoutError("timeout")),
+      };
+    });
 
     const response = await chatPost(buildRequest({ message: "Hello" }));
     const body = await response.json();
@@ -139,9 +141,11 @@ describe("POST /api/recipes/chat (integration)", () => {
   });
 
   it("returns 402 on monthly spend limit reached", async () => {
-    (RecipeChatService as unknown as Mock).mockImplementation(() => ({
-      processMessage: vi.fn().mockRejectedValue(new MonthlySpendLimitError(100, 120)),
-    }));
+    (RecipeChatService as unknown as Mock).mockImplementation(function () {
+      return {
+        processMessage: vi.fn().mockRejectedValue(new MonthlySpendLimitError(100, 120)),
+      };
+    });
 
     const response = await chatPost(buildRequest({ message: "Hello", locale: "nl" }));
     expect(response.status).toBe(402);
@@ -153,9 +157,9 @@ describe("POST /api/recipes/chat (integration)", () => {
     const formatErrorResponse = vi
       .spyOn(ChatResponseFormatter.prototype, "formatErrorResponse")
       .mockResolvedValue({ error: "Too many requests", status: 429 });
-    (RecipeChatService as unknown as Mock).mockImplementation(() => ({
-      processMessage: vi.fn().mockRejectedValue(new Error("rate limit")),
-    }));
+    (RecipeChatService as unknown as Mock).mockImplementation(function () {
+      return { processMessage: vi.fn().mockRejectedValue(new Error("rate limit")) };
+    });
 
     const response = await chatPost(buildRequest({ message: "Hello" }));
     expect(response.status).toBe(429);

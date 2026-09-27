@@ -19,7 +19,7 @@ Meal Maestro is an AI-augmented recipe management platform. Users can store and 
 - **Recipe web scraping** — import recipes directly from a URL
 - **Nutrition estimates** — on-demand AI-generated nutrition summaries per recipe
 - **Multilingual** — Dutch (default) and English via next-intl
-- **Progressive Web App** — installable, offline-capable (next-pwa / Workbox)
+- **Progressive Web App** — installable, offline-capable (Serwist)
 - **Image management** — Cloudflare R2 storage with client-side and server-side compression
 - **Per-user AI cost tracking & rate limiting** — monthly caps with automated admin email alerts
 - **Admin dashboard** — usage monitoring and feedback moderation
@@ -75,7 +75,7 @@ Meal Maestro is an AI-augmented recipe management platform. Users can store and 
 | Technology | Notes |
 |---|---|
 | next-intl | i18n — `nl` default, `en` |
-| next-pwa | PWA / Workbox |
+| Serwist | PWA / offline caching |
 | Vercel Analytics + Speed Insights | — |
 
 ### Dev Tools

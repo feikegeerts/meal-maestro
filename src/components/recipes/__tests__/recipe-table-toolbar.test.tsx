@@ -1,13 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { Table } from "@tanstack/react-table";
 import type { Recipe } from "@/types/recipe";
+import type { RecipeTableFeatures } from "@/components/recipes/recipe-table-config";
 import { RecipeTableToolbar } from "@/components/recipes/recipe-table-toolbar";
 
-function createTable(): Table<Recipe> {
+function createTable(): Table<RecipeTableFeatures, Recipe> {
   return {
     getColumn: () => undefined,
     getAllColumns: () => [],
-  } as unknown as Table<Recipe>;
+  } as unknown as Table<RecipeTableFeatures, Recipe>;
 }
 
 function renderToolbar(overrides: Partial<React.ComponentProps<typeof RecipeTableToolbar>> = {}) {

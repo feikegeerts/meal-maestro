@@ -4,9 +4,11 @@ vi.mock('@/db', () => ({
 }));
 
 vi.mock('@/lib/email/services/email-delivery-service', () => ({
-  EmailDeliveryService: vi.fn().mockImplementation(() => ({
-    sendEmail: vi.fn(() => Promise.resolve({ success: true })),
-  })),
+  EmailDeliveryService: vi.fn(
+    class MockEmailDeliveryService {
+      sendEmail = vi.fn(() => Promise.resolve({ success: true }));
+    }
+  ),
 }));
 
 import { ChatResponseFormatter } from '../chat-response-formatter';
