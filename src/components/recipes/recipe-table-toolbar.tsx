@@ -26,7 +26,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { RECIPE_CATEGORIES, RECIPE_SEASONS } from "@/types/recipe";
-import { Table, SortingState } from "@tanstack/react-table";
+import type { SortingState, Table } from "@tanstack/react-table";
+import type { RecipeTableFeatures } from "./recipe-table-config";
 import { Recipe } from "@/types/recipe";
 import { useTranslations } from "next-intl";
 
@@ -47,7 +48,7 @@ function getSortKey(sorting: SortingState): string {
 }
 
 interface RecipeTableToolbarProps {
-  table: Table<Recipe>;
+  table: Table<RecipeTableFeatures, Recipe>;
   searchInput: string;
   onSearchChange: (value: string) => void;
   hasFilters: boolean;

@@ -1,9 +1,16 @@
-onlyBuiltDependencies:
-  - '@parcel/watcher'
-  - '@swc/core'
-  - core-js
-  - esbuild
-  - msw
-  - sharp
-  - supabase
-  - unrs-resolver
+allowBuilds:
+  '@parcel/watcher': true
+  '@swc/core': true
+  core-js: true
+  esbuild: true
+  msw: true
+  sharp: true
+  supabase: true
+  unrs-resolver: true
+
+overrides:
+  '@types/react': 19.3.0
+  '@types/react-dom': 19.3.0
+  better-auth: 1.7.6
+  browserslist: 4.28.7
+  esbuild: 0.28.2

@@ -136,9 +136,11 @@ vi.mock("@/db", () => {
 vi.mock("@/lib/email/services/email-delivery-service", () => {
   const mock = vi.fn().mockResolvedValue(undefined);
   return {
-    EmailDeliveryService: vi.fn(() => ({
-      sendEmail: mock,
-    })),
+    EmailDeliveryService: vi.fn(
+      class MockEmailDeliveryService {
+        sendEmail = mock;
+      }
+    ),
     __sendEmailMock: mock,
   };
 });

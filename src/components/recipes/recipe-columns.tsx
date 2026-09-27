@@ -1,6 +1,7 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
+import type { RecipeTableFeatures } from "./recipe-table-config";
 import {
   Recipe,
   RecipeCategory,
@@ -48,7 +49,7 @@ import { DateSelectionPopover } from "@/components/ui/date-selection-popover";
 import * as React from "react";
 
 interface RecipeColumnsResult {
-  columns: ColumnDef<Recipe>[];
+  columns: ColumnDef<RecipeTableFeatures, Recipe>[];
 }
 
 export function useRecipeColumns(): RecipeColumnsResult {
@@ -105,7 +106,7 @@ export function useRecipeColumns(): RecipeColumnsResult {
     }
   };
 
-  const columns: ColumnDef<Recipe>[] = [
+  const columns: ColumnDef<RecipeTableFeatures, Recipe>[] = [
     {
       id: "select",
       size: 30,
@@ -343,7 +344,7 @@ export function useRecipeColumns(): RecipeColumnsResult {
           </div>
         );
       },
-      sortingFn: (rowA, rowB, columnId) => {
+      sortFn: (rowA, rowB, columnId) => {
         const dateA = rowA.getValue(columnId) as string | undefined;
         const dateB = rowB.getValue(columnId) as string | undefined;
 

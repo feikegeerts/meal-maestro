@@ -99,9 +99,11 @@ vi.mock("../usage-tracking-service", () => ({
 }));
 
 vi.mock("@/lib/email/services/email-delivery-service", () => ({
-  EmailDeliveryService: vi.fn(() => ({
-    sendEmail: vi.fn(),
-  })),
+  EmailDeliveryService: vi.fn(
+    class MockEmailDeliveryService {
+      sendEmail = vi.fn();
+    }
+  ),
 }));
 
 vi.mock("../usage-limit-service", async () => {
@@ -268,14 +270,18 @@ describe("RecipeChatService", () => {
       updateConversationHistory: updateConversationHistoryMock,
     };
     ConversationBuilderMock.mockImplementation(
-      () => builderMocks as unknown as ConversationBuilder
+      function () {
+        return builderMocks as unknown as ConversationBuilder;
+      }
     );
 
     processorMocks = {
       processFunctionCall: processFunctionCallMock,
     };
     FunctionCallProcessorMock.mockImplementation(
-      () => processorMocks as unknown as FunctionCallProcessor
+      function () {
+        return processorMocks as unknown as FunctionCallProcessor;
+      }
     );
     FunctionCallProcessorMock.getAvailableFunctions = getAvailableFunctionsMock;
 
@@ -283,7 +289,9 @@ describe("RecipeChatService", () => {
       formatResponse: formatResponseMock,
     };
     ChatResponseFormatterMock.mockImplementation(
-      () => formatterMocks as unknown as ChatResponseFormatter
+      function () {
+        return formatterMocks as unknown as ChatResponseFormatter;
+      }
     );
 
     createChatCompletionTypedMock.mockImplementation(

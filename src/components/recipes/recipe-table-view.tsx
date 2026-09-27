@@ -1,11 +1,12 @@
 "use client";
 
 import * as React from "react";
-import {
-  flexRender,
-  Table as TanStackTable,
+import { flexRender } from "@tanstack/react-table";
+import type {
   ColumnDef,
+  Table as TanStackTable,
 } from "@tanstack/react-table";
+import type { RecipeTableFeatures } from "./recipe-table-config";
 import {
   Table,
   TableBody,
@@ -18,8 +19,8 @@ import { Recipe } from "@/types/recipe";
 import { useTranslations } from "next-intl";
 
 interface RecipeTableViewProps {
-  table: TanStackTable<Recipe>;
-  columns: ColumnDef<Recipe, unknown>[];
+  table: TanStackTable<RecipeTableFeatures, Recipe>;
+  columns: ColumnDef<RecipeTableFeatures, Recipe, unknown>[];
   loading?: boolean;
   clickedRecipeId: string | null;
   onRowMouseEnter: (recipeId: string) => void;

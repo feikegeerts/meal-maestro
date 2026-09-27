@@ -78,10 +78,10 @@ export function DateSelectionPopover({
             selected={selectedDate}
             onSelect={handleDateChange}
             disabled={(date) => date > new Date()}
-            initialFocus
+            autoFocus
             captionLayout="dropdown"
-            fromYear={2020}
-            toYear={new Date().getFullYear()}
+            startMonth={new Date(2020, 0)}
+            endMonth={new Date(new Date().getFullYear(), 11)}
           />
 
           <div className="flex justify-between gap-2">

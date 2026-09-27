@@ -65,9 +65,11 @@ vi.mock("@/db", () => {
 });
 
 vi.mock("@/lib/email/email-service", () => ({
-  EmailService: vi.fn().mockImplementation(() => ({
-    sendLocalizedEmail: vi.fn().mockResolvedValue({ success: true }),
-  })),
+  EmailService: vi.fn(
+    class MockEmailService {
+      sendLocalizedEmail = vi.fn().mockResolvedValue({ success: true });
+    }
+  ),
 }));
 
 // ---------------------------------------------------------------------------
