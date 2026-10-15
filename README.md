@@ -16,6 +16,7 @@ Meal Maestro is an AI-augmented recipe management platform. Users can store and 
 
 - **AI recipe chat** — OpenAI function calling drives create, update, scale, and search operations via conversation
 - **Recipe CRUD** — full lifecycle management with categories, seasons, cuisines, diet types, and tags
+- **Personal agent API** — let Hermes search recipes and mark meals as eaten; [setup guide](docs/hermes-agent-api.md)
 - **Recipe web scraping** — import recipes directly from a URL
 - **Nutrition estimates** — on-demand AI-generated nutrition summaries per recipe
 - **Multilingual** — Dutch (default) and English via next-intl
