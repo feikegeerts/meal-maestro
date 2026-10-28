@@ -127,7 +127,7 @@ Verification steps for most feature changes:
 2. Tests green (`pnpm test`)
 3. Type checks (no TS errors in editor or build)
 4. App starts (`pnpm dev`) and affected UI path loads without runtime errors
-5. For UI changes: smoke test using the `agent-browser` skill — test credentials are in `.env.local` (`TEST_USER_EMAIL` / `TEST_USER_PASSWORD`).
+5. For UI changes: smoke test using the `agent-browser` skill. For repeatable browser regression tests, use Playwright (`pnpm test:e2e`; see `docs/e2e-testing.md`). Authenticated E2E tests require a dedicated non-production Neon database/Auth environment configured through `.env.e2e.local`; never run recipe mutations against the credentials copied from `.env.local` unless they are explicitly isolated for testing.
 
 ---
 

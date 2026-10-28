@@ -47,6 +47,7 @@ next-env.d.ts
 
 # Playwright
 /playwright-report/
+/playwright/.auth/
 /test-results/
 
 # Superpowers

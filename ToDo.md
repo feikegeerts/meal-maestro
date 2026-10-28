@@ -18,7 +18,7 @@
 
 1. [ ] Add integration test to test the usage limit emails that need to be send when the limit is almost reached.
 1. [ ] Add more integration tests (run via `pnpm verify` in CI; keep them fast and focused on auth flows, recipe sharing/import, and key edit paths). Maintain ≥65% coverage for libs/api/components.
-1. [ ] Set up Playwright for e2e regression testing — cover core flows (login, add recipe, edit recipe) so regressions are caught automatically in CI.
+1. [ ] Finish Playwright E2E rollout — local Preview Auth and public/auth recipe plus shopping-list flows are verified; add GitHub Actions secrets and enable the CI E2E job later.
 
 ### Low Priority
 
