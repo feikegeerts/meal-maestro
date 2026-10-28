@@ -28,6 +28,28 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run test:ci
       - run: pnpm run test:integration
+      - name: Install Playwright Chromium
+        if: ${{ vars.E2E_ENABLED == 'true' }}
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run end-to-end tests
+        if: ${{ vars.E2E_ENABLED == 'true' }}
+        run: pnpm run test:e2e
+        env:
+          E2E_DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
+          E2E_NEON_AUTH_BASE_URL: ${{ secrets.E2E_NEON_AUTH_BASE_URL }}
+          E2E_NEON_AUTH_COOKIE_SECRET: ${{ secrets.E2E_NEON_AUTH_COOKIE_SECRET }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      - name: Upload Playwright report and traces
+        if: ${{ always() && vars.E2E_ENABLED == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14
 
   deploy-preview:
     name: Deploy Preview

@@ -202,6 +202,7 @@ pnpm test:watch           # Run tests in watch mode
 pnpm test:coverage        # Run tests with coverage report
 pnpm test:ci              # Run tests in CI mode (verbose)
 pnpm test:integration     # Run integration tests
+pnpm test:e2e             # Run Playwright browser tests
 pnpm verify               # Full check: type-check + lint + tests
 pnpm db:generate          # Generate Drizzle migration
 pnpm db:migrate           # Apply migrations (local)
@@ -218,6 +219,7 @@ pnpm db:studio            # Open Drizzle Studio
 - **Integration tests**: `src/__tests__/integration/`
 - **HTTP mocking**: MSW (Mock Service Worker) — handlers in `src/__mocks__/`
 - **DOM testing**: React Testing Library + `@testing-library/jest-dom`
+- **Browser E2E**: Playwright Test — setup and isolated test-environment requirements in [`docs/e2e-testing.md`](docs/e2e-testing.md)
 - **Coverage threshold**: 65% (branches, functions, lines, statements)
 
 Run all checks before opening a PR:

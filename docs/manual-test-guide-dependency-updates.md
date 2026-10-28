@@ -39,4 +39,4 @@ This is a checklist for a human tester, not a test report. No manual checks are 
 ## Automated checks (separate from the manual checks above)
 
 - Run `pnpm run verify` for type-check, lint, unit, and integration tests, then `pnpm run build`.
-- Run `pnpm run test:e2e` when the app is available. The repository's current Playwright suite has a homepage-load smoke test; it does not exercise recipe-table, picker, PWA-install, chat, or admin-chart interactions. Keep those as human checks unless dedicated E2E coverage is added.
+- Run `pnpm run test:e2e` when the app and isolated E2E environment are available. Playwright covers public-page smoke/redirect behavior, recipe form validation and create-edit-delete, recipe search/category filtering, and shopping-list add/check/uncheck/delete. It does not yet exercise date pickers, PWA installation, chat, or admin-chart interactions. Keep those as human checks unless dedicated E2E coverage is added.
