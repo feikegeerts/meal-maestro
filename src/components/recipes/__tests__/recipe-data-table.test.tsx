@@ -168,6 +168,20 @@ describe("RecipeDataTable filter state", () => {
     expect(screen.queryByText("Recipe 01")).not.toBeInTheDocument();
   });
 
+  it("uses natural sorting for titles with numeric parts", () => {
+    const numericTitleRecipes = [
+      { ...recipes[0], title: "Recipe 10" },
+      { ...recipes[1], title: "Recipe 2" },
+    ];
+
+    renderTable(numericTitleRecipes, sortableColumns);
+    fireEvent.click(screen.getByRole("button", { name: "Sort title" }));
+
+    const rows = screen.getAllByRole("row").slice(1);
+    expect(rows[0]).toHaveTextContent("Recipe 2");
+    expect(rows[1]).toHaveTextContent("Recipe 10");
+  });
+
   it("filters rows by the selected category", () => {
     renderTable(categoryRecipes);
 
